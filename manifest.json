@@ -1,24 +1,5 @@
 [
   {
-    "guid": "b7d41e02-9c58-4f6a-8d13-5a2c7e9f4610",
-    "name": "Jellyseerr Bridge",
-    "overview": "Jellyseerr inside Jellyfin: button, embedded view, search and sign-in.",
-    "description": "Brings Jellyseerr into the Jellyfin web client: a button in the header and side menu, Jellyseerr embedded in Jellyfin instead of a redirect, Jellyseerr suggestions under Jellyfin search results with one-click requests attributed to the right user, optional single sign-on via Quick Connect, and a compatibility bridge for clients that still send legacy X-Emby authorization headers. Settings page is in German; the button label follows each user's language.",
-    "owner": "MKI",
-    "category": "General",
-    "imageUrl": "https://raw.githubusercontent.com/MKI002/mki-jellyfin-plugins/main/src/Jellyfin.Plugin.SeerrBridge/logo.png",
-    "versions": [
-      {
-        "version": "1.0.0.0",
-        "changelog": "Header and side-menu button, embedded view, search suggestions with requests, single sign-on via Quick Connect, legacy auth header bridge.",
-        "targetAbi": "12.0.0.0",
-        "sourceUrl": "https://github.com/MKI002/mki-jellyfin-plugins/releases/download/v1.0.0/seerrbridge_1.0.0.0.zip",
-        "checksum": "eb2b495b886214915eaf4bbb6cabae95",
-        "timestamp": "2026-10-19T19:27:42Z"
-      }
-    ]
-  },
-  {
     "guid": "b8e2f3a1-6c47-4d59-9f0e-7a1c2d3e4b5f",
     "name": "MKI Merge Versions",
     "overview": "Two resolutions, one entry. The 4K version leads.",
@@ -41,17 +22,52 @@
     "guid": "6f3a1d84-2b57-4c19-9a0e-7d51c8e4b2f6",
     "name": "Media Hero",
     "overview": "A cinematic hero banner on the Jellyfin home screen.",
-    "description": "Adds a full-width hero carousel to the Jellyfin home screen. The list is prepared on the server from recently added, top rated and (optionally) Jellyseerr trending titles, filtered per library with title, genre, tag and rating whitelists and blacklists. Layout, transitions, text and buttons are configurable. Settings page is in German.",
+    "description": "Adds a full-width hero carousel to the Jellyfin home screen. The list is prepared on the server from recently added, top rated and (optionally) Seerr trending titles, filtered per library with title, genre, tag and rating whitelists and blacklists. Layout, transitions, text and buttons are configurable. Settings page is in German.",
     "owner": "MKI",
     "category": "General",
     "imageUrl": "https://raw.githubusercontent.com/MKI002/mki-jellyfin-plugins/main/src/Jellyfin.Plugin.MediaHero/logo.png",
     "versions": [
+      {
+        "version": "1.1.0.0",
+        "changelog": "Jellyseerr is now Seerr: renamed the trending sources and all labels. Settings are kept.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/MKI002/mki-jellyfin-plugins/releases/download/v1.1.0/mediahero_1.1.0.0.zip",
+        "checksum": "5708a72172a75b8e55b5bf2b9d989885",
+        "timestamp": "2026-10-19T19:38:32Z"
+      },
       {
         "version": "1.0.0.0",
         "changelog": "Per-library targets, sources as upper limits, paged Jellyseerr trending lookup, browser caching and a background pre-warmer.",
         "targetAbi": "12.0.0.0",
         "sourceUrl": "https://github.com/MKI002/mki-jellyfin-plugins/releases/download/v1.0.0/mediahero_1.0.0.0.zip",
         "checksum": "4902a3716496197b9ca16803d64a3a8a",
+        "timestamp": "2026-10-19T19:27:42Z"
+      }
+    ]
+  },
+  {
+    "guid": "b7d41e02-9c58-4f6a-8d13-5a2c7e9f4610",
+    "name": "Seerr Bridge",
+    "overview": "Seerr inside Jellyfin: button, embedded view, search and sign-in.",
+    "description": "Brings Seerr into the Jellyfin web client: a button in the header and side menu, Seerr embedded in Jellyfin instead of a redirect, Seerr suggestions under Jellyfin search results with one-click requests attributed to the right user, optional single sign-on via Quick Connect, and a compatibility bridge for clients that still send legacy X-Emby authorization headers. Settings page is in German; the button label follows each user's language.",
+    "owner": "MKI",
+    "category": "General",
+    "imageUrl": "https://raw.githubusercontent.com/MKI002/mki-jellyfin-plugins/main/src/Jellyfin.Plugin.SeerrBridge/logo.png",
+    "versions": [
+      {
+        "version": "1.1.0.0",
+        "changelog": "Renamed to Seerr Bridge: Jellyseerr is now Seerr. All labels, descriptions and the menu route (#/seerr) follow the new name. Settings are kept.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/MKI002/mki-jellyfin-plugins/releases/download/v1.1.0/seerrbridge_1.1.0.0.zip",
+        "checksum": "373bee3d008056304119110819f02bdf",
+        "timestamp": "2026-10-19T19:38:32Z"
+      },
+      {
+        "version": "1.0.0.0",
+        "changelog": "Header and side-menu button, embedded view, search suggestions with requests, single sign-on via Quick Connect, legacy auth header bridge.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/MKI002/mki-jellyfin-plugins/releases/download/v1.0.0/seerrbridge_1.0.0.0.zip",
+        "checksum": "eb2b495b886214915eaf4bbb6cabae95",
         "timestamp": "2026-10-19T19:27:42Z"
       }
     ]
