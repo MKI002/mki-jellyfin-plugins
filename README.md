@@ -1,21 +1,96 @@
-# MKI Jellyfin-Plugins
+<div align="center">
 
-Eigene Plugins für Jellyfin 12.2, .NET 10, targetAbi 12.0.0.0.
+# MKI Jellyfin Plugins
 
-| Ordner | Plugin | Zweck |
-| --- | --- | --- |
-| `SeerrBridge` | Jellyseerr Bridge | Seerr in der Jellyfin-Oberfläche: Knopf, eingebettete Ansicht, Suche mit Anfrage, Einmal-Anmeldung |
-| `MkiMergeVersions` | MKI Merge Versions | Führt Filme mit mehreren Auflösungen zu einem Eintrag zusammen |
-| `MediaHero` | Media Hero | Startseiten-Leiste mit Whitelists, Blacklists und Trendtiteln aus Seerr |
+Three plugins for [Jellyfin](https://jellyfin.org) 12, installable from one plugin repository.
 
-Der Quellcode wurde am 2026-10-19 mit ILSpy aus den installierten DLLs zurückgewonnen
-(Originalquellen waren nicht mehr vorhanden), daher ohne die ursprünglichen Kommentare.
+[![Build](https://github.com/MKI002/mki-jellyfin-plugins/actions/workflows/build.yml/badge.svg)](https://github.com/MKI002/mki-jellyfin-plugins/actions/workflows/build.yml)
+[![Release](https://img.shields.io/github/v/release/MKI002/mki-jellyfin-plugins?label=release)](https://github.com/MKI002/mki-jellyfin-plugins/releases)
+![Jellyfin](https://img.shields.io/badge/Jellyfin-12.x-00a4dc)
+[![License](https://img.shields.io/github/license/MKI002/mki-jellyfin-plugins)](LICENSE)
 
-## Bauen und installieren
+</div>
+
+## Plugins
+
+<table>
+  <tr>
+    <td width="33%" valign="top">
+      <a href="src/Jellyfin.Plugin.MediaHero"><img src="src/Jellyfin.Plugin.MediaHero/logo.png" alt="Media Hero"></a>
+      <h3><a href="src/Jellyfin.Plugin.MediaHero">Media Hero</a></h3>
+      A cinematic hero carousel on the home screen, built on the server from recent, top rated and Jellyseerr trending titles, with per-library whitelists and blacklists.
+    </td>
+    <td width="33%" valign="top">
+      <a href="src/Jellyfin.Plugin.MkiMergeVersions"><img src="src/Jellyfin.Plugin.MkiMergeVersions/logo.png" alt="MKI Merge Versions"></a>
+      <h3><a href="src/Jellyfin.Plugin.MkiMergeVersions">MKI Merge Versions</a></h3>
+      Merges movies that exist in several resolutions into one entry, matched by TMDb or IMDb ID. The highest resolution becomes the primary version.
+    </td>
+    <td width="33%" valign="top">
+      <a href="src/Jellyfin.Plugin.SeerrBridge"><img src="src/Jellyfin.Plugin.SeerrBridge/logo.png" alt="Jellyseerr Bridge"></a>
+      <h3><a href="src/Jellyfin.Plugin.SeerrBridge">Jellyseerr Bridge</a></h3>
+      Jellyseerr inside the Jellyfin web client: a menu button, an embedded view, request suggestions in search, and optional single sign-on.
+    </td>
+  </tr>
+</table>
+
+## Installation
+
+1. In Jellyfin, open **Dashboard → Plugins → Repositories** (on older layouts: **Catalog → ⚙ Settings**).
+2. Add a repository:
+   - **Name:** `MKI Plugins`
+   - **URL:**
+     ```
+     https://raw.githubusercontent.com/MKI002/mki-jellyfin-plugins/main/manifest.json
+     ```
+3. Open the **Catalog**, pick a plugin and click **Install**.
+4. Restart Jellyfin, then open the plugin's settings page under **Dashboard → Plugins**.
+
+Updates show up in the catalog automatically when a new version is released.
+
+### Requirements
+
+- Jellyfin **12.x** (plugin ABI `12.0.0.0`). Older servers will not list the plugins.
+- **Media Hero** and **Jellyseerr Bridge** add a small script to the Jellyfin web client by writing to its `index.html`. The Jellyfin process needs write access to the web folder for that; the official Docker image has it.
+- **Jellyseerr Bridge**, and Media Hero's trending source, need a running [Jellyseerr](https://github.com/Fallenbagel/jellyseerr) instance and its API key.
+
+> [!NOTE]
+> The settings pages are currently in German. The features themselves work in any language.
+
+## Building from source
+
+You need the [.NET 10 SDK](https://dotnet.microsoft.com/download).
+
+```bash
+dotnet build MkiJellyfinPlugins.sln -c Release
 ```
-dotnet build -c Release <Ordner>
-```
-Die DLL aus `bin/Release/net10.0/` zusammen mit `meta.json` und `logo.png` nach
-`<Jellyfin-Datenordner>/plugins/<Name>_<Version>/` auf dem Server kopieren und Jellyfin neu starten.
 
-Plugin-Einstellungen (API-Schlüssel usw.) liegen nur auf dem Server, nicht im Repo.
+Each plugin's DLL lands in `src/<Plugin>/bin/Release/net10.0/`. To install by hand, copy that DLL together with the plugin's `meta.json` into a new folder under your Jellyfin data directory's `plugins/` folder and restart Jellyfin.
+
+## Releasing a new version
+
+1. Raise `version` and update `changelog` in the plugin's `src/<Plugin>/meta.json`.
+2. Merge to `main`.
+3. Push a tag that starts with `v`, for example `git tag v1.1.0 && git push origin v1.1.0`.
+
+The [Release workflow](.github/workflows/release.yml) builds every plugin whose version is not yet in `manifest.json`, attaches the zips to a GitHub release for that tag and commits the updated `manifest.json` to `main`. Plugins whose version did not change are left alone.
+
+## Repository layout
+
+```
+.
+├── manifest.json                    Jellyfin plugin repository (generated by the release workflow)
+├── MkiJellyfinPlugins.sln
+├── build/package.py                 builds, zips and updates manifest.json
+├── .github/workflows/               CI build and tag-triggered release
+└── src/
+    ├── Jellyfin.Plugin.MediaHero/
+    ├── Jellyfin.Plugin.MkiMergeVersions/
+    └── Jellyfin.Plugin.SeerrBridge/
+        ├── meta.json                name, description, version and changelog
+        ├── logo.png                 catalog image
+        └── README.md                features and setup
+```
+
+## License
+
+[GPL-3.0](LICENSE). Jellyfin itself is GPL licensed, and plugins build against its libraries.

@@ -13,3 +13,6 @@ obj/
 *.xml
 !**/*.csproj
 .env
+
+# Release packages
+dist/

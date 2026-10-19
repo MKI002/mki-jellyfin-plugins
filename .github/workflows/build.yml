@@ -1,0 +1,19 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - name: Validate metadata
+        run: python3 build/package.py --check
+      - name: Build all plugins
+        run: dotnet build MkiJellyfinPlugins.sln -c Release
