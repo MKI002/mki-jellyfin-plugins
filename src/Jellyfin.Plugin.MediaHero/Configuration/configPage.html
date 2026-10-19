@@ -1,426 +1,416 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><title>MKI Media Hero</title></head>
+<head>
+    <meta charset="utf-8" />
+    <title>MKI Media Hero</title>
+</head>
 <body>
 <div id="MediaHeroConfig" data-role="page" class="page type-interior pluginConfigurationPage"
      data-require="emby-input,emby-button,emby-select,emby-checkbox">
-  <div data-role="content">
-    <div class="content-primary">
+    <style>
+        #MediaHeroConfig .mhc-tabs { display: flex; gap: .5em; flex-wrap: wrap; margin: 1em 0 1.5em; }
+        #MediaHeroConfig .mhc-tabs button { margin: 0; }
+        #MediaHeroConfig .mhc-tabs button.mhc-aktiv { background: #00a4dc; color: #fff; }
+        #MediaHeroConfig .mhc-panel { display: none; }
+        #MediaHeroConfig .mhc-panel.mhc-aktiv { display: block; }
+        #MediaHeroConfig .mhc-zwei { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 2em; }
+        #MediaHeroConfig .mhc-schmal { max-width: 22em; }
+        #MediaHeroConfig .mhc-haken { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 2em; }
+        #MediaHeroConfig .mhc-hinweis { border-left: 3px solid #00a4dc; padding: .6em 1em; background: rgba(0,164,220,.08); margin: 1em 0; }
+        #MediaHeroConfig .mhc-pill { display: inline-block; padding: .15em .6em; border-radius: 1em; font-size: .85em; white-space: nowrap; }
+        #MediaHeroConfig .mhc-pill:empty { display: none; }
+        #MediaHeroConfig .mhc-ok { background: rgba(80,190,80,.2); color: #6c6; }
+        #MediaHeroConfig .mhc-warn { background: rgba(230,150,40,.2); color: #e93; }
+        #MediaHeroConfig .mhc-neutral { background: rgba(128,128,128,.25); }
 
-      <style>
-        .mh-cfg h3 { margin: 1.6em 0 .5em; font-size: 1.05em; opacity: .95; }
-        .mh-cfg .mh-zeile { display: flex; gap: 1em; flex-wrap: wrap; }
-        .mh-cfg .mh-zeile > * { flex: 1 1 210px; }
-        .mh-cfg .fieldDescription { opacity: .65; }
-        /* Keep the table deliberately narrow. At full page width there was a
-           gap of about 350 pixels between the source name and the number
-           field - you had to trace the row with your eye to see which number
-           belonged to which source. */
-        .mh-quellen { width: 100%; max-width: 30em; border-collapse: collapse; }
-        .mh-quellen th { padding: 0 .35em .25em; font-weight: 600; }
-        .mh-quellen td { padding: .05em .35em; border-bottom: 1px solid rgba(128,128,128,.14); }
-        .mh-quellen tr:last-child td { border-bottom: 0; }
-        /* Jellyfin's input fields are made for single form rows and come with
-           a lot of padding. In a ten-row list that adds up - so flatter here. */
-        .mh-quellen input[type=number] {
-          width: 4em; height: 2em; padding: 0 .1em 0 .4em;
-          font-size: .92em; line-height: 2em; margin: 0;
-        }
-        /* emby-input puts a label element in front of every field. Here it is
-           empty - the column header already says what it is about - but as an
-           inline element it still creates a full line of text above the field
-           and made every row about 20 pixels taller. */
-        .mh-quellen label.inputLabel { display: none; }
-        .mh-quellen input[type=checkbox] {
-          width: 1.05em; height: 1.05em; margin: 0;
-          accent-color: #00a4dc; cursor: pointer;
-        }
-        .mh-quellen .mh-quelle-name { white-space: nowrap; }
-        .mh-quellen .mh-quelle-name label { cursor: pointer; font-size: .94em; }
-        .mh-quellen tr.mh-aus .mh-quelle-name { opacity: .40; }
-        .mh-quellen tr.mh-aus input[type=number] {
-          opacity: .30; cursor: not-allowed; pointer-events: none;
-        }
-        .mh-vorschau-huelle {
-          position: sticky; top: .5em; z-index: 5;
-          margin: 1em 0 1.6em; padding: .7em;
-          border: 1px solid rgba(128,128,128,.28); border-radius: 10px;
-          background: rgba(0,0,0,.28);
-        }
-        .mh-vorschau-kopf {
-          display: flex; justify-content: space-between; align-items: center;
-          margin-bottom: .55em; font-size: .82em; opacity: .8;
-        }
-        #mhVorschau { min-height: 210px; }
-        .mh-hinweis { font-size: .82em; opacity: .7; margin: .35em 0 0; }
-        .mh-status { font-size: .85em; margin-left: .6em; }
-      </style>
+        /* Live preview: stays in view while you scroll through the settings. */
+        #MediaHeroConfig .mhc-vorschau { position: sticky; top: .5em; z-index: 5; margin: 1em 0 0; padding: .7em; border: 1px solid rgba(128,128,128,.28); border-radius: 10px; background: rgba(0,0,0,.28); }
+        #MediaHeroConfig .mhc-vorschau-kopf { display: flex; justify-content: space-between; align-items: center; gap: .5em; flex-wrap: wrap; margin-bottom: .55em; }
+        #MediaHeroConfig .mhc-vorschau-kopf .mhc-titel { font-size: .9em; opacity: .8; }
+        #MediaHeroConfig .mhc-vorschau-kopf button { margin: 0; padding: .4em .9em; font-size: .9em; }
+        #MediaHeroConfig .mhc-vorschau-fuss { margin-top: .5em; }
+        #MediaHeroConfig #mhVorschau { min-height: 210px; }
 
-      <form id="mhForm" class="mh-cfg">
+        /* Library and source tables. Kept narrow so the number stays close to
+           its name instead of drifting to the far edge of a wide page. */
+        #MediaHeroConfig .mhc-tabelle { overflow-x: auto; }
+        #MediaHeroConfig table.mhc-quellen { width: auto; min-width: 24em; border-collapse: collapse; }
+        #MediaHeroConfig .mhc-quellen th, #MediaHeroConfig .mhc-quellen td { text-align: left; padding: .4em .5em; border-bottom: 1px solid rgba(128,128,128,.25); vertical-align: middle; }
+        #MediaHeroConfig .mhc-quellen th { font-weight: 600; font-size: .9em; opacity: .8; }
+        #MediaHeroConfig .mhc-quellen .mhc-an { width: 2em; }
+        #MediaHeroConfig .mhc-quellen .mhc-zahl { width: 6em; }
+        #MediaHeroConfig .mhc-quellen .mhc-jahr { width: 7em; }
+        /* Jellyfin's inputs are sized for form rows; flatter inside the table. */
+        #MediaHeroConfig .mhc-quellen input[type=number] { width: 4.5em; height: 2em; padding: 0 .1em 0 .4em; font-size: .92em; line-height: 2em; margin: 0; }
+        /* emby-input adds an empty label before each field; the column header says it already. */
+        #MediaHeroConfig .mhc-quellen label.inputLabel { display: none; }
+        #MediaHeroConfig .mhc-quellen input[type=checkbox] { width: 1.05em; height: 1.05em; margin: 0; accent-color: #00a4dc; cursor: pointer; }
+        #MediaHeroConfig .mhc-quellen .mh-quelle-name { white-space: nowrap; padding-right: 2.5em; }
+        #MediaHeroConfig .mhc-quellen .mh-quelle-name label { cursor: pointer; }
+        #MediaHeroConfig .mhc-quellen tr.mh-aus .mh-quelle-name { opacity: .4; }
+        #MediaHeroConfig .mhc-quellen tr.mh-aus input[type=number] { opacity: .3; cursor: not-allowed; pointer-events: none; }
 
-        <div class="mh-vorschau-huelle">
-          <div class="mh-vorschau-kopf">
-            <span>Live preview &ndash; shows real titles from your library</span>
-            <span>
-              <button is="emby-button" type="button" id="mhNeuLaden" class="raised">Rebuild list now</button>
-            </span>
-          </div>
-          <div id="mhVorschau"></div>
-          <p class="mh-hinweis" id="mhVorschauInfo">loading &hellip;</p>
-        </div>
-
-        <h3>General</h3>
-        <label class="checkboxContainer">
-          <input is="emby-checkbox" type="checkbox" id="Enabled" />
-          <span>Show the banner</span>
-        </label>
-        <label class="checkboxContainer">
-          <input is="emby-checkbox" type="checkbox" id="HomeOnly" />
-          <span>Home screen only</span>
-        </label>
-        <label class="checkboxContainer">
-          <input is="emby-checkbox" type="checkbox" id="ShuffleResult" />
-          <span>Shuffle the order</span>
-        </label>
-        <label class="checkboxContainer">
-          <input is="emby-checkbox" type="checkbox" id="ShuffleOnLoad" />
-          <span>Reshuffle on every visit</span>
-        </label>
-        <div class="fieldDescription" style="margin:-.3em 0 .6em 2.2em">
-          &ldquo;Shuffle the order&rdquo; shuffles once when the list is built &ndash;
-          until the next build everyone sees the same order.
-          &ldquo;Reshuffle on every visit&rdquo; also shuffles in the browser, i.e. every
-          time the home screen is opened. Costs nothing: the list stays
-          cached, only its order changes.
-        </div>
-        <div class="mh-zeile">
-          <div class="inputContainer">
-            <input is="emby-input" type="number" id="CacheMinutes" min="1" max="1440"
-                   label="Rebuild list every (minutes)" />
-            <div class="fieldDescription">
-              How often the server assembles the list. In between, a page view
-              costs practically nothing.
+        #MediaHeroConfig textarea.mhc-code { font-family: monospace; font-size: .9em; }
+        #MediaHeroConfig .mhc-fuss { margin-top: 2em; }
+        #MediaHeroConfig .mhc-reihe { display: flex; gap: .8em; align-items: center; flex-wrap: wrap; margin-top: .8em; }
+        #MediaHeroConfig .mhc-reihe button { margin: 0; }
+    </style>
+    <div data-role="content">
+        <div class="content-primary">
+            <div class="verticalSection">
+                <h2 class="sectionTitle">MKI Media Hero</h2>
+                <div class="mhc-hinweis">
+                    A rotating banner with large artwork at the top of the home screen. The preview below uses your
+                    real titles and updates as you change settings. Save applies everything and rebuilds the list.
+                </div>
             </div>
-          </div>
-        </div>
 
-        <h3>Libraries</h3>
-        <table class="mh-quellen">
-          <thead class="mh-quellen-kopf"><tr>
-            <th style="width:2em;text-align:left">On</th>
-            <th style="text-align:left">Library</th>
-            <th style="width:6em;text-align:left">Count</th>
-          </tr></thead>
-          <tbody id="mhBibliotheken"></tbody>
-        </table>
-        <p class="mh-hinweis">
-          <b>Count</b> = how many items from this library should appear in the banner
-          &ndash; a <b>target</b>, not a cap. The build keeps searching the sources until
-          every library has reached its number, and then takes no more. For Seerr this
-          means loading further pages (at most 25 pages, i.e. 500 titles &ndash; the list
-          has nothing beyond that).
-          <br>Example: Movies 10, Series 10, Anime 10 gives a banner with ten current
-          titles from each library.
-        </p>
+            <form id="mhForm">
+                <div class="mhc-vorschau">
+                    <div class="mhc-vorschau-kopf">
+                        <span class="mhc-titel">Live preview</span>
+                        <button is="emby-button" type="button" id="mhNeuLaden" class="raised emby-button">Rebuild list now</button>
+                    </div>
+                    <div id="mhVorschau"></div>
+                    <div class="mhc-vorschau-fuss"><span class="mhc-pill mhc-neutral" id="mhVorschauInfo">Loading &hellip;</span></div>
+                </div>
 
-        <h3>Sources</h3>
-        <table class="mh-quellen">
-          <thead class="mh-quellen-kopf"><tr>
-            <th style="width:2em;text-align:left">On</th>
-            <th style="text-align:left">Source</th>
-            <th style="width:6em;text-align:left">Count</th>
-            <th style="width:7em;text-align:left">From year</th>
-          </tr></thead>
-          <tbody id="mhQuellen"></tbody>
-        </table>
-        <p class="mh-hinweis">
-          <b>Count</b> = the <b>maximum</b> number of items this source contributes
-          &ndash; an upper limit. Sources are queried in this order until all library
-          targets are met. Example: three libraries at 10 each and &ldquo;Trending&rdquo;
-          at 30 &ndash; that one source can deliver everything. At 15, the next ticked
-          source has to contribute the rest.
-          <br><b>From year</b> = only titles released in or after this year, 0 = all.
-          Useful for &ldquo;Recently added&rdquo;: that means the import date, which also
-          jumps when only the record was rewritten &ndash; and suddenly a film from
-          1979 is at the top.
-        </p>
+                <div class="mhc-tabs">
+                    <button is="emby-button" type="button" class="raised emby-button mhc-aktiv" data-tab="quellen"><span>Sources &amp; libraries</span></button>
+                    <button is="emby-button" type="button" class="raised emby-button" data-tab="filter"><span>Filters</span></button>
+                    <button is="emby-button" type="button" class="raised emby-button" data-tab="aussehen"><span>Look</span></button>
+                    <button is="emby-button" type="button" class="raised emby-button" data-tab="inhalt"><span>Content &amp; buttons</span></button>
+                    <button is="emby-button" type="button" class="raised emby-button" data-tab="verhalten"><span>Behavior</span></button>
+                    <button is="emby-button" type="button" class="raised emby-button" data-tab="css"><span>Custom CSS</span></button>
+                </div>
 
-        <h3>Seerr</h3>
-        <div class="mh-zeile">
-          <div class="inputContainer">
-            <input is="emby-input" type="text" id="JellyseerrUrl"
-                   label="Address" placeholder="http://192.168.1.10:5055" />
-          </div>
-          <div class="inputContainer">
-            <input is="emby-input" type="password" id="JellyseerrApiKey" label="API key" />
-          </div>
-        </div>
-        <div class="mh-zeile">
-          <div class="inputContainer">
-            <input is="emby-input" type="number" id="JellyseerrMinPopularity" min="0"
-                   label="Minimum popularity" />
-          </div>
-        </div>
-        <label class="checkboxContainer">
-          <input is="emby-checkbox" type="checkbox" id="JellyseerrOnlyInLibrary" />
-          <span>Only show titles that are in the library</span>
-        </label>
-        <p class="mh-hinweis">
-          Matching uses the TMDB id, not the title.
-          Without this option the banner shows things that cannot be played.
-        </p>
+                <!-- Sources & libraries -->
+                <div class="mhc-panel mhc-aktiv" data-panel="quellen">
+                    <div class="verticalSection">
+                        <h3>Banner</h3>
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="Enabled" /><span>Show the banner</span></label>
+                        </div>
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="HomeOnly" /><span>Home screen only</span></label>
+                        </div>
+                    </div>
 
-        <h3>Filters</h3>
-        <div class="mh-zeile">
-          <div class="inputContainer">
-            <input is="emby-input" type="number" id="MinCommunityRating" min="0" max="10" step="0.1"
-                   label="Minimum rating" />
-          </div>
-          <div class="inputContainer">
-            <input is="emby-input" type="number" id="MinProductionYear" min="0" max="2100"
-                   label="Earliest year" />
-          </div>
-        </div>
-        <label class="checkboxContainer">
-          <input is="emby-checkbox" type="checkbox" id="RequireBackdrop" />
-          <span>Only items with a backdrop</span>
-        </label>
-        <label class="checkboxContainer">
-          <input is="emby-checkbox" type="checkbox" id="RequireLogo" />
-          <span>Only items with a logo</span>
-        </label>
-        <div class="mh-zeile">
-          <div class="selectContainer">
-            <select is="emby-select" id="MinBackdropWidth" label="Minimum backdrop resolution">
-              <option value="0">Any</option>
-              <option value="1280">1280 px and up (720p)</option>
-              <option value="1920">1920 px and up (1080p)</option>
-              <option value="2560">2560 px and up (1440p)</option>
-              <option value="3840">3840 px and up (2160p)</option>
-            </select>
-            <div class="fieldDescription">
-              Applies to the displayed image, not the video. A small backdrop
-              stretched across the full width looks blurry. Items whose image
-              size has not been recorded yet are kept.
-            </div>
-          </div>
-        </div>
-        <div class="mh-zeile">
-          <div class="inputContainer">
-            <label class="inputLabel inputLabelUnfocused" for="TitleWhitelist">Title whitelist</label>
-            <textarea is="emby-textarea" class="emby-input" id="TitleWhitelist" rows="3"
-                      placeholder="One entry per line&#10;Dune&#10;Breaking Bad"></textarea>
-            <div class="fieldDescription">
-              One entry per line. Series title or item id. Leave empty for
-              no restriction.
-            </div>
-          </div>
-          <div class="inputContainer">
-            <label class="inputLabel inputLabelUnfocused" for="TitleBlacklist">Title blacklist</label>
-            <textarea is="emby-textarea" class="emby-input" id="TitleBlacklist" rows="3"></textarea>
-          </div>
-        </div>
-        <div class="mh-zeile">
-          <div class="inputContainer">
-            <label class="inputLabel inputLabelUnfocused" for="GenreWhitelist">Genre whitelist</label>
-            <textarea is="emby-textarea" class="emby-input" id="GenreWhitelist" rows="3"></textarea>
-          </div>
-          <div class="inputContainer">
-            <label class="inputLabel inputLabelUnfocused" for="GenreBlacklist">Genre blacklist</label>
-            <textarea is="emby-textarea" class="emby-input" id="GenreBlacklist" rows="3"></textarea>
-          </div>
-        </div>
-        <div class="mh-zeile">
-          <div class="inputContainer">
-            <label class="inputLabel inputLabelUnfocused" for="TagWhitelist">Tag whitelist</label>
-            <textarea is="emby-textarea" class="emby-input" id="TagWhitelist" rows="2"></textarea>
-          </div>
-          <div class="inputContainer">
-            <label class="inputLabel inputLabelUnfocused" for="TagBlacklist">Tag blacklist</label>
-            <textarea is="emby-textarea" class="emby-input" id="TagBlacklist" rows="2"></textarea>
-          </div>
-        </div>
-        <div class="mh-zeile">
-          <div class="inputContainer">
-            <label class="inputLabel inputLabelUnfocused" for="OfficialRatingBlacklist">Blocked content ratings (e.g. XXX)</label>
-            <textarea is="emby-textarea" class="emby-input" id="OfficialRatingBlacklist" rows="2"></textarea>
-          </div>
-          <div class="inputContainer">
-            <label class="inputLabel inputLabelUnfocused">Media types</label>
-            <div id="mhTypen" style="padding-top:.3em"></div>
-            <div class="fieldDescription">
-              What may appear in the banner. Single episodes and music are
-              deliberately excluded &ndash; they lack the large backdrops.
-            </div>
-          </div>
-        </div>
+                    <div class="verticalSection">
+                        <h3>Libraries</h3>
+                        <p class="fieldDescription">
+                            Tick the libraries to show. <b>Count</b> is a target, not a cap: the build keeps searching the
+                            sources until each library has its number. Example: Movies 10, Series 10 gives ten titles of each.
+                        </p>
+                        <div class="mhc-tabelle">
+                            <table class="mhc-quellen">
+                                <thead><tr><th class="mhc-an">On</th><th>Library</th><th class="mhc-zahl">Count</th></tr></thead>
+                                <tbody id="mhBibliotheken"></tbody>
+                            </table>
+                        </div>
+                    </div>
 
-        <h3>Appearance</h3>
-        <div class="mh-zeile">
-          <div class="selectContainer">
-            <select is="emby-select" id="Layout" label="Layout">
-              <option value="Fullwidth">Full width</option>
-              <option value="Contained">Inset</option>
-              <option value="Compact">Compact</option>
-              <option value="PosterLeft">Poster left</option>
-              <option value="Centered">Centered</option>
-            </select>
-          </div>
-          <div class="selectContainer">
-            <select is="emby-select" id="Transition" label="Transition">
-              <option value="Fade">Fade</option>
-              <option value="Slide">Slide</option>
-              <option value="KenBurns">Ken Burns</option>
-              <option value="None">None</option>
-            </select>
-          </div>
-          <div class="selectContainer">
-            <select is="emby-select" id="Indicator" label="Position indicator">
-              <option value="Dots">Dots</option>
-              <option value="Thumbnails">Thumbnails</option>
-              <option value="ProgressBar">Progress bar</option>
-              <option value="Numbers">Numbers</option>
-              <option value="None">None</option>
-            </select>
-          </div>
-        </div>
-        <div class="mh-zeile">
-          <div class="inputContainer">
-            <input is="emby-input" type="number" id="HeightVh" min="20" max="90" label="Height (% of window)" />
-          </div>
-          <div class="inputContainer">
-            <input is="emby-input" type="number" id="MaxHeightPx" min="200" max="1400" label="Maximum height (px)" />
-          </div>
-          <div class="inputContainer">
-            <input is="emby-input" type="number" id="CornerRadius" min="0" max="40" label="Corner radius (px)" />
-          </div>
-          <div class="inputContainer">
-            <input is="emby-input" type="number" id="ScrimStrength" min="0" max="100" label="Scrim strength (%)" />
-          </div>
-          <div class="inputContainer">
-            <input is="emby-input" type="number" id="BottomFadePercent" min="0" max="60"
-                   label="Fade out at the bottom (%)" />
-            <div class="fieldDescription">
-              0 = hard edge as before. Higher values blend the image into the
-              page. Text and buttons stay fully visible.
-            </div>
-          </div>
-        </div>
-        <div class="mh-zeile">
-          <div>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="BlendIntoHeader" /><span>Extend behind the header bar</span></label>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowLogo" /><span>Logo</span></label>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowTitleWhenNoLogo" /><span>Title when there is no logo</span></label>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowOverview" /><span>Description</span></label>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowYear" /><span>Year</span></label>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowRating" /><span>Rating</span></label>
-          </div>
-          <div>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowRuntime" /><span>Runtime</span></label>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowGenres" /><span>Genres</span></label>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowOfficialRating" /><span>Content rating</span></label>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowPlayButton" /><span>Play button</span></label>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowDetailsButton" /><span>Details button</span></label>
-          </div>
-          <div>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowTrailerButton" /><span>Trailer button</span></label>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowFavoriteButton" /><span>Favorite button</span></label>
-            <div class="inputContainer">
-              <input is="emby-input" type="number" id="OverviewLines" min="1" max="8" label="Description lines" />
-            </div>
-          </div>
-        </div>
+                    <div class="verticalSection">
+                        <h3>Sources</h3>
+                        <p class="fieldDescription">
+                            Asked top to bottom until every library target is met. <b>Count</b> is the most a source adds.
+                            <b>From year</b> keeps only titles released in or after that year (0 = any). Handy for
+                            &ldquo;Recently added&rdquo;, where a re-imported old film can otherwise jump to the top.
+                            Seerr sources load at most 25 pages (500 titles).
+                        </p>
+                        <div class="mhc-tabelle">
+                            <table class="mhc-quellen">
+                                <thead><tr><th class="mhc-an">On</th><th>Source</th><th class="mhc-zahl">Count</th><th class="mhc-jahr">From year</th></tr></thead>
+                                <tbody id="mhQuellen"></tbody>
+                            </table>
+                        </div>
+                    </div>
 
-        <h3>Sizes and spacing</h3>
-        <p class="mh-hinweis">
-          Everything in percent of the banner area &ndash; so it looks the same on
-          a TV as on a phone. The preview above shows every change
-          immediately.
-        </p>
-        <div class="mh-zeile">
-          <div class="inputContainer">
-            <input is="emby-input" type="number" id="LogoMaxWidthPercent" min="5" max="90"
-                   label="Logo: maximum width (%)" />
-          </div>
-          <div class="inputContainer">
-            <input is="emby-input" type="number" id="LogoMaxHeightPercent" min="5" max="90"
-                   label="Logo: maximum height (%)" />
-          </div>
-        </div>
-        <div class="mh-zeile">
-          <div class="inputContainer">
-            <input is="emby-input" type="number" id="TextLeftPercent" min="0" max="60"
-                   label="Text block: offset from left (%)" />
-          </div>
-          <div class="inputContainer">
-            <input is="emby-input" type="number" id="TextBottomPercent" min="0" max="60"
-                   label="Text block: offset from bottom (%)" />
-          </div>
-          <div class="inputContainer">
-            <input is="emby-input" type="number" id="TextWidthPercent" min="15" max="95"
-                   label="Text block: width (%)" />
-          </div>
-        </div>
-        <div class="mh-zeile">
-          <div class="inputContainer">
-            <input is="emby-input" type="number" id="ElementGap" min="0" max="30"
-                   label="Spacing between blocks" />
-            <div class="fieldDescription">In tenths of an em: 7 equals 0.7 em.</div>
-          </div>
-          <div class="inputContainer">
-            <input is="emby-input" type="number" id="TitleScale" min="40" max="250"
-                   label="Title size (%)" />
-          </div>
-          <div class="inputContainer">
-            <input is="emby-input" type="number" id="TextScale" min="40" max="250"
-                   label="Text size (%)" />
-          </div>
-          <div class="inputContainer">
-            <input is="emby-input" type="number" id="ButtonScale" min="40" max="250"
-                   label="Buttons (%)" />
-          </div>
-        </div>
+                    <div class="verticalSection">
+                        <h3>Seerr</h3>
+                        <p class="fieldDescription">Only needed for the Seerr sources above.</p>
+                        <div class="mhc-zwei">
+                            <div class="inputContainer">
+                                <input is="emby-input" type="text" id="JellyseerrUrl" label="Address" placeholder="http://192.168.1.10:5055" />
+                            </div>
+                            <div class="inputContainer">
+                                <input is="emby-input" type="password" id="JellyseerrApiKey" label="API key" />
+                            </div>
+                            <div class="inputContainer">
+                                <input is="emby-input" type="number" id="JellyseerrMinPopularity" min="0" label="Minimum popularity" />
+                            </div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="JellyseerrOnlyInLibrary" /><span>Only titles that are in your library</span></label>
+                            <div class="fieldDescription checkboxFieldDescription">Matched by TMDB id, not by title. Without this the banner can show things nobody can play.</div>
+                        </div>
+                    </div>
+                </div>
 
-        <h3>Behavior</h3>
-        <div class="mh-zeile">
-          <div>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="Autoplay" /><span>Advance automatically</span></label>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="PauseOnHover" /><span>Pause on hover</span></label>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="EnableKeyboard" /><span>Arrow keys</span></label>
-          </div>
-          <div>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="EnableSwipe" /><span>Swipe</span></label>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="RespectReducedMotion" /><span>Respect the system&rsquo;s reduced-motion setting</span></label>
-            <div class="inputContainer">
-              <input is="emby-input" type="number" id="IntervalSeconds" min="2" max="120" label="Change every (seconds)" />
-            </div>
-          </div>
-        </div>
+                <!-- Filters -->
+                <div class="mhc-panel" data-panel="filter">
+                    <div class="verticalSection">
+                        <h3>Quality</h3>
+                        <div class="mhc-zwei">
+                            <div class="inputContainer">
+                                <input is="emby-input" type="number" id="MinCommunityRating" min="0" max="10" step="0.1" label="Minimum rating" />
+                            </div>
+                            <div class="inputContainer">
+                                <input is="emby-input" type="number" id="MinProductionYear" min="0" max="2100" label="Earliest year" />
+                            </div>
+                        </div>
+                        <div class="selectContainer mhc-schmal">
+                            <select is="emby-select" id="MinBackdropWidth" label="Minimum backdrop resolution" class="emby-select-withcolor emby-select">
+                                <option value="0">Any</option>
+                                <option value="1280">1280 px and up (720p)</option>
+                                <option value="1920">1920 px and up (1080p)</option>
+                                <option value="2560">2560 px and up (1440p)</option>
+                                <option value="3840">3840 px and up (2160p)</option>
+                            </select>
+                            <div class="fieldDescription">Refers to the image, not the video. Small backdrops look blurry at full width. Items with an unknown image size are kept.</div>
+                        </div>
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="RequireBackdrop" /><span>Only items with a backdrop</span></label>
+                        </div>
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="RequireLogo" /><span>Only items with a logo</span></label>
+                        </div>
+                    </div>
 
-        <h3>Custom CSS</h3>
-        <div class="inputContainer">
-          <label class="inputLabel inputLabelUnfocused" for="CustomCss">Loaded in addition to the built-in styles</label>
-            <textarea is="emby-textarea" class="emby-input" id="CustomCss" rows="4"></textarea>
-        </div>
+                    <div class="verticalSection">
+                        <h3>Media types</h3>
+                        <p class="fieldDescription">Single episodes and music are left out on purpose: they lack large backdrops.</p>
+                        <div id="mhTypen"></div>
+                    </div>
 
-        <div style="margin-top:1.6em">
-          <button is="emby-button" type="submit" class="raised button-submit">
-            <span>Save</span>
-          </button>
-          <button is="emby-button" type="button" id="mhNeuLaden2" class="raised">
-            <span>Rebuild list now</span>
-          </button>
-          <span class="mh-status" id="mhStatus"></span>
-          <div class="fieldDescription" style="margin-top:.6em">
-            Save applies the settings and rebuilds the list anyway.
-            The second button is for when only the library has changed
-            &ndash; for example after an import.
-          </div>
+                    <div class="verticalSection">
+                        <h3>Allow and block lists</h3>
+                        <p class="fieldDescription">One entry per line. Leave a list empty for no restriction. Title lists also accept an item id.</p>
+                        <div class="mhc-zwei">
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="TitleWhitelist">Title whitelist</label>
+                                <textarea is="emby-textarea" class="emby-textarea" id="TitleWhitelist" rows="3" placeholder="Dune&#10;Breaking Bad"></textarea>
+                            </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="TitleBlacklist">Title blacklist</label>
+                                <textarea is="emby-textarea" class="emby-textarea" id="TitleBlacklist" rows="3"></textarea>
+                            </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="GenreWhitelist">Genre whitelist</label>
+                                <textarea is="emby-textarea" class="emby-textarea" id="GenreWhitelist" rows="3"></textarea>
+                            </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="GenreBlacklist">Genre blacklist</label>
+                                <textarea is="emby-textarea" class="emby-textarea" id="GenreBlacklist" rows="3"></textarea>
+                            </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="TagWhitelist">Tag whitelist</label>
+                                <textarea is="emby-textarea" class="emby-textarea" id="TagWhitelist" rows="2"></textarea>
+                            </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="TagBlacklist">Tag blacklist</label>
+                                <textarea is="emby-textarea" class="emby-textarea" id="TagBlacklist" rows="2"></textarea>
+                            </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="OfficialRatingBlacklist">Blocked content ratings</label>
+                                <textarea is="emby-textarea" class="emby-textarea" id="OfficialRatingBlacklist" rows="2" placeholder="XXX"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Look -->
+                <div class="mhc-panel" data-panel="aussehen">
+                    <div class="verticalSection">
+                        <h3>Style</h3>
+                        <div class="mhc-zwei">
+                            <div class="selectContainer">
+                                <select is="emby-select" id="Layout" label="Layout" class="emby-select-withcolor emby-select">
+                                    <option value="Fullwidth">Full width</option>
+                                    <option value="Contained">Inset</option>
+                                    <option value="Compact">Compact</option>
+                                    <option value="PosterLeft">Poster left</option>
+                                    <option value="Centered">Centered</option>
+                                </select>
+                            </div>
+                            <div class="selectContainer">
+                                <select is="emby-select" id="Transition" label="Transition" class="emby-select-withcolor emby-select">
+                                    <option value="Fade">Fade</option>
+                                    <option value="Slide">Slide</option>
+                                    <option value="KenBurns">Ken Burns</option>
+                                    <option value="None">None</option>
+                                </select>
+                            </div>
+                            <div class="selectContainer">
+                                <select is="emby-select" id="Indicator" label="Position indicator" class="emby-select-withcolor emby-select">
+                                    <option value="Dots">Dots</option>
+                                    <option value="Thumbnails">Thumbnails</option>
+                                    <option value="ProgressBar">Progress bar</option>
+                                    <option value="Numbers">Numbers</option>
+                                    <option value="None">None</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="verticalSection">
+                        <h3>Size and shape</h3>
+                        <div class="mhc-zwei">
+                            <div class="inputContainer">
+                                <input is="emby-input" type="number" id="HeightVh" min="20" max="90" label="Height (% of window)" />
+                            </div>
+                            <div class="inputContainer">
+                                <input is="emby-input" type="number" id="MaxHeightPx" min="200" max="1400" label="Maximum height (px)" />
+                            </div>
+                            <div class="inputContainer">
+                                <input is="emby-input" type="number" id="CornerRadius" min="0" max="40" label="Corner radius (px)" />
+                            </div>
+                        </div>
+                        <div class="mhc-zwei">
+                            <div class="inputContainer">
+                                <input is="emby-input" type="number" id="ScrimStrength" min="0" max="100" label="Scrim strength (%)" />
+                                <div class="fieldDescription">Darkening behind the text.</div>
+                            </div>
+                            <div class="inputContainer">
+                                <input is="emby-input" type="number" id="BottomFadePercent" min="0" max="60" label="Fade out at the bottom (%)" />
+                                <div class="fieldDescription">0 = hard edge. Higher values blend the image into the page.</div>
+                            </div>
+                        </div>
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="BlendIntoHeader" /><span>Extend behind the header bar</span></label>
+                        </div>
+                    </div>
+
+                    <div class="verticalSection">
+                        <h3>Sizes and spacing</h3>
+                        <p class="fieldDescription">In percent of the banner, so it looks the same on a TV and on a phone.</p>
+                        <div class="mhc-zwei">
+                            <div class="inputContainer">
+                                <input is="emby-input" type="number" id="LogoMaxWidthPercent" min="5" max="90" label="Logo: maximum width (%)" />
+                            </div>
+                            <div class="inputContainer">
+                                <input is="emby-input" type="number" id="LogoMaxHeightPercent" min="5" max="90" label="Logo: maximum height (%)" />
+                            </div>
+                        </div>
+                        <div class="mhc-zwei">
+                            <div class="inputContainer">
+                                <input is="emby-input" type="number" id="TextLeftPercent" min="0" max="60" label="Text: offset from left (%)" />
+                            </div>
+                            <div class="inputContainer">
+                                <input is="emby-input" type="number" id="TextBottomPercent" min="0" max="60" label="Text: offset from bottom (%)" />
+                            </div>
+                            <div class="inputContainer">
+                                <input is="emby-input" type="number" id="TextWidthPercent" min="15" max="95" label="Text: width (%)" />
+                            </div>
+                        </div>
+                        <div class="mhc-zwei">
+                            <div class="inputContainer">
+                                <input is="emby-input" type="number" id="TitleScale" min="40" max="250" label="Title size (%)" />
+                            </div>
+                            <div class="inputContainer">
+                                <input is="emby-input" type="number" id="TextScale" min="40" max="250" label="Text size (%)" />
+                            </div>
+                            <div class="inputContainer">
+                                <input is="emby-input" type="number" id="ButtonScale" min="40" max="250" label="Button size (%)" />
+                            </div>
+                            <div class="inputContainer">
+                                <input is="emby-input" type="number" id="ElementGap" min="0" max="30" label="Spacing between blocks" />
+                                <div class="fieldDescription">In tenths of an em: 7 = 0.7 em.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content & buttons -->
+                <div class="mhc-panel" data-panel="inhalt">
+                    <div class="verticalSection">
+                        <h3>Text and details</h3>
+                        <div class="mhc-haken">
+                            <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ShowLogo" /><span>Logo</span></label></div>
+                            <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ShowTitleWhenNoLogo" /><span>Title when there is no logo</span></label></div>
+                            <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ShowOverview" /><span>Description</span></label></div>
+                            <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ShowYear" /><span>Year</span></label></div>
+                            <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ShowRating" /><span>Rating</span></label></div>
+                            <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ShowRuntime" /><span>Runtime</span></label></div>
+                            <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ShowGenres" /><span>Genres</span></label></div>
+                            <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ShowOfficialRating" /><span>Content rating</span></label></div>
+                        </div>
+                        <div class="inputContainer mhc-schmal">
+                            <input is="emby-input" type="number" id="OverviewLines" min="1" max="8" label="Description lines" />
+                        </div>
+                    </div>
+
+                    <div class="verticalSection">
+                        <h3>Buttons</h3>
+                        <div class="mhc-haken">
+                            <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ShowPlayButton" /><span>Play</span></label></div>
+                            <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ShowDetailsButton" /><span>Details</span></label></div>
+                            <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ShowTrailerButton" /><span>Trailer</span></label></div>
+                            <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ShowFavoriteButton" /><span>Favorite</span></label></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Behavior -->
+                <div class="mhc-panel" data-panel="verhalten">
+                    <div class="verticalSection">
+                        <h3>Slideshow</h3>
+                        <div class="inputContainer mhc-schmal">
+                            <input is="emby-input" type="number" id="IntervalSeconds" min="2" max="120" label="Change every (seconds)" />
+                        </div>
+                        <div class="mhc-haken">
+                            <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="Autoplay" /><span>Advance automatically</span></label></div>
+                            <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="PauseOnHover" /><span>Pause on hover</span></label></div>
+                            <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="EnableKeyboard" /><span>Arrow keys</span></label></div>
+                            <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="EnableSwipe" /><span>Swipe</span></label></div>
+                        </div>
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="RespectReducedMotion" /><span>Respect the system&rsquo;s reduced-motion setting</span></label>
+                        </div>
+                    </div>
+
+                    <div class="verticalSection">
+                        <h3>List and order</h3>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ShuffleResult" /><span>Shuffle the order</span></label>
+                            <div class="fieldDescription checkboxFieldDescription">Once per build. Everyone sees the same order until the next build.</div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ShuffleOnLoad" /><span>Reshuffle on every visit</span></label>
+                            <div class="fieldDescription checkboxFieldDescription">Shuffles again in the browser each time the home screen opens. Costs nothing: the list stays cached.</div>
+                        </div>
+                        <div class="inputContainer mhc-schmal">
+                            <input is="emby-input" type="number" id="CacheMinutes" min="1" max="1440" label="Rebuild list every (minutes)" />
+                            <div class="fieldDescription">How often the server builds the list. Page views in between cost practically nothing.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custom CSS -->
+                <div class="mhc-panel" data-panel="css">
+                    <div class="verticalSection">
+                        <h3>Custom CSS</h3>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="CustomCss">Loaded after the built-in styles</label>
+                            <textarea is="emby-textarea" class="emby-textarea mhc-code" id="CustomCss" rows="10" spellcheck="false"></textarea>
+                            <div class="fieldDescription">Applies to the banner and to the preview above.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mhc-fuss">
+                    <button is="emby-button" type="submit" class="raised button-submit block emby-button"><span>Save</span></button>
+                    <div class="mhc-reihe">
+                        <button is="emby-button" type="button" id="mhNeuLaden2" class="raised emby-button"><span>Rebuild list now</span></button>
+                        <span class="mhc-pill mhc-ok" id="mhStatus"></span>
+                    </div>
+                    <div class="fieldDescription" style="margin-top:.6em">
+                        Save also rebuilds the list. Use &ldquo;Rebuild list now&rdquo; when only the library changed, for example after an import.
+                    </div>
+                </div>
+            </form>
         </div>
-      </form>
     </div>
-  </div>
-
 
 <script type="text/javascript">
 (function () {
@@ -462,6 +452,25 @@
 
   function $(id) { return seite.querySelector('#' + id); }
 
+  /* Status pill: ok / warn / neutral. An empty text hides the pill. */
+  function pille(id, art, text) {
+    var e = $(id);
+    e.className = 'mhc-pill mhc-' + art;
+    e.textContent = text;
+  }
+
+  /* Tabs, same pattern as the other MKI plugins. */
+  (function () {
+    var p = document.querySelector('#MediaHeroConfig');
+    Array.prototype.forEach.call(p.querySelectorAll('.mhc-tabs button'), function (b) {
+      b.addEventListener('click', function () {
+        Array.prototype.forEach.call(p.querySelectorAll('.mhc-tabs button, .mhc-panel'), function (e) {
+          e.classList.toggle('mhc-aktiv', e.getAttribute('data-tab') === b.getAttribute('data-tab') || e.getAttribute('data-panel') === b.getAttribute('data-tab'));
+        });
+      });
+    });
+  })();
+
   /* An unticked source contributes nothing - so its count is meaningless.
      Grey out the row and lock the number field instead of letting the user
      look for a 0 that does not exist. */
@@ -489,12 +498,12 @@
          name clickable. */
       var kennung = 'mhq-' + q[0];
       tr.innerHTML =
-        '<td style="width:2em"><input type="checkbox" id="' + kennung + '" '
+        '<td class="mhc-an"><input type="checkbox" id="' + kennung + '" '
         + 'data-q="' + q[0] + '" ' + (vorhanden.Enabled ? 'checked' : '') + ' /></td>'
         + '<td class="mh-quelle-name"><label for="' + kennung + '">' + q[1] + '</label></td>'
-        + '<td style="width:6em"><input type="number" min="1" max="40" is="emby-input" '
+        + '<td class="mhc-zahl"><input type="number" min="1" max="40" is="emby-input" '
         + 'data-take="' + q[0] + '" value="' + (vorhanden.Take || 8) + '" /></td>'
-        + '<td style="width:7em"><input type="number" min="0" max="2100" is="emby-input" '
+        + '<td class="mhc-jahr"><input type="number" min="0" max="2100" is="emby-input" '
         + 'data-jahr="' + q[0] + '" value="' + (vorhanden.MinYear || 0) + '" /></td>';
       tb.appendChild(tr);
       zeileAktualisieren(tr);
@@ -517,7 +526,7 @@
      on with 10 each. */
   function bibliothekenZeichnen(gespeichert) {
     var tb = $('mhBibliotheken');
-    tb.innerHTML = '<tr><td colspan="3" style="opacity:.6">loading &hellip;</td></tr>';
+    tb.innerHTML = '<tr><td colspan="3" style="opacity:.6">Loading &hellip;</td></tr>';
     var alt = {};
     (gespeichert || []).forEach(function (b) {
       alt[String(b.Id || '').replace(/-/g, '').toLowerCase()] = b;
@@ -533,11 +542,11 @@
         var kennung = 'mhb-' + id;
         var tr = document.createElement('tr');
         tr.innerHTML =
-          '<td style="width:2em"><input type="checkbox" id="' + kennung + '" data-lib="' + id + '"'
+          '<td class="mhc-an"><input type="checkbox" id="' + kennung + '" data-lib="' + id + '"'
           + ' data-name="' + (b.Name || id).replace(/"/g, '&quot;') + '"'
           + (v.Enabled ? ' checked' : '') + ' /></td>'
           + '<td class="mh-quelle-name"><label for="' + kennung + '">' + (b.Name || id) + '</label></td>'
-          + '<td style="width:6em"><input type="number" min="1" max="40" is="emby-input" '
+          + '<td class="mhc-zahl"><input type="number" min="1" max="40" is="emby-input" '
           + 'data-lib-take="' + id + '" value="' + (v.Count || 10) + '" /></td>';
         tb.appendChild(tr);
         bibZeileAktualisieren(tr);
@@ -564,12 +573,13 @@
     var ziel = $('mhTypen');
     ziel.innerHTML = '';
     MEDIENARTEN.forEach(function (t) {
-      var l = document.createElement('label');
-      l.className = 'checkboxContainer';
-      l.innerHTML = '<input is="emby-checkbox" type="checkbox" data-typ="' + t[0] + '"'
+      var d = document.createElement('div');
+      d.className = 'checkboxContainer';
+      d.innerHTML = '<label class="emby-checkbox-label">'
+        + '<input is="emby-checkbox" type="checkbox" data-typ="' + t[0] + '"'
         + ((gewaehlt || []).indexOf(t[0]) !== -1 ? ' checked' : '') + ' />'
-        + '<span>' + t[1] + '</span>';
-      ziel.appendChild(l);
+        + '<span>' + t[1] + '</span></label>';
+      ziel.appendChild(d);
     });
     ziel.querySelectorAll('input').forEach(function (i) {
       i.addEventListener('change', vorschauAuffrischen);
@@ -675,11 +685,10 @@
       itemsHolen(false).then(function (list) {
         var ziel = $('mhVorschau');
         if (laufend && laufend.zerstoeren) laufend.zerstoeren();
-        if (!window.MediaHero) { $('mhVorschauInfo').textContent = 'Render script not loaded'; return; }
+        if (!window.MediaHero) { pille('mhVorschauInfo', 'warn', 'Render script not loaded'); return; }
         laufend = window.MediaHero.render(ziel, list, anzeigeAusFormular(), { vorschau: true });
-        $('mhVorschauInfo').textContent = list.length
-          ? list.length + ' items in the list'
-          : 'No items - sources enabled? Filters too strict?';
+        if (list.length) pille('mhVorschauInfo', 'ok', list.length + ' items in the list');
+        else pille('mhVorschauInfo', 'warn', 'No items. Sources ticked? Filters too strict?');
       });
     }, 180);
   }
@@ -712,14 +721,15 @@
       function neuBauen(knopf) {
         var alt = knopf ? knopf.textContent : '';
         if (knopf) { knopf.disabled = true; knopf.textContent = 'Rebuilding …'; }
-        $('mhStatus').textContent = '';
+        pille('mhStatus', 'ok', '');
         return ApiClient.ajax({ type: 'POST', url: ApiClient.getUrl('MediaHero/refresh') })
           .catch(function () { })
           .then(function () { return itemsHolen(true); })
           .then(function (liste) {
             vorschauAuffrischen();
-            $('mhStatus').textContent = 'Rebuilt: ' + (liste || []).length + ' items';
-            setTimeout(function () { $('mhStatus').textContent = ''; }, 4000);
+            var n = (liste || []).length;
+            pille('mhStatus', n ? 'ok' : 'warn', 'Rebuilt: ' + n + ' items');
+            setTimeout(function () { pille('mhStatus', 'ok', ''); }, 4000);
           })
           .then(function () {
             if (knopf) { knopf.disabled = false; knopf.textContent = alt; }
@@ -745,8 +755,8 @@
       return ApiClient.ajax({ type: 'POST', url: ApiClient.getUrl('MediaHero/refresh') })
         .catch(function () { });
     }).then(function () {
-      $('mhStatus').textContent = 'Saved';
-      setTimeout(function () { $('mhStatus').textContent = ''; }, 2500);
+      pille('mhStatus', 'ok', 'Saved');
+      setTimeout(function () { pille('mhStatus', 'ok', ''); }, 2500);
       itemsHolen(true).then(vorschauAuffrischen);
     });
     return false;

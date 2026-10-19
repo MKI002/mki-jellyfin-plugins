@@ -1,242 +1,242 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>MKI Seerr Bridge</title>
+    <meta charset="utf-8" />
+    <title>MKI Seerr Bridge</title>
 </head>
 <body>
-  <div id="SeerrBridgeConfig" data-role="page" class="page type-interior pluginConfigurationPage">
+<div id="SeerrBridgeConfig" data-role="page" class="page type-interior pluginConfigurationPage">
+    <style>
+        #SeerrBridgeConfig .sb-tabs { display: flex; gap: .5em; flex-wrap: wrap; margin: 1em 0 1.5em; }
+        #SeerrBridgeConfig .sb-tabs button { margin: 0; }
+        #SeerrBridgeConfig .sb-tabs button.sb-aktiv { background: #00a4dc; color: #fff; }
+        #SeerrBridgeConfig .sb-panel { display: none; }
+        #SeerrBridgeConfig .sb-panel.sb-aktiv { display: block; }
+        #SeerrBridgeConfig .sb-zwei { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 2em; }
+        #SeerrBridgeConfig .sb-hinweis { border-left: 3px solid #00a4dc; padding: .6em 1em; background: rgba(0,164,220,.08); margin: 1em 0; }
+        #SeerrBridgeConfig .sb-pruefen { display: flex; gap: .8em; align-items: center; flex-wrap: wrap; margin: .5em 0 1em; }
+        #SeerrBridgeConfig .sb-pruefen button { margin: 0; }
+        #SeerrBridgeConfig .sb-marke { display: inline-block; padding: .15em .7em; border-radius: 1em; font-size: .85em; white-space: nowrap; }
+        #SeerrBridgeConfig .sb-ok { background: rgba(80,190,80,.2); color: #6c6; }
+        #SeerrBridgeConfig .sb-fehler { background: rgba(220,60,60,.2); color: #e55; }
+        #SeerrBridgeConfig .sb-neutral { background: rgba(128,128,128,.25); }
+        #SeerrBridgeConfig .sb-meldung { flex: 1 1 240px; opacity: .8; font-size: .9em; }
+        #SeerrBridgeConfig code { font-size: .92em; }
+    </style>
     <div data-role="content">
-      <div class="content-primary">
-        <style>
-          .sb-cfg h3 { margin: 1.6em 0 .5em; font-size: 1.05em; opacity: .95; }
-          .sb-cfg .sb-zeile { display: flex; gap: 1em; flex-wrap: wrap; }
-          .sb-cfg .sb-zeile > * { flex: 1 1 240px; }
-          .sb-cfg .fieldDescription { opacity: .65; }
-          .sb-pruef {
-            margin: .8em 0 0; padding: .6em .8em; border-radius: 8px;
-            border: 1px solid rgba(128,128,128,.28); font-size: .9em;
-          }
-          .sb-pruef.sb-ok { border-color: rgba(46,125,50,.7); }
-          .sb-pruef.sb-fehler { border-color: rgba(140,47,47,.8); }
-        </style>
-
-        <form id="sbForm" class="sb-cfg">
-          <h3>General</h3>
-          <label class="checkboxContainer">
-            <input is="emby-checkbox" type="checkbox" id="Enabled" />
-            <span>Integration enabled</span>
-          </label>
-
-          <div class="inputContainer">
-            <input is="emby-input" type="text" id="PublicUrl"
-                   label="Address for the browser" />
-            <div class="fieldDescription">
-              The <b>browser</b> opens Seerr at this address &ndash; it is loaded in the
-              embedded frame. Example: <code>http://192.168.1.10:5055</code>
-              <br><b>Important for sign-in:</b> Seerr sets its session cookie with
-              <code>SameSite=lax</code>, which is not sent inside a cross-site frame.
-              Ports do not count &ndash; <code>:8096</code> and <code>:5055</code> on the
-              same host name count as the same site and work. If Jellyfin and Seerr are
-              on <i>different domains</i>, the frame asks for a new sign-in every time.
+        <div class="content-primary">
+            <div class="verticalSection">
+                <h2 class="sectionTitle">MKI Seerr Bridge</h2>
+                <div class="sb-hinweis">
+                    Brings Seerr into Jellyfin: a Requests button in the menu, Seerr suggestions in the search
+                    and sign-in without a second login. Enter the Seerr address and API key, test the connection
+                    and you are ready to go.
+                </div>
             </div>
-          </div>
 
-          <div class="inputContainer">
-            <input is="emby-input" type="text" id="ServerUrl"
-                   label="Address for the server (optional)" />
-            <div class="fieldDescription">
-              The <b>Jellyfin server</b> reaches Seerr at this address, for search and
-              requests. Leave empty if it is the same as above.
+            <div class="sb-tabs">
+                <button is="emby-button" type="button" class="raised emby-button sb-aktiv" data-tab="verbindung"><span>Connection</span></button>
+                <button is="emby-button" type="button" class="raised emby-button" data-tab="suche"><span>Menu &amp; search</span></button>
+                <button is="emby-button" type="button" class="raised emby-button" data-tab="anmeldung"><span>Sign-in</span></button>
             </div>
-          </div>
 
-          <div class="inputContainer">
-            <input is="emby-input" type="text" id="ApiKey" label="API key" />
-            <div class="fieldDescription">
-              From Seerr under Settings &rarr; General. Stays on the server &ndash;
-              the browser never sees it.
-            </div>
-          </div>
+            <form id="sbForm">
+                <div class="sb-panel sb-aktiv" data-panel="verbindung">
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="Enabled" /><span>Integration enabled</span></label>
+                        <div class="fieldDescription checkboxFieldDescription">Turn off to hide everything Seerr-related without losing your settings.</div>
+                    </div>
 
-          <button is="emby-button" type="button" id="sbPruefen" class="raised">
-            <span>Test connection</span>
-          </button>
-          <div class="sb-pruef" id="sbErgebnis" style="display:none"></div>
+                    <div class="verticalSection">
+                        <h3>Seerr address</h3>
+                        <div class="sb-zwei">
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="PublicUrl">Address for the browser</label>
+                                <input is="emby-input" type="text" id="PublicUrl" placeholder="http://192.168.1.10:5055" />
+                                <div class="fieldDescription">Where your browser opens Seerr; it is shown in an embedded frame.</div>
+                            </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="ServerUrl">Address for the server (optional)</label>
+                                <input is="emby-input" type="text" id="ServerUrl" />
+                                <div class="fieldDescription">How the Jellyfin server reaches Seerr for search and requests. Leave empty if it is the same.</div>
+                            </div>
+                        </div>
+                        <p class="fieldDescription">
+                            Seerr's session cookie is not sent inside a frame from a different site. Different ports on the same
+                            host name are fine (<code>:8096</code> and <code>:5055</code>). If Jellyfin and Seerr run on different
+                            domains, the frame asks you to sign in every time.
+                        </p>
+                    </div>
 
-          <h3>Button</h3>
-          <div class="inputContainer">
-            <input is="emby-input" type="text" id="Label" label="Label" />
-            <div class="fieldDescription">
-              <b>Leave empty</b> (recommended) to use the default label
-              &ldquo;Requests&rdquo;. Any text entered here replaces it for everyone.
-            </div>
-          </div>
-          <label class="checkboxContainer">
-            <input is="emby-checkbox" type="checkbox" id="ShowInHeader" />
-            <span>Show in the header</span>
-          </label>
-          <label class="checkboxContainer">
-            <input is="emby-checkbox" type="checkbox" id="ShowInDrawer" />
-            <span>Show in the side menu (mobile)</span>
-          </label>
+                    <div class="verticalSection">
+                        <h3>Access</h3>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="ApiKey">API key</label>
+                            <input is="emby-input" type="text" id="ApiKey" autocomplete="off" />
+                            <div class="fieldDescription">Find it in Seerr under Settings &rarr; General. It stays on the server; browsers never see it.</div>
+                        </div>
+                        <div class="sb-pruefen">
+                            <button is="emby-button" type="button" id="sbPruefen" class="raised emby-button"><span>Test connection</span></button>
+                            <span class="sb-marke sb-neutral" id="sbMarke">Not tested</span>
+                            <span class="sb-meldung" id="sbErgebnis">Saves your settings first, then checks them.</span>
+                        </div>
+                    </div>
+                </div>
 
-          <h3>Search</h3>
-          <label class="checkboxContainer">
-            <input is="emby-checkbox" type="checkbox" id="EnableSearch" />
-            <span>Show Seerr suggestions below the Jellyfin results</span>
-          </label>
-          <label class="checkboxContainer">
-            <input is="emby-checkbox" type="checkbox" id="HideAvailable" />
-            <span>Hide titles already in the library</span>
-          </label>
-          <label class="checkboxContainer">
-            <input is="emby-checkbox" type="checkbox" id="AllowRequests" />
-            <span>Allow requests directly from the results</span>
-          </label>
-          <label class="checkboxContainer">
-            <input is="emby-checkbox" type="checkbox" id="MapUsers" />
-            <span>Attribute requests to the matching Seerr account</span>
-          </label>
-          <div class="fieldDescription" style="margin:-.3em 0 .6em 2.2em">
-            Without this every request runs under the API key's account, i.e. the
-            admin &ndash; then nobody can see who asked for what, and per-account
-            approval rules do not apply.
-          </div>
+                <div class="sb-panel" data-panel="suche">
+                    <div class="verticalSection">
+                        <h3>Requests button</h3>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="Label">Label</label>
+                            <input is="emby-input" type="text" id="Label" placeholder="Requests" />
+                            <div class="fieldDescription">Leave empty for the default &ldquo;Requests&rdquo; (recommended). Any text here replaces it for everyone.</div>
+                        </div>
+                        <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ShowInHeader" /><span>Show in the header</span></label></div>
+                        <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ShowInDrawer" /><span>Show in the side menu (mobile)</span></label></div>
+                    </div>
 
-          <div class="sb-zeile">
-            <div class="inputContainer">
-              <input is="emby-input" type="number" id="SearchLimit" min="1" max="40"
-                     label="Maximum suggestions" />
-            </div>
-            <div class="inputContainer">
-              <input is="emby-input" type="text" id="Language" label="Result language" />
-              <div class="fieldDescription">Two-letter code, e.g. <code>en</code>.</div>
-            </div>
-          </div>
+                    <div class="verticalSection">
+                        <h3>Search</h3>
+                        <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="EnableSearch" /><span>Show Seerr suggestions below the Jellyfin results</span></label></div>
+                        <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="HideAvailable" /><span>Hide titles already in the library</span></label></div>
+                        <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="AllowRequests" /><span>Allow requests directly from the results</span></label></div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="MapUsers" /><span>Request as the matching Seerr account</span></label>
+                            <div class="fieldDescription checkboxFieldDescription">Otherwise every request runs as the API key's account (the admin), so you cannot see who asked for what and per-user approval rules do not apply.</div>
+                        </div>
+                        <div class="sb-zwei">
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="SearchLimit">Maximum suggestions</label>
+                                <input is="emby-input" type="number" id="SearchLimit" min="1" max="40" />
+                            </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="Language">Result language</label>
+                                <input is="emby-input" type="text" id="Language" placeholder="en" />
+                                <div class="fieldDescription">Two-letter code, e.g. <code>en</code>.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-          <h3>Sign-in</h3>
-          <label class="checkboxContainer">
-            <input is="emby-checkbox" type="checkbox" id="EnableSso" />
-            <span>Pass Jellyfin sign-in on to Seerr</span>
-          </label>
-          <div class="fieldDescription" style="margin:-.3em 0 .6em 2.2em">
-            Anyone signed in to Jellyfin is also signed in to Seerr when opening it
-            &ndash; no login form inside the frame.
-            <br><b>No password is bypassed</b>: the plugin issues a one-time pass
-            (valid for one minute, usable exactly once, bound to the account), uses it
-            to sign in to Seerr server-side and answers Seerr's challenge via Jellyfin's
-            own <b>Quick&nbsp;Connect</b>. The pass only allows what the signed-in user
-            can do anyway: sign in as themselves.
-            <br><b>Requirements:</b> Quick&nbsp;Connect must be enabled on the server, and
-            Jellyfin and Seerr must share a parent domain
-            (e.g. <code>jf.example.org</code> and <code>js.example.org</code>). It does not
-            work over a plain IP address &ndash; then the usual sign-in remains.
-          </div>
-          <div class="inputContainer">
-            <input is="emby-input" type="text" id="CookieDomain"
-                   label="Session cookie domain (optional)" />
-            <div class="fieldDescription">
-              Leave empty to derive it from both addresses, e.g.
-              <code>.example.org</code>.
-            </div>
-          </div>
+                <div class="sb-panel" data-panel="anmeldung">
+                    <div class="verticalSection">
+                        <h3>Single sign-on</h3>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="EnableSso" /><span>Sign in to Seerr with the Jellyfin account</span></label>
+                            <div class="fieldDescription checkboxFieldDescription">Anyone signed in to Jellyfin is signed in to Seerr too, with no login form in the frame.</div>
+                        </div>
+                        <div class="sb-hinweis">
+                            <b>No password is bypassed.</b> The plugin issues a one-time pass (valid for one minute, usable once,
+                            bound to the account) and answers Seerr through Jellyfin's own Quick&nbsp;Connect. Users can only
+                            sign in as themselves.
+                            <br />Needs Quick&nbsp;Connect enabled and a shared parent domain, e.g. <code>jf.example.org</code> and
+                            <code>js.example.org</code>. Plain IP addresses fall back to the normal sign-in.
+                        </div>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="CookieDomain">Session cookie domain (optional)</label>
+                            <input is="emby-input" type="text" id="CookieDomain" placeholder=".example.org" />
+                            <div class="fieldDescription">Leave empty to work it out from both addresses, e.g. <code>.example.org</code>.</div>
+                        </div>
+                    </div>
 
-          <h3>Compatibility</h3>
-          <label class="checkboxContainer">
-            <input is="emby-checkbox" type="checkbox" id="LegacyAuthHeader" />
-            <span>Translate legacy auth headers</span>
-          </label>
-          <div class="fieldDescription" style="margin:-.3em 0 .6em 2.2em">
-            Jellyfin&nbsp;12 only reads <code>Authorization</code>. Seerr and other
-            older apps send <code>X-Emby-Authorization</code> or
-            <code>X-Emby-Token</code> &ndash; sign-in then fails with
-            &ldquo;Something went wrong while trying to sign in&rdquo; (HTTP&nbsp;400) and
-            user sync gets stuck at 401.
-            <br>This bridge only fills in <code>Authorization</code> when that header is
-            <i>missing</i>. It never overwrites an existing one and grants nobody anything
-            extra: it is the same credentials, just in an older envelope.
-          </div>
+                    <div class="verticalSection">
+                        <h3>Compatibility</h3>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="LegacyAuthHeader" /><span>Translate legacy auth headers</span></label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Jellyfin&nbsp;12 only reads <code>Authorization</code>, but Seerr and other older apps send
+                                <code>X-Emby-Authorization</code> or <code>X-Emby-Token</code>. Without this, sign-in fails with
+                                &ldquo;Something went wrong&rdquo; (HTTP&nbsp;400) and user sync stops at 401. The header is only
+                                filled in when it is missing, never overwritten, and grants nothing extra.
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-          <br />
-          <button is="emby-button" type="submit" class="raised button-submit block">
-            <span>Save</span>
-          </button>
-        </form>
-      </div>
+                <div>
+                    <button is="emby-button" type="submit" class="raised button-submit block emby-button"><span>Save</span></button>
+                </div>
+            </form>
+        </div>
     </div>
-  </div>
 
-<script type="text/javascript">
-(function () {
-  var PLUGIN = 'b7d41e02-9c58-4f6a-8d13-5a2c7e9f4610';
-  var seite;
+    <script type="text/javascript">
+        (function () {
+            var PLUGIN = 'b7d41e02-9c58-4f6a-8d13-5a2c7e9f4610';
+            var seite = document.querySelector('#SeerrBridgeConfig');
 
-  var SCHALTER = ['Enabled', 'ShowInHeader', 'ShowInDrawer', 'EnableSearch',
-                  'HideAvailable', 'AllowRequests', 'MapUsers', 'LegacyAuthHeader', 'EnableSso'];
-  var TEXTE = ['PublicUrl', 'ServerUrl', 'ApiKey', 'Label', 'Language', 'CookieDomain'];
-  var ZAHLEN = ['SearchLimit'];
+            var SCHALTER = ['Enabled', 'ShowInHeader', 'ShowInDrawer', 'EnableSearch',
+                            'HideAvailable', 'AllowRequests', 'MapUsers', 'LegacyAuthHeader', 'EnableSso'];
+            var TEXTE = ['PublicUrl', 'ServerUrl', 'ApiKey', 'Label', 'Language', 'CookieDomain'];
+            var ZAHLEN = ['SearchLimit'];
 
-  function $(id) { return seite.querySelector('#' + id); }
+            function $(id) { return seite.querySelector('#' + id); }
 
-  function insFormular(c) {
-    SCHALTER.forEach(function (k) { if ($(k)) { $(k).checked = !!c[k]; } });
-    TEXTE.forEach(function (k) { if ($(k)) { $(k).value = c[k] || ''; } });
-    ZAHLEN.forEach(function (k) { if ($(k)) { $(k).value = c[k] || 0; } });
-  }
+            function insFormular(c) {
+                SCHALTER.forEach(function (k) { if ($(k)) { $(k).checked = !!c[k]; } });
+                TEXTE.forEach(function (k) { if ($(k)) { $(k).value = c[k] || ''; } });
+                ZAHLEN.forEach(function (k) { if ($(k)) { $(k).value = c[k] || 0; } });
+            }
 
-  function ausFormular(c) {
-    SCHALTER.forEach(function (k) { if ($(k)) { c[k] = $(k).checked; } });
-    TEXTE.forEach(function (k) { if ($(k)) { c[k] = ($(k).value || '').trim(); } });
-    ZAHLEN.forEach(function (k) { if ($(k)) { c[k] = Number($(k).value) || 0; } });
-    return c;
-  }
+            function ausFormular(c) {
+                SCHALTER.forEach(function (k) { if ($(k)) { c[k] = $(k).checked; } });
+                TEXTE.forEach(function (k) { if ($(k)) { c[k] = ($(k).value || '').trim(); } });
+                ZAHLEN.forEach(function (k) { if ($(k)) { c[k] = Number($(k).value) || 0; } });
+                return c;
+            }
 
-  document.querySelector('#SeerrBridgeConfig').addEventListener('pageshow', function () {
-    seite = this;
-    Dashboard.showLoadingMsg();
-    ApiClient.getPluginConfiguration(PLUGIN).then(function (c) {
-      insFormular(c);
-      Dashboard.hideLoadingMsg();
-    });
+            function status(klasse, marke, text) {
+                $('sbMarke').className = 'sb-marke ' + klasse;
+                $('sbMarke').textContent = marke;
+                $('sbErgebnis').textContent = text;
+            }
 
-    var knopf = $('sbPruefen');
-    if (knopf && !knopf.getAttribute('data-gebunden')) {
-      knopf.setAttribute('data-gebunden', '1');
-      knopf.addEventListener('click', function () {
-        var ziel = $('sbErgebnis');
-        ziel.style.display = '';
-        ziel.className = 'sb-pruef';
-        ziel.textContent = 'checking …';
-        // Save first, then check: otherwise the server still tests the old
-        // address and reports an error that was just fixed.
-        ApiClient.getPluginConfiguration(PLUGIN).then(function (c) {
-          return ApiClient.updatePluginConfiguration(PLUGIN, ausFormular(c));
-        }).then(function () {
-          return ApiClient.ajax({
-            type: 'GET', url: ApiClient.getUrl('SeerrBridge/check'), dataType: 'json',
-          });
-        }).then(function (r) {
-          ziel.className = 'sb-pruef ' + (r.ok ? 'sb-ok' : 'sb-fehler');
-          ziel.textContent = r.text;
-        }).catch(function (e) {
-          ziel.className = 'sb-pruef sb-fehler';
-          ziel.textContent = 'Check failed: ' + (e && e.message ? e.message : e);
-        });
-      });
-    }
-  });
+            Array.prototype.forEach.call(seite.querySelectorAll('.sb-tabs button'), function (b) {
+                b.addEventListener('click', function () {
+                    var tab = b.getAttribute('data-tab');
+                    Array.prototype.forEach.call(seite.querySelectorAll('.sb-tabs button, .sb-panel'), function (e) {
+                        e.classList.toggle('sb-aktiv', e.getAttribute('data-tab') === tab || e.getAttribute('data-panel') === tab);
+                    });
+                });
+            });
 
-  document.querySelector('#sbForm').addEventListener('submit', function (e) {
-    e.preventDefault();
-    Dashboard.showLoadingMsg();
-    ApiClient.getPluginConfiguration(PLUGIN).then(function (c) {
-      ApiClient.updatePluginConfiguration(PLUGIN, ausFormular(c)).then(function (r) {
-        Dashboard.processPluginConfigurationUpdateResult(r);
-      });
-    });
-    return false;
-  });
-})();
-</script>
+            $('sbPruefen').addEventListener('click', function () {
+                status('sb-neutral', 'Checking', 'Saving and contacting Seerr …');
+                // Save first, then check: otherwise the server still tests the old
+                // address and reports an error that was just fixed.
+                ApiClient.getPluginConfiguration(PLUGIN).then(function (c) {
+                    return ApiClient.updatePluginConfiguration(PLUGIN, ausFormular(c));
+                }).then(function () {
+                    return ApiClient.ajax({
+                        type: 'GET', url: ApiClient.getUrl('SeerrBridge/check'), dataType: 'json'
+                    });
+                }).then(function (r) {
+                    status(r.ok ? 'sb-ok' : 'sb-fehler', r.ok ? 'Connected' : 'Error', r.text);
+                }).catch(function (e) {
+                    status('sb-fehler', 'Error', 'Check failed: ' + (e && e.message ? e.message : e));
+                });
+            });
+
+            seite.addEventListener('pageshow', function () {
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(PLUGIN).then(function (c) {
+                    insFormular(c);
+                    Dashboard.hideLoadingMsg();
+                });
+            });
+
+            $('sbForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(PLUGIN).then(function (c) {
+                    ApiClient.updatePluginConfiguration(PLUGIN, ausFormular(c)).then(function (r) {
+                        Dashboard.processPluginConfigurationUpdateResult(r);
+                    });
+                });
+                return false;
+            });
+        })();
+    </script>
+</div>
 </body>
 </html>

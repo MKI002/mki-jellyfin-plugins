@@ -6,56 +6,69 @@
 </head>
 <body>
 <div id="MkiMergeConfigPage" data-role="page" class="page type-interior pluginConfigurationPage">
+    <style>
+        #MkiMergeConfigPage .mkimerge-hint { border-left: 3px solid #00a4dc; padding: .6em 1em; background: rgba(0,164,220,.08); margin: 1em 0; }
+        #MkiMergeConfigPage .mkimerge-steps { margin: .5em 0 0; padding-left: 1.3em; line-height: 1.6; }
+        #MkiMergeConfigPage .mkimerge-steps li { margin: .2em 0; }
+        #MkiMergeConfigPage .mkimerge-run { display: flex; gap: .8em; flex-wrap: wrap; align-items: center; margin: .5em 0; }
+        #MkiMergeConfigPage .mkimerge-run button { margin: 0; }
+        #MkiMergeConfigPage .mkimerge-pill { display: inline-block; padding: .15em .6em; border-radius: 1em; font-size: .85em; }
+        #MkiMergeConfigPage .mkimerge-pill:empty { display: none; }
+        #MkiMergeConfigPage .mkimerge-ok { background: rgba(80,190,80,.2); color: #6c6; }
+        #MkiMergeConfigPage .mkimerge-running { background: rgba(230,150,40,.2); color: #e93; }
+        #MkiMergeConfigPage .mkimerge-error { background: rgba(220,60,60,.2); color: #e55; }
+    </style>
     <div data-role="content">
         <div class="content-primary">
+            <div class="verticalSection">
+                <h2 class="sectionTitle">MKI Merge Versions</h2>
+                <div class="mkimerge-hint">
+                    Movies that exist in several resolutions, like 1080p and 2160p, are merged into a single library entry.
+                    The highest resolution always becomes the primary version, and TV series are never touched.
+                </div>
+            </div>
 
             <form id="MkiMergeConfigForm">
                 <div class="verticalSection">
-                    <h2 class="sectionTitle">MKI Merge Versions</h2>
-                    <p class="fieldDescription">
-                        Movies that exist in several resolutions are merged into a single entry.
-                        The highest resolution always becomes the primary entry.
-                        Matching uses the TMDb ID, falling back to the IMDb ID &ndash;
-                        never title and year. TV series are left untouched.
-                    </p>
+                    <h3>How it works</h3>
+                    <ul class="mkimerge-steps fieldDescription">
+                        <li>Movies are matched by TMDb ID, falling back to IMDb ID. Never by title and year.</li>
+                        <li>Runs at startup, every hour, and once the library has been quiet for five minutes after changes.</li>
+                        <li>You can also start it in Dashboard &rarr; Scheduled Tasks &rarr; Library &rarr; Merge movie versions (MKI).</li>
+                    </ul>
                 </div>
 
-                <div class="checkboxContainer checkboxContainer-withDescription">
-                    <label class="emby-checkbox-label">
-                        <input is="emby-checkbox" type="checkbox" id="FixPrimaryOrder" />
-                        <span>Fix primary entry</span>
-                    </label>
-                    <div class="fieldDescription checkboxFieldDescription">
-                        Rebuilds existing links if the highest resolution is not the
-                        primary entry.
+                <div class="verticalSection">
+                    <h3>Options</h3>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input is="emby-checkbox" type="checkbox" id="FixPrimaryOrder" />
+                            <span>Fix the primary version</span>
+                        </label>
+                        <div class="fieldDescription checkboxFieldDescription">Rebuilds existing merges where a lower resolution is currently the primary version.</div>
+                    </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input is="emby-checkbox" type="checkbox" id="DryRun" />
+                            <span>Dry run (change nothing)</span>
+                        </label>
+                        <div class="fieldDescription checkboxFieldDescription">Only logs what would be merged. Handy for a first check; look for "MKI Merge" in the Jellyfin log.</div>
                     </div>
                 </div>
 
-                <div class="checkboxContainer checkboxContainer-withDescription">
-                    <label class="emby-checkbox-label">
-                        <input is="emby-checkbox" type="checkbox" id="DryRun" />
-                        <span>Dry run (write nothing)</span>
-                    </label>
-                    <div class="fieldDescription checkboxFieldDescription">
-                        The run only logs what it would do. Results appear in the
-                        Jellyfin log.
+                <div class="verticalSection">
+                    <h3>Run</h3>
+                    <p class="fieldDescription">Starts a merge right away with the saved settings. Save first if you changed something above.</p>
+                    <div class="mkimerge-run">
+                        <button is="emby-button" type="button" id="MkiMergeRunNow" class="raised emby-button"><span>Run now</span></button>
+                        <span class="mkimerge-pill" id="MkiMergeStatus"></span>
                     </div>
                 </div>
 
                 <div>
-                    <button is="emby-button" type="submit" class="raised button-submit block emby-button">
-                        <span>Save</span>
-                    </button>
-                    <button is="emby-button" type="button" id="MkiMergeRunNow" class="raised block emby-button">
-                        <span>Run now</span>
-                    </button>
-                </div>
-
-                <div class="verticalSection">
-                    <div class="fieldDescription" id="MkiMergeStatus"></div>
+                    <button is="emby-button" type="submit" class="raised button-submit block emby-button"><span>Save</span></button>
                 </div>
             </form>
-
         </div>
     </div>
 
@@ -65,8 +78,11 @@
             var taskKey = 'MkiMergeVersionsMovies';
             var page = document.querySelector('#MkiMergeConfigPage');
 
-            function melde(text) {
-                page.querySelector('#MkiMergeStatus').textContent = text;
+            // kind: 'ok' | 'running' | 'error'
+            function melde(kind, text) {
+                var pill = page.querySelector('#MkiMergeStatus');
+                pill.className = 'mkimerge-pill mkimerge-' + kind;
+                pill.textContent = text;
             }
 
             page.addEventListener('pageshow', function () {
@@ -74,6 +90,8 @@
                 ApiClient.getPluginConfiguration(pluginId).then(function (config) {
                     page.querySelector('#FixPrimaryOrder').checked = config.FixPrimaryOrder !== false;
                     page.querySelector('#DryRun').checked = config.DryRun === true;
+                    Dashboard.hideLoadingMsg();
+                }, function () {
                     Dashboard.hideLoadingMsg();
                 });
             });
@@ -92,19 +110,21 @@
             });
 
             page.querySelector('#MkiMergeRunNow').addEventListener('click', function () {
-                melde('Starting task …');
+                melde('running', 'Starting …');
                 ApiClient.getScheduledTasks().then(function (tasks) {
                     var task = tasks.filter(function (t) { return t.Key === taskKey; })[0];
                     if (!task) {
-                        melde('Task not found. Is the plugin running?');
+                        melde('error', 'Task not found. Restart Jellyfin after installing.');
                         return;
                     }
-                    ApiClient.ajax({
+                    return ApiClient.ajax({
                         type: 'POST',
                         url: ApiClient.getUrl('ScheduledTasks/Running/' + task.Id)
                     }).then(function () {
-                        melde('Running. Results will appear in the log under "MKI Merge".');
+                        melde('ok', 'Started. Progress shows up in the log under "MKI Merge".');
                     });
+                }).then(null, function () {
+                    melde('error', 'Could not start the task.');
                 });
             });
         })();
