@@ -1,11 +1,11 @@
 {
   "guid": "6f3a1d84-2b57-4c19-9a0e-7d51c8e4b2f6",
-  "name": "Media Hero",
+  "name": "MKI Media Hero",
   "overview": "A cinematic hero banner on the Jellyfin home screen.",
   "description": "Adds a full-width hero carousel to the Jellyfin home screen. The list is prepared on the server from recently added, top rated and (optionally) Seerr trending titles, filtered per library with title, genre, tag and rating whitelists and blacklists. Layout, transitions, text and buttons are configurable. Settings page is in German.",
   "owner": "MKI",
   "category": "General",
   "targetAbi": "12.0.0.0",
-  "version": "1.1.0.0",
-  "changelog": "Jellyseerr is now Seerr: renamed the trending sources and all labels. Settings are kept."
+  "version": "1.2.0.0",
+  "changelog": "Renamed to MKI Media Hero so all MKI plugins sit together in the plugin list. Settings are kept."
 }

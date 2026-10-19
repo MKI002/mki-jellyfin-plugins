@@ -1,6 +1,6 @@
-<img src="logo.png?v=1.1.0" alt="Seerr Bridge" width="100%">
+<img src="logo.png?v=1.1.0" alt="MKI Seerr Bridge" width="100%">
 
-# Seerr Bridge
+# MKI Seerr Bridge
 
 Brings [Seerr](https://github.com/seerr-team/seerr) (formerly Jellyseerr) into the Jellyfin web client, so users can discover and request media without leaving Jellyfin.
 
@@ -16,7 +16,7 @@ Brings [Seerr](https://github.com/seerr-team/seerr) (formerly Jellyseerr) into t
 ## Setup
 
 1. Install from the plugin catalog and restart Jellyfin.
-2. Open **Dashboard → Plugins → Seerr Bridge** and enter:
+2. Open **Dashboard → Plugins → MKI Seerr Bridge** and enter:
    - the **public URL** browsers use to reach Seerr,
    - the **server URL** Jellyfin uses to reach Seerr (leave empty if it is the same),
    - the Seerr **API key** (Seerr → Settings → General). It stays on the server and is never sent to browsers.

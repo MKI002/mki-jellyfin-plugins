@@ -18,8 +18,8 @@ Three plugins for [Jellyfin](https://jellyfin.org) 12, installable from one plug
 <table>
   <tr>
     <td width="33%" valign="top">
-      <a href="src/Jellyfin.Plugin.MediaHero"><img src="src/Jellyfin.Plugin.MediaHero/logo.png?v=1.1.0" alt="Media Hero"></a>
-      <h3><a href="src/Jellyfin.Plugin.MediaHero">Media Hero</a></h3>
+      <a href="src/Jellyfin.Plugin.MediaHero"><img src="src/Jellyfin.Plugin.MediaHero/logo.png?v=1.1.0" alt="MKI Media Hero"></a>
+      <h3><a href="src/Jellyfin.Plugin.MediaHero">MKI Media Hero</a></h3>
       A cinematic hero carousel on the home screen, built on the server from recent, top rated and Seerr trending titles, with per-library whitelists and blacklists.
     </td>
     <td width="33%" valign="top">
@@ -28,8 +28,8 @@ Three plugins for [Jellyfin](https://jellyfin.org) 12, installable from one plug
       Merges movies that exist in several resolutions into one entry, matched by TMDb or IMDb ID. The highest resolution becomes the primary version.
     </td>
     <td width="33%" valign="top">
-      <a href="src/Jellyfin.Plugin.SeerrBridge"><img src="src/Jellyfin.Plugin.SeerrBridge/logo.png?v=1.1.0" alt="Seerr Bridge"></a>
-      <h3><a href="src/Jellyfin.Plugin.SeerrBridge">Seerr Bridge</a></h3>
+      <a href="src/Jellyfin.Plugin.SeerrBridge"><img src="src/Jellyfin.Plugin.SeerrBridge/logo.png?v=1.1.0" alt="MKI Seerr Bridge"></a>
+      <h3><a href="src/Jellyfin.Plugin.SeerrBridge">MKI Seerr Bridge</a></h3>
       Seerr inside the Jellyfin web client: a menu button, an embedded view, request suggestions in search, and optional single sign-on.
     </td>
   </tr>
@@ -52,8 +52,8 @@ Updates show up in the catalog automatically when a new version is released.
 ### Requirements
 
 - Jellyfin **12.x** (plugin ABI `12.0.0.0`). Older servers will not list the plugins.
-- **Media Hero** and **Seerr Bridge** add a small script to the Jellyfin web client by writing to its `index.html`. The Jellyfin process needs write access to the web folder for that; the official Docker image has it.
-- **Seerr Bridge**, and Media Hero's trending source, need a running [Seerr](https://github.com/seerr-team/seerr) instance and its API key.
+- **MKI Media Hero** and **MKI Seerr Bridge** add a small script to the Jellyfin web client by writing to its `index.html`. The Jellyfin process needs write access to the web folder for that; the official Docker image has it.
+- **MKI Seerr Bridge**, and MKI Media Hero's trending source, need a running [Seerr](https://github.com/seerr-team/seerr) instance and its API key.
 
 > [!NOTE]
 > The settings pages are currently in German. The features themselves work in any language.
