@@ -54,6 +54,25 @@
     ]
   },
   {
+    "guid": "ea705ff9-2793-4156-a253-3720f294ec89",
+    "name": "MKI Password Policy",
+    "overview": "Password rules and forced password changes for Jellyfin users.",
+    "description": "Enforces password rules (length, character types, no username, common passwords) on the server for every client, with ready-made profiles. Lets an administrator require a new password from all users or from single users: they cannot sign in on any device until they have set one. Optional password expiry, a check at sign-in and a forced change for new users. The web client shows the rules live and a change dialog; TV and native apps use a change page that opens in any browser. Settings page is in German.",
+    "owner": "MKI",
+    "category": "Authentication",
+    "imageUrl": "https://raw.githubusercontent.com/MKI002/mki-jellyfin-plugins/main/src/Jellyfin.Plugin.MkiPasswordPolicy/logo.png",
+    "versions": [
+      {
+        "version": "1.0.0.0",
+        "changelog": "First release.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/MKI002/mki-jellyfin-plugins/releases/download/v1.3.0/mkipasswordpolicy_1.0.0.0.zip",
+        "checksum": "27cfa99731ea0711ad4df1678228317d",
+        "timestamp": "2026-10-19T20:27:28Z"
+      }
+    ]
+  },
+  {
     "guid": "b7d41e02-9c58-4f6a-8d13-5a2c7e9f4610",
     "name": "MKI Seerr Bridge",
     "overview": "Seerr inside Jellyfin: button, embedded view, search and sign-in.",
