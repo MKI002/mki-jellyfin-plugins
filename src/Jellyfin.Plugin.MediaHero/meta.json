@@ -1,0 +1,11 @@
+{
+  "guid": "6f3a1d84-2b57-4c19-9a0e-7d51c8e4b2f6",
+  "name": "Media Hero",
+  "overview": "A cinematic hero banner on the Jellyfin home screen.",
+  "description": "Adds a full-width hero carousel to the Jellyfin home screen. The list is prepared on the server from recently added, top rated and (optionally) Jellyseerr trending titles, filtered per library with title, genre, tag and rating whitelists and blacklists. Layout, transitions, text and buttons are configurable. Settings page is in German.",
+  "owner": "MKI",
+  "category": "General",
+  "targetAbi": "12.0.0.0",
+  "version": "1.0.0.0",
+  "changelog": "Per-library targets, sources as upper limits, paged Jellyseerr trending lookup, browser caching and a background pre-warmer."
+}
