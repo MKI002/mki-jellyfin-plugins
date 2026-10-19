@@ -103,6 +103,14 @@
     "imageUrl": "https://raw.githubusercontent.com/MKI002/mki-jellyfin-plugins/main/src/Jellyfin.Plugin.MkiPasswordPolicy/logo.png",
     "versions": [
       {
+        "version": "1.0.3.0",
+        "changelog": "Disabled users can get profiles and password requests, also from the buttons for many users; they apply once the account is enabled again. With exempt administrators on, administrators are greyed out in the list. Each user's Password tab in the dashboard now shows their profile, password status and any request, with a shortcut to them in the plugin settings. Live hints on that tab now use the rules of the user being edited.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/MKI002/mki-jellyfin-plugins/releases/download/v1.6.1/mkipasswordpolicy_1.0.3.0.zip",
+        "checksum": "d5e71cf452a16547af687c424883f2ab",
+        "timestamp": "2026-10-19T21:18:59Z"
+      },
+      {
         "version": "1.0.2.0",
         "changelog": "The change dialog now stays above everything, including the Jellyfin loading spinner, and lists the password rules for your account. A profile picked for a user in the list is saved immediately, so requiring a new password right after picking it no longer drops the choice.",
         "targetAbi": "12.0.0.0",
