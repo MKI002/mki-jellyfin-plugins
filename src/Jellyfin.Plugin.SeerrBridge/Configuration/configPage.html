@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <title>Jellyseerr Bridge</title>
+  <title>Seerr Bridge</title>
 </head>
 <body>
   <div id="SeerrBridgeConfig" data-role="page" class="page type-interior pluginConfigurationPage">
@@ -31,13 +31,13 @@
             <input is="emby-input" type="text" id="PublicUrl"
                    label="Adresse f&uuml;r den Browser" />
             <div class="fieldDescription">
-              Unter dieser Adresse ruft der <b>Browser</b> Jellyseerr auf &ndash; sie landet
+              Unter dieser Adresse ruft der <b>Browser</b> Seerr auf &ndash; sie landet
               im eingebetteten Rahmen. Beispiel: <code>http://192.168.1.10:5055</code>
-              <br><b>Wichtig zur Anmeldung:</b> Jellyseerr setzt seinen Sitzungskeks mit
+              <br><b>Wichtig zur Anmeldung:</b> Seerr setzt seinen Sitzungskeks mit
               <code>SameSite=lax</code>. Der wird in einem fremdst&auml;mmigen Rahmen nicht
               mitgeschickt. Ports z&auml;hlen dabei nicht mit &ndash; <code>:8096</code> und
               <code>:5055</code> auf demselben Rechnernamen gelten als dieselbe Seite und
-              funktionieren. Liegen Jellyfin und Jellyseerr auf <i>verschiedenen Domänen</i>,
+              funktionieren. Liegen Jellyfin und Seerr auf <i>verschiedenen Domänen</i>,
               verlangt der Rahmen jedes Mal eine neue Anmeldung.
             </div>
           </div>
@@ -46,7 +46,7 @@
             <input is="emby-input" type="text" id="ServerUrl"
                    label="Adresse f&uuml;r den Server (optional)" />
             <div class="fieldDescription">
-              Unter dieser Adresse erreicht der <b>Jellyfin-Server</b> Jellyseerr, also f&uuml;r
+              Unter dieser Adresse erreicht der <b>Jellyfin-Server</b> Seerr, also f&uuml;r
               Suche und Anfragen. Leer lassen, wenn dieselbe wie oben.
             </div>
           </div>
@@ -54,7 +54,7 @@
           <div class="inputContainer">
             <input is="emby-input" type="text" id="ApiKey" label="API-Schl&uuml;ssel" />
             <div class="fieldDescription">
-              Aus Jellyseerr unter Einstellungen &rarr; Allgemein. Bleibt auf dem Server &ndash;
+              Aus Seerr unter Einstellungen &rarr; Allgemein. Bleibt auf dem Server &ndash;
               der Browser bekommt ihn nie zu sehen.
             </div>
           </div>
@@ -87,7 +87,7 @@
           <h3>Suche</h3>
           <label class="checkboxContainer">
             <input is="emby-checkbox" type="checkbox" id="EnableSearch" />
-            <span>Vorschl&auml;ge aus Jellyseerr unter den Jellyfin-Treffern</span>
+            <span>Vorschl&auml;ge aus Seerr unter den Jellyfin-Treffern</span>
           </label>
           <label class="checkboxContainer">
             <input is="emby-checkbox" type="checkbox" id="HideAvailable" />
@@ -99,7 +99,7 @@
           </label>
           <label class="checkboxContainer">
             <input is="emby-checkbox" type="checkbox" id="MapUsers" />
-            <span>Anfragen dem passenden Jellyseerr-Konto zuschreiben</span>
+            <span>Anfragen dem passenden Seerr-Konto zuschreiben</span>
           </label>
           <div class="fieldDescription" style="margin:-.3em 0 .6em 2.2em">
             Ohne das l&auml;uft jede Anfrage unter dem Konto des API-Schl&uuml;ssels, also
@@ -121,19 +121,19 @@
           <h3>Anmeldung</h3>
           <label class="checkboxContainer">
             <input is="emby-checkbox" type="checkbox" id="EnableSso" />
-            <span>Jellyfin-Anmeldung an Jellyseerr weiterreichen</span>
+            <span>Jellyfin-Anmeldung an Seerr weiterreichen</span>
           </label>
           <div class="fieldDescription" style="margin:-.3em 0 .6em 2.2em">
-            Wer in Jellyfin angemeldet ist, ist beim &Ouml;ffnen auch in Jellyseerr
+            Wer in Jellyfin angemeldet ist, ist beim &Ouml;ffnen auch in Seerr
             angemeldet &ndash; ohne Anmeldemaske im Rahmen.
             <br>Dabei wird <b>kein Passwort umgangen</b>: das Plugin stellt einen
             Einmal-Ausweis aus (eine Minute g&uuml;ltig, genau einmal verwendbar, fest an
-            das Konto gebunden), meldet sich damit serverseitig bei Jellyseerr an und
+            das Konto gebunden), meldet sich damit serverseitig bei Seerr an und
             beantwortet dessen R&uuml;ckfrage &uuml;ber Jellyfins eigenes
             <b>Quick&nbsp;Connect</b>. Der Ausweis erlaubt nur das, was der Angemeldete
             ohnehin darf: sich als er selbst anzumelden.
             <br><b>Voraussetzungen:</b> Quick&nbsp;Connect muss am Server aktiv sein, und
-            Jellyfin und Jellyseerr m&uuml;ssen sich eine &uuml;bergeordnete Domäne teilen
+            Jellyfin und Seerr m&uuml;ssen sich eine &uuml;bergeordnete Domäne teilen
             (etwa <code>jf.example.org</code> und <code>js.example.org</code>). &Uuml;ber eine
             reine IP-Adresse geht es nicht &ndash; dann bleibt es bei der gewohnten Anmeldung.
           </div>
@@ -152,7 +152,7 @@
             <span>Alte Anmeldekopfzeilen &uuml;bersetzen</span>
           </label>
           <div class="fieldDescription" style="margin:-.3em 0 .6em 2.2em">
-            Jellyfin&nbsp;12 wertet nur noch <code>Authorization</code> aus. Jellyseerr und
+            Jellyfin&nbsp;12 wertet nur noch <code>Authorization</code> aus. Seerr und
             andere &auml;ltere Anwendungen schicken <code>X-Emby-Authorization</code> bzw.
             <code>X-Emby-Token</code> &ndash; die Anmeldung scheitert dann mit
             &bdquo;Something went wrong while trying to sign in&ldquo; (HTTP&nbsp;400) und die

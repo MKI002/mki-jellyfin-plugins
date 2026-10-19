@@ -60,7 +60,7 @@ public class JellyseerrClient
 				using HttpResponseMessage response = await client.SendAsync(request, ct).ConfigureAwait(continueOnCapturedContext: false);
 				if (!response.IsSuccessStatusCode)
 				{
-					LoggerExtensions.LogWarning((ILogger)(object)_logger, "Jellyseerr antwortete auf {Route} (Seite {Seite}) mit {Code}", new object[3]
+					LoggerExtensions.LogWarning((ILogger)(object)_logger, "Seerr antwortete auf {Route} (Seite {Seite}) mit {Code}", new object[3]
 					{
 						route,
 						seite,
@@ -110,7 +110,7 @@ public class JellyseerrClient
 		}
 		catch (Exception ex2)
 		{
-			LoggerExtensions.LogWarning((ILogger)(object)_logger, ex2, "Jellyseerr ({Route}, Seite {Seite}) nicht erreichbar", new object[2] { route, seite });
+			LoggerExtensions.LogWarning((ILogger)(object)_logger, ex2, "Seerr ({Route}, Seite {Seite}) nicht erreichbar", new object[2] { route, seite });
 			return Array.Empty<TrendEntry>();
 		}
 		throw null;

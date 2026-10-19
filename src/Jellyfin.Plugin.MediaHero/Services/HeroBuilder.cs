@@ -526,7 +526,7 @@ public class HeroBuilder
 				}
 			}
 		}
-		LoggerExtensions.LogInformation((ILogger)(object)_logger, "Jellyseerr {Route}: {Seiten} Seiten, {Geprueft} Titel geprueft, {Genommen} genommen", new object[4] { route, seiten, geprueft, genommen });
+		LoggerExtensions.LogInformation((ILogger)(object)_logger, "Seerr {Route}: {Seiten} Seiten, {Geprueft} Titel geprueft, {Genommen} genommen", new object[4] { route, seiten, geprueft, genommen });
 	}
 
 	private BaseItem? TrefferZu(int tmdbId, BaseItemKind[] typen, Guid[] wurzeln)

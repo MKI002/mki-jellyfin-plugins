@@ -79,7 +79,7 @@ public class LegacyAuthHeader : IStartupFilter
 			if (!_gemeldet)
 			{
 				_gemeldet = true;
-				LoggerExtensions.LogInformation((ILogger)(object)_logger, "Alte Anmeldekopfzeile uebersetzt (erstmals von {Pfad}) - aeltere Anwendungen wie Jellyseerr koennen sich wieder anmelden", new object[1] { ((object)kontext.Request.Path/*cast due to .constrained prefix*/).ToString() });
+				LoggerExtensions.LogInformation((ILogger)(object)_logger, "Alte Anmeldekopfzeile uebersetzt (erstmals von {Pfad}) - aeltere Anwendungen wie Seerr koennen sich wieder anmelden", new object[1] { ((object)kontext.Request.Path/*cast due to .constrained prefix*/).ToString() });
 			}
 		}
 	}

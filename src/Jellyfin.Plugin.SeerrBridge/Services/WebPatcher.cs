@@ -31,7 +31,7 @@ public class WebPatcher : IHostedService
 		}
 		catch (Exception ex)
 		{
-			LoggerExtensions.LogError((ILogger)(object)_logger, ex, "Jellyseerr Bridge konnte sich nicht in den Web-Client eintragen", Array.Empty<object>());
+			LoggerExtensions.LogError((ILogger)(object)_logger, ex, "Seerr Bridge konnte sich nicht in den Web-Client eintragen", Array.Empty<object>());
 		}
 		return Task.CompletedTask;
 	}
@@ -69,7 +69,7 @@ public class WebPatcher : IHostedService
 		if (!(text3 == text4))
 		{
 			File.WriteAllText(text2, text3);
-			LoggerExtensions.LogInformation((ILogger)(object)_logger, "Jellyseerr Bridge in den Web-Client eingetragen ({Pfad})", new object[1] { text2 });
+			LoggerExtensions.LogInformation((ILogger)(object)_logger, "Seerr Bridge in den Web-Client eingetragen ({Pfad})", new object[1] { text2 });
 		}
 	}
 

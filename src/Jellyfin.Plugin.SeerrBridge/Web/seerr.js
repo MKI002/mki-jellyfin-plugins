@@ -1,8 +1,8 @@
 /*
- * Jellyseerr Bridge - Clientteil.
+ * Seerr Bridge - Clientteil.
  *
  * Drei Aufgaben: Schaltflaeche in Kopfleiste und Seitenmenue, eingebettete
- * Ansicht unter #/jellyseerr, Suchvorschlaege auf der Suchseite.
+ * Ansicht unter #/seerr, Suchvorschlaege auf der Suchseite.
  *
  * Grundhaltung beim Eingriff in eine fremde Oberflaeche: nichts nachbauen, was
  * schon da ist. Die Knoepfe werden deshalb aus einem vorhandenen Knopf GEKLONT
@@ -14,7 +14,7 @@
 (function () {
   'use strict';
 
-  var ROUTE = '#/jellyseerr';
+  var ROUTE = '#/seerr';
   var cfg = null;
   var beobachter = null;
   var suchTakt = null;
@@ -27,26 +27,26 @@
      sobald im Profil Englisch gewaehlt ist); fehlt das, entscheidet der Browser.
      Unbekannte Sprachen fallen auf Englisch zurueck statt auf Deutsch. */
   var SPRACHEN = {
-    en: { titel: "Requests", vorschlaege: "Available via Jellyseerr", anfragen: "Request", laeuft: "requesting …", fertig: "Requested", vorhanden: "in your library", angefragt: "already requested", arbeit: "being fetched", teilweise: "partially available", fehler: "Did not work", oeffnen: "Open in Jellyseerr", rahmenLeer: "Jellyseerr cannot be shown here. Usually the address is wrong – an http address will not load inside an https page. Currently set:" },
-    de: { titel: "Anfragen", vorschlaege: "Bei Jellyseerr verfügbar", anfragen: "Anfragen", laeuft: "wird angefragt …", fertig: "Angefragt", vorhanden: "in der Bibliothek", angefragt: "bereits angefragt", arbeit: "wird geholt", teilweise: "teilweise da", fehler: "Nicht geklappt", oeffnen: "In Jellyseerr öffnen", rahmenLeer: "Jellyseerr lässt sich hier nicht anzeigen. Meist stimmt die Adresse nicht – eine http-Adresse lädt in einer https-Seite nicht. Eingestellt ist:" },
-    fr: { titel: "Demandes", vorschlaege: "Disponible via Jellyseerr", anfragen: "Demander", laeuft: "demande en cours …", fertig: "Demandé", vorhanden: "dans votre bibliothèque", angefragt: "déjà demandé", arbeit: "en cours de récupération", teilweise: "partiellement disponible", fehler: "Échec", oeffnen: "Ouvrir dans Jellyseerr", rahmenLeer: "Jellyseerr ne peut pas s’afficher ici. L’adresse est généralement en cause – une adresse http ne se charge pas dans une page https. Adresse actuelle :" },
-    es: { titel: "Solicitudes", vorschlaege: "Disponible en Jellyseerr", anfragen: "Solicitar", laeuft: "solicitando …", fertig: "Solicitado", vorhanden: "en tu biblioteca", angefragt: "ya solicitado", arbeit: "descargando", teilweise: "parcialmente disponible", fehler: "No funcionó", oeffnen: "Abrir en Jellyseerr", rahmenLeer: "Jellyseerr no puede mostrarse aquí. Normalmente la dirección es incorrecta: una dirección http no carga dentro de una página https. Configurada:" },
-    it: { titel: "Richieste", vorschlaege: "Disponibile su Jellyseerr", anfragen: "Richiedi", laeuft: "richiesta in corso …", fertig: "Richiesto", vorhanden: "nella tua libreria", angefragt: "già richiesto", arbeit: "in scaricamento", teilweise: "parzialmente disponibile", fehler: "Non riuscito", oeffnen: "Apri in Jellyseerr", rahmenLeer: "Jellyseerr non può essere mostrato qui. Di solito l’indirizzo è sbagliato: un indirizzo http non si carica in una pagina https. Impostato:" },
-    nl: { titel: "Verzoeken", vorschlaege: "Beschikbaar via Jellyseerr", anfragen: "Aanvragen", laeuft: "aanvragen …", fertig: "Aangevraagd", vorhanden: "in je bibliotheek", angefragt: "al aangevraagd", arbeit: "wordt opgehaald", teilweise: "gedeeltelijk beschikbaar", fehler: "Niet gelukt", oeffnen: "Openen in Jellyseerr", rahmenLeer: "Jellyseerr kan hier niet worden getoond. Meestal klopt het adres niet: een http-adres laadt niet in een https-pagina. Ingesteld:" },
-    pt: { titel: "Pedidos", vorschlaege: "Disponível via Jellyseerr", anfragen: "Pedir", laeuft: "a pedir …", fertig: "Pedido", vorhanden: "na sua biblioteca", angefragt: "já pedido", arbeit: "a obter", teilweise: "parcialmente disponível", fehler: "Não resultou", oeffnen: "Abrir no Jellyseerr", rahmenLeer: "O Jellyseerr não pode ser mostrado aqui. Normalmente o endereço está errado: um endereço http não carrega numa página https. Definido:" },
-    pl: { titel: "Żądania", vorschlaege: "Dostępne przez Jellyseerr", anfragen: "Poproś", laeuft: "wysyłanie …", fertig: "Zgłoszono", vorhanden: "w Twojej bibliotece", angefragt: "już zgłoszone", arbeit: "pobieranie", teilweise: "częściowo dostępne", fehler: "Nie udało się", oeffnen: "Otwórz w Jellyseerr", rahmenLeer: "Nie można tu wyświetlić Jellyseerr. Zwykle adres jest błędny: adres http nie wczyta się na stronie https. Ustawiono:" },
-    ru: { titel: "Запросы", vorschlaege: "Доступно через Jellyseerr", anfragen: "Запросить", laeuft: "запрос …", fertig: "Запрошено", vorhanden: "в вашей библиотеке", angefragt: "уже запрошено", arbeit: "загружается", teilweise: "частично доступно", fehler: "Не удалось", oeffnen: "Открыть в Jellyseerr", rahmenLeer: "Jellyseerr нельзя показать здесь. Обычно дело в адресе: http не загрузится внутри https. Задано:" },
-    sv: { titel: "Förfrågningar", vorschlaege: "Tillgängligt via Jellyseerr", anfragen: "Begär", laeuft: "begär …", fertig: "Begärd", vorhanden: "i ditt bibliotek", angefragt: "redan begärd", arbeit: "hämtas", teilweise: "delvis tillgänglig", fehler: "Gick inte", oeffnen: "Öppna i Jellyseerr", rahmenLeer: "Jellyseerr kan inte visas här. Oftast är adressen fel: en http-adress laddas inte i en https-sida. Inställt:" },
-    da: { titel: "Anmodninger", vorschlaege: "Tilgængelig via Jellyseerr", anfragen: "Anmod", laeuft: "anmoder …", fertig: "Anmodet", vorhanden: "i dit bibliotek", angefragt: "allerede anmodet", arbeit: "hentes", teilweise: "delvist tilgængelig", fehler: "Gik ikke", oeffnen: "Åbn i Jellyseerr", rahmenLeer: "Jellyseerr kan ikke vises her. Som regel er adressen forkert: en http-adresse indlæses ikke i en https-side. Indstillet:" },
-    nb: { titel: "Forespørsler", vorschlaege: "Tilgjengelig via Jellyseerr", anfragen: "Be om", laeuft: "ber om …", fertig: "Forespúrt", vorhanden: "i biblioteket ditt", angefragt: "allerede forespúrt", arbeit: "hentes", teilweise: "delvis tilgjengelig", fehler: "Gikk ikke", oeffnen: "Åpne i Jellyseerr", rahmenLeer: "Jellyseerr kan ikke vises her. Som regel er adressen feil: en http-adresse lastes ikke i en https-side. Innstilt:" },
-    fi: { titel: "Pyynnöt", vorschlaege: "Saatavilla Jellyseerrin kautta", anfragen: "Pyydä", laeuft: "pyydetään …", fertig: "Pyydetty", vorhanden: "kirjastossasi", angefragt: "jo pyydetty", arbeit: "haetaan", teilweise: "osittain saatavilla", fehler: "Ei onnistunut", oeffnen: "Avaa Jellyseerrissä", rahmenLeer: "Jellyseerriä ei voi näyttää tässä. Yleensä osoite on väärä: http-osoite ei lataudu https-sivulla. Asetettu:" },
-    cs: { titel: "Žádosti", vorschlaege: "Dostupné přes Jellyseerr", anfragen: "Požádat", laeuft: "žádám …", fertig: "Vyžádáno", vorhanden: "ve vaší knihovně", angefragt: "již vyžádáno", arbeit: "stažuje se", teilweise: "částečně dostupné", fehler: "Nepovedlo se", oeffnen: "Otevřít v Jellyseerr", rahmenLeer: "Jellyseerr zde nelze zobrazit. Obvykle je špatně adresa: http se v https stránce nenačte. Nastaveno:" },
-    hu: { titel: "Kérések", vorschlaege: "Elérhető a Jellyseerren", anfragen: "Kérés", laeuft: "kérés …", fertig: "Kérve", vorhanden: "a könyvtáradban", angefragt: "már kérve", arbeit: "letöltés alatt", teilweise: "részben elérhető", fehler: "Nem sikerült", oeffnen: "Megnyitás a Jellyseerrben", rahmenLeer: "A Jellyseerr itt nem jeleníthető meg. Általában a cím hibás: http cím nem tölt be https oldalon. Beállítva:" },
-    tr: { titel: "İstekler", vorschlaege: "Jellyseerr üzerinden mevcut", anfragen: "İste", laeuft: "isteniyor …", fertig: "İstendi", vorhanden: "kütüphanenizde", angefragt: "zaten istendi", arbeit: "alınıyor", teilweise: "kısmen mevcut", fehler: "Olmadı", oeffnen: "Jellyseerr’de aç", rahmenLeer: "Jellyseerr burada gösterilemiyor. Genellikle adres yanlıştır: http adresi https sayfada yüklenmez. Ayarlı:" },
-    uk: { titel: "Запити", vorschlaege: "Доступно через Jellyseerr", anfragen: "Запитати", laeuft: "запит …", fertig: "Запитано", vorhanden: "у вашій бібліотеці", angefragt: "вже запитано", arbeit: "завантажується", teilweise: "частково доступно", fehler: "Не вдалося", oeffnen: "Відкрити в Jellyseerr", rahmenLeer: "Jellyseerr не можна показати тут. Зазвичай справа в адресі: http не завантажиться в https. Задано:" },
-    zh: { titel: "请求", vorschlaege: "可通过 Jellyseerr 获取", anfragen: "请求", laeuft: "请求中 …", fertig: "已请求", vorhanden: "已在媒体库", angefragt: "已请求过", arbeit: "下载中", teilweise: "部分可用", fehler: "未成功", oeffnen: "在 Jellyseerr 中打开", rahmenLeer: "无法在此显示 Jellyseerr。通常是地址有误：http 地址无法在 https 页面中加载。当前设置：" },
-    ja: { titel: "リクエスト", vorschlaege: "Jellyseerr で入手可能", anfragen: "リクエスト", laeuft: "リクエスト中 …", fertig: "リクエスト済み", vorhanden: "ライブラリにあり", angefragt: "リクエスト済み", arbeit: "取得中", teilweise: "一部利用可能", fehler: "失敗しました", oeffnen: "Jellyseerr で開く", rahmenLeer: "ここに Jellyseerr を表示できません。多くはアドレスの問題です：http は https ページ内で読み込めません。現在の設定:" },
-    ko: { titel: "요청", vorschlaege: "Jellyseerr에서 이용 가능", anfragen: "요청", laeuft: "요청 중 …", fertig: "요청됨", vorhanden: "라이브러리에 있음", angefragt: "이미 요청됨", arbeit: "가져오는 중", teilweise: "일부 이용 가능", fehler: "실패", oeffnen: "Jellyseerr에서 열기", rahmenLeer: "여기에 Jellyseerr를 표시할 수 없습니다. 보통 주소 문제입니다: http 주소는 https 페이지에서 로드되지 않습니다. 현재 설정:" },
+    en: { titel: "Requests", vorschlaege: "Available via Seerr", anfragen: "Request", laeuft: "requesting …", fertig: "Requested", vorhanden: "in your library", angefragt: "already requested", arbeit: "being fetched", teilweise: "partially available", fehler: "Did not work", oeffnen: "Open in Seerr", rahmenLeer: "Seerr cannot be shown here. Usually the address is wrong – an http address will not load inside an https page. Currently set:" },
+    de: { titel: "Anfragen", vorschlaege: "Bei Seerr verfügbar", anfragen: "Anfragen", laeuft: "wird angefragt …", fertig: "Angefragt", vorhanden: "in der Bibliothek", angefragt: "bereits angefragt", arbeit: "wird geholt", teilweise: "teilweise da", fehler: "Nicht geklappt", oeffnen: "In Seerr öffnen", rahmenLeer: "Seerr lässt sich hier nicht anzeigen. Meist stimmt die Adresse nicht – eine http-Adresse lädt in einer https-Seite nicht. Eingestellt ist:" },
+    fr: { titel: "Demandes", vorschlaege: "Disponible via Seerr", anfragen: "Demander", laeuft: "demande en cours …", fertig: "Demandé", vorhanden: "dans votre bibliothèque", angefragt: "déjà demandé", arbeit: "en cours de récupération", teilweise: "partiellement disponible", fehler: "Échec", oeffnen: "Ouvrir dans Seerr", rahmenLeer: "Seerr ne peut pas s’afficher ici. L’adresse est généralement en cause – une adresse http ne se charge pas dans une page https. Adresse actuelle :" },
+    es: { titel: "Solicitudes", vorschlaege: "Disponible en Seerr", anfragen: "Solicitar", laeuft: "solicitando …", fertig: "Solicitado", vorhanden: "en tu biblioteca", angefragt: "ya solicitado", arbeit: "descargando", teilweise: "parcialmente disponible", fehler: "No funcionó", oeffnen: "Abrir en Seerr", rahmenLeer: "Seerr no puede mostrarse aquí. Normalmente la dirección es incorrecta: una dirección http no carga dentro de una página https. Configurada:" },
+    it: { titel: "Richieste", vorschlaege: "Disponibile su Seerr", anfragen: "Richiedi", laeuft: "richiesta in corso …", fertig: "Richiesto", vorhanden: "nella tua libreria", angefragt: "già richiesto", arbeit: "in scaricamento", teilweise: "parzialmente disponibile", fehler: "Non riuscito", oeffnen: "Apri in Seerr", rahmenLeer: "Seerr non può essere mostrato qui. Di solito l’indirizzo è sbagliato: un indirizzo http non si carica in una pagina https. Impostato:" },
+    nl: { titel: "Verzoeken", vorschlaege: "Beschikbaar via Seerr", anfragen: "Aanvragen", laeuft: "aanvragen …", fertig: "Aangevraagd", vorhanden: "in je bibliotheek", angefragt: "al aangevraagd", arbeit: "wordt opgehaald", teilweise: "gedeeltelijk beschikbaar", fehler: "Niet gelukt", oeffnen: "Openen in Seerr", rahmenLeer: "Seerr kan hier niet worden getoond. Meestal klopt het adres niet: een http-adres laadt niet in een https-pagina. Ingesteld:" },
+    pt: { titel: "Pedidos", vorschlaege: "Disponível via Seerr", anfragen: "Pedir", laeuft: "a pedir …", fertig: "Pedido", vorhanden: "na sua biblioteca", angefragt: "já pedido", arbeit: "a obter", teilweise: "parcialmente disponível", fehler: "Não resultou", oeffnen: "Abrir no Seerr", rahmenLeer: "O Seerr não pode ser mostrado aqui. Normalmente o endereço está errado: um endereço http não carrega numa página https. Definido:" },
+    pl: { titel: "Żądania", vorschlaege: "Dostępne przez Seerr", anfragen: "Poproś", laeuft: "wysyłanie …", fertig: "Zgłoszono", vorhanden: "w Twojej bibliotece", angefragt: "już zgłoszone", arbeit: "pobieranie", teilweise: "częściowo dostępne", fehler: "Nie udało się", oeffnen: "Otwórz w Seerr", rahmenLeer: "Nie można tu wyświetlić Seerr. Zwykle adres jest błędny: adres http nie wczyta się na stronie https. Ustawiono:" },
+    ru: { titel: "Запросы", vorschlaege: "Доступно через Seerr", anfragen: "Запросить", laeuft: "запрос …", fertig: "Запрошено", vorhanden: "в вашей библиотеке", angefragt: "уже запрошено", arbeit: "загружается", teilweise: "частично доступно", fehler: "Не удалось", oeffnen: "Открыть в Seerr", rahmenLeer: "Seerr нельзя показать здесь. Обычно дело в адресе: http не загрузится внутри https. Задано:" },
+    sv: { titel: "Förfrågningar", vorschlaege: "Tillgängligt via Seerr", anfragen: "Begär", laeuft: "begär …", fertig: "Begärd", vorhanden: "i ditt bibliotek", angefragt: "redan begärd", arbeit: "hämtas", teilweise: "delvis tillgänglig", fehler: "Gick inte", oeffnen: "Öppna i Seerr", rahmenLeer: "Seerr kan inte visas här. Oftast är adressen fel: en http-adress laddas inte i en https-sida. Inställt:" },
+    da: { titel: "Anmodninger", vorschlaege: "Tilgængelig via Seerr", anfragen: "Anmod", laeuft: "anmoder …", fertig: "Anmodet", vorhanden: "i dit bibliotek", angefragt: "allerede anmodet", arbeit: "hentes", teilweise: "delvist tilgængelig", fehler: "Gik ikke", oeffnen: "Åbn i Seerr", rahmenLeer: "Seerr kan ikke vises her. Som regel er adressen forkert: en http-adresse indlæses ikke i en https-side. Indstillet:" },
+    nb: { titel: "Forespørsler", vorschlaege: "Tilgjengelig via Seerr", anfragen: "Be om", laeuft: "ber om …", fertig: "Forespúrt", vorhanden: "i biblioteket ditt", angefragt: "allerede forespúrt", arbeit: "hentes", teilweise: "delvis tilgjengelig", fehler: "Gikk ikke", oeffnen: "Åpne i Seerr", rahmenLeer: "Seerr kan ikke vises her. Som regel er adressen feil: en http-adresse lastes ikke i en https-side. Innstilt:" },
+    fi: { titel: "Pyynnöt", vorschlaege: "Saatavilla Seerrin kautta", anfragen: "Pyydä", laeuft: "pyydetään …", fertig: "Pyydetty", vorhanden: "kirjastossasi", angefragt: "jo pyydetty", arbeit: "haetaan", teilweise: "osittain saatavilla", fehler: "Ei onnistunut", oeffnen: "Avaa Seerrissä", rahmenLeer: "Seerriä ei voi näyttää tässä. Yleensä osoite on väärä: http-osoite ei lataudu https-sivulla. Asetettu:" },
+    cs: { titel: "Žádosti", vorschlaege: "Dostupné přes Seerr", anfragen: "Požádat", laeuft: "žádám …", fertig: "Vyžádáno", vorhanden: "ve vaší knihovně", angefragt: "již vyžádáno", arbeit: "stažuje se", teilweise: "částečně dostupné", fehler: "Nepovedlo se", oeffnen: "Otevřít v Seerr", rahmenLeer: "Seerr zde nelze zobrazit. Obvykle je špatně adresa: http se v https stránce nenačte. Nastaveno:" },
+    hu: { titel: "Kérések", vorschlaege: "Elérhető a Seerren", anfragen: "Kérés", laeuft: "kérés …", fertig: "Kérve", vorhanden: "a könyvtáradban", angefragt: "már kérve", arbeit: "letöltés alatt", teilweise: "részben elérhető", fehler: "Nem sikerült", oeffnen: "Megnyitás a Seerrben", rahmenLeer: "A Seerr itt nem jeleníthető meg. Általában a cím hibás: http cím nem tölt be https oldalon. Beállítva:" },
+    tr: { titel: "İstekler", vorschlaege: "Seerr üzerinden mevcut", anfragen: "İste", laeuft: "isteniyor …", fertig: "İstendi", vorhanden: "kütüphanenizde", angefragt: "zaten istendi", arbeit: "alınıyor", teilweise: "kısmen mevcut", fehler: "Olmadı", oeffnen: "Seerr’de aç", rahmenLeer: "Seerr burada gösterilemiyor. Genellikle adres yanlıştır: http adresi https sayfada yüklenmez. Ayarlı:" },
+    uk: { titel: "Запити", vorschlaege: "Доступно через Seerr", anfragen: "Запитати", laeuft: "запит …", fertig: "Запитано", vorhanden: "у вашій бібліотеці", angefragt: "вже запитано", arbeit: "завантажується", teilweise: "частково доступно", fehler: "Не вдалося", oeffnen: "Відкрити в Seerr", rahmenLeer: "Seerr не можна показати тут. Зазвичай справа в адресі: http не завантажиться в https. Задано:" },
+    zh: { titel: "请求", vorschlaege: "可通过 Seerr 获取", anfragen: "请求", laeuft: "请求中 …", fertig: "已请求", vorhanden: "已在媒体库", angefragt: "已请求过", arbeit: "下载中", teilweise: "部分可用", fehler: "未成功", oeffnen: "在 Seerr 中打开", rahmenLeer: "无法在此显示 Seerr。通常是地址有误：http 地址无法在 https 页面中加载。当前设置：" },
+    ja: { titel: "リクエスト", vorschlaege: "Seerr で入手可能", anfragen: "リクエスト", laeuft: "リクエスト中 …", fertig: "リクエスト済み", vorhanden: "ライブラリにあり", angefragt: "リクエスト済み", arbeit: "取得中", teilweise: "一部利用可能", fehler: "失敗しました", oeffnen: "Seerr で開く", rahmenLeer: "ここに Seerr を表示できません。多くはアドレスの問題です：http は https ページ内で読み込めません。現在の設定:" },
+    ko: { titel: "요청", vorschlaege: "Seerr에서 이용 가능", anfragen: "요청", laeuft: "요청 중 …", fertig: "요청됨", vorhanden: "라이브러리에 있음", angefragt: "이미 요청됨", arbeit: "가져오는 중", teilweise: "일부 이용 가능", fehler: "실패", oeffnen: "Seerr에서 열기", rahmenLeer: "여기에 Seerr를 표시할 수 없습니다. 보통 주소 문제입니다: http 주소는 https 페이지에서 로드되지 않습니다. 현재 설정:" },
   };
 
   function sprache() {
@@ -201,9 +201,9 @@
     return h > 0 ? h : 56;
   }
 
-  /* Welcher Pfad innerhalb von Jellyseerr soll gezeigt werden?
+  /* Welcher Pfad innerhalb von Seerr soll gezeigt werden?
 
-     Steht als Zusatz in der Adresse: #/jellyseerr?ziel=%2Fmovie%2F1234
+     Steht als Zusatz in der Adresse: #/seerr?ziel=%2Fmovie%2F1234
      Nur Pfade werden akzeptiert, keine vollstaendigen Adressen - sonst koennte
      ein untergeschobener Link eine fremde Seite im Rahmen oeffnen, die dann
      aussieht, als gehoere sie zu Jellyfin. */
@@ -242,8 +242,8 @@
 
     var rahmen = document.createElement('iframe');
     rahmen.className = 'sb-rahmen';
-    rahmen.setAttribute('title', 'Jellyseerr');
-    // allow-same-origin ist noetig, damit Jellyseerr seine Sitzung behaelt;
+    rahmen.setAttribute('title', 'Seerr');
+    // allow-same-origin ist noetig, damit Seerr seine Sitzung behaelt;
     // ohne das waere der Rahmen bei jedem Aufruf abgemeldet.
     rahmen.setAttribute('allow', 'fullscreen');
     rahmen.setAttribute('data-ziel', ziel);
@@ -303,7 +303,7 @@
 
   function routePruefen() {
     if (!cfg || !cfg.enabled) { return; }
-    var aktiv = (location.hash || '').indexOf('jellyseerr') !== -1;
+    var aktiv = (location.hash || '').indexOf('#/seerr') !== -1;
     if (aktiv) { ansichtZeigen(); } else { ansichtVerbergen(); }
   }
 
@@ -387,7 +387,7 @@
     return '';
   }
 
-  /* Adresse eines Treffers in Jellyseerr. Filme liegen unter /movie/<id>,
+  /* Adresse eines Treffers in Seerr. Filme liegen unter /movie/<id>,
      Serien unter /tv/<id> - dieselbe Kennung von TMDB in beiden Faellen. */
   function trefferZiel(e) {
     return ROUTE + '?ziel='
@@ -492,7 +492,7 @@
     feld.addEventListener('input', function () {
       var wert = feld.value;
       if (suchTakt) { clearTimeout(suchTakt); }
-      // Bewusst traege: bei jedem Tastendruck zu suchen belastet Jellyseerr
+      // Bewusst traege: bei jedem Tastendruck zu suchen belastet Seerr
       // und liefert Treffer zu halben Woertern.
       suchTakt = setTimeout(function () { suchen(wert); }, 450);
     });
