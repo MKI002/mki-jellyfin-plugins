@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="utf-8" />
     <title>MKI Merge Versions</title>
@@ -13,41 +13,41 @@
                 <div class="verticalSection">
                     <h2 class="sectionTitle">MKI Merge Versions</h2>
                     <p class="fieldDescription">
-                        Filme, die in mehreren Aufloesungen vorliegen, werden zu einem Eintrag
-                        zusammengefasst. Haupteintrag wird immer die hoechste Aufloesung.
-                        Zugeordnet wird ueber die TMDb-, ersatzweise die IMDb-Kennung &ndash;
-                        nie ueber Titel und Jahr. Serien bleiben unberuehrt.
+                        Movies that exist in several resolutions are merged into a single entry.
+                        The highest resolution always becomes the primary entry.
+                        Matching uses the TMDb ID, falling back to the IMDb ID &ndash;
+                        never title and year. TV series are left untouched.
                     </p>
                 </div>
 
                 <div class="checkboxContainer checkboxContainer-withDescription">
                     <label class="emby-checkbox-label">
                         <input is="emby-checkbox" type="checkbox" id="FixPrimaryOrder" />
-                        <span>Haupteintrag korrigieren</span>
+                        <span>Fix primary entry</span>
                     </label>
                     <div class="fieldDescription checkboxFieldDescription">
-                        Baut bestehende Verknuepfungen um, falls nicht die hoechste Aufloesung
-                        der Haupteintrag ist.
+                        Rebuilds existing links if the highest resolution is not the
+                        primary entry.
                     </div>
                 </div>
 
                 <div class="checkboxContainer checkboxContainer-withDescription">
                     <label class="emby-checkbox-label">
                         <input is="emby-checkbox" type="checkbox" id="DryRun" />
-                        <span>Nur testen, nichts schreiben</span>
+                        <span>Dry run (write nothing)</span>
                     </label>
                     <div class="fieldDescription checkboxFieldDescription">
-                        Der Lauf protokolliert nur, was er tun wuerde. Ergebnis steht im
-                        Jellyfin-Protokoll.
+                        The run only logs what it would do. Results appear in the
+                        Jellyfin log.
                     </div>
                 </div>
 
                 <div>
                     <button is="emby-button" type="submit" class="raised button-submit block emby-button">
-                        <span>Speichern</span>
+                        <span>Save</span>
                     </button>
                     <button is="emby-button" type="button" id="MkiMergeRunNow" class="raised block emby-button">
-                        <span>Jetzt ausfuehren</span>
+                        <span>Run now</span>
                     </button>
                 </div>
 
@@ -92,18 +92,18 @@
             });
 
             page.querySelector('#MkiMergeRunNow').addEventListener('click', function () {
-                melde('Aufgabe wird gestartet …');
+                melde('Starting task …');
                 ApiClient.getScheduledTasks().then(function (tasks) {
                     var task = tasks.filter(function (t) { return t.Key === taskKey; })[0];
                     if (!task) {
-                        melde('Aufgabe nicht gefunden. Laeuft das Plugin?');
+                        melde('Task not found. Is the plugin running?');
                         return;
                     }
                     ApiClient.ajax({
                         type: 'POST',
                         url: ApiClient.getUrl('ScheduledTasks/Running/' + task.Id)
                     }).then(function () {
-                        melde('Laeuft. Ergebnis steht danach im Protokoll unter "MKI Merge".');
+                        melde('Running. Results will appear in the log under "MKI Merge".');
                     });
                 });
             });

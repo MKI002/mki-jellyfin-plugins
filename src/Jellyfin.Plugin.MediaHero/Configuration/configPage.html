@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head><title>MKI Media Hero</title></head>
 <body>
 <div id="MediaHeroConfig" data-role="page" class="page type-interior pluginConfigurationPage"
@@ -12,25 +12,24 @@
         .mh-cfg .mh-zeile { display: flex; gap: 1em; flex-wrap: wrap; }
         .mh-cfg .mh-zeile > * { flex: 1 1 210px; }
         .mh-cfg .fieldDescription { opacity: .65; }
-        /* Die Tabelle bewusst schmal halten. Ueber die volle Seitenbreite
-           klaffte zwischen Quellenname und Zahlenfeld eine Luecke von rund
-           350 Pixeln - man musste die Zeile mit dem Auge verfolgen, um zu
-           sehen, welche Zahl zu welcher Quelle gehoert. */
+        /* Keep the table deliberately narrow. At full page width there was a
+           gap of about 350 pixels between the source name and the number
+           field - you had to trace the row with your eye to see which number
+           belonged to which source. */
         .mh-quellen { width: 100%; max-width: 30em; border-collapse: collapse; }
         .mh-quellen th { padding: 0 .35em .25em; font-weight: 600; }
         .mh-quellen td { padding: .05em .35em; border-bottom: 1px solid rgba(128,128,128,.14); }
         .mh-quellen tr:last-child td { border-bottom: 0; }
-        /* Jellyfins Eingabefelder sind fuer einzelne Formularzeilen gemacht und
-           bringen viel Innenabstand mit. In einer zehnzeiligen Liste summiert
-           sich das - hier also flacher. */
+        /* Jellyfin's input fields are made for single form rows and come with
+           a lot of padding. In a ten-row list that adds up - so flatter here. */
         .mh-quellen input[type=number] {
           width: 4em; height: 2em; padding: 0 .1em 0 .4em;
           font-size: .92em; line-height: 2em; margin: 0;
         }
-        /* emby-input stellt jedem Feld ein Beschriftungselement voran. Hier ist
-           es leer - die Spaltenueberschrift sagt ja schon, worum es geht - aber
-           als Inline-Element erzeugt es trotzdem eine volle Textzeile ueber dem
-           Feld und machte jede Zeile rund 20 Pixel hoeher. */
+        /* emby-input puts a label element in front of every field. Here it is
+           empty - the column header already says what it is about - but as an
+           inline element it still creates a full line of text above the field
+           and made every row about 20 pixels taller. */
         .mh-quellen label.inputLabel { display: none; }
         .mh-quellen input[type=checkbox] {
           width: 1.05em; height: 1.05em; margin: 0;
@@ -61,361 +60,361 @@
 
         <div class="mh-vorschau-huelle">
           <div class="mh-vorschau-kopf">
-            <span>Live-Vorschau &ndash; zeigt echte Titel aus deiner Bibliothek</span>
+            <span>Live preview &ndash; shows real titles from your library</span>
             <span>
-              <button is="emby-button" type="button" id="mhNeuLaden" class="raised">Liste jetzt neu bauen</button>
+              <button is="emby-button" type="button" id="mhNeuLaden" class="raised">Rebuild list now</button>
             </span>
           </div>
           <div id="mhVorschau"></div>
-          <p class="mh-hinweis" id="mhVorschauInfo">wird geladen &hellip;</p>
+          <p class="mh-hinweis" id="mhVorschauInfo">loading &hellip;</p>
         </div>
 
-        <h3>Allgemein</h3>
+        <h3>General</h3>
         <label class="checkboxContainer">
           <input is="emby-checkbox" type="checkbox" id="Enabled" />
-          <span>Leiste anzeigen</span>
+          <span>Show the banner</span>
         </label>
         <label class="checkboxContainer">
           <input is="emby-checkbox" type="checkbox" id="HomeOnly" />
-          <span>Nur auf der Startseite</span>
+          <span>Home screen only</span>
         </label>
         <label class="checkboxContainer">
           <input is="emby-checkbox" type="checkbox" id="ShuffleResult" />
-          <span>Reihenfolge mischen</span>
+          <span>Shuffle the order</span>
         </label>
         <label class="checkboxContainer">
           <input is="emby-checkbox" type="checkbox" id="ShuffleOnLoad" />
-          <span>Bei jedem Aufruf neu mischen</span>
+          <span>Reshuffle on every visit</span>
         </label>
         <div class="fieldDescription" style="margin:-.3em 0 .6em 2.2em">
-          &bdquo;Reihenfolge mischen&ldquo; w&uuml;rfelt einmal beim Aufbau der Liste &ndash;
-          bis zum n&auml;chsten Aufbau sehen alle dieselbe Reihenfolge.
-          &bdquo;Bei jedem Aufruf&ldquo; w&uuml;rfelt zus&auml;tzlich im Browser, also bei
-          jedem &Ouml;ffnen der Startseite neu. Kostet nichts: die Liste bleibt
-          zwischengespeichert, nur ihre Reihenfolge wechselt.
+          &ldquo;Shuffle the order&rdquo; shuffles once when the list is built &ndash;
+          until the next build everyone sees the same order.
+          &ldquo;Reshuffle on every visit&rdquo; also shuffles in the browser, i.e. every
+          time the home screen is opened. Costs nothing: the list stays
+          cached, only its order changes.
         </div>
         <div class="mh-zeile">
           <div class="inputContainer">
             <input is="emby-input" type="number" id="CacheMinutes" min="1" max="1440"
-                   label="Liste neu bauen alle (Minuten)" />
+                   label="Rebuild list every (minutes)" />
             <div class="fieldDescription">
-              Bestimmt, wie oft der Server die Liste zusammenstellt. Dazwischen kostet
-              ein Seitenaufruf praktisch nichts.
+              How often the server assembles the list. In between, a page view
+              costs practically nothing.
             </div>
           </div>
         </div>
 
-        <h3>Bibliotheken</h3>
+        <h3>Libraries</h3>
         <table class="mh-quellen">
           <thead class="mh-quellen-kopf"><tr>
-            <th style="width:2em;text-align:left">An</th>
-            <th style="text-align:left">Bibliothek</th>
-            <th style="width:6em;text-align:left">Anzahl</th>
+            <th style="width:2em;text-align:left">On</th>
+            <th style="text-align:left">Library</th>
+            <th style="width:6em;text-align:left">Count</th>
           </tr></thead>
           <tbody id="mhBibliotheken"></tbody>
         </table>
         <p class="mh-hinweis">
-          <b>Anzahl</b> = wie viele Eintr&auml;ge aus dieser Bibliothek in der Leiste stehen
-          sollen &ndash; ein <b>Ziel</b>, kein Deckel. Der Aufbau sucht in den Quellen so
-          lange, bis jede Bibliothek ihre Zahl beisammen hat, und nimmt dann auch nicht
-          mehr. Bei Seerr wird daf&uuml;r seitenweise nachgeladen (h&ouml;chstens 25
-          Seiten, also 500 Titel &ndash; danach gibt die Liste es nicht her).
-          <br>Beispiel: Filme 10, Serien 10, Anime 10 ergibt eine Leiste mit je zehn
-          aktuellen Titeln aus jeder Bibliothek.
+          <b>Count</b> = how many items from this library should appear in the banner
+          &ndash; a <b>target</b>, not a cap. The build keeps searching the sources until
+          every library has reached its number, and then takes no more. For Seerr this
+          means loading further pages (at most 25 pages, i.e. 500 titles &ndash; the list
+          has nothing beyond that).
+          <br>Example: Movies 10, Series 10, Anime 10 gives a banner with ten current
+          titles from each library.
         </p>
 
-        <h3>Quellen</h3>
+        <h3>Sources</h3>
         <table class="mh-quellen">
           <thead class="mh-quellen-kopf"><tr>
-            <th style="width:2em;text-align:left">An</th>
-            <th style="text-align:left">Quelle</th>
-            <th style="width:6em;text-align:left">Anzahl</th>
-            <th style="width:7em;text-align:left">ab Jahr</th>
+            <th style="width:2em;text-align:left">On</th>
+            <th style="text-align:left">Source</th>
+            <th style="width:6em;text-align:left">Count</th>
+            <th style="width:7em;text-align:left">From year</th>
           </tr></thead>
           <tbody id="mhQuellen"></tbody>
         </table>
         <p class="mh-hinweis">
-          <b>Anzahl</b> = wie viele Eintr&auml;ge diese Quelle <b>h&ouml;chstens</b> beisteuert
-          &ndash; eine Obergrenze. Die Quellen werden in dieser Reihenfolge abgefragt, bis
-          alle Bibliotheksziele erreicht sind. Beispiel: drei Bibliotheken zu je 10 und
-          &bdquo;Im Trend&ldquo; mit 30 &ndash; diese eine Quelle kann alles liefern. Steht
-          sie auf 15, muss die n&auml;chste angehakte Quelle den Rest beisteuern.
-          <br><b>ab Jahr</b> = nur Titel ab diesem Erscheinungsjahr, 0 = alle.
-          N&uuml;tzlich bei &bdquo;Zuletzt hinzugef&uuml;gt&ldquo;: das meint das Importdatum, und
-          das springt auch, wenn nur der Datensatz neu geschrieben wurde &ndash; dann
-          steht pl&ouml;tzlich ein Film von 1979 ganz oben.
+          <b>Count</b> = the <b>maximum</b> number of items this source contributes
+          &ndash; an upper limit. Sources are queried in this order until all library
+          targets are met. Example: three libraries at 10 each and &ldquo;Trending&rdquo;
+          at 30 &ndash; that one source can deliver everything. At 15, the next ticked
+          source has to contribute the rest.
+          <br><b>From year</b> = only titles released in or after this year, 0 = all.
+          Useful for &ldquo;Recently added&rdquo;: that means the import date, which also
+          jumps when only the record was rewritten &ndash; and suddenly a film from
+          1979 is at the top.
         </p>
 
         <h3>Seerr</h3>
         <div class="mh-zeile">
           <div class="inputContainer">
             <input is="emby-input" type="text" id="JellyseerrUrl"
-                   label="Adresse" placeholder="http://192.168.1.10:5055" />
+                   label="Address" placeholder="http://192.168.1.10:5055" />
           </div>
           <div class="inputContainer">
-            <input is="emby-input" type="password" id="JellyseerrApiKey" label="API-Schl&uuml;ssel" />
+            <input is="emby-input" type="password" id="JellyseerrApiKey" label="API key" />
           </div>
         </div>
         <div class="mh-zeile">
           <div class="inputContainer">
             <input is="emby-input" type="number" id="JellyseerrMinPopularity" min="0"
-                   label="Mindest-Beliebtheit" />
+                   label="Minimum popularity" />
           </div>
         </div>
         <label class="checkboxContainer">
           <input is="emby-checkbox" type="checkbox" id="JellyseerrOnlyInLibrary" />
-          <span>Nur Titel zeigen, die auch in der Bibliothek liegen</span>
+          <span>Only show titles that are in the library</span>
         </label>
         <p class="mh-hinweis">
-          Der Abgleich l&auml;uft &uuml;ber die TMDB-Kennung, nicht &uuml;ber den Titel.
-          Ohne diese Option zeigt die Leiste Dinge, die sich nicht abspielen lassen.
+          Matching uses the TMDB id, not the title.
+          Without this option the banner shows things that cannot be played.
         </p>
 
-        <h3>Filter</h3>
+        <h3>Filters</h3>
         <div class="mh-zeile">
           <div class="inputContainer">
             <input is="emby-input" type="number" id="MinCommunityRating" min="0" max="10" step="0.1"
-                   label="Mindestbewertung" />
+                   label="Minimum rating" />
           </div>
           <div class="inputContainer">
             <input is="emby-input" type="number" id="MinProductionYear" min="0" max="2100"
-                   label="Fr&uuml;hestes Jahr" />
+                   label="Earliest year" />
           </div>
         </div>
         <label class="checkboxContainer">
           <input is="emby-checkbox" type="checkbox" id="RequireBackdrop" />
-          <span>Nur Eintr&auml;ge mit Hintergrundbild</span>
+          <span>Only items with a backdrop</span>
         </label>
         <label class="checkboxContainer">
           <input is="emby-checkbox" type="checkbox" id="RequireLogo" />
-          <span>Nur Eintr&auml;ge mit Logo</span>
+          <span>Only items with a logo</span>
         </label>
         <div class="mh-zeile">
           <div class="selectContainer">
-            <select is="emby-select" id="MinBackdropWidth" label="Mindestaufl&ouml;sung des Hintergrundbildes">
-              <option value="0">egal</option>
-              <option value="1280">ab 1280 px (720p)</option>
-              <option value="1920">ab 1920 px (1080p)</option>
-              <option value="2560">ab 2560 px (1440p)</option>
-              <option value="3840">ab 3840 px (2160p)</option>
+            <select is="emby-select" id="MinBackdropWidth" label="Minimum backdrop resolution">
+              <option value="0">Any</option>
+              <option value="1280">1280 px and up (720p)</option>
+              <option value="1920">1920 px and up (1080p)</option>
+              <option value="2560">2560 px and up (1440p)</option>
+              <option value="3840">3840 px and up (2160p)</option>
             </select>
             <div class="fieldDescription">
-              Betrifft das angezeigte Bild, nicht das Video. Ein kleines Backdrop
-              &uuml;ber die volle Breite gezogen wirkt matschig. Eintr&auml;ge, bei denen
-              die Bildgr&ouml;&szlig;e noch nicht erfasst ist, bleiben drin.
+              Applies to the displayed image, not the video. A small backdrop
+              stretched across the full width looks blurry. Items whose image
+              size has not been recorded yet are kept.
             </div>
           </div>
         </div>
         <div class="mh-zeile">
           <div class="inputContainer">
-            <label class="inputLabel inputLabelUnfocused" for="TitleWhitelist">Whitelist Titel</label>
+            <label class="inputLabel inputLabelUnfocused" for="TitleWhitelist">Title whitelist</label>
             <textarea is="emby-textarea" class="emby-input" id="TitleWhitelist" rows="3"
-                      placeholder="Ein Eintrag je Zeile&#10;Dune&#10;Breaking Bad"></textarea>
+                      placeholder="One entry per line&#10;Dune&#10;Breaking Bad"></textarea>
             <div class="fieldDescription">
-              Eine Zeile je Eintrag. Serientitel oder Item-Id. Leer lassen hei&szlig;t:
-              keine Einschr&auml;nkung.
+              One entry per line. Series title or item id. Leave empty for
+              no restriction.
             </div>
           </div>
           <div class="inputContainer">
-            <label class="inputLabel inputLabelUnfocused" for="TitleBlacklist">Blacklist Titel</label>
+            <label class="inputLabel inputLabelUnfocused" for="TitleBlacklist">Title blacklist</label>
             <textarea is="emby-textarea" class="emby-input" id="TitleBlacklist" rows="3"></textarea>
           </div>
         </div>
         <div class="mh-zeile">
           <div class="inputContainer">
-            <label class="inputLabel inputLabelUnfocused" for="GenreWhitelist">Whitelist Genres</label>
+            <label class="inputLabel inputLabelUnfocused" for="GenreWhitelist">Genre whitelist</label>
             <textarea is="emby-textarea" class="emby-input" id="GenreWhitelist" rows="3"></textarea>
           </div>
           <div class="inputContainer">
-            <label class="inputLabel inputLabelUnfocused" for="GenreBlacklist">Blacklist Genres</label>
+            <label class="inputLabel inputLabelUnfocused" for="GenreBlacklist">Genre blacklist</label>
             <textarea is="emby-textarea" class="emby-input" id="GenreBlacklist" rows="3"></textarea>
           </div>
         </div>
         <div class="mh-zeile">
           <div class="inputContainer">
-            <label class="inputLabel inputLabelUnfocused" for="TagWhitelist">Whitelist Tags</label>
+            <label class="inputLabel inputLabelUnfocused" for="TagWhitelist">Tag whitelist</label>
             <textarea is="emby-textarea" class="emby-input" id="TagWhitelist" rows="2"></textarea>
           </div>
           <div class="inputContainer">
-            <label class="inputLabel inputLabelUnfocused" for="TagBlacklist">Blacklist Tags</label>
+            <label class="inputLabel inputLabelUnfocused" for="TagBlacklist">Tag blacklist</label>
             <textarea is="emby-textarea" class="emby-input" id="TagBlacklist" rows="2"></textarea>
           </div>
         </div>
         <div class="mh-zeile">
           <div class="inputContainer">
-            <label class="inputLabel inputLabelUnfocused" for="OfficialRatingBlacklist">Gesperrte Freigaben (z. B. XXX)</label>
+            <label class="inputLabel inputLabelUnfocused" for="OfficialRatingBlacklist">Blocked content ratings (e.g. XXX)</label>
             <textarea is="emby-textarea" class="emby-input" id="OfficialRatingBlacklist" rows="2"></textarea>
           </div>
           <div class="inputContainer">
-            <label class="inputLabel inputLabelUnfocused">Medienarten</label>
+            <label class="inputLabel inputLabelUnfocused">Media types</label>
             <div id="mhTypen" style="padding-top:.3em"></div>
             <div class="fieldDescription">
-              Was in der Leiste erscheinen darf. Einzelne Folgen und Musik sind
-              bewusst nicht dabei &ndash; daf&uuml;r fehlen die gro&szlig;en Hintergrundbilder.
+              What may appear in the banner. Single episodes and music are
+              deliberately excluded &ndash; they lack the large backdrops.
             </div>
           </div>
         </div>
 
-        <h3>Darstellung</h3>
+        <h3>Appearance</h3>
         <div class="mh-zeile">
           <div class="selectContainer">
-            <select is="emby-select" id="Layout" label="Grundform">
-              <option value="Fullwidth">Vollbreite</option>
-              <option value="Contained">Eingefasst</option>
-              <option value="Compact">Kompakt</option>
-              <option value="PosterLeft">Poster links</option>
-              <option value="Centered">Zentriert</option>
+            <select is="emby-select" id="Layout" label="Layout">
+              <option value="Fullwidth">Full width</option>
+              <option value="Contained">Inset</option>
+              <option value="Compact">Compact</option>
+              <option value="PosterLeft">Poster left</option>
+              <option value="Centered">Centered</option>
             </select>
           </div>
           <div class="selectContainer">
-            <select is="emby-select" id="Transition" label="&Uuml;bergang">
-              <option value="Fade">Blende</option>
-              <option value="Slide">Schub</option>
+            <select is="emby-select" id="Transition" label="Transition">
+              <option value="Fade">Fade</option>
+              <option value="Slide">Slide</option>
               <option value="KenBurns">Ken Burns</option>
-              <option value="None">Keiner</option>
+              <option value="None">None</option>
             </select>
           </div>
           <div class="selectContainer">
-            <select is="emby-select" id="Indicator" label="Positionsanzeige">
-              <option value="Dots">Punkte</option>
-              <option value="Thumbnails">Vorschaubilder</option>
-              <option value="ProgressBar">Balken</option>
-              <option value="Numbers">Zahlen</option>
-              <option value="None">Keine</option>
+            <select is="emby-select" id="Indicator" label="Position indicator">
+              <option value="Dots">Dots</option>
+              <option value="Thumbnails">Thumbnails</option>
+              <option value="ProgressBar">Progress bar</option>
+              <option value="Numbers">Numbers</option>
+              <option value="None">None</option>
             </select>
           </div>
         </div>
         <div class="mh-zeile">
           <div class="inputContainer">
-            <input is="emby-input" type="number" id="HeightVh" min="20" max="90" label="H&ouml;he (% des Fensters)" />
+            <input is="emby-input" type="number" id="HeightVh" min="20" max="90" label="Height (% of window)" />
           </div>
           <div class="inputContainer">
-            <input is="emby-input" type="number" id="MaxHeightPx" min="200" max="1400" label="H&ouml;chstens (px)" />
+            <input is="emby-input" type="number" id="MaxHeightPx" min="200" max="1400" label="Maximum height (px)" />
           </div>
           <div class="inputContainer">
-            <input is="emby-input" type="number" id="CornerRadius" min="0" max="40" label="Eckenrundung (px)" />
+            <input is="emby-input" type="number" id="CornerRadius" min="0" max="40" label="Corner radius (px)" />
           </div>
           <div class="inputContainer">
-            <input is="emby-input" type="number" id="ScrimStrength" min="0" max="100" label="Abdunklung (%)" />
+            <input is="emby-input" type="number" id="ScrimStrength" min="0" max="100" label="Scrim strength (%)" />
           </div>
           <div class="inputContainer">
             <input is="emby-input" type="number" id="BottomFadePercent" min="0" max="60"
-                   label="Ausblenden nach unten (%)" />
+                   label="Fade out at the bottom (%)" />
             <div class="fieldDescription">
-              0 = harte Kante wie vorher. H&ouml;here Werte lassen das Bild in die
-              Seite &uuml;bergehen. Text und Kn&ouml;pfe bleiben voll sichtbar.
+              0 = hard edge as before. Higher values blend the image into the
+              page. Text and buttons stay fully visible.
             </div>
           </div>
         </div>
         <div class="mh-zeile">
           <div>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="BlendIntoHeader" /><span>Hinter die Kopfleiste blenden</span></label>
+            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="BlendIntoHeader" /><span>Extend behind the header bar</span></label>
             <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowLogo" /><span>Logo</span></label>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowTitleWhenNoLogo" /><span>Titel, wenn kein Logo</span></label>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowOverview" /><span>Beschreibung</span></label>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowYear" /><span>Jahr</span></label>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowRating" /><span>Bewertung</span></label>
+            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowTitleWhenNoLogo" /><span>Title when there is no logo</span></label>
+            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowOverview" /><span>Description</span></label>
+            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowYear" /><span>Year</span></label>
+            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowRating" /><span>Rating</span></label>
           </div>
           <div>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowRuntime" /><span>Laufzeit</span></label>
+            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowRuntime" /><span>Runtime</span></label>
             <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowGenres" /><span>Genres</span></label>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowOfficialRating" /><span>Freigabe</span></label>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowPlayButton" /><span>Abspielen-Knopf</span></label>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowDetailsButton" /><span>Details-Knopf</span></label>
+            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowOfficialRating" /><span>Content rating</span></label>
+            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowPlayButton" /><span>Play button</span></label>
+            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowDetailsButton" /><span>Details button</span></label>
           </div>
           <div>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowTrailerButton" /><span>Trailer-Knopf</span></label>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowFavoriteButton" /><span>Favoriten-Knopf</span></label>
+            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowTrailerButton" /><span>Trailer button</span></label>
+            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="ShowFavoriteButton" /><span>Favorite button</span></label>
             <div class="inputContainer">
-              <input is="emby-input" type="number" id="OverviewLines" min="1" max="8" label="Zeilen Beschreibung" />
+              <input is="emby-input" type="number" id="OverviewLines" min="1" max="8" label="Description lines" />
             </div>
           </div>
         </div>
 
-        <h3>Ma&szlig;e und Abst&auml;nde</h3>
+        <h3>Sizes and spacing</h3>
         <p class="mh-hinweis">
-          Alles in Prozent der Leistenfl&auml;che &ndash; damit es auf dem Fernseher
-          genauso wirkt wie auf dem Handy. Die Vorschau oben zeigt jede
-          &Auml;nderung sofort.
+          Everything in percent of the banner area &ndash; so it looks the same on
+          a TV as on a phone. The preview above shows every change
+          immediately.
         </p>
         <div class="mh-zeile">
           <div class="inputContainer">
             <input is="emby-input" type="number" id="LogoMaxWidthPercent" min="5" max="90"
-                   label="Logo: gr&ouml;&szlig;te Breite (%)" />
+                   label="Logo: maximum width (%)" />
           </div>
           <div class="inputContainer">
             <input is="emby-input" type="number" id="LogoMaxHeightPercent" min="5" max="90"
-                   label="Logo: gr&ouml;&szlig;te H&ouml;he (%)" />
+                   label="Logo: maximum height (%)" />
           </div>
         </div>
         <div class="mh-zeile">
           <div class="inputContainer">
             <input is="emby-input" type="number" id="TextLeftPercent" min="0" max="60"
-                   label="Textblock: Abstand links (%)" />
+                   label="Text block: offset from left (%)" />
           </div>
           <div class="inputContainer">
             <input is="emby-input" type="number" id="TextBottomPercent" min="0" max="60"
-                   label="Textblock: Abstand unten (%)" />
+                   label="Text block: offset from bottom (%)" />
           </div>
           <div class="inputContainer">
             <input is="emby-input" type="number" id="TextWidthPercent" min="15" max="95"
-                   label="Textblock: Breite (%)" />
+                   label="Text block: width (%)" />
           </div>
         </div>
         <div class="mh-zeile">
           <div class="inputContainer">
             <input is="emby-input" type="number" id="ElementGap" min="0" max="30"
-                   label="Abstand zwischen den Bl&ouml;cken" />
-            <div class="fieldDescription">In Zehntel-em: 7 entspricht 0,7 em.</div>
+                   label="Spacing between blocks" />
+            <div class="fieldDescription">In tenths of an em: 7 equals 0.7 em.</div>
           </div>
           <div class="inputContainer">
             <input is="emby-input" type="number" id="TitleScale" min="40" max="250"
-                   label="Titelgr&ouml;&szlig;e (%)" />
+                   label="Title size (%)" />
           </div>
           <div class="inputContainer">
             <input is="emby-input" type="number" id="TextScale" min="40" max="250"
-                   label="Textgr&ouml;&szlig;e (%)" />
+                   label="Text size (%)" />
           </div>
           <div class="inputContainer">
             <input is="emby-input" type="number" id="ButtonScale" min="40" max="250"
-                   label="Kn&ouml;pfe (%)" />
+                   label="Buttons (%)" />
           </div>
         </div>
 
-        <h3>Verhalten</h3>
+        <h3>Behavior</h3>
         <div class="mh-zeile">
           <div>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="Autoplay" /><span>Automatisch weiterschalten</span></label>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="PauseOnHover" /><span>Bei Mauszeiger anhalten</span></label>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="EnableKeyboard" /><span>Pfeiltasten</span></label>
+            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="Autoplay" /><span>Advance automatically</span></label>
+            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="PauseOnHover" /><span>Pause on hover</span></label>
+            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="EnableKeyboard" /><span>Arrow keys</span></label>
           </div>
           <div>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="EnableSwipe" /><span>Wischen</span></label>
-            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="RespectReducedMotion" /><span>Systemeinstellung &bdquo;weniger Bewegung&ldquo; beachten</span></label>
+            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="EnableSwipe" /><span>Swipe</span></label>
+            <label class="checkboxContainer"><input is="emby-checkbox" type="checkbox" id="RespectReducedMotion" /><span>Respect the system&rsquo;s reduced-motion setting</span></label>
             <div class="inputContainer">
-              <input is="emby-input" type="number" id="IntervalSeconds" min="2" max="120" label="Wechsel alle (Sekunden)" />
+              <input is="emby-input" type="number" id="IntervalSeconds" min="2" max="120" label="Change every (seconds)" />
             </div>
           </div>
         </div>
 
-        <h3>Eigenes CSS</h3>
+        <h3>Custom CSS</h3>
         <div class="inputContainer">
-          <label class="inputLabel inputLabelUnfocused" for="CustomCss">Wird zus&auml;tzlich geladen</label>
+          <label class="inputLabel inputLabelUnfocused" for="CustomCss">Loaded in addition to the built-in styles</label>
             <textarea is="emby-textarea" class="emby-input" id="CustomCss" rows="4"></textarea>
         </div>
 
         <div style="margin-top:1.6em">
           <button is="emby-button" type="submit" class="raised button-submit">
-            <span>Speichern</span>
+            <span>Save</span>
           </button>
           <button is="emby-button" type="button" id="mhNeuLaden2" class="raised">
-            <span>Liste jetzt neu bauen</span>
+            <span>Rebuild list now</span>
           </button>
           <span class="mh-status" id="mhStatus"></span>
           <div class="fieldDescription" style="margin-top:.6em">
-            Speichern &uuml;bernimmt die Einstellungen und baut die Liste ohnehin neu.
-            Der zweite Knopf ist f&uuml;r den Fall, dass sich nur die Bibliothek
-            ge&auml;ndert hat &ndash; etwa nach einem Import.
+            Save applies the settings and rebuilds the list anyway.
+            The second button is for when only the library has changed
+            &ndash; for example after an import.
           </div>
         </div>
       </form>
@@ -424,174 +423,20 @@
 
 
 <script type="text/javascript">
-/*
- * Beschriftungen uebersetzen.
- *
- * Der Server ist einer, die Betrachter sind viele - die Sprache muss also vom
- * Client kommen. Jellyfin setzt sie auf <html lang>; fehlt das, entscheidet der
- * Browser. Deutsch bleibt wie geschrieben, alles andere faellt auf Englisch.
- *
- * Uebersetzt wird ueber den deutschen Text als Schluessel und nur bei
- * Blattelementen, damit keine ganzen Abschnitte ueberschrieben werden.
- */
-(function () {
-  var UEBERSETZUNG = { en: {
- "Live-Vorschau – zeigt echte Titel aus deiner Bibliothek": "Live preview – real titles from your library",
- "Liste jetzt neu bauen": "Rebuild list now",
- "wird geladen …": "loading …",
- "Allgemein": "General",
- "Leiste anzeigen": "Show the bar",
- "Nur auf der Startseite": "Home screen only",
- "Reihenfolge mischen": "Shuffle the order",
- "Bei jedem Aufruf neu mischen": "Reshuffle on every visit",
- "Liste neu bauen alle (Minuten)": "Rebuild list every (minutes)",
- "Quellen": "Sources",
- "An": "On",
- "Quelle": "Source",
- "Anzahl": "Count",
- "Bibliothek": "Library",
- "ab Jahr": "from year",
- "Adresse": "Address",
- "API-Schlüssel": "API key",
- "Mindest-Beliebtheit": "Minimum popularity",
- "Nur Titel zeigen, die auch in der Bibliothek liegen": "Only show titles that are actually in the library",
- "Filter": "Filters",
- "Mindestbewertung": "Minimum rating",
- "Frühestes Jahr": "Earliest year",
- "Nur Einträge mit Hintergrundbild": "Only items with a backdrop",
- "Nur Einträge mit Logo": "Only items with a logo",
- "Mindestauflösung des Hintergrundbildes": "Minimum backdrop resolution",
- "egal": "any",
- "Whitelist Titel": "Title whitelist",
- "Blacklist Titel": "Title blacklist",
- "Whitelist Genres": "Genre whitelist",
- "Blacklist Genres": "Genre blacklist",
- "Whitelist Tags": "Tag whitelist",
- "Blacklist Tags": "Tag blacklist",
- "Gesperrte Freigaben (z. B. XXX)": "Blocked content ratings (e.g. XXX)",
- "Bibliotheken": "Libraries",
- "Medienarten": "Media types",
- "Filme": "Movies",
- "Serien": "Series",
- "Darstellung": "Appearance",
- "Grundform": "Layout",
- "Übergang": "Transition",
- "Positionsanzeige": "Position indicator",
- "Vollbreite": "Full width",
- "Eingefasst": "Inset",
- "Kompakt": "Compact",
- "Poster links": "Poster left",
- "Zentriert": "Centred",
- "Blende": "Fade",
- "Schub": "Slide",
- "Keiner": "None",
- "Punkte": "Dots",
- "Vorschaubilder": "Thumbnails",
- "Balken": "Progress bar",
- "Zahlen": "Numbers",
- "Keine": "None",
- "Höhe (% des Fensters)": "Height (% of window)",
- "Höchstens (px)": "At most (px)",
- "Eckenrundung (px)": "Corner radius (px)",
- "Abdunklung (%)": "Scrim strength (%)",
- "Ausblenden nach unten (%)": "Fade out at the bottom (%)",
- "Hinter die Kopfleiste blenden": "Extend behind the header bar",
- "Titel, wenn kein Logo": "Title when there is no logo",
- "Beschreibung": "Description",
- "Jahr": "Year",
- "Bewertung": "Rating",
- "Laufzeit": "Runtime",
- "Freigabe": "Content rating",
- "Abspielen-Knopf": "Play button",
- "Details-Knopf": "Details button",
- "Trailer-Knopf": "Trailer button",
- "Favoriten-Knopf": "Favourite button",
- "Zeilen Beschreibung": "Description lines",
- "Maße und Abstände": "Sizes and spacing",
- "Logo: größte Breite (%)": "Logo: maximum width (%)",
- "Logo: größte Höhe (%)": "Logo: maximum height (%)",
- "Textblock: Abstand links (%)": "Text block: offset from left (%)",
- "Textblock: Abstand unten (%)": "Text block: offset from bottom (%)",
- "Textblock: Breite (%)": "Text block: width (%)",
- "Abstand zwischen den Blöcken": "Spacing between blocks",
- "Titelgröße (%)": "Title size (%)",
- "Textgröße (%)": "Text size (%)",
- "Knöpfe (%)": "Buttons (%)",
- "Verhalten": "Behaviour",
- "Automatisch weiterschalten": "Advance automatically",
- "Bei Mauszeiger anhalten": "Pause on hover",
- "Pfeiltasten": "Arrow keys",
- "Wischen": "Swipe",
- "Systemeinstellung „weniger Bewegung“ beachten": "Respect the system's reduced-motion setting",
- "Wechsel alle (Sekunden)": "Change every (seconds)",
- "Eigenes CSS": "Custom CSS",
- "Wird zusätzlich geladen": "Loaded in addition",
- "Speichern": "Save",
- "gespeichert": "saved",
- "Zuletzt hinzugefuegt (Importdatum)": "Recently added (import date)",
- "Neu erschienen (Erscheinungsdatum)": "Recently released (release date)",
- "Noch nicht gesehen": "Not watched yet",
- "Favoriten": "Favourites",
- "Bestbewertet": "Top rated",
- "Zufaellig": "Random",
- "Seerr: im Trend": "Seerr: trending",
- "Seerr: beliebte Filme": "Seerr: popular movies",
- "Seerr: beliebte Serien": "Seerr: popular series",
- "Nur Whitelist": "Whitelist only"
-} };
-
-  function zielsprache() {
-    var l = '';
-    try {
-      l = document.documentElement.getAttribute('lang')
-        || (navigator.language || navigator.userLanguage || '');
-    } catch (e) { /* egal */ }
-    l = String(l).toLowerCase().split('-')[0];
-    if (l === 'de') return null;
-    return UEBERSETZUNG[l] ? l : 'en';
-  }
-
-  function uebersetzen(wurzel) {
-    var z = zielsprache();
-    if (!z || !wurzel) return;
-    var tab = UEBERSETZUNG[z];
-    var knoten = wurzel.querySelectorAll(
-      'label, span, option, div.fieldDescription, h3, th, p.mh-hinweis, button');
-    Array.prototype.forEach.call(knoten, function (e) {
-      if (e.children.length) return;
-      var txt = (e.textContent || '').trim();
-      if (tab[txt]) e.textContent = tab[txt];
-      var ph = e.getAttribute && e.getAttribute('placeholder');
-      if (ph && tab[ph]) e.setAttribute('placeholder', tab[ph]);
-    });
-    Array.prototype.forEach.call(wurzel.querySelectorAll('input[label]'), function (e) {
-      var l = e.getAttribute('label');
-      if (tab[l]) e.setAttribute('label', tab[l]);
-    });
-    Array.prototype.forEach.call(wurzel.querySelectorAll('select[label]'), function (e) {
-      var l = e.getAttribute('label');
-      if (tab[l]) e.setAttribute('label', tab[l]);
-    });
-  }
-
-  window.MediaHeroI18n = { uebersetzen: uebersetzen, ziel: zielsprache };
-})();
-</script>
-<script type="text/javascript">
 (function () {
   var PLUGIN = '6f3a1d84-2b57-4c19-9a0e-7d51c8e4b2f6';
 
   var QUELLEN = [
-    ['RecentlyAdded', 'Zuletzt hinzugefuegt (Importdatum)'],
-    ['RecentlyReleased', 'Neu erschienen (Erscheinungsdatum)'],
-    ['NextUp', 'Noch nicht gesehen'],
-    ['Favorites', 'Favoriten'],
-    ['TopRated', 'Bestbewertet'],
-    ['Random', 'Zufaellig'],
-    ['JellyseerrTrending', 'Seerr: im Trend'],
-    ['JellyseerrPopularMovies', 'Seerr: beliebte Filme'],
-    ['JellyseerrPopularSeries', 'Seerr: beliebte Serien'],
-    ['Whitelist', 'Nur Whitelist']
+    ['RecentlyAdded', 'Recently added (import date)'],
+    ['RecentlyReleased', 'Recently released (release date)'],
+    ['NextUp', 'Not watched yet'],
+    ['Favorites', 'Favorites'],
+    ['TopRated', 'Top rated'],
+    ['Random', 'Random'],
+    ['JellyseerrTrending', 'Seerr: trending'],
+    ['JellyseerrPopularMovies', 'Seerr: popular movies'],
+    ['JellyseerrPopularSeries', 'Seerr: popular series'],
+    ['Whitelist', 'Whitelist only']
   ];
 
   var SCHALTER = ['Enabled','HomeOnly','ShuffleResult','ShuffleOnLoad','RequireBackdrop','RequireLogo','BlendIntoHeader',
@@ -611,15 +456,15 @@
   var LISTEN = ['TitleWhitelist','TitleBlacklist','GenreWhitelist','GenreBlacklist',
     'TagWhitelist','TagBlacklist','OfficialRatingBlacklist'];
 
-  var MEDIENARTEN = [['Movie', 'Filme'], ['Series', 'Serien']];
+  var MEDIENARTEN = [['Movie', 'Movies'], ['Series', 'Series']];
 
   var seite, daten = null, laufend = null;
 
   function $(id) { return seite.querySelector('#' + id); }
 
-  /* Eine abgehakte Quelle traegt nichts bei - dann ist ihre Anzahl
-     bedeutungslos. Also Zeile ausgrauen und das Zahlenfeld sperren, statt
-     den Nutzer eine 0 suchen zu lassen, die es nicht gibt. */
+  /* An unticked source contributes nothing - so its count is meaningless.
+     Grey out the row and lock the number field instead of letting the user
+     look for a 0 that does not exist. */
   function zeileAktualisieren(tr) {
     var an = tr.querySelector('[data-q]').checked;
     var zahl = tr.querySelector('[data-take]');
@@ -636,12 +481,12 @@
       var vorhanden = (sources || []).filter(function (s) { return s.Source === q[0]; })[0]
         || { Source: q[0], Take: 8, Enabled: false };
       var tr = document.createElement('tr');
-      /* Bewusst ohne is="emby-checkbox": Jellyfin schrumpft das echte
-         Eingabefeld dabei auf 1x1 Pixel und zeichnet ein span.checkboxOutline
-         darueber. Ohne umschliessendes <label> faengt dieser Span den Klick ab
-         und leitet ihn nirgendwohin - das Haekchen laesst sich dann nicht mehr
-         umstellen. Ein schlichtes Kaestchen tut hier dasselbe und funktioniert.
-         Das <label for> macht ausserdem den Quellennamen mit anklickbar. */
+      /* Deliberately without is="emby-checkbox": Jellyfin then shrinks the
+         real input to 1x1 pixel and draws a span.checkboxOutline over it.
+         Without a wrapping <label> that span catches the click and sends it
+         nowhere - the checkbox can no longer be toggled. A plain checkbox does
+         the same job here and works. The <label for> also makes the source
+         name clickable. */
       var kennung = 'mhq-' + q[0];
       tr.innerHTML =
         '<td style="width:2em"><input type="checkbox" id="' + kennung + '" '
@@ -663,17 +508,16 @@
     tb.querySelectorAll('input').forEach(function (i) {
       i.addEventListener('change', vorschauAuffrischen);
     });
-    if (window.MediaHeroI18n) window.MediaHeroI18n.uebersetzen(tb);
   }
 
-  /* Die Bibliotheken kommen live vom Server - fest verdrahtete Namen waeren
-     falsch, sobald jemand eine anlegt oder umbenennt. Gespeicherte Eintraege
-     liefern Haken und Anzahl; neue Bibliotheken erscheinen abgeschaltet, damit
-     sie die Leiste nicht ungefragt umbauen. Ist noch gar nichts gespeichert
-     (Umstieg von der alten Fassung), sind alle an mit je 10. */
+  /* Libraries come live from the server - hard-coded names would be wrong as
+     soon as someone adds or renames one. Saved entries supply the tick and
+     count; new libraries appear switched off so they do not rebuild the banner
+     unasked. If nothing is saved yet (upgrade from the old version), all are
+     on with 10 each. */
   function bibliothekenZeichnen(gespeichert) {
     var tb = $('mhBibliotheken');
-    tb.innerHTML = '<tr><td colspan="3" style="opacity:.6">wird geladen &hellip;</td></tr>';
+    tb.innerHTML = '<tr><td colspan="3" style="opacity:.6">loading &hellip;</td></tr>';
     var alt = {};
     (gespeichert || []).forEach(function (b) {
       alt[String(b.Id || '').replace(/-/g, '').toLowerCase()] = b;
@@ -704,9 +548,8 @@
       tb.querySelectorAll('input').forEach(function (i) {
         i.addEventListener('change', vorschauAuffrischen);
       });
-      if (window.MediaHeroI18n) window.MediaHeroI18n.uebersetzen(tb);
     }).catch(function () {
-      tb.innerHTML = '<tr><td colspan="3" style="opacity:.6">Bibliotheken nicht abrufbar</td></tr>';
+      tb.innerHTML = '<tr><td colspan="3" style="opacity:.6">Could not load libraries</td></tr>';
     });
   }
 
@@ -731,7 +574,6 @@
     ziel.querySelectorAll('input').forEach(function (i) {
       i.addEventListener('change', vorschauAuffrischen);
     });
-    if (window.MediaHeroI18n) window.MediaHeroI18n.uebersetzen(ziel);
   }
 
   function ausFormular() {
@@ -748,8 +590,8 @@
     seite.querySelectorAll('[data-q]').forEach(function (i) {
       var name = i.getAttribute('data-q');
       var take = seite.querySelector('[data-take="' + name + '"]');
-      // Die Anzahl bleibt gespeichert, auch wenn die Quelle gerade aus ist -
-      // so steht der alte Wert wieder da, sobald man sie erneut anhakt.
+      // The count is kept even while the source is off - so the old value
+      // is back as soon as it is ticked again.
       var jahr = seite.querySelector('[data-jahr="' + name + '"]');
       s.push({
         Source: name, Enabled: i.checked, Take: Number(take.value) || 8,
@@ -773,7 +615,7 @@
     seite.querySelectorAll('[data-typ]').forEach(function (i) {
       if (i.checked) typen.push(i.getAttribute('data-typ'));
     });
-    // Ohne Auswahl waere die Leiste leer - dann lieber beide zulassen
+    // With nothing selected the banner would be empty - allow both instead
     c.IncludeItemTypes = typen.length ? typen : ['Movie', 'Series'];
     return c;
   }
@@ -788,15 +630,15 @@
     bibliothekenZeichnen(c.Libraries || []);
   }
 
-  /* Die Vorschau benutzt dieselbe Zeichenroutine wie die echte Leiste.
-     Deshalb kann sie nichts anderes zeigen als das, was hinterher herauskommt. */
+  /* The preview uses the same render routine as the real banner.
+     So it cannot show anything other than the actual result. */
   function anzeigeAusFormular() {
     var c = ausFormular();
     return {
       enabled: c.Enabled, layout: c.Layout, transition: c.Transition, indicator: c.Indicator,
       heightVh: c.HeightVh, maxHeightPx: Math.min(c.MaxHeightPx || 720, 380),
       cornerRadius: c.CornerRadius, scrimStrength: c.ScrimStrength,
-      blendIntoHeader: false,   // in der Vorschau nicht sinnvoll - dort gibt es keine Kopfleiste
+      blendIntoHeader: false,   // pointless in the preview - there is no header bar there
       logoMaxWidthPercent: c.LogoMaxWidthPercent, logoMaxHeightPercent: c.LogoMaxHeightPercent,
       textLeftPercent: c.TextLeftPercent, textBottomPercent: c.TextBottomPercent,
       textWidthPercent: c.TextWidthPercent, elementGap: c.ElementGap,
@@ -833,11 +675,11 @@
       itemsHolen(false).then(function (list) {
         var ziel = $('mhVorschau');
         if (laufend && laufend.zerstoeren) laufend.zerstoeren();
-        if (!window.MediaHero) { $('mhVorschauInfo').textContent = 'Zeichenroutine nicht geladen'; return; }
+        if (!window.MediaHero) { $('mhVorschauInfo').textContent = 'Render script not loaded'; return; }
         laufend = window.MediaHero.render(ziel, list, anzeigeAusFormular(), { vorschau: true });
         $('mhVorschauInfo').textContent = list.length
-          ? list.length + ' Eintraege in der Liste'
-          : 'Keine Eintraege - Quellen aktiviert? Filter zu streng?';
+          ? list.length + ' items in the list'
+          : 'No items - sources enabled? Filters too strict?';
       });
     }, 180);
   }
@@ -869,14 +711,14 @@
       });
       function neuBauen(knopf) {
         var alt = knopf ? knopf.textContent : '';
-        if (knopf) { knopf.disabled = true; knopf.textContent = 'wird gebaut …'; }
+        if (knopf) { knopf.disabled = true; knopf.textContent = 'Rebuilding …'; }
         $('mhStatus').textContent = '';
         return ApiClient.ajax({ type: 'POST', url: ApiClient.getUrl('MediaHero/refresh') })
           .catch(function () { })
           .then(function () { return itemsHolen(true); })
           .then(function (liste) {
             vorschauAuffrischen();
-            $('mhStatus').textContent = 'neu gebaut: ' + (liste || []).length + ' Eintraege';
+            $('mhStatus').textContent = 'Rebuilt: ' + (liste || []).length + ' items';
             setTimeout(function () { $('mhStatus').textContent = ''; }, 4000);
           })
           .then(function () {
@@ -890,7 +732,6 @@
       });
       return ressourcenLaden();
     }).then(function () {
-      if (window.MediaHeroI18n) window.MediaHeroI18n.uebersetzen(seite);
       vorschauAuffrischen();
       Dashboard.hideLoadingMsg();
     });
@@ -904,7 +745,7 @@
       return ApiClient.ajax({ type: 'POST', url: ApiClient.getUrl('MediaHero/refresh') })
         .catch(function () { });
     }).then(function () {
-      $('mhStatus').textContent = 'gespeichert';
+      $('mhStatus').textContent = 'Saved';
       setTimeout(function () { $('mhStatus').textContent = ''; }, 2500);
       itemsHolen(true).then(vorschauAuffrischen);
     });

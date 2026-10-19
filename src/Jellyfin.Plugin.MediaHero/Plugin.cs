@@ -16,7 +16,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 
 	public override Guid Id => Guid.Parse("6f3a1d84-2b57-4c19-9a0e-7d51c8e4b2f6");
 
-	public override string Description => "Startseiten-Leiste mit serverseitig vorbereiteter Liste, Whitelists, Blacklists und optionalen Trendtiteln aus Seerr.";
+	public override string Description => "Home screen banner with a server-side prepared list, whitelists, blacklists and optional trending titles from Seerr.";
 
 	public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer)
 		: base(applicationPaths, xmlSerializer)

@@ -1,15 +1,15 @@
 /*
- * Seerr Bridge - Clientteil.
+ * Seerr Bridge - client part.
  *
- * Drei Aufgaben: Schaltflaeche in Kopfleiste und Seitenmenue, eingebettete
- * Ansicht unter #/seerr, Suchvorschlaege auf der Suchseite.
+ * Three jobs: a button in the header and side menu, an embedded view under
+ * #/seerr, and search suggestions on the search page.
  *
- * Grundhaltung beim Eingriff in eine fremde Oberflaeche: nichts nachbauen, was
- * schon da ist. Die Knoepfe werden deshalb aus einem vorhandenen Knopf GEKLONT
- * und nur umbeschriftet. Jellyfin 12 baut seine Kopfleiste mit Material-UI, und
- * dessen Klassennamen tragen einen Hash aus dem Bauvorgang (css-1f20jcn). Wer
- * die abschreibt, hat beim naechsten Jellyfin-Update einen unformatierten Link
- * in der Leiste stehen. Ein Klon erbt alles und ueberlebt das.
+ * Ground rule when touching someone else's UI: do not rebuild what is already
+ * there. The buttons are therefore CLONED from an existing button and only
+ * relabelled. Jellyfin 12 builds its header with Material UI, whose class names
+ * carry a build hash (css-1f20jcn). Copying those leaves an unstyled link in
+ * the header after the next Jellyfin update. A clone inherits everything and
+ * survives that.
  */
 (function () {
   'use strict';
@@ -20,48 +20,11 @@
   var suchTakt = null;
   var ssoVersucht = false;
 
-  /* Beschriftungen je Sprache.
-
-     Der Server ist einer, die Betrachter sind viele - die Sprache muss also vom
-     Client kommen. Jellyfin setzt sie auf <html lang> (dort steht z. B. "en-us",
-     sobald im Profil Englisch gewaehlt ist); fehlt das, entscheidet der Browser.
-     Unbekannte Sprachen fallen auf Englisch zurueck statt auf Deutsch. */
-  var SPRACHEN = {
-    en: { titel: "Requests", vorschlaege: "Available via Seerr", anfragen: "Request", laeuft: "requesting …", fertig: "Requested", vorhanden: "in your library", angefragt: "already requested", arbeit: "being fetched", teilweise: "partially available", fehler: "Did not work", oeffnen: "Open in Seerr", rahmenLeer: "Seerr cannot be shown here. Usually the address is wrong – an http address will not load inside an https page. Currently set:" },
-    de: { titel: "Anfragen", vorschlaege: "Bei Seerr verfügbar", anfragen: "Anfragen", laeuft: "wird angefragt …", fertig: "Angefragt", vorhanden: "in der Bibliothek", angefragt: "bereits angefragt", arbeit: "wird geholt", teilweise: "teilweise da", fehler: "Nicht geklappt", oeffnen: "In Seerr öffnen", rahmenLeer: "Seerr lässt sich hier nicht anzeigen. Meist stimmt die Adresse nicht – eine http-Adresse lädt in einer https-Seite nicht. Eingestellt ist:" },
-    fr: { titel: "Demandes", vorschlaege: "Disponible via Seerr", anfragen: "Demander", laeuft: "demande en cours …", fertig: "Demandé", vorhanden: "dans votre bibliothèque", angefragt: "déjà demandé", arbeit: "en cours de récupération", teilweise: "partiellement disponible", fehler: "Échec", oeffnen: "Ouvrir dans Seerr", rahmenLeer: "Seerr ne peut pas s’afficher ici. L’adresse est généralement en cause – une adresse http ne se charge pas dans une page https. Adresse actuelle :" },
-    es: { titel: "Solicitudes", vorschlaege: "Disponible en Seerr", anfragen: "Solicitar", laeuft: "solicitando …", fertig: "Solicitado", vorhanden: "en tu biblioteca", angefragt: "ya solicitado", arbeit: "descargando", teilweise: "parcialmente disponible", fehler: "No funcionó", oeffnen: "Abrir en Seerr", rahmenLeer: "Seerr no puede mostrarse aquí. Normalmente la dirección es incorrecta: una dirección http no carga dentro de una página https. Configurada:" },
-    it: { titel: "Richieste", vorschlaege: "Disponibile su Seerr", anfragen: "Richiedi", laeuft: "richiesta in corso …", fertig: "Richiesto", vorhanden: "nella tua libreria", angefragt: "già richiesto", arbeit: "in scaricamento", teilweise: "parzialmente disponibile", fehler: "Non riuscito", oeffnen: "Apri in Seerr", rahmenLeer: "Seerr non può essere mostrato qui. Di solito l’indirizzo è sbagliato: un indirizzo http non si carica in una pagina https. Impostato:" },
-    nl: { titel: "Verzoeken", vorschlaege: "Beschikbaar via Seerr", anfragen: "Aanvragen", laeuft: "aanvragen …", fertig: "Aangevraagd", vorhanden: "in je bibliotheek", angefragt: "al aangevraagd", arbeit: "wordt opgehaald", teilweise: "gedeeltelijk beschikbaar", fehler: "Niet gelukt", oeffnen: "Openen in Seerr", rahmenLeer: "Seerr kan hier niet worden getoond. Meestal klopt het adres niet: een http-adres laadt niet in een https-pagina. Ingesteld:" },
-    pt: { titel: "Pedidos", vorschlaege: "Disponível via Seerr", anfragen: "Pedir", laeuft: "a pedir …", fertig: "Pedido", vorhanden: "na sua biblioteca", angefragt: "já pedido", arbeit: "a obter", teilweise: "parcialmente disponível", fehler: "Não resultou", oeffnen: "Abrir no Seerr", rahmenLeer: "O Seerr não pode ser mostrado aqui. Normalmente o endereço está errado: um endereço http não carrega numa página https. Definido:" },
-    pl: { titel: "Żądania", vorschlaege: "Dostępne przez Seerr", anfragen: "Poproś", laeuft: "wysyłanie …", fertig: "Zgłoszono", vorhanden: "w Twojej bibliotece", angefragt: "już zgłoszone", arbeit: "pobieranie", teilweise: "częściowo dostępne", fehler: "Nie udało się", oeffnen: "Otwórz w Seerr", rahmenLeer: "Nie można tu wyświetlić Seerr. Zwykle adres jest błędny: adres http nie wczyta się na stronie https. Ustawiono:" },
-    ru: { titel: "Запросы", vorschlaege: "Доступно через Seerr", anfragen: "Запросить", laeuft: "запрос …", fertig: "Запрошено", vorhanden: "в вашей библиотеке", angefragt: "уже запрошено", arbeit: "загружается", teilweise: "частично доступно", fehler: "Не удалось", oeffnen: "Открыть в Seerr", rahmenLeer: "Seerr нельзя показать здесь. Обычно дело в адресе: http не загрузится внутри https. Задано:" },
-    sv: { titel: "Förfrågningar", vorschlaege: "Tillgängligt via Seerr", anfragen: "Begär", laeuft: "begär …", fertig: "Begärd", vorhanden: "i ditt bibliotek", angefragt: "redan begärd", arbeit: "hämtas", teilweise: "delvis tillgänglig", fehler: "Gick inte", oeffnen: "Öppna i Seerr", rahmenLeer: "Seerr kan inte visas här. Oftast är adressen fel: en http-adress laddas inte i en https-sida. Inställt:" },
-    da: { titel: "Anmodninger", vorschlaege: "Tilgængelig via Seerr", anfragen: "Anmod", laeuft: "anmoder …", fertig: "Anmodet", vorhanden: "i dit bibliotek", angefragt: "allerede anmodet", arbeit: "hentes", teilweise: "delvist tilgængelig", fehler: "Gik ikke", oeffnen: "Åbn i Seerr", rahmenLeer: "Seerr kan ikke vises her. Som regel er adressen forkert: en http-adresse indlæses ikke i en https-side. Indstillet:" },
-    nb: { titel: "Forespørsler", vorschlaege: "Tilgjengelig via Seerr", anfragen: "Be om", laeuft: "ber om …", fertig: "Forespúrt", vorhanden: "i biblioteket ditt", angefragt: "allerede forespúrt", arbeit: "hentes", teilweise: "delvis tilgjengelig", fehler: "Gikk ikke", oeffnen: "Åpne i Seerr", rahmenLeer: "Seerr kan ikke vises her. Som regel er adressen feil: en http-adresse lastes ikke i en https-side. Innstilt:" },
-    fi: { titel: "Pyynnöt", vorschlaege: "Saatavilla Seerrin kautta", anfragen: "Pyydä", laeuft: "pyydetään …", fertig: "Pyydetty", vorhanden: "kirjastossasi", angefragt: "jo pyydetty", arbeit: "haetaan", teilweise: "osittain saatavilla", fehler: "Ei onnistunut", oeffnen: "Avaa Seerrissä", rahmenLeer: "Seerriä ei voi näyttää tässä. Yleensä osoite on väärä: http-osoite ei lataudu https-sivulla. Asetettu:" },
-    cs: { titel: "Žádosti", vorschlaege: "Dostupné přes Seerr", anfragen: "Požádat", laeuft: "žádám …", fertig: "Vyžádáno", vorhanden: "ve vaší knihovně", angefragt: "již vyžádáno", arbeit: "stažuje se", teilweise: "částečně dostupné", fehler: "Nepovedlo se", oeffnen: "Otevřít v Seerr", rahmenLeer: "Seerr zde nelze zobrazit. Obvykle je špatně adresa: http se v https stránce nenačte. Nastaveno:" },
-    hu: { titel: "Kérések", vorschlaege: "Elérhető a Seerren", anfragen: "Kérés", laeuft: "kérés …", fertig: "Kérve", vorhanden: "a könyvtáradban", angefragt: "már kérve", arbeit: "letöltés alatt", teilweise: "részben elérhető", fehler: "Nem sikerült", oeffnen: "Megnyitás a Seerrben", rahmenLeer: "A Seerr itt nem jeleníthető meg. Általában a cím hibás: http cím nem tölt be https oldalon. Beállítva:" },
-    tr: { titel: "İstekler", vorschlaege: "Seerr üzerinden mevcut", anfragen: "İste", laeuft: "isteniyor …", fertig: "İstendi", vorhanden: "kütüphanenizde", angefragt: "zaten istendi", arbeit: "alınıyor", teilweise: "kısmen mevcut", fehler: "Olmadı", oeffnen: "Seerr’de aç", rahmenLeer: "Seerr burada gösterilemiyor. Genellikle adres yanlıştır: http adresi https sayfada yüklenmez. Ayarlı:" },
-    uk: { titel: "Запити", vorschlaege: "Доступно через Seerr", anfragen: "Запитати", laeuft: "запит …", fertig: "Запитано", vorhanden: "у вашій бібліотеці", angefragt: "вже запитано", arbeit: "завантажується", teilweise: "частково доступно", fehler: "Не вдалося", oeffnen: "Відкрити в Seerr", rahmenLeer: "Seerr не можна показати тут. Зазвичай справа в адресі: http не завантажиться в https. Задано:" },
-    zh: { titel: "请求", vorschlaege: "可通过 Seerr 获取", anfragen: "请求", laeuft: "请求中 …", fertig: "已请求", vorhanden: "已在媒体库", angefragt: "已请求过", arbeit: "下载中", teilweise: "部分可用", fehler: "未成功", oeffnen: "在 Seerr 中打开", rahmenLeer: "无法在此显示 Seerr。通常是地址有误：http 地址无法在 https 页面中加载。当前设置：" },
-    ja: { titel: "リクエスト", vorschlaege: "Seerr で入手可能", anfragen: "リクエスト", laeuft: "リクエスト中 …", fertig: "リクエスト済み", vorhanden: "ライブラリにあり", angefragt: "リクエスト済み", arbeit: "取得中", teilweise: "一部利用可能", fehler: "失敗しました", oeffnen: "Seerr で開く", rahmenLeer: "ここに Seerr を表示できません。多くはアドレスの問題です：http は https ページ内で読み込めません。現在の設定:" },
-    ko: { titel: "요청", vorschlaege: "Seerr에서 이용 가능", anfragen: "요청", laeuft: "요청 중 …", fertig: "요청됨", vorhanden: "라이브러리에 있음", angefragt: "이미 요청됨", arbeit: "가져오는 중", teilweise: "일부 이용 가능", fehler: "실패", oeffnen: "Seerr에서 열기", rahmenLeer: "여기에 Seerr를 표시할 수 없습니다. 보통 주소 문제입니다: http 주소는 https 페이지에서 로드되지 않습니다. 현재 설정:" },
-  };
-
-  function sprache() {
-    var l = '';
-    try {
-      l = document.documentElement.getAttribute('lang')
-        || (navigator.language || navigator.userLanguage || '');
-    } catch (e) { /* egal */ }
-    l = String(l).toLowerCase().split('-')[0];
-    return SPRACHEN[l] ? l : 'en';
-  }
+  /* UI strings. English only, regardless of the client's language. */
+  var TEXT = { titel: "Requests", vorschlaege: "Available via Seerr", anfragen: "Request", laeuft: "requesting …", fertig: "Requested", vorhanden: "in your library", angefragt: "already requested", arbeit: "being fetched", teilweise: "partially available", fehler: "Did not work", oeffnen: "Open in Seerr", rahmenLeer: "Seerr cannot be shown here. Usually the address is wrong – an http address will not load inside an https page. Currently set:" };
 
   function t(schluessel) {
-    var tab = SPRACHEN[sprache()] || SPRACHEN.en;
-    return tab[schluessel] || SPRACHEN.en[schluessel] || schluessel;
+    return TEXT[schluessel] || schluessel;
   }
 
   function basis() {
@@ -69,7 +32,7 @@
       if (window.ApiClient && window.ApiClient.serverAddress) {
         return window.ApiClient.serverAddress();
       }
-    } catch (e) { /* egal */ }
+    } catch (e) { /* ignore */ }
     return '';
   }
 
@@ -80,7 +43,7 @@
         var tk = window.ApiClient.accessToken();
         if (tk) { h.Authorization = 'MediaBrowser Token="' + tk + '"'; }
       }
-    } catch (e) { /* egal */ }
+    } catch (e) { /* ignore */ }
     return h;
   }
 
@@ -93,29 +56,29 @@
     });
   }
 
-  /* ---------------------------------------------------------------- Knoepfe */
+  /* ---------------------------------------------------------------- Buttons */
 
-  /* Ein vorhandener Bibliotheksknopf aus der Kopfleiste - Vorlage und
-     zugleich Einhaengepunkt. */
+  /* An existing library button in the header - both the template and the
+     insertion point. */
   function vorbildKopf() {
     return document.querySelector(
       'a.MuiButton-root[href^="#/movies"], a.MuiButton-root[href^="#/tv?"],'
       + ' a.MuiButton-root[href^="#/livetv"], a.MuiButton-root[href^="#/home?"]');
   }
 
-  /* Wolke mit Pfeil nach unten. Dasselbe Zeichen im Seitenmenue, dort ueber die
-     Klasse cloud_download - die ist in Jellyfins Stylesheet definiert, weil der
-     Client sie selbst benutzt. Nur solche Zeichen lassen sich per Klasse
-     setzen; erfundene Namen ergaeben eine leere Flaeche. */
+  /* Cloud with a down arrow. Same icon in the side menu, there via the
+     cloud_download class - it is defined in Jellyfin's stylesheet because the
+     client uses it itself. Only such icons can be set via class; made-up names
+     would render as an empty box. */
   var SYMBOL = 'M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0'
     + ' 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17'
     + ' 13l-5 5-5-5h3V9h4v4h3z';
 
-  /* Beschriftung der Schaltflaeche.
+  /* Button label.
 
-     Ein in den Einstellungen eingetragener Text gewinnt - wer bewusst etwas
-     anderes hinschreibt, will das auch sehen. Ist das Feld leer (Standard),
-     entscheidet die Sprache des Clients. */
+     A text entered in the settings wins - whoever deliberately sets something
+     else wants to see it. If the field is empty (default), the English
+     default label is used. */
   function beschriftung() {
     return (cfg && cfg.label) ? cfg.label : t('titel');
   }
@@ -125,8 +88,8 @@
 
     var schon = document.querySelector('a[data-seerr-kopf]');
     if (schon) {
-      // Die Sprache kann sich im laufenden Betrieb aendern - im Profil
-      // umgestellt, ohne Neuladen. Dann muss die Beschriftung nachziehen.
+      // The label can change while running (e.g. settings changed without a
+      // reload). Then the button has to follow.
       var soll = beschriftung();
       if (schon.textContent.trim() !== soll) {
         Array.prototype.slice.call(schon.childNodes).forEach(function (n) {
@@ -150,9 +113,8 @@
     var svg = knopf.querySelector('svg');
     if (svg) { svg.setAttribute('data-testid', 'SeerrIcon'); }
 
-    // Die Beschriftung ist ein blanker Textknoten hinter dem Symbol. Alle
-    // Textknoten entfernen und einen eigenen anhaengen - dann bleibt die
-    // Symbolhuelle unangetastet.
+    // The label is a bare text node after the icon. Remove all text nodes
+    // and append our own - that leaves the icon wrapper untouched.
     Array.prototype.slice.call(knopf.childNodes).forEach(function (n) {
       if (n.nodeType === 3) { knopf.removeChild(n); }
     });
@@ -184,7 +146,7 @@
 
     var symbol = eintrag.querySelector('.navMenuOptionIcon');
     if (symbol) {
-      // Jellyfin setzt das Symbol ueber die Klasse, nicht ueber den Inhalt.
+      // Jellyfin sets the icon via the class, not via the content.
       symbol.className = 'material-icons navMenuOptionIcon cloud_download';
     }
     var text = eintrag.querySelector('.navMenuOptionText');
@@ -193,7 +155,7 @@
     liste.appendChild(eintrag);
   }
 
-  /* ------------------------------------------------------- Eingebettete Ansicht */
+  /* ---------------------------------------------------------- Embedded view */
 
   function kopfHoehe() {
     var kopf = document.querySelector('header.MuiAppBar-root, .skinHeader');
@@ -201,12 +163,11 @@
     return h > 0 ? h : 56;
   }
 
-  /* Welcher Pfad innerhalb von Seerr soll gezeigt werden?
+  /* Which path inside Seerr should be shown?
 
-     Steht als Zusatz in der Adresse: #/seerr?ziel=%2Fmovie%2F1234
-     Nur Pfade werden akzeptiert, keine vollstaendigen Adressen - sonst koennte
-     ein untergeschobener Link eine fremde Seite im Rahmen oeffnen, die dann
-     aussieht, als gehoere sie zu Jellyfin. */
+     Passed as a parameter in the address: #/seerr?ziel=%2Fmovie%2F1234
+     Only paths are accepted, no full URLs - otherwise a planted link could
+     open a foreign page in the frame that then looks like part of Jellyfin. */
   function zielAusHash() {
     var h = location.hash || '';
     var i = h.indexOf('?');
@@ -224,9 +185,9 @@
     var vorhanden = document.getElementById('seerrAnsicht');
     if (vorhanden) {
       vorhanden.style.top = kopfHoehe() + 'px';
-      // Beim Sprung von einem Treffer zum naechsten bleibt der Rahmen stehen
-      // und bekommt nur eine neue Adresse - das ist schneller als ihn neu
-      // aufzubauen und behaelt die Anmeldung.
+      // When jumping from one result to the next the frame stays and only
+      // gets a new address - faster than rebuilding it, and it keeps the
+      // sign-in.
       var f = vorhanden.querySelector('iframe');
       if (f && f.getAttribute('data-ziel') !== ziel) {
         f.setAttribute('data-ziel', ziel);
@@ -243,15 +204,15 @@
     var rahmen = document.createElement('iframe');
     rahmen.className = 'sb-rahmen';
     rahmen.setAttribute('title', 'Seerr');
-    // allow-same-origin ist noetig, damit Seerr seine Sitzung behaelt;
-    // ohne das waere der Rahmen bei jedem Aufruf abgemeldet.
+    // allow-same-origin is needed so Seerr keeps its session; without it
+    // the frame would be signed out on every visit.
     rahmen.setAttribute('allow', 'fullscreen');
     rahmen.setAttribute('data-ziel', ziel);
 
-    // Wenn der Rahmen leer bleibt, ist die Ursache fast immer die Adresse:
-    // eine http-Seite in einer https-Seite blockiert der Browser ersatzlos, und
-    // eine reine LAN-Adresse ist von unterwegs nicht erreichbar. Ein leerer
-    // blauer Kasten sagt das niemandem - dieser Hinweis schon.
+    // If the frame stays empty, the cause is almost always the address: the
+    // browser silently blocks an http page inside an https page, and a
+    // LAN-only address is not reachable from outside. An empty blue box tells
+    // nobody that - this hint does.
     var geladen = false;
     rahmen.addEventListener('load', function () { geladen = true; });
     setTimeout(function () {
@@ -275,20 +236,20 @@
     document.body.appendChild(huelle);
     document.body.classList.add('sb-aktiv');
 
-    /* Erst die Anmeldung weiterreichen, dann laden.
+    /* Pass on the sign-in first, then load.
 
-       Die Reihenfolge ist wichtig: laedt der Rahmen zuerst, sieht man kurz die
-       Anmeldemaske und muesste danach neu laden. Der Aufruf kostet einmal je
-       Seitenaufruf einen Moment; danach steht die Sitzung 30 Tage. Schlaegt er
-       fehl, wird trotzdem geladen - dann eben mit der gewohnten Anmeldemaske. */
+       The order matters: if the frame loads first, the login form flashes up
+       and a reload would be needed afterwards. The call costs a moment once
+       per page load; after that the session lasts 30 days. If it fails, the
+       frame loads anyway - just with the usual login form. */
     ssoDann(function () { rahmen.src = cfg.url + ziel; });
   }
 
   function ssoDann(weiter) {
     if (!cfg || !cfg.sso || ssoVersucht) { weiter(); return; }
     ssoVersucht = true;
-    // Haengt der Server, nicht endlos warten - lieber die Anmeldemaske zeigen
-    // als einen leeren Kasten.
+    // If the server hangs, do not wait forever - better show the login form
+    // than an empty box.
     var zeit = setTimeout(weiter, 4000);
     holen('/SeerrBridge/sso')
       .then(function () { clearTimeout(zeit); weiter(); })
@@ -307,7 +268,7 @@
     if (aktiv) { ansichtZeigen(); } else { ansichtVerbergen(); }
   }
 
-  /* ------------------------------------------------------------------ Suche */
+  /* ----------------------------------------------------------------- Search */
 
   function suchFeld() {
     var kandidaten = document.querySelectorAll(
@@ -325,20 +286,20 @@
   }
 
   function zielBehaelter() {
-    // Der sichtbare Seiteninhalt der Suchseite. Mehrere Kandidaten, weil
-    // Jellyfin die Suchseite je nach Fassung anders aufhaengt.
+    // The visible content of the search page. Several candidates, because
+    // Jellyfin mounts the search page differently depending on version.
     return document.querySelector('.searchResults')
       || document.querySelector('.mainAnimatedPage:not(.hide) .padded-left')
       || document.querySelector('.mainAnimatedPage:not(.hide)')
       || document.querySelector('#reactRoot > div:last-child');
   }
 
-  /* Hinter Jellyfins eigene Ergebnisgruppen setzen.
-     Die eigene Bibliothek gehoert zuerst auf die Seite - was man schon hat,
-     will man nicht unter Vorschlaegen suchen. Jellyfin legt jede Gruppe
-     ("Filme", "Serien") als eigenen Abschnitt an; hinter den letzten davon
-     einzuhaengen ist zuverlaessiger als ein Anhaengen an den Behaelter, weil
-     Jellyfin seine Gruppen nach uns fertigstellt. */
+  /* Place after Jellyfin's own result groups.
+     The user's own library comes first - nobody wants to hunt for what they
+     already have among suggestions. Jellyfin creates each group ("Movies",
+     "Shows") as its own section; inserting after the last of them is more
+     reliable than appending to the container, because Jellyfin finishes its
+     groups after us. */
   function einordnen(a) {
     var gruppen = document.querySelectorAll(
       '.mainAnimatedPage:not(.hide) .verticalSection, .searchResults .verticalSection');
@@ -366,11 +327,10 @@
 
     var a = document.createElement('div');
     a.id = 'seerrTreffer';
-    // Jellyfins eigene Klassen mitnehmen statt eigene Abstaende erfinden:
-    // der linke Rand steckt nicht im Abschnitt, sondern in "padded-left" an
-    // Ueberschrift und Kachelreihe. Wer das nachbaut, trifft einen festen
-    // Pixelwert, der auf schmalen Geraeten wieder falsch ist - Jellyfin
-    // veraendert diesen Abstand je nach Fensterbreite.
+    // Reuse Jellyfin's own classes instead of inventing spacing: the left
+    // margin is not on the section but in "padded-left" on the heading and
+    // tile row. Rebuilding it means a fixed pixel value that is wrong again on
+    // narrow devices - Jellyfin varies this spacing with window width.
     a.className = 'sb-abschnitt verticalSection';
     a.innerHTML =
       '<h2 class="sb-ueberschrift sectionTitle sectionTitle-cards padded-left padded-right"></h2>'
@@ -387,16 +347,16 @@
     return '';
   }
 
-  /* Adresse eines Treffers in Seerr. Filme liegen unter /movie/<id>,
-     Serien unter /tv/<id> - dieselbe Kennung von TMDB in beiden Faellen. */
+  /* Address of a result in Seerr. Movies live under /movie/<id>, shows
+     under /tv/<id> - the same TMDB id in both cases. */
   function trefferZiel(e) {
     return ROUTE + '?ziel='
       + encodeURIComponent('/' + (e.mediaType === 'tv' ? 'tv' : 'movie') + '/' + e.tmdbId);
   }
 
   function kachel(e) {
-    // Ein echter Link, kein Klickfaenger: so funktionieren mittlere Maustaste,
-    // Tastaturbedienung und die Vorschau der Zieladresse wie ueberall sonst.
+    // A real link, not a click handler: middle-click, keyboard navigation and
+    // the link target preview work like everywhere else.
     var k = document.createElement('a');
     k.className = 'sb-kachel';
     k.setAttribute('href', trefferZiel(e));
@@ -422,8 +382,8 @@
       knopf.className = 'sb-knopf';
       knopf.textContent = t('anfragen');
       knopf.addEventListener('click', function (ereignis) {
-        // Der Knopf sitzt in einem Link - ohne das hier wuerde ein Klick auf
-        // "Anfragen" zusaetzlich die Detailseite oeffnen.
+        // The button sits inside a link - without this a click on
+        // "Request" would also open the detail page.
         ereignis.preventDefault();
         ereignis.stopPropagation();
         knopf.disabled = true;
@@ -463,9 +423,8 @@
     holen('/SeerrBridge/search?q=' + encodeURIComponent(begriff)).then(function (d) {
       var a = abschnitt();
       if (!a) { return; }
-      // Die Ueberschrift wird beim Anlegen gesetzt, der Abschnitt aber
-      // wiederverwendet. Ohne diese Zeile bliebe sie nach einem Sprachwechsel
-      // in der alten Sprache stehen.
+      // The heading is set on creation, but the section is reused. This keeps
+      // the heading text in sync if it ever changes.
       var ueber = a.querySelector('.sb-ueberschrift');
       if (ueber && ueber.textContent !== t('vorschlaege')) {
         ueber.textContent = t('vorschlaege');
@@ -481,7 +440,7 @@
       items.forEach(function (e) { reihe.appendChild(kachel(e)); });
 
       einordnen(a);
-    }).catch(function () { /* stumm - die Suche darf daran nicht scheitern */ });
+    }).catch(function () { /* silent - search must not fail because of this */ });
   }
 
   function sucheAnbinden() {
@@ -492,13 +451,13 @@
     feld.addEventListener('input', function () {
       var wert = feld.value;
       if (suchTakt) { clearTimeout(suchTakt); }
-      // Bewusst traege: bei jedem Tastendruck zu suchen belastet Seerr
-      // und liefert Treffer zu halben Woertern.
+      // Deliberately slow: searching on every keystroke loads Seerr and
+      // returns results for half-typed words.
       suchTakt = setTimeout(function () { suchen(wert); }, 450);
     });
   }
 
-  /* ---------------------------------------------------------------- Anstoss */
+  /* ---------------------------------------------------------------- Startup */
 
   function auffrischen() {
     kopfKnopfSetzen();
@@ -506,8 +465,8 @@
     routePruefen();
     if (suchSeite()) {
       sucheAnbinden();
-      // Jellyfin baut seine Gruppen bei jedem Tastendruck neu - danach steht
-      // unser Abschnitt wieder falsch und muss erneut einsortiert werden.
+      // Jellyfin rebuilds its groups on every keystroke - afterwards our
+      // section is out of place and has to be re-positioned.
       var a = document.getElementById('seerrTreffer');
       if (a) { einordnen(a); }
     }
@@ -531,9 +490,9 @@
           if (h) { h.style.top = kopfHoehe() + 'px'; }
         });
 
-        // React baut die Kopfleiste bei jedem Seitenwechsel neu auf und wirft
-        // Fremdes dabei heraus. Der Beobachter setzt es danach erneut - gedrosselt,
-        // weil er sonst bei jeder Kleinigkeit im Baum feuert.
+        // React rebuilds the header on every page change and throws out
+        // anything foreign. The observer re-adds it afterwards - throttled,
+        // because otherwise it fires on every little change in the tree.
         var geplant = false;
         beobachter = new MutationObserver(function () {
           if (geplant) { return; }
@@ -542,20 +501,19 @@
         });
         beobachter.observe(document.body, { childList: true, subtree: true });
 
-        /* Zusaetzlich eine ruhige Nachschau im Sekundentakt.
-           Der Beobachter allein reicht nicht: waehrend React eine Seite umbaut,
-           feuert er mitten im Umbau. Faellt der Knopf dabei weg oder ist die
-           Vorlage gerade nicht da, laeuft der Wiedereinbau ins Leere - und
-           danach gibt es keine Aenderung mehr, die ihn erneut ausloesen wuerde.
-           Der Knopf bliebe bis zum naechsten Klick verschwunden. Ein Blick pro
-           Sekunde kostet eine Abfrage im Baum und macht das Ganze unabhaengig
-           vom Zufall der Reihenfolge. Kurz genug, dass die Luecke nach einem
-           Seitenwechsel nicht als Flackern auffaellt. */
+        /* Additionally, a quiet periodic re-check.
+           The observer alone is not enough: while React rebuilds a page, it
+           fires mid-rebuild. If the button disappears then or the template is
+           missing at that moment, re-adding it does nothing - and afterwards
+           no further change triggers it again. The button would stay gone until
+           the next click. A periodic check costs one DOM query and makes this
+           independent of timing. Short enough that the gap after a page change
+           does not show as flicker. */
         setInterval(auffrischen, 400);
 
         auffrischen();
       })
-      .catch(function () { /* Plugin nicht eingerichtet - dann eben nichts */ });
+      .catch(function () { /* plugin not configured - then do nothing */ });
   }
 
   if (document.readyState === 'loading') {

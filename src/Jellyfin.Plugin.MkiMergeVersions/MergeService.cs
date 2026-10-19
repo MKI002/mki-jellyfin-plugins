@@ -61,7 +61,7 @@ public class MergeService
 	public async Task<Ergebnis> RunAsync(bool dryRun, bool fixPrimaryOrder, IProgress<double>? progress, CancellationToken ct)
 	{
 		List<Video> filme = AlleFilme();
-		LoggerExtensions.LogInformation(_log, "MKI Merge: {Anzahl} Filmeintraege gelesen", new object[1] { filme.Count });
+		LoggerExtensions.LogInformation(_log, "MKI Merge: read {Count} movie entries", new object[1] { filme.Count });
 		Dictionary<string, List<Video>> dictionary = new Dictionary<string, List<Video>>(StringComparer.Ordinal);
 		foreach (Video item in filme.Where((Video x) => !x.PrimaryVersionId.HasValue))
 		{
@@ -79,7 +79,7 @@ public class MergeService
 		int umgebaut = 0;
 		int fehler = 0;
 		List<List<Video>> arbeit = dictionary.Values.Where((List<Video> g) => g.Count > 1).ToList();
-		LoggerExtensions.LogInformation(_log, "MKI Merge: {Anzahl} Gruppen zum Zusammenfuehren", new object[1] { arbeit.Count });
+		LoggerExtensions.LogInformation(_log, "MKI Merge: {Count} groups to merge", new object[1] { arbeit.Count });
 		for (int i = 0; i < arbeit.Count; i++)
 		{
 			ct.ThrowIfCancellationRequested();
@@ -95,7 +95,7 @@ public class MergeService
 			catch (Exception ex)
 			{
 				fehler++;
-				LoggerExtensions.LogError(_log, ex, "MKI Merge: {Titel} fehlgeschlagen", new object[1] { ((BaseItem)arbeit[i][0]).Name });
+				LoggerExtensions.LogError(_log, ex, "MKI Merge: {Title} failed", new object[1] { ((BaseItem)arbeit[i][0]).Name });
 			}
 		}
 		if (fixPrimaryOrder)
@@ -123,7 +123,7 @@ public class MergeService
 				{
 					continue;
 				}
-				LoggerExtensions.LogInformation(_log, "MKI Merge: {Titel} - Haupteintrag hat {Alt}px, hoechste Aufloesung waere {Neu}px. Wird umgebaut.", new object[3]
+				LoggerExtensions.LogInformation(_log, "MKI Merge: {Title} - primary entry is {Old}px, highest resolution is {New}px. Rebuilding.", new object[3]
 				{
 					((BaseItem)haupt).Name,
 					Breite((BaseItem)(object)haupt),
@@ -139,17 +139,17 @@ public class MergeService
 				catch (Exception ex2)
 				{
 					fehler++;
-					LoggerExtensions.LogError(_log, ex2, "MKI Merge: Umbau von {Titel} fehlgeschlagen", new object[1] { ((BaseItem)haupt).Name });
+					LoggerExtensions.LogError(_log, ex2, "MKI Merge: rebuilding {Title} failed", new object[1] { ((BaseItem)haupt).Name });
 				}
 			}
 		}
 		progress?.Report(100.0);
-		LoggerExtensions.LogInformation(_log, "MKI Merge fertig: {Zusammen} zusammengefuehrt, {Umgebaut} umgebaut, {Fehler} Fehler{Trocken}", new object[4]
+		LoggerExtensions.LogInformation(_log, "MKI Merge done: {Merged} merged, {Rebuilt} rebuilt, {Errors} errors{DryRun}", new object[4]
 		{
 			zusammen,
 			umgebaut,
 			fehler,
-			dryRun ? " (Testlauf, nichts geschrieben)" : string.Empty
+			dryRun ? " (dry run, nothing written)" : string.Empty
 		});
 		return new Ergebnis(arbeit.Count, zusammen, umgebaut, fehler);
 	}
@@ -169,7 +169,7 @@ public class MergeService
 		}
 		string text = string.Join(" + ", from x in alle.OrderByDescending(Breite)
 			select Breite((BaseItem)(object)x).ToString(CultureInfo.InvariantCulture) + "px");
-		LoggerExtensions.LogInformation(_log, "MKI Merge: {Titel} [{Aufl}] -> Haupteintrag {Breite}px", new object[3]
+		LoggerExtensions.LogInformation(_log, "MKI Merge: {Title} [{Resolutions}] -> primary entry {Width}px", new object[3]
 		{
 			((BaseItem)haupt).Name,
 			text,

@@ -1,10 +1,10 @@
 /*
- * Media Hero - Darstellung
+ * Media Hero - styles
  *
- * Bewusst ohne Bibliothek und ohne teure Filter: die Uebergaenge laufen ueber
- * opacity und transform, also auf der Grafikkarte. Kein backdrop-filter auf
- * grossen Flaechen - das ist der haeufigste Grund, warum solche Leisten auf
- * schwachen Geraeten ruckeln.
+ * Deliberately no library and no expensive filters: transitions run on
+ * opacity and transform, i.e. on the GPU. No backdrop-filter on large
+ * areas - that is the most common reason such banners stutter on weak
+ * devices.
  */
 
 .mh-host {
@@ -19,9 +19,9 @@
   border-radius: var(--mh-radius, 0px);
   overflow: hidden;
   isolation: isolate;
-  /* KEIN eigener Hintergrund: er laege unter dem ausblendenden Bild und
-     wuerde als harte Kante sichtbar. Die Platzhalterfarbe sitzt stattdessen
-     auf .mh-bild und wird von derselben Maske miterfasst. */
+  /* NO background of its own: it would sit under the fading image and
+     show up as a hard edge. The placeholder colour lives on .mh-bild
+     instead and is covered by the same mask. */
   background: transparent;
 }
 
@@ -30,15 +30,15 @@
   inset: 0;
 }
 
-/* Ohne Ausblendung soll die Maske gar nicht erst greifen - sonst kaeme es
-   an manchen Browsern zu einem kaum sichtbaren Saum an der Unterkante. */
+/* Without a fade the mask should not apply at all - otherwise some browsers
+   show a barely visible seam along the bottom edge. */
 .mh-wrap[data-fade="0"] .mh-bild,
 .mh-wrap[data-fade="0"] .mh-scrim {
   -webkit-mask-image: none;
   mask-image: none;
 }
 
-/* --- Folien ------------------------------------------------------------- */
+/* --- Slides ------------------------------------------------------------- */
 .mh-folie {
   position: absolute;
   inset: 0;
@@ -72,10 +72,10 @@
 
 .mh-uebergang-none { transition: none; }
 
-/* Ausblenden zum unteren Rand.
-   Die Maske liegt auf Bild und Abdunklung, nicht auf der ganzen Folie - sonst
-   waeren Titel und Knoepfe gleich mit durchsichtig. Bei --mh-fade: 0% bleibt
-   die harte Kante. */
+/* Fade out towards the bottom edge.
+   The mask sits on the image and the scrim, not on the whole slide - otherwise
+   the title and buttons would turn transparent too. With --mh-fade: 0% the
+   hard edge stays. */
 .mh-bild, .mh-scrim {
   -webkit-mask-image: linear-gradient(to bottom,
     #000 calc(100% - var(--mh-fade, 18%)), transparent 100%);
@@ -206,7 +206,7 @@
 
 .mh-rund { border-radius: 999px; padding: .62em .85em; }
 
-/* --- Positionsanzeige --------------------------------------------------- */
+/* --- Position indicator ------------------------------------------------ */
 .mh-anzeige {
   position: absolute;
   right: 3.5%;
@@ -225,10 +225,10 @@
   transition: background .2s ease, width .25s ease, transform .2s ease;
 }
 
-/* Wanderndes Fenster statt einer Punktereihe ueber die ganze Breite.
-   Der aktive Punkt ist ein voller Strich, die Nachbarn verlaufen nach aussen
-   ins Nichts. Punkte ab Abstand 3 bekommen Breite und Abstand 0 und fallen
-   damit aus dem Fluss - dadurch wandert das Fenster von selbst mit. */
+/* A moving window instead of a row of dots across the full width.
+   The active dot is a full bar, its neighbours fade out towards the edges.
+   Dots at distance 3 or more get zero width and spacing and drop out of the
+   flow - so the window moves along by itself. */
 .mh-anzeige-dots { overflow: hidden; max-width: 45%; justify-content: flex-end; }
 
 .mh-anzeige-dots .mh-punkt {
@@ -267,7 +267,7 @@
 .mh-anzeige-progressbar .mh-punkt { flex: 1; height: 3px; border-radius: 2px; }
 .mh-anzeige-progressbar .mh-punkt.mh-aktiv { background: #fff; }
 
-/* --- Grundformen -------------------------------------------------------- */
+/* --- Layouts ------------------------------------------------------------ */
 .mh-layout-contained { margin: 0 2%; }
 
 .mh-layout-compact {
@@ -311,7 +311,7 @@
   font-size: .95rem;
 }
 
-/* --- Schmale Fenster ---------------------------------------------------- */
+/* --- Narrow windows ----------------------------------------------------- */
 @media (max-width: 800px) {
   .mh-wrap { height: min(var(--mh-h, 56vh), 46vh); min-height: 210px; }
   .mh-text { right: 6%; bottom: 12%; }
@@ -324,10 +324,10 @@
   .mh-uebergang-kenburns.mh-aktiv .mh-bild { animation: none; }
 }
 
-/* --- Verschmelzung mit der Kopfleiste ------------------------------------
- * Die Leiste wird um die Kopfhoehe nach oben gezogen und waechst um denselben
- * Betrag, damit die sichtbare Flaeche gleich bleibt. Zusaetzlich ein Verlauf
- * oben, damit die Navigation auf hellen Bildern lesbar bleibt.
+/* --- Blending into the header bar ---------------------------------------
+ * The banner is pulled up by the header height and grows by the same amount
+ * so the visible area stays the same. Plus a gradient at the top so the
+ * navigation stays readable on bright images.
  */
 .mh-host.mh-verschmolzen {
   margin-top: calc(-1 * var(--mh-kopf, 0px));
@@ -339,13 +339,13 @@
 }
 
 .mh-host.mh-verschmolzen .mh-scrim::after {
-  /* eigener Verlauf oben - die Maske unten darf ihn nicht abschneiden */
+  /* separate gradient at the top - the bottom mask must not cut it off */
   content: '';
   position: absolute;
   left: 0; right: 0; top: 0;
-  /* Deutlich hoeher als die Kopfleiste und mit weichem Ausklang: bei einem
-     kurzen Verlauf sieht man die Kante, an der er endet. Die mittleren
-     Stuetzpunkte nehmen die harte Mitte aus dem Uebergang. */
+  /* Much taller than the header bar and with a soft tail: with a short
+     gradient you can see the edge where it ends. The middle colour stops
+     take the hard middle out of the transition. */
   height: calc(var(--mh-kopf, 0px) * 2.6 + 90px);
   background: linear-gradient(180deg,
     rgba(0, 0, 0, .62) 0%,
@@ -356,8 +356,8 @@
   pointer-events: none;
 }
 
-/* Kopfleiste durchsichtig, solange oben nicht gescrollt wurde */
-/* Auf das gefundene Element, nicht auf einen geratenen Klassennamen */
+/* Header bar transparent while the page is not scrolled */
+/* Applied to the detected element, not to a guessed class name */
 body.mh-kopf-frei .mh-kopf-el,
 body.mh-kopf-frei .skinHeader {
   background: transparent !important;

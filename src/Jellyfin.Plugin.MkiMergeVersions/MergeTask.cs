@@ -15,13 +15,13 @@ public class MergeTask : IScheduledTask
 
 	private readonly ILogger<MergeTask> _log;
 
-	public string Name => "Filme zusammenfuehren (MKI)";
+	public string Name => "Merge movie versions (MKI)";
 
 	public string Key => "MkiMergeVersionsMovies";
 
-	public string Description => "Verknuepft Filme, die in mehreren Aufloesungen vorliegen, zu einem Eintrag. Die hoechste Aufloesung wird der Haupteintrag.";
+	public string Description => "Links movies that exist in several resolutions into a single entry. The highest resolution becomes the primary entry.";
 
-	public string Category => "Bibliothek";
+	public string Category => "Library";
 
 	public MergeTask(ILibraryManager library, ILogger<MergeTask> log)
 	{

@@ -1,17 +1,17 @@
 /*
- * Media Hero - Startseiten-Leiste fuer Jellyfin 12
+ * Media Hero - home screen banner for Jellyfin 12
  *
- * Aufbau in zwei Teilen:
- *   MediaHero.render(...)  zeichnet eine Leiste in ein beliebiges Element.
- *                          Die Konfigurationsseite ruft genau diese Funktion
- *                          fuer ihre Vorschau auf - deshalb kann die Vorschau
- *                          gar nichts anderes zeigen als das Original.
- *   Der Beobachter unten   haengt die Leiste auf der Startseite ein.
+ * Two parts:
+ *   MediaHero.render(...)  draws a banner into any element. The configuration
+ *                          page calls exactly this function for its preview -
+ *                          so the preview cannot show anything other than
+ *                          the real thing.
+ *   The observer below     mounts the banner on the home screen.
  *
- * Zur Geschwindigkeit: der Server liefert die fertige Liste in einer einzigen
- * Antwort. Hier werden keine Eintraege einzeln nachgeladen, und es haengt genau
- * ein Bild je sichtbarer Folie im Speicher - das naechste wird vorgeladen, alle
- * anderen nicht. Kein Zeitgeber laeuft, solange die Leiste nicht zu sehen ist.
+ * On speed: the server delivers the finished list in a single response. No
+ * items are fetched one by one here, and exactly one image per visible slide
+ * is held in memory - the next one is preloaded, the others are not. No timer
+ * runs while the banner is not visible.
  */
 (function () {
   'use strict';
@@ -19,63 +19,18 @@
   var WURZEL = 'mediahero-root';
   var zustand = null;
 
-  /*
-   * Beschriftungen.
-   *
-   * Die Sprache kommt vom Client, nicht vom Server: derselbe Server bedient
-   * Leute mit unterschiedlichen Einstellungen. Jellyfin setzt die aktive
-   * Sprache auf das <html lang>-Attribut; fehlt das, entscheidet der Browser.
-   * Unbekannte Sprachen fallen auf Englisch zurueck, nicht auf Deutsch.
-   */
-  var SPRACHEN = {
-    en: {
-      play: 'Play', details: 'Details', trailer: 'Trailer', favorit: 'Favorite',
-      leer: 'Nothing to show – filters too strict?',
-      eintrag: 'Item', stunde: 'h', minute: 'min',
-    },
-    de: {
-      play: 'Abspielen', details: 'Details', trailer: 'Trailer', favorit: 'Favorit',
-      leer: 'Keine Einträge – Filter zu streng?',
-      eintrag: 'Eintrag', stunde: 'Std.', minute: 'Min.',
-    },
-    fr: {
-      play: 'Lecture', details: 'Détails', trailer: 'Bande-annonce', favorit: 'Favori',
-      leer: 'Rien à afficher – filtres trop stricts ?',
-      eintrag: 'Élément', stunde: 'h', minute: 'min',
-    },
-    es: {
-      play: 'Reproducir', details: 'Detalles', trailer: 'Tráiler', favorit: 'Favorito',
-      leer: 'Nada que mostrar – ¿filtros demasiado estrictos?',
-      eintrag: 'Elemento', stunde: 'h', minute: 'min',
-    },
-    it: {
-      play: 'Riproduci', details: 'Dettagli', trailer: 'Trailer', favorit: 'Preferito',
-      leer: 'Niente da mostrare – filtri troppo restrittivi?',
-      eintrag: 'Elemento', stunde: 'h', minute: 'min',
-    },
-    nl: {
-      play: 'Afspelen', details: 'Details', trailer: 'Trailer', favorit: 'Favoriet',
-      leer: 'Niets te tonen – filters te streng?',
-      eintrag: 'Item', stunde: 'u', minute: 'min',
-    },
+  /* UI labels. English only. */
+  var TEXTE = {
+    play: 'Play', details: 'Details', trailer: 'Trailer', favorit: 'Favorite',
+    leer: 'Nothing to show – filters too strict?',
+    eintrag: 'Item', stunde: 'h', minute: 'min',
   };
 
-  function sprache() {
-    var l = '';
-    try {
-      l = document.documentElement.getAttribute('lang')
-        || (navigator.language || navigator.userLanguage || '');
-    } catch (e) { /* egal */ }
-    l = String(l).toLowerCase().split('-')[0];
-    return SPRACHEN[l] ? l : 'en';
-  }
-
   function t(schluessel) {
-    var s = SPRACHEN[sprache()];
-    return (s && s[schluessel]) || SPRACHEN.en[schluessel] || schluessel;
+    return TEXTE[schluessel] || schluessel;
   }
 
-  // ----------------------------------------------------------------- Hilfen
+  // ----------------------------------------------------------------- Helpers
   function el(tag, klasse, text) {
     var n = document.createElement(tag);
     if (klasse) n.className = klasse;
@@ -86,7 +41,7 @@
   function basis() {
     try {
       if (window.ApiClient && ApiClient.serverAddress) return ApiClient.serverAddress();
-    } catch (e) { /* egal */ }
+    } catch (e) { /* ignore */ }
     return '';
   }
 
@@ -114,7 +69,7 @@
     } catch (e) { return false; }
   }
 
-  // ----------------------------------------------------------------- Zeichnen
+  // ----------------------------------------------------------------- Drawing
   function render(ziel, items, d, optionen) {
     optionen = optionen || {};
     if (!ziel) return null;
@@ -124,10 +79,10 @@
       return null;
     }
 
-    /* Pro Aufruf mischen - auf einer Kopie, damit die vom Server geholte
-       Liste unveraendert bleibt und ein zweiter Aufruf nicht auf einer bereits
-       verwuerfelten Reihenfolge aufsetzt. In der Vorschau bewusst nicht: dort
-       soll sich beim Einstellen nur das aendern, was man gerade verstellt. */
+    /* Shuffle per call - on a copy, so the list fetched from the server stays
+       unchanged and a second call does not start from an already shuffled
+       order. Deliberately not in the preview: there, only what you are
+       currently adjusting should change. */
     if (d.shuffleOnLoad && optionen.vorschau !== true) {
       items = items.slice();
       for (var mi = items.length - 1; mi > 0; mi--) {
@@ -146,8 +101,8 @@
     wrap.style.setProperty('--mh-radius', (d.cornerRadius || 0) + 'px');
     wrap.style.setProperty('--mh-scrim', ((d.scrimStrength == null ? 70 : d.scrimStrength) / 100));
 
-    // Feinmasse als CSS-Variablen - so bleibt das Stylesheet statisch und
-    // trotzdem alles einstellbar.
+    // Fine-grained sizes as CSS variables - keeps the stylesheet static while
+    // everything stays adjustable.
     function mass(name, wert, standard, einheit) {
       wrap.style.setProperty(name, (wert == null ? standard : wert) + (einheit || ''));
     }
@@ -180,8 +135,8 @@
       if (d.showLogo && logo) {
         var img = el('img', 'mh-logo');
         img.alt = item.Name;
-        // Das Logo der ersten Folie ist sofort sichtbar - traege zu laden
-        // hiesse, es erst nachtraeglich einblenden zu lassen.
+        // The first slide's logo is visible immediately - lazy loading would
+        // mean it pops in afterwards.
         img.loading = i === 0 ? 'eager' : 'lazy';
         img.decoding = 'async';
         if (i === 0 && 'fetchPriority' in img) { img.fetchPriority = 'high'; }
@@ -239,7 +194,7 @@
       return { el: f, bild: bild, item: item, geladen: false };
     });
 
-    // Anzeige der Position
+    // Position indicator
     var anzeige = null;
     var art = d.indicator || 'Dots';
     if (art !== 'None' && items.length > 1) {
@@ -251,8 +206,8 @@
           punkt.setAttribute('aria-label', t('eintrag') + ' ' + (n + 1));
           if (art === 'Numbers') punkt.textContent = String(n + 1);
           if (art === 'Thumbnails') {
-            // NICHT t nennen: das wuerde die Uebersetzungsfunktion t() im
-            // gesamten umgebenden Bereich verdecken (var-Hoisting).
+            // Do NOT name this t: it would shadow the label function t() in
+            // the whole enclosing scope (var hoisting).
             var vorschau = bildUrl(items[n], 'Thumb', 200)
               || bildUrl(items[n], 'Backdrop', 200);
             if (vorschau) punkt.style.backgroundImage = 'url("' + vorschau + '")';
@@ -266,7 +221,7 @@
 
     ziel.appendChild(wrap);
 
-    // ------------------------------------------------------------- Ablauf
+    // ------------------------------------------------------------- Playback
     var aktuell = -1;
     var timer = null;
     var pausiert = false;
@@ -287,10 +242,10 @@
         f.el.setAttribute('aria-hidden', i === n ? 'false' : 'true');
       });
       if (anzeige) {
-        // Abstand zur aktuellen Folie als Attribut - das CSS macht daraus ein
-        // Fenster aus wenigen Punkten, das mitwandert. Weit entfernte Punkte
-        // bekommen Breite 0 und verschwinden dadurch aus dem Fluss, statt die
-        // Leiste mit dreissig Punkten zu pflastern.
+        // Distance to the current slide as an attribute - the CSS turns it into
+        // a small window of dots that moves along. Distant dots get width 0
+        // and drop out of the flow instead of covering the banner with thirty
+        // dots.
         Array.prototype.forEach.call(anzeige.children, function (k, i) {
           k.classList.toggle('mh-aktiv', i === n);
           k.setAttribute('data-fern', String(Math.min(Math.abs(i - n), 4)));
@@ -298,7 +253,7 @@
       }
       aktuell = n;
       laden(n);
-      laden((n + 1) % folien.length); // nur die naechste Folie vorladen
+      laden((n + 1) % folien.length); // preload only the next slide
       if (manuell) neuStarten();
     }
 
@@ -337,8 +292,8 @@
       document.addEventListener('keydown', tasten);
     }
 
-    // Zeitgeber anhalten, solange die Leiste nicht sichtbar ist - spart Arbeit
-    // im Hintergrundtab und beim Herunterscrollen.
+    // Pause the timer while the banner is not visible - saves work in
+    // background tabs and when scrolled down.
     var beobachter = null;
     if (window.IntersectionObserver && !optionen.ohneAblauf) {
       beobachter = new IntersectionObserver(function (e) {
@@ -373,19 +328,19 @@
     window.location.hash = hash;
   }
 
-  // ----------------------------------------------------------------- Einhaengen
+  // ----------------------------------------------------------------- Mounting
   function istStartseite() {
     var h = window.location.hash || '';
     return h.indexOf('home') !== -1 || h === '' || h === '#/' || h === '#!/';
   }
 
   /*
-   * Der Anker, VOR den die Leiste gesetzt wird.
+   * The anchor the banner is inserted BEFORE.
    *
-   * Wichtig: nicht hinein. Der Web-Client baut die Abschnitte mit
+   * Important: not inside it. The web client builds the sections with
    *     e.innerHTML = h;  e.classList.add("homeSectionsContainer");
-   * auf und wirft damit jedes eingefuegte Kind sofort wieder raus. Als
-   * Geschwister davor ueberlebt die Leiste jeden Neuaufbau.
+   * which immediately throws out any inserted child. As a sibling in front
+   * of it, the banner survives every rebuild.
    */
   function anker() {
     var k = document.querySelector('.homeSectionsContainer')
@@ -398,35 +353,34 @@
   var laeuft = false;
   var netzLaeuft = null;
 
-  /* Der Zwischenspeicher im Browser.
+  /* The browser-side cache.
 
-     Der Grund: frueher begann der Abruf erst, wenn Jellyfins Startseite
-     fertig war - also nach einer halben Sekunde -, und danach kamen Netz,
-     Aufbau und Bild obendrauf. Die Leiste poppte sichtbar nach.
+     The reason: the fetch used to start only once Jellyfin's home screen was
+     done - after about half a second - and then network, build and image came
+     on top. The banner visibly popped in late.
 
-     Mit einer gespeicherten Fassung steht sie beim zweiten Besuch sofort, ohne
-     eine einzige Anfrage abzuwarten. Die frische Liste wird daneben geholt und
-     nur dann neu gezeichnet, wenn sie sich wirklich unterscheidet - sonst
-     flackert es bei jedem Aufruf.
+     With a stored copy it is there instantly on the second visit, without
+     waiting for a single request. The fresh list is fetched alongside and
+     only redrawn if it really differs - otherwise it flickers on every visit.
 
-     Der Schluessel traegt die Benutzerkennung: auf einem gemeinsam genutzten
-     Geraet soll niemand kurz die Liste des Vorgaengers sehen. */
+     The key includes the user id: on a shared device nobody should briefly
+     see the previous user's list. */
   var SPEICHER_TAGE = 7;
 
-  /* Die Benutzerkennung - auch dann, wenn ApiClient noch nicht bereit ist.
+  /* The user id - even when ApiClient is not ready yet.
 
-     Genau daran scheiterte der Zwischenspeicher zuerst: beim fruehen Lesen war
-     ApiClient noch nicht da, die Kennung also leer; beim spaeteren Schreiben
-     war sie gesetzt. Zwei verschiedene Schluessel, nie ein Treffer. Der
-     Webclient legt seine Zugangsdaten aber selbst im lokalen Speicher ab, und
-     der steht vom ersten Augenblick an zur Verfuegung. */
+     This is exactly where the cache failed at first: on the early read
+     ApiClient was not there yet, so the id was empty; on the later write it
+     was set. Two different keys, never a hit. But the web client stores its
+     credentials in local storage itself, and that is available from the very
+     first moment. */
   function nutzerKennung() {
     try {
       if (window.ApiClient && ApiClient.getCurrentUserId) {
         var u = ApiClient.getCurrentUserId();
         if (u) return u;
       }
-    } catch (e) { /* egal */ }
+    } catch (e) { /* ignore */ }
     try {
       var roh = localStorage.getItem('jellyfin_credentials');
       if (roh) {
@@ -434,7 +388,7 @@
         var srv = o && o.Servers && o.Servers[0];
         if (srv && srv.UserId) return srv.UserId;
       }
-    } catch (e) { /* egal */ }
+    } catch (e) { /* ignore */ }
     return '';
   }
 
@@ -457,16 +411,15 @@
     try {
       localStorage.setItem(speicherSchluessel(),
         JSON.stringify({ stand: Date.now(), daten: j }));
-    } catch (e) { /* voll oder gesperrt - dann eben ohne */ }
+    } catch (e) { /* full or blocked - then do without */ }
   }
 
-  /* Ist der Webclient schon so weit, dass er ein Token hat?
+  /* Does the web client already have a token?
 
-     Wichtig, weil frueh losgeschickte Anfragen sonst unangemeldet hinausgehen
-     und mit 401 zurueckkommen - gemessen nach 190 ms, also lange bevor
-     ApiClient bereit war. Der Abruf war damit verschenkt und musste spaeter
-     wiederholt werden. Lieber ein paar Millisekunden warten als eine Anfrage
-     wegwerfen. */
+     Important, because requests sent too early otherwise go out
+     unauthenticated and come back with 401 - measured at 190 ms, long before
+     ApiClient was ready. That fetch was wasted and had to be repeated later.
+     Better to wait a few milliseconds than to throw a request away. */
   function tokenDa() {
     try {
       return !!(window.ApiClient && ApiClient.accessToken && ApiClient.accessToken());
@@ -478,8 +431,8 @@
       if (tokenDa()) { fertig(); return; }
       var n = 0;
       var uhr = setInterval(function () {
-        // Nach etwa drei Sekunden aufgeben und es trotzdem versuchen - ohne
-        // Anmeldung gibt es ohnehin nichts anzuzeigen.
+        // Give up after about three seconds and try anyway - without a
+        // login there is nothing to show anyway.
         if (tokenDa() || ++n > 100) { clearInterval(uhr); fertig(); }
       }, 30);
     });
@@ -493,7 +446,7 @@
         if (window.ApiClient && ApiClient.accessToken()) {
           kopf['Authorization'] = 'MediaBrowser Token="' + ApiClient.accessToken() + '"';
         }
-      } catch (e) { /* egal */ }
+      } catch (e) { /* ignore */ }
       return fetch(basis() + '/MediaHero/items', { headers: kopf, credentials: 'same-origin' });
     })
       .then(function (r) { return r.ok ? r.json() : null; })
@@ -506,11 +459,11 @@
     return netzLaeuft;
   }
 
-  /* Das erste Bild anmelden, sobald die Liste bekannt ist.
+  /* Announce the first image as soon as the list is known.
 
-     Der Browser laedt es dann parallel zu allem anderen, statt erst wenn die
-     Folie im Baum haengt. Die Adresse muss auf das Zeichen genau dieselbe sein
-     wie spaeter beim Zeichnen - sonst laedt er es zweimal. */
+     The browser then loads it in parallel with everything else instead of
+     only once the slide is in the DOM. The URL must match the one used when
+     drawing character for character - otherwise it is loaded twice. */
   function vorladen(j) {
     try {
       if (!j || !j.Items || !j.Items.length) return;
@@ -524,7 +477,7 @@
       l.href = u;
       if ('fetchPriority' in l) { l.fetchPriority = 'high'; }
       document.head.appendChild(l);
-    } catch (e) { /* egal */ }
+    } catch (e) { /* ignore */ }
   }
 
   function neuZeichnen() {
@@ -541,7 +494,7 @@
     if (alt && alt.Items && alt.Items.length) {
       daten = alt;
       vorladen(alt);
-      // Daneben auffrischen. Nur bei echter Aenderung neu zeichnen.
+      // Refresh alongside. Redraw only on a real change.
       vomServer().then(function (j) {
         if (!j || !j.Items) return;
         if (j.BuiltAtUnix && alt.BuiltAtUnix && j.BuiltAtUnix === alt.BuiltAtUnix) return;
@@ -575,8 +528,8 @@
 
       var host = el('div', 'mh-host');
       host.id = WURZEL;
-      // als Geschwister DAVOR, nicht als Kind - sonst raeumt der naechste
-      // innerHTML-Neuaufbau der Abschnitte die Leiste weg
+      // as a sibling BEFORE it, not as a child - otherwise the next
+      // innerHTML rebuild of the sections removes the banner
       ort2.parentNode.insertBefore(host, ort2);
 
       if (j.Display.customCss) {
@@ -598,20 +551,20 @@
   }
 
   /*
-   * Die Leiste unter die Kopfleiste ziehen.
+   * Pull the banner up under the header bar.
    *
-   * Die Hoehe wird gemessen statt geraten - sie unterscheidet sich je nach
-   * Fensterbreite und Jellyfin-Fassung. Der Kopf wird nur durchsichtig,
-   * solange ganz oben steht; sobald gescrollt wird, bekommt er seinen
-   * Hintergrund zurueck, sonst verschwindet die Navigation im Bild.
+   * The height is measured rather than guessed - it differs by window width
+   * and Jellyfin version. The header is only transparent while the page is at
+   * the very top; as soon as it scrolls, it gets its background back,
+   * otherwise the navigation disappears into the image.
    */
   /*
-   * Die Kopfleiste suchen, ohne ihren Klassennamen zu kennen.
+   * Find the header bar without knowing its class name.
    *
-   * Jellyfin 12 mischt die alte Oberflaeche mit Material UI; je nach Ansicht
-   * heisst das Element .skinHeader oder .MuiAppBar-root. Statt zu raten wird
-   * genommen, was messbar oben klebt: breit, oben angesetzt, fest positioniert
-   * und von plausibler Hoehe. Das ueberlebt auch kuenftige Umbauten.
+   * Jellyfin 12 mixes the old UI with Material UI; depending on the view the
+   * element is .skinHeader or .MuiAppBar-root. Instead of guessing, take
+   * whatever measurably sticks to the top: wide, anchored at the top, fixed
+   * position and of plausible height. That also survives future rewrites.
    */
   function kopfElement() {
     var kandidaten = document.querySelectorAll(
@@ -649,8 +602,8 @@
       if (kopfMerker) { kopfMerker.classList.remove('mh-kopf-el'); kopfMerker = null; }
       return;
     }
-    // Der Kopf wird von der Oberflaeche teils spaeter aufgebaut als die Leiste;
-    // deshalb ein paar Mal nachmessen statt einmalig zu raten.
+    // The UI sometimes builds the header later than the banner; so measure
+    // a few times instead of guessing once.
     [0, 150, 400, 900, 1800].forEach(function (t) {
       setTimeout(function () { if (kopfAktiv) { kopfMessen(); pruefeScroll(); } }, t);
     });
@@ -691,21 +644,19 @@
 
   function starten() {
     stil();
-    /* Sofort anstossen.
+    /* Kick off immediately.
 
-       Das ist der groesste Einzelgewinn: der Abruf lief frueher erst an,
-       nachdem Jellyfins Startseite fertig gerendert war, weil einhaengen()
-       vorher am fehlenden Anker abbrach. Damit lagen Jellyfins Aufbau und
-       unserer hintereinander statt nebeneinander. Angestossen wird er jetzt
-       hier - wenn die Startseite dann steht, liegt die Liste meist schon
-       bereit. */
+       This is the biggest single win: the fetch used to start only after
+       Jellyfin's home screen had finished rendering, because einhaengen()
+       bailed out earlier on the missing anchor. So Jellyfin's build and ours
+       ran one after the other instead of in parallel. Now it is started
+       here - by the time the home screen is up, the list is usually ready. */
     holen();
     einhaengen();
     window.addEventListener('hashchange', function () {
-      /* Frueher wurde hier alles verworfen und beim naechsten Aufbau neu
-         geholt - das kostete bei jedem Hin und Her eine Anfrage, waehrend der
-         die Leiste fehlte. Jetzt bleibt das Vorhandene stehen und wird
-         daneben geprueft. */
+      /* This used to discard everything and refetch on the next build - which
+         cost a request on every back-and-forth, during which the banner was
+         missing. Now the existing one stays and is checked alongside. */
       vomServer().then(function (j) {
         if (!j || !j.Items) return;
         if (daten && j.BuiltAtUnix && daten.BuiltAtUnix === j.BuiltAtUnix) return;
@@ -714,9 +665,9 @@
       });
       setTimeout(einhaengen, 60);
     });
-    // Der Web-Client baut die Startseite nach, ohne die Adresse zu aendern.
-    // Der Beobachter feuert bei jeder Aenderung im Baum. Ohne Bremse waere das
-    // hunderte Aufrufe je Seitenaufbau - gedrosselt kostet es praktisch nichts.
+    // The web client rebuilds the home screen without changing the URL.
+    // The observer fires on every DOM change. Without throttling that would be
+    // hundreds of calls per page build - throttled it costs practically nothing.
     var bremse = null;
     ['scroll', 'wheel', 'touchmove'].forEach(function (e) {
       document.addEventListener(e, pruefeScroll, { passive: true, capture: true });

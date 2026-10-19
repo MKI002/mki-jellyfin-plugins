@@ -2,7 +2,7 @@
   "guid": "b8e2f3a1-6c47-4d59-9f0e-7a1c2d3e4b5f",
   "name": "MKI Merge Versions",
   "overview": "Two resolutions, one entry. The 4K version leads.",
-  "description": "Merges movies that exist in several resolutions into a single library entry, matched by TMDb ID (IMDb as fallback), never by title. The highest resolution becomes the primary version. Runs as a scheduled task and automatically once the library has been quiet for five minutes. Includes a dry-run mode. Settings page is in German.",
+  "description": "Merges movies that exist in several resolutions into a single library entry, matched by TMDb ID (IMDb as fallback), never by title. The highest resolution becomes the primary version. Runs as a scheduled task and automatically once the library has been quiet for five minutes. Includes a dry-run mode.",
   "owner": "MKI",
   "category": "General",
   "targetAbi": "12.0.0.0",

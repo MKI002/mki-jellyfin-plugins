@@ -31,7 +31,7 @@ public class WebPatcher : IHostedService
 		}
 		catch (Exception ex)
 		{
-			LoggerExtensions.LogError((ILogger)(object)_logger, ex, "Media Hero konnte sich nicht in den Web-Client eintragen", Array.Empty<object>());
+			LoggerExtensions.LogError((ILogger)(object)_logger, ex, "Media Hero could not inject itself into the web client", Array.Empty<object>());
 		}
 		return Task.CompletedTask;
 	}
@@ -46,13 +46,13 @@ public class WebPatcher : IHostedService
 		string text = WebWurzel();
 		if (text == null)
 		{
-			LoggerExtensions.LogWarning((ILogger)(object)_logger, "Web-Verzeichnis nicht gefunden - Leiste bleibt unsichtbar", Array.Empty<object>());
+			LoggerExtensions.LogWarning((ILogger)(object)_logger, "Web directory not found - banner will stay invisible", Array.Empty<object>());
 			return;
 		}
 		string text2 = Path.Combine(text, "index.html");
 		if (!File.Exists(text2))
 		{
-			LoggerExtensions.LogWarning((ILogger)(object)_logger, "index.html nicht gefunden unter {Pfad}", new object[1] { text });
+			LoggerExtensions.LogWarning((ILogger)(object)_logger, "index.html not found under {Path}", new object[1] { text });
 			return;
 		}
 		string text3 = File.ReadAllText(text2);
@@ -62,14 +62,14 @@ public class WebPatcher : IHostedService
 		int num = text3.LastIndexOf("</body>", StringComparison.OrdinalIgnoreCase);
 		if (num < 0)
 		{
-			LoggerExtensions.LogWarning((ILogger)(object)_logger, "Kein </body> in der index.html gefunden", Array.Empty<object>());
+			LoggerExtensions.LogWarning((ILogger)(object)_logger, "No </body> found in index.html", Array.Empty<object>());
 			return;
 		}
 		text3 = text3.Insert(num, value);
 		if (!(text3 == text4))
 		{
 			File.WriteAllText(text2, text3);
-			LoggerExtensions.LogInformation((ILogger)(object)_logger, "Media Hero in den Web-Client eingetragen ({Pfad})", new object[1] { text2 });
+			LoggerExtensions.LogInformation((ILogger)(object)_logger, "Media Hero injected into the web client ({Path})", new object[1] { text2 });
 		}
 	}
 

@@ -134,7 +134,7 @@ public class HeroBuilder
 			}
 			catch (Exception ex)
 			{
-				LoggerExtensions.LogWarning((ILogger)(object)_logger, ex, "Auffrischen der Leiste im Hintergrund fehlgeschlagen", Array.Empty<object>());
+				LoggerExtensions.LogWarning((ILogger)(object)_logger, ex, "Background refresh of the banner failed", Array.Empty<object>());
 			}
 			finally
 			{
@@ -213,7 +213,7 @@ public class HeroBuilder
 			}
 			catch (Exception ex2)
 			{
-				LoggerExtensions.LogWarning((ILogger)(object)_logger, ex2, "Quelle {Quelle} uebersprungen", new object[1] { quelle.Source });
+				LoggerExtensions.LogWarning((ILogger)(object)_logger, ex2, "Source {Source} skipped", new object[1] { quelle.Source });
 			}
 		}
 		List<(BaseItem, string)> list = new List<(BaseItem, string)>();
@@ -253,15 +253,15 @@ public class HeroBuilder
 		List<KeyValuePair<Guid, int>> list4 = korb.Bedarf.Where((KeyValuePair<Guid, int> b) => b.Value > 0).ToList();
 		if (list4.Count > 0)
 		{
-			LoggerExtensions.LogInformation((ILogger)(object)_logger, "Leiste gebaut: {Anzahl} Eintraege; nicht ganz erreicht: {Offen}", new object[2]
+			LoggerExtensions.LogInformation((ILogger)(object)_logger, "Banner built: {Count} items; targets not fully met: {Open}", new object[2]
 			{
 				list.Count,
-				string.Join(", ", list4.Select((KeyValuePair<Guid, int> o) => Bibliotheksname(o.Key) + " fehlt " + o.Value))
+				string.Join(", ", list4.Select((KeyValuePair<Guid, int> o) => Bibliotheksname(o.Key) + " short by " + o.Value))
 			});
 		}
 		else
 		{
-			LoggerExtensions.LogInformation((ILogger)(object)_logger, "Leiste gebaut: {Anzahl} Eintraege, alle Ziele erreicht", new object[1] { list.Count });
+			LoggerExtensions.LogInformation((ILogger)(object)_logger, "Banner built: {Count} items, all targets met", new object[1] { list.Count });
 		}
 		return list.Select<(BaseItem, string), HeroItem>(((BaseItem Item, string Quelle) e) => Abbilden(e.Item, e.Quelle)).ToList();
 	}
@@ -526,7 +526,7 @@ public class HeroBuilder
 				}
 			}
 		}
-		LoggerExtensions.LogInformation((ILogger)(object)_logger, "Seerr {Route}: {Seiten} Seiten, {Geprueft} Titel geprueft, {Genommen} genommen", new object[4] { route, seiten, geprueft, genommen });
+		LoggerExtensions.LogInformation((ILogger)(object)_logger, "Seerr {Route}: {Pages} pages, {Checked} titles checked, {Taken} taken", new object[4] { route, seiten, geprueft, genommen });
 	}
 
 	private BaseItem? TrefferZu(int tmdbId, BaseItemKind[] typen, Guid[] wurzeln)

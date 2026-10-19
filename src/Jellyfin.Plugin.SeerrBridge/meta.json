@@ -2,7 +2,7 @@
   "guid": "b7d41e02-9c58-4f6a-8d13-5a2c7e9f4610",
   "name": "MKI Seerr Bridge",
   "overview": "Seerr inside Jellyfin: button, embedded view, search and sign-in.",
-  "description": "Brings Seerr into the Jellyfin web client: a button in the header and side menu, Seerr embedded in Jellyfin instead of a redirect, Seerr suggestions under Jellyfin search results with one-click requests attributed to the right user, optional single sign-on via Quick Connect, and a compatibility bridge for clients that still send legacy X-Emby authorization headers. Settings page is in German; the button label follows each user's language.",
+  "description": "Brings Seerr into the Jellyfin web client: a button in the header and side menu, Seerr embedded in Jellyfin instead of a redirect, Seerr suggestions under Jellyfin search results with one-click requests attributed to the right user, optional single sign-on via Quick Connect, and a compatibility bridge for clients that still send legacy X-Emby authorization headers. All text is in English.",
   "owner": "MKI",
   "category": "General",
   "targetAbi": "12.0.0.0",
