@@ -18,17 +18,17 @@ Three plugins for [Jellyfin](https://jellyfin.org) 12, installable from one plug
 <table>
   <tr>
     <td width="33%" valign="top">
-      <a href="src/Jellyfin.Plugin.MediaHero"><img src="src/Jellyfin.Plugin.MediaHero/logo.png" alt="Media Hero"></a>
+      <a href="src/Jellyfin.Plugin.MediaHero"><img src="src/Jellyfin.Plugin.MediaHero/logo.png?v=1.1.0" alt="Media Hero"></a>
       <h3><a href="src/Jellyfin.Plugin.MediaHero">Media Hero</a></h3>
       A cinematic hero carousel on the home screen, built on the server from recent, top rated and Seerr trending titles, with per-library whitelists and blacklists.
     </td>
     <td width="33%" valign="top">
-      <a href="src/Jellyfin.Plugin.MkiMergeVersions"><img src="src/Jellyfin.Plugin.MkiMergeVersions/logo.png" alt="MKI Merge Versions"></a>
+      <a href="src/Jellyfin.Plugin.MkiMergeVersions"><img src="src/Jellyfin.Plugin.MkiMergeVersions/logo.png?v=1.1.0" alt="MKI Merge Versions"></a>
       <h3><a href="src/Jellyfin.Plugin.MkiMergeVersions">MKI Merge Versions</a></h3>
       Merges movies that exist in several resolutions into one entry, matched by TMDb or IMDb ID. The highest resolution becomes the primary version.
     </td>
     <td width="33%" valign="top">
-      <a href="src/Jellyfin.Plugin.SeerrBridge"><img src="src/Jellyfin.Plugin.SeerrBridge/logo.png" alt="Seerr Bridge"></a>
+      <a href="src/Jellyfin.Plugin.SeerrBridge"><img src="src/Jellyfin.Plugin.SeerrBridge/logo.png?v=1.1.0" alt="Seerr Bridge"></a>
       <h3><a href="src/Jellyfin.Plugin.SeerrBridge">Seerr Bridge</a></h3>
       Seerr inside the Jellyfin web client: a menu button, an embedded view, request suggestions in search, and optional single sign-on.
     </td>
