@@ -6,7 +6,7 @@ Password rules and forced password changes for Jellyfin users, enforced on the s
 
 ## Does nothing until you say so
 
-A fresh install changes nothing. No rules apply, no password is checked, nothing is recorded and the web client is left untouched. The plugin only acts for users you give a profile to, or when you ask someone for a new password.
+A fresh install changes nothing about sign-ins or passwords. No rules apply, no password is checked and nothing is recorded. The plugin only acts for users you give a profile to, or when you ask someone for a new password. The one thing you will see right away is a small MKI Password Policy box on each user's **Password** tab in the dashboard, for administrators only, with a shortcut to that user in the plugin settings.
 
 ## Features
 
@@ -14,7 +14,8 @@ A fresh install changes nothing. No rules apply, no password is checked, nothing
 - **Require a new password** from one user, from everyone, or from everyone whose password is not known to meet their profile. Open apps get a notice, then every device is signed out. Until the user has set a new password, they cannot sign in anywhere and any token they still hold is refused.
 - **Change dialog in the web client.** Signing in opens a dialog for the new password with the profile's rules shown live; afterwards the user lands in Jellyfin as usual. This also covers the Jellyfin apps for Android, iOS and desktop, which use the web client.
 - **Change page for TVs and native apps.** Those only show "sign-in failed". The user opens the change page (`/MkiPasswordPolicy/Change`, the link is on the settings page) on any phone or computer, sets the password there and signs in normally.
-- **User review.** For each user: their profile, whether a change is pending, and what is known about the password: *meets the rules*, *older rules*, *no password*, *unknown* or *no rules*.
+- **User review.** For each user: their profile, whether a change is pending, and what is known about the password: *meets the rules*, *older rules*, *no password*, *unknown* or *no rules*. Disabled accounts can get profiles and requests too; they apply once the account is enabled again. With *exempt administrators* on, administrators are greyed out.
+- **Shortcut on the user page.** Each user's **Password** tab in the dashboard shows their profile, password status and any pending request, with a button that opens their row in the plugin settings.
 - **Optional:** password expiry, new users must set their own password, rules for passwords an admin sets, exempt administrators, live hints on the profile and new-user pages.
 
 ## How passwords are handled
@@ -22,6 +23,7 @@ A fresh install changes nothing. No rules apply, no password is checked, nothing
 - The plugin never stores, logs or re-reads a password. Jellyfin keeps only its own hash.
 - A password is checked in exactly one moment: when it is being set. The plugin then remembers which rules it passed, never the password.
 - Passwords set before a profile applied cannot be judged, and the plugin does not try: the review shows them as *unknown*. Require a new password if you want certainty.
+- Jellyfin's own **Reset password** button on a user's Password tab removes the password completely, so the account can be signed in to without one. The review then shows *no password*.
 
 ## Security notes
 

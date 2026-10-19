@@ -7,6 +7,8 @@
 
     var script = document.currentScript;
     var BASE = script && script.src ? script.src.replace(/\/MkiPasswordPolicy\/client\.js.*$/i, '') : '';
+    // "link": the plugin has nothing to enforce, so only the admin shortcut on user pages runs.
+    var FULL = !script || script.getAttribute('data-mode') !== 'link';
     var AUTH_URL = /\/Users\/(AuthenticateByName|AuthenticateWithQuickConnect|[^\/?]+\/Authenticate)(\?|$)/i;
 
     var T = {
@@ -37,6 +39,19 @@
         common: 'Not a common, easy to guess password',
         repeat: 'At most {n} identical characters in a row',
         rulesTitle: 'Your password must have:',
+        shortTitle: 'MKI Password Policy',
+        shortProfile: 'Profile',
+        shortStatus: 'Password',
+        shortRequest: 'New password',
+        shortPending: 'Requested, not set yet',
+        shortNone: 'Not requested',
+        shortSameAsAll: ' (same as all users)',
+        shortExempt: 'Exempt (administrator)',
+        shortDisabled: 'This account is disabled in Jellyfin. Rules and requests still apply once it is enabled again.',
+        shortReset: 'Jellyfin\u2019s \u201cReset password\u201d removes the password completely: the account can then be signed in to without one.',
+        shortOpen: 'Open in MKI Password Policy',
+        profiles: { none: 'No rules', basic: 'Basic', standard: 'Standard', strong: 'Strong', verystrong: 'Very strong', passphrase: 'Passphrase', custom: 'Custom profile' },
+        statuses: { ok: 'Meets the rules', older: 'Older rules', unknown: 'Unknown', none: 'No password', norules: 'No rules' },
         strength: ['Very weak', 'Weak', 'Fair', 'Strong', 'Very strong']
     };
 
@@ -132,6 +147,12 @@
         '.mkipw-box input{width:100%;box-sizing:border-box;padding:10px 12px;border-radius:6px;border:1px solid #444;background:#2c2c2c;color:#fff;font-size:1em}',
         '.mkipw-box input:focus{outline:none;border-color:#00a4dc}',
         'body:has(.mkipw-back) .docspinner{display:none!important}',
+        '.mkipw-short{border-left:3px solid #00a4dc;background:rgba(0,164,220,.08);padding:12px 16px;margin:2em 0 1em;border-radius:4px}',
+        '.mkipw-short h3{margin:0 0 8px}',
+        '.mkipw-short table{border-collapse:collapse;margin:0 0 8px}',
+        '.mkipw-short td{padding:2px 16px 2px 0}',
+        '.mkipw-short p{margin:6px 0;opacity:.8;font-size:.9em}',
+        '.mkipw-short button{margin:8px 0 0}',
         '.mkipw-rules-title{margin:16px 0 0;font-size:.9em;color:#ccc}',
         '.mkipw-hints{list-style:none;margin:8px 0 0;padding:0;font-size:.85em}',
         '.mkipw-hints li{margin:3px 0;color:#d66}',
@@ -339,62 +360,71 @@
         }
     }
 
-    // Sign-in hook for fetch: show the dialog, then repeat the sign-in with the new password so the user lands in the app.
     var originalFetch = window.fetch.bind(window);
-    window.fetch = function (input, init) {
-        var url = typeof input === 'string' ? input : (input && input.url) || '';
-        var result = originalFetch(input, init);
-        if (!AUTH_URL.test(url)) {
-            return result;
-        }
-        return result.then(function (res) {
-            if (res.status !== 401 || res.headers.get('X-Mki-Password-Change') !== 'required') {
-                return res;
+
+    // Sign-in hooks, only while the plugin is active (data-mode="full").
+    function installSignInHooks() {
+        // Sign-in hook for fetch: show the dialog, then repeat the sign-in with the new password so the user lands in the app.
+        window.fetch = function (input, init) {
+            var url = typeof input === 'string' ? input : (input && input.url) || '';
+            var result = originalFetch(input, init);
+            if (!AUTH_URL.test(url)) {
+                return result;
             }
-            var creds = parseBody(init && init.body) || {};
-            return openDialog({
-                username: creds.Username,
-                current: creds.Username ? (creds.Pw || '') : null,
-                reason: res.headers.get('X-Mki-Password-Reason')
-            }).then(function (pw) {
-                if (pw == null || !creds.Username) {
+            return result.then(function (res) {
+                if (res.status !== 401 || res.headers.get('X-Mki-Password-Change') !== 'required') {
                     return res;
                 }
-                creds.Pw = pw;
-                return originalFetch(input, Object.assign({}, init, { body: JSON.stringify(creds) }));
+                var creds = parseBody(init && init.body) || {};
+                return openDialog({
+                    username: creds.Username,
+                    current: creds.Username ? (creds.Pw || '') : null,
+                    reason: res.headers.get('X-Mki-Password-Reason')
+                }).then(function (pw) {
+                    if (pw == null || !creds.Username) {
+                        return res;
+                    }
+                    creds.Pw = pw;
+                    return originalFetch(input, Object.assign({}, init, { body: JSON.stringify(creds) }));
+                });
             });
-        });
-    };
+        };
 
-    // Sign-in hook for XMLHttpRequest (used by the newer SDK): the request cannot be repeated, so ask to sign in again.
-    var xhrOpen = XMLHttpRequest.prototype.open;
-    var xhrSend = XMLHttpRequest.prototype.send;
-    XMLHttpRequest.prototype.open = function (method, url) {
-        this.__mkipwAuth = AUTH_URL.test(String(url));
-        return xhrOpen.apply(this, arguments);
-    };
-    XMLHttpRequest.prototype.send = function (body) {
-        if (this.__mkipwAuth) {
-            var xhr = this;
-            xhr.addEventListener('load', function () {
-                if (xhr.status === 401 && xhr.getResponseHeader('X-Mki-Password-Change') === 'required') {
-                    var creds = parseBody(body) || {};
-                    openDialog({
-                        username: creds.Username,
-                        current: creds.Username ? (creds.Pw || '') : null,
-                        reason: xhr.getResponseHeader('X-Mki-Password-Reason'),
-                        relogin: true
-                    });
-                }
-            });
-        }
-        return xhrSend.apply(this, arguments);
-    };
+        // Sign-in hook for XMLHttpRequest (used by the newer SDK): the request cannot be repeated, so ask to sign in again.
+        var xhrOpen = XMLHttpRequest.prototype.open;
+        var xhrSend = XMLHttpRequest.prototype.send;
+        XMLHttpRequest.prototype.open = function (method, url) {
+            this.__mkipwAuth = AUTH_URL.test(String(url));
+            return xhrOpen.apply(this, arguments);
+        };
+        XMLHttpRequest.prototype.send = function (body) {
+            if (this.__mkipwAuth) {
+                var xhr = this;
+                xhr.addEventListener('load', function () {
+                    if (xhr.status === 401 && xhr.getResponseHeader('X-Mki-Password-Change') === 'required') {
+                        var creds = parseBody(body) || {};
+                        openDialog({
+                            username: creds.Username,
+                            current: creds.Username ? (creds.Pw || '') : null,
+                            reason: xhr.getResponseHeader('X-Mki-Password-Reason'),
+                            relogin: true
+                        });
+                    }
+                });
+            }
+            return xhrSend.apply(this, arguments);
+        };
+    }
+
+    if (FULL) {
+        installSignInHooks();
+    }
 
     // Live hints under the password fields of the profile page and the "new user" page.
     var bypass = false;
     function targetUserId() {
-        var m = /[?&]userId=([0-9a-f-]{32,36})/i.exec(location.href);
+        // Older web clients use ?userId=, Jellyfin 12 uses #/dashboard/users/<id>/<tab>.
+        var m = /[?&]userId=([0-9a-f-]{32,36})/i.exec(location.href) || /\/users\/([0-9a-f-]{32,36})(?=[\/?#]|$)/i.exec(location.hash);
         return m ? m[1] : null;
     }
 
@@ -458,8 +488,53 @@
         }
     }
 
+    // Admin shortcut on a user's Password tab: what the plugin knows about this user, and a link to its row.
+    var shortcutFor = null;
+    function shortcut(form) {
+        var m = /\/dashboard\/users\/([0-9a-f-]{32,36})\/password/i.exec(location.hash);
+        if (!m || !window.ApiClient || document.querySelector('.mkipw-short[data-user="' + m[1] + '"]') || shortcutFor === m[1]) return;
+        var id = m[1];
+        shortcutFor = id;
+        window.ApiClient.ajax({ type: 'GET', url: window.ApiClient.getUrl('MkiPasswordPolicy/Users'), dataType: 'json' }).then(function (d) {
+            var norm = id.replace(/-/g, '').toLowerCase();
+            var u = (d && d.Users || []).filter(function (x) { return String(x.Id).replace(/-/g, '').toLowerCase() === norm; })[0];
+            if (!u || !document.body.contains(form) || document.querySelector('.mkipw-short[data-user="' + id + '"]')) return;
+            addCss();
+            var box = el('div', { 'class': 'mkipw-short', 'data-user': id });
+            box.appendChild(el('h3', null, T.shortTitle));
+            var table = el('table');
+            function row(k, v) {
+                var tr = el('tr');
+                tr.appendChild(el('td', null, k));
+                tr.appendChild(el('td', null, v));
+                table.appendChild(tr);
+            }
+            var profil = u.IsExempt ? T.shortExempt
+                : (T.profiles[u.EffectiveProfile] || u.EffectiveProfile) + (u.Profile === 'default' ? T.shortSameAsAll : '');
+            row(T.shortProfile, profil);
+            row(T.shortStatus, T.statuses[u.PasswordStatus] || u.PasswordStatus);
+            row(T.shortRequest, u.MustChange ? T.shortPending : T.shortNone);
+            box.appendChild(table);
+            if (u.IsDisabled) box.appendChild(el('p', null, T.shortDisabled));
+            box.appendChild(el('p', null, T.shortReset));
+            var open = el('button', { type: 'button', 'class': 'raised emby-button' }, T.shortOpen);
+            open.addEventListener('click', function () {
+                location.hash = '#/configurationpage?name=' + encodeURIComponent(T.shortTitle) + '&user=' + id;
+            });
+            box.appendChild(open);
+            form.parentNode.insertBefore(box, form.nextSibling);
+            shortcutFor = null;
+        }, function () { /* Not an administrator: no shortcut, and no retry for this user. */ });
+    }
+
     function scan() {
         var pwForm = document.querySelector('form.updatePasswordForm');
+        if (pwForm) {
+            shortcut(pwForm);
+        }
+        if (!FULL) {
+            return;
+        }
         var pwInput = pwForm && pwForm.querySelector('#txtNewPassword');
         if (pwInput) {
             attachHints(pwInput, pwForm, function () { return ''; }, false);

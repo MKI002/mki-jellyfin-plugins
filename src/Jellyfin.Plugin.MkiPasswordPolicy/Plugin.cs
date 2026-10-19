@@ -34,6 +34,19 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 		ConfigSaved?.Invoke();
 	}
 
+	public override void OnUninstalling()
+	{
+		try
+		{
+			Services.WebPatcher.Entfernen(ApplicationPaths);
+		}
+		catch (Exception)
+		{
+			// Uninstalling must not fail because index.html is read-only.
+		}
+		base.OnUninstalling();
+	}
+
 	public IEnumerable<PluginPageInfo> GetPages()
 	{
 		yield return new PluginPageInfo

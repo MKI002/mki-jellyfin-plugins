@@ -211,8 +211,8 @@ public class PasswordPolicyController : ControllerBase
 	{
 		var c = Plugin.Config;
 		IEnumerable<Guid> ids = anfrage.All || anfrage.OnlyNotMeetingRules
+			// Disabled accounts are included: they have to set a new password once they are enabled again.
 			? _users.GetUsers()
-				.Where(u => !u.HasPermission(PermissionKind.IsDisabled))
 				.Where(u => anfrage.IncludeAdministrators || !Enforcer.IsAdmin(u))
 				.Where(u => !anfrage.OnlyNotMeetingRules || Status(u, _store.Get(u.Id)) is "unknown" or "older" or "none")
 				.Select(u => u.Id)
