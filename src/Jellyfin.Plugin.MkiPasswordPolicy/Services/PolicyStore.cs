@@ -61,17 +61,49 @@ public class PolicyStore
 	{
 		Aendern(userId, s =>
 		{
+			var frist = DateTime.UtcNow + grace;
 			if (!s.MustChange)
 			{
 				s.RequiredSinceUtc = DateTime.UtcNow;
-				s.EnforceAfterUtc = DateTime.UtcNow + grace;
+				s.EnforceAfterUtc = frist;
 				s.Notice = notice;
+			}
+			else if (s.EnforceAfterUtc != null && frist < s.EnforceAfterUtc)
+			{
+				// A second request can only bring the deadline forward, never push it back.
+				s.EnforceAfterUtc = frist;
+				s.Notice = s.Notice && notice;
 			}
 			s.MustChange = true;
 			s.Reason = reason;
 			s.ChangeUrl = changeUrl ?? s.ChangeUrl;
 		});
 	}
+
+	// Blocks the user right away, ending any notice period or grace time.
+	public void RequireNow(Guid userId, string reason)
+	{
+		Aendern(userId, s =>
+		{
+			s.RequiredSinceUtc ??= DateTime.UtcNow;
+			s.EnforceAfterUtc = DateTime.UtcNow;
+			s.Notice = false;
+			s.MustChange = true;
+			s.Reason = reason;
+		});
+	}
+
+	// A locked account without a password got one from someone else (administrator, reset PIN): it is now a temporary one.
+	public void PasswordGivenToLocked(Guid userId)
+	{
+		if (MustChange(userId) && Get(userId).Reason == "nopassword")
+		{
+			Aendern(userId, s => s.Reason = "temporary");
+		}
+	}
+
+	// True when the user is blocked right now, with no notice period or grace time left.
+	public bool BlockedNow(Guid userId) => SessionsBlocked(userId);
 
 	// True while the user is in a notice period: still allowed in, but reminded.
 	public bool InNotice(Guid userId)

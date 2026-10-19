@@ -32,6 +32,15 @@ public static class Policy
 		return PasswordRules.Profile(EffectiveProfile(user.Id, c), c);
 	}
 
+	// True for an account of Jellyfin's own password provider that has no password at all (Jellyfin stores no hash then).
+	// Accounts of other providers (LDAP and the like) have no local hash either and are left alone.
+	public static bool HasNoPassword(User user)
+	{
+		return string.IsNullOrEmpty(user.Password)
+			&& (string.IsNullOrEmpty(user.AuthenticationProviderId)
+				|| user.AuthenticationProviderId.EndsWith("DefaultAuthenticationProvider", StringComparison.Ordinal));
+	}
+
 	public static RuleSnapshot? RulesForNewUser() => PasswordRules.Profile(Plugin.Config.DefaultProfile, Plugin.Config);
 
 	// True once the admin has switched on anything at all.

@@ -36,6 +36,11 @@
         #MkiPwConfigPage .mkipw-ueberlagerung.mkipw-aktiv { display: flex; }
         #MkiPwConfigPage .mkipw-frage { background: #202020; color: #eee; border-radius: 10px; padding: 1.5em; max-width: 480px; width: 100%; }
         #MkiPwConfigPage .mkipw-frage h3 { margin-top: 0; }
+        #MkiPwConfigPage .mkipw-knoepfe { display: flex; gap: .4em; flex-wrap: wrap; }
+        #MkiPwConfigPage .mkipw-geheim { font-family: ui-monospace, Consolas, monospace; font-size: 1.35em; letter-spacing: .05em; padding: .6em; background: #111; border-radius: 6px; text-align: center; user-select: all; margin: .5em 0; }
+        #MkiPwConfigPage .mkipw-gespeichert { position: fixed; right: 1.5em; bottom: 1.5em; z-index: 10001; background: #2a7d2a; color: #fff; padding: .6em 1.1em; border-radius: 6px; opacity: 0; transition: opacity .25s; pointer-events: none; }
+        #MkiPwConfigPage .mkipw-gespeichert.mkipw-aktiv { opacity: 1; }
+        #MkiPwConfigPage .mkipw-gespeichert.mkipw-fehler { background: #b33; }
     </style>
     <div data-role="content">
         <div class="content-primary">
@@ -44,7 +49,9 @@
                 <div class="mkipw-hinweis">
                     Installing the plugin changes nothing about sign-ins or passwords. Rules only apply to users you assign a profile to,
                     and a password change is only required when you ask for one. It is then enforced on the server, so it
-                    holds on every client: browser, phone, TV and all apps.
+                    holds on every client: browser, phone, TV, Quick Connect and all apps.
+                    <br /><b>Every change on this page takes effect immediately.</b> There is nothing to save; anything that
+                    signs people out or locks accounts asks first.
                 </div>
             </div>
 
@@ -56,6 +63,7 @@
 
             <form id="MkiPwForm">
                 <div class="mkipw-panel mkipw-aktiv" data-panel="benutzer">
+                    <h3>Rules</h3>
                     <div class="selectContainer">
                         <label class="selectLabel" for="DefaultProfile">Profile for all users</label>
                         <select is="emby-select" id="DefaultProfile" class="emby-select-withcolor emby-select mkipw-profilwahl"></select>
@@ -77,7 +85,11 @@
                                 <tbody id="MkiPwListe"><tr><td colspan="6">Loading …</td></tr></tbody>
                             </table>
                         </div>
-                        <p class="fieldDescription">Profile changes in the table apply after “Save”.</p>
+                        <p class="fieldDescription">
+                            “Temporary password” creates a random password, shows it to you once and signs the user out everywhere.
+                            The user signs in with it and must then choose their own. Use it for forgotten passwords and for accounts
+                            without a password, which stay locked until they get one.
+                        </p>
                     </div>
 
                     <div class="verticalSection">
@@ -92,6 +104,7 @@
                                 <option value="14">14 days</option>
                             </select>
                             <div class="fieldDescription" id="MkiPwFristText"></div>
+                            <div class="fieldDescription">Accounts without any password never get a notice period: once they have a profile or a request, they are locked right away on every app, TV and Quick Connect, and only a temporary password from you unlocks them. Nobody can claim such an account by just knowing its name.</div>
                         </div>
                         <button is="emby-button" type="button" id="MkiPwUnsichere" class="raised block emby-button">
                             <span>Everyone with a profile whose password is not known to meet its rules …</span>
@@ -104,11 +117,12 @@
                     <div class="verticalSection">
                         <h3>Link for TVs and apps</h3>
                         <p class="fieldDescription">
-                            In a browser (and in the Jellyfin apps for Android, iOS and desktop) the dialog appears right at
-                            sign-in. TVs and other native apps can only show a short message while the user still has access,
-                            and after that only “sign-in failed”. Those users set their password through this link, for
-                            example on their phone, and then sign in as usual. Pick a notice period above so their apps
-                            remind them first, or send them the message below yourself.
+                            In a browser and in the Jellyfin apps for Android, iOS and desktop, users get a popup they have to
+                            answer, and the change dialog right at sign-in. TVs and other apps show Jellyfin’s own message
+                            window while the user still has access (during a notice period), and after that only
+                            “sign-in failed”. Those users set their password through this link, for example on their phone,
+                            and then sign in as usual. Pick a notice period above so their apps warn them first, or send them
+                            the message below yourself.
                         </p>
                         <div class="mkipw-link">
                             <input is="emby-input" type="text" id="MkiPwLink" readonly />
@@ -174,12 +188,12 @@
                         <div class="fieldDescription">Counted from the last change. For passwords set earlier, it counts from the day the plugin first saw the user sign in.</div>
                     </div>
                     <div class="checkboxContainer checkboxContainer-withDescription">
-                        <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="RequireChangeForNewUsers" /><span>New users must set their own password</span></label>
-                        <div class="fieldDescription checkboxFieldDescription">Applies to every newly created account. You give a starting password (or none) and the user replaces it at first sign-in.</div>
+                        <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="RequireChangeForNewUsers" /><span>New users must set their own password, also without a profile</span></label>
+                        <div class="fieldDescription checkboxFieldDescription">Users with a profile always replace a password you gave them (at creation or later) at their first sign-in. With this option, users without a profile do too. Accounts created without any password stay locked until you give them a temporary password.</div>
                     </div>
                     <div class="checkboxContainer checkboxContainer-withDescription">
                         <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ApplyToAdminChanges" /><span>Apply rules to passwords set by an administrator</span></label>
-                        <div class="fieldDescription checkboxFieldDescription">When creating users and when you set another user’s password.</div>
+                        <div class="fieldDescription checkboxFieldDescription">When creating users and when you set another user’s password. Either way the user replaces that password with their own at the next sign-in.</div>
                     </div>
                     <div class="checkboxContainer checkboxContainer-withDescription">
                         <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ExemptAdministrators" /><span>Exempt administrators from the rules</span></label>
@@ -194,7 +208,7 @@
                         <div class="fieldDescription checkboxFieldDescription">When a new password is required, every open session gets a message; sign-out happens after the grace period.</div>
                     </div>
                     <div class="inputContainer">
-                        <label class="inputLabel inputLabelUnfocused" for="GraceSeconds">Grace period before sign-out (seconds)</label>
+                        <label class="inputLabel inputLabelUnfocused" for="GraceSeconds">Grace period before sign-out when a new password is required right away (seconds)</label>
                         <input is="emby-input" type="number" id="GraceSeconds" min="0" max="300" />
                     </div>
                     <div class="inputContainer">
@@ -209,24 +223,24 @@
                     </div>
                 </div>
 
-                <div>
-                    <button is="emby-button" type="submit" class="raised button-submit block emby-button"><span>Save</span></button>
-                </div>
             </form>
         </div>
     </div>
 
+
     <div class="mkipw-ueberlagerung" id="MkiPwFrage">
-        <div class="mkipw-frage">
+        <div class="mkipw-frage" role="alertdialog" aria-modal="true">
             <h3 id="MkiPwFrageTitel"></h3>
             <p id="MkiPwFrageText"></p>
-            <div class="checkboxContainer">
-                <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="MkiPwMitAdmins" /><span>Include administrators, including your own account</span></label>
+            <div id="MkiPwFrageExtra"></div>
+            <div class="checkboxContainer" id="MkiPwMitAdminsZeile">
+                <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="MkiPwMitAdmins" /><span>Include other administrators (your own account is never included)</span></label>
             </div>
-            <button is="emby-button" type="button" id="MkiPwJa" class="raised block emby-button mkipw-gefahr"><span>Yes, require it</span></button>
+            <button is="emby-button" type="button" id="MkiPwJa" class="raised block emby-button mkipw-gefahr"><span id="MkiPwJaText"></span></button>
             <button is="emby-button" type="button" id="MkiPwNein" class="raised block emby-button"><span>Cancel</span></button>
         </div>
     </div>
+    <div class="mkipw-gespeichert" id="MkiPwGespeichert">Saved</div>
 
     <script type="text/javascript">
         (function () {
@@ -245,18 +259,17 @@
             };
             var REGELN = ['MinLength', 'MaxRepeat', 'RequireUpper', 'RequireLower', 'RequireDigit', 'RequireSymbol', 'ForbidUsername', 'BlockCommon'];
             var WEITERES_BOOL = ['RequireChangeForNewUsers', 'ApplyToAdminChanges', 'ExemptAdministrators', 'WebHints', 'NotifySessions'];
-            var WEITERES_ZAHL = ['ExpiryDays', 'GraceSeconds'];
+            var WEITERES_ZAHL = { ExpiryDays: [0, 3650], GraceSeconds: [0, 300], MinLength: [1, 128], MaxRepeat: [0, 20] };
             var WEITERES_TEXT = ['NotifyText', 'PublicUrl'];
-            var GRUENDE = { admin: 'requested', expired: 'expired', 'new': 'new account' };
+            var GRUENDE = { admin: 'requested', expired: 'expired', 'new': 'new account', nopassword: 'no password', temporary: 'temporary password' };
             var STATUS = {
                 ok: ['mkipw-ok', 'Meets the rules', 'Checked when set against rules at least as strict as the current profile.'],
                 older: ['mkipw-offen', 'Older rules', 'Checked when set, but the profile has become stricter since.'],
                 unknown: ['mkipw-neutral', 'Unknown', 'Never checked by the plugin, for example set before the profile was assigned. Stored passwords are never judged after the fact.'],
-                none: ['mkipw-schlecht', 'No password', 'The plugin saw the account being created or reset without a password.'],
+                none: ['mkipw-schlecht', 'No password', 'This account has no password in Jellyfin. With a profile or a request it is locked until you give it a temporary password.'],
                 norules: ['mkipw-neutral', 'No rules', 'This user has no profile, so the plugin checks nothing.']
             };
             var daten = { Presets: {}, Common: [], Users: [] };
-            var config = null;
 
             function setzen(id, wert) {
                 var e = $('#' + id);
@@ -266,14 +279,18 @@
             function lesen(id) {
                 var e = $('#' + id);
                 if (e.type === 'checkbox') return e.checked;
-                if (e.type === 'number') return parseInt(e.value, 10) || 0;
+                if (e.type === 'number') {
+                    var grenzen = WEITERES_ZAHL[id] || [0, 100000];
+                    var n = Math.min(grenzen[1], Math.max(grenzen[0], parseInt(e.value, 10) || 0));
+                    e.value = n;
+                    return n;
+                }
                 return e.value;
             }
 
             function eigeneRegeln() {
                 var r = {};
                 REGELN.forEach(function (k) { r[k] = lesen(k); });
-                r.MinLength = Math.max(1, r.MinLength);
                 return r;
             }
 
@@ -373,11 +390,92 @@
                 return td;
             }
 
+            function knopf(text, gefahr, aktion) {
+                var b = document.createElement('button');
+                b.setAttribute('is', 'emby-button');
+                b.type = 'button';
+                b.className = 'raised emby-button' + (gefahr ? ' mkipw-gefahr' : '');
+                b.textContent = text;
+                b.addEventListener('click', aktion);
+                return b;
+            }
+
+            // --- One way of working: every change is saved right away, one after the other. ---
+            var warteschlange = Promise.resolve();
+            var hinweisUhr = null;
+            function meldung(text, fehler) {
+                var m = $('#MkiPwGespeichert');
+                m.textContent = text;
+                m.classList.toggle('mkipw-fehler', !!fehler);
+                m.classList.add('mkipw-aktiv');
+                clearTimeout(hinweisUhr);
+                hinweisUhr = setTimeout(function () { m.classList.remove('mkipw-aktiv'); }, fehler ? 5000 : 1500);
+            }
+
+            function speichern(aendern) {
+                warteschlange = warteschlange.then(function () {
+                    return ApiClient.getPluginConfiguration(pluginId).then(function (c) {
+                        aendern(c);
+                        return ApiClient.updatePluginConfiguration(pluginId, c);
+                    }).then(function () {
+                        meldung('Saved');
+                        return benutzerLaden();
+                    }, function () {
+                        meldung('Not saved. Please reload the page.', true);
+                    });
+                });
+                return warteschlange;
+            }
+
+            // --- Questions and results in one dialog. ---
+            var antwort = null;
+            function dialog(o) {
+                $('#MkiPwFrageTitel').textContent = o.titel;
+                $('#MkiPwFrageText').textContent = o.text || '';
+                var extra = $('#MkiPwFrageExtra');
+                extra.innerHTML = '';
+                if (o.extra) extra.appendChild(o.extra);
+                $('#MkiPwMitAdmins').checked = false;
+                $('#MkiPwMitAdminsZeile').style.display = o.mitAdmins ? '' : 'none';
+                $('#MkiPwJaText').textContent = o.ja || 'OK';
+                $('#MkiPwJa').classList.toggle('mkipw-gefahr', !!o.gefahr);
+                $('#MkiPwNein').style.display = o.nurOk ? 'none' : '';
+                $('#MkiPwFrage').classList.add('mkipw-aktiv');
+                return new Promise(function (resolve) { antwort = resolve; });
+            }
+            function dialogZu(ja) {
+                $('#MkiPwFrage').classList.remove('mkipw-aktiv');
+                $('#MkiPwFrageExtra').innerHTML = '';
+                var r = antwort;
+                antwort = null;
+                if (r) r({ ja: ja, mitAdmins: $('#MkiPwMitAdmins').checked });
+            }
+            $('#MkiPwJa').addEventListener('click', function () { dialogZu(true); });
+            $('#MkiPwNein').addEventListener('click', function () { dialogZu(false); });
+
+            // Accounts without a password that a profile change would lock right away.
+            function wirdGesperrt(betroffen, profilNeu) {
+                if (profilNeu === 'none') return [];
+                return betroffen.filter(function (u) { return !u.IsExempt && u.PasswordStatus === 'none' && !u.MustChange; });
+            }
+
+            function sperrFrage(gesperrt) {
+                if (!gesperrt.length) return Promise.resolve(true);
+                return dialog({
+                    titel: 'Lock ' + gesperrt.length + (gesperrt.length === 1 ? ' account' : ' accounts') + ' without a password?',
+                    text: gesperrt.map(function (u) { return u.Name; }).join(', ') + (gesperrt.length === 1 ? ' has' : ' have')
+                        + ' no password. With a profile, an account without a password is locked right away on every app and TV, and stays locked until you give it a temporary password from the list.',
+                    ja: 'Yes, assign the profile',
+                    gefahr: true
+                }).then(function (r) { return r.ja; });
+            }
+
             function benutzerZeigen() {
                 $('#MkiPwLink').value = daten.ChangeUrl || '';
                 var tbody = $('#MkiPwListe');
                 tbody.innerHTML = '';
                 var zaehler = {};
+                var ich = ApiClient.getCurrentUserId && ApiClient.getCurrentUserId();
                 daten.Users.forEach(function (u) {
                     var tr = document.createElement('tr');
                     tr.setAttribute('data-user', u.Id);
@@ -395,34 +493,49 @@
                         wahl.title = 'Administrators are exempt under “More settings”.';
                     }
                     zelle(tr, wahl);
-                    // Save the choice right away: the buttons in this table reload the list and would drop an unsaved choice.
-                    wahl.addEventListener('change', function () { profilSpeichern(u.Id, wahl.value); });
+                    wahl.addEventListener('change', function () {
+                        var neu = wahl.value;
+                        var wirksam = neu === 'default' ? $('#DefaultProfile').value : neu;
+                        sperrFrage(wirdGesperrt([u], wirksam)).then(function (ok) {
+                            if (!ok) {
+                                wahl.value = u.Profile;
+                                return;
+                            }
+                            speichern(function (c) {
+                                c.UserProfiles = (c.UserProfiles || []).filter(function (e) { return String(e.UserId).replace(/-/g, '').toLowerCase() !== String(u.Id).replace(/-/g, '').toLowerCase(); });
+                                if (neu !== 'default') c.UserProfiles.push({ UserId: u.Id, Profile: neu });
+                            });
+                        });
+                    });
 
                     var st = STATUS[u.PasswordStatus] || STATUS.unknown;
                     zelle(tr, marke(st[0], st[1], st[2] + (u.VerifiedRules ? ' Checked against: ' + regelText(u.VerifiedRules) + '.' : '')));
                     zaehler[u.PasswordStatus] = (zaehler[u.PasswordStatus] || 0) + 1;
 
-                    var wechsel = u.MustChange
-                        ? marke('mkipw-offen', u.Deadline && new Date(u.Deadline) > new Date()
-                            ? 'Until ' + new Date(u.Deadline).toLocaleDateString()
-                            : 'Pending (' + (GRUENDE[u.Reason] || u.Reason || '') + ')',
-                            u.Deadline ? 'Keeps access until ' + new Date(u.Deadline).toLocaleString() + ', then is signed out until a new password is set. '
-                                + (u.RemindedOn && u.RemindedOn.length ? 'Reminded on: ' + u.RemindedOn.join(', ') + '.' : 'No app has been reminded yet: none was open since the request.')
-                                : '')
-                        : marke('mkipw-neutral', '–');
+                    var gesperrtOhne = u.MustChange && u.PasswordStatus === 'none';
+                    var wechsel = gesperrtOhne
+                        ? marke('mkipw-schlecht', 'Locked', 'No password: locked on every app and TV until you give it a temporary password.')
+                        : u.MustChange
+                            ? marke('mkipw-offen', u.Deadline && new Date(u.Deadline) > new Date()
+                                ? 'Until ' + new Date(u.Deadline).toLocaleDateString()
+                                : 'Pending (' + (GRUENDE[u.Reason] || u.Reason || '') + ')',
+                                u.Deadline ? 'Keeps access until ' + new Date(u.Deadline).toLocaleString() + ', then is signed out until a new password is set. '
+                                    + (u.RemindedOn && u.RemindedOn.length ? 'Reminded on: ' + u.RemindedOn.join(', ') + '.' : 'No app has been reminded yet: none was open since the request.')
+                                    : 'Cannot use any app until they set a new password.')
+                            : marke('mkipw-neutral', '–');
                     zelle(tr, wechsel);
                     zelle(tr, datum(u.LastChangedUtc));
 
-                    var knopf = document.createElement('button');
-                    knopf.setAttribute('is', 'emby-button');
-                    knopf.type = 'button';
-                    knopf.className = 'raised emby-button';
-                    knopf.textContent = u.MustChange ? 'Cancel request' : 'Require new password';
-                    knopf.addEventListener('click', function () {
-                        if (!u.MustChange && !confirm('Require a new password from ' + u.Name + '? ' + fristSatz())) return;
-                        senden(u.MustChange ? 'Release' : 'Require', { UserIds: [u.Id], NoticeDays: frist() });
-                    });
-                    zelle(tr, knopf);
+                    var knoepfe = document.createElement('div');
+                    knoepfe.className = 'mkipw-knoepfe';
+                    var selbst = ich && String(ich).replace(/-/g, '').toLowerCase() === String(u.Id).replace(/-/g, '').toLowerCase();
+                    if (u.MustChange) {
+                        knoepfe.appendChild(knopf('Cancel request', false, function () { anfrageAufheben(u); }));
+                    } else if (u.PasswordStatus !== 'none') {
+                        knoepfe.appendChild(knopf('Require new password', false, function () { einzelnAnfordern(u, selbst); }));
+                    }
+                    if (!selbst) knoepfe.appendChild(knopf('Temporary password', gesperrtOhne, function () { vorlaeufig(u); }));
+                    zelle(tr, knoepfe);
                     tbody.appendChild(tr);
                 });
                 markieren(false);
@@ -433,18 +546,75 @@
                 });
             }
 
-            function profilSpeichern(userId, profil) {
-                Dashboard.showLoadingMsg();
-                ApiClient.getPluginConfiguration(pluginId).then(function (c) {
-                    c.UserProfiles = (c.UserProfiles || []).filter(function (e) { return e.UserId !== userId; });
-                    if (profil !== 'default') c.UserProfiles.push({ UserId: userId, Profile: profil });
-                    return ApiClient.updatePluginConfiguration(pluginId, c);
-                }).then(function () {
-                    Dashboard.hideLoadingMsg();
-                    benutzerLaden();
-                }, function () {
-                    Dashboard.hideLoadingMsg();
-                    alert('That did not work.');
+            function einzelnAnfordern(u, selbst) {
+                dialog({
+                    titel: selbst ? 'Require a new password from yourself?' : 'Require a new password from ' + u.Name + '?',
+                    text: (selbst ? 'This is your own account: you will be signed out too and set your new password at the next sign-in. ' : '')
+                        + fristSatz() + ' You can cancel it at any time.',
+                    ja: 'Yes, require it',
+                    gefahr: true
+                }).then(function (r) {
+                    if (r.ja) senden('Require', { UserIds: [u.Id], NoticeDays: frist() });
+                });
+            }
+
+            function anfrageAufheben(u) {
+                var ohne = u.PasswordStatus === 'none' && !u.IsExempt && u.EffectiveProfile !== 'none';
+                dialog({
+                    titel: 'Cancel the request for ' + u.Name + '?',
+                    text: ohne
+                        ? 'This account has no password and a profile, so it stays locked anyway. Give it a temporary password instead.'
+                        : u.Name + ' can then sign in again with the current password.',
+                    ja: 'Cancel the request'
+                }).then(function (r) {
+                    if (r.ja) senden('Release', { UserIds: [u.Id] });
+                });
+            }
+
+            function vorlaeufig(u) {
+                dialog({
+                    titel: 'Temporary password for ' + u.Name + '?',
+                    text: 'The plugin creates a random password, shows it to you once and signs ' + u.Name + ' out on every device. '
+                        + u.Name + ' signs in with it and must then choose their own password. Their current password stops working.',
+                    ja: 'Create temporary password',
+                    gefahr: true
+                }).then(function (r) {
+                    if (!r.ja) return;
+                    Dashboard.showLoadingMsg();
+                    ApiClient.ajax({
+                        type: 'POST',
+                        url: ApiClient.getUrl('MkiPasswordPolicy/TemporaryPassword'),
+                        data: JSON.stringify({ UserIds: [u.Id] }),
+                        contentType: 'application/json',
+                        dataType: 'json'
+                    }).then(function (ergebnis) {
+                        Dashboard.hideLoadingMsg();
+                        benutzerLaden();
+                        var feld = document.createElement('div');
+                        feld.className = 'mkipw-geheim';
+                        feld.textContent = ergebnis.Password;
+                        var nachricht = 'Hi ' + u.Name + '! Your temporary Jellyfin password is: ' + ergebnis.Password
+                            + '\nSign in with it in any Jellyfin app or at ' + (ergebnis.ChangeUrl || daten.ChangeUrl || '')
+                            + ' and choose your own password right away.';
+                        var kopieren = knopf('Copy message with password', false, function () {
+                            if (navigator.clipboard) navigator.clipboard.writeText(nachricht).then(function () { meldung('Copied'); }, function () { prompt('Copy this message:', nachricht); });
+                            else prompt('Copy this message:', nachricht);
+                        });
+                        var huelle = document.createElement('div');
+                        huelle.appendChild(feld);
+                        huelle.appendChild(kopieren);
+                        dialog({
+                            titel: 'Temporary password for ' + u.Name,
+                            text: 'Shown only now: neither the plugin nor Jellyfin can show it again. ' + u.Name
+                                + ' signs in with it (on a TV, or on the phone/computer at the link) and is then asked for their own password; on a TV they set it at the link.',
+                            extra: huelle,
+                            ja: 'Done',
+                            nurOk: true
+                        });
+                    }, function () {
+                        Dashboard.hideLoadingMsg();
+                        meldung('That did not work.', true);
+                    });
                 });
             }
 
@@ -478,13 +648,14 @@
                     data: JSON.stringify(nutzdaten),
                     contentType: 'application/json',
                     dataType: aktion === 'Require' ? 'json' : undefined
-                }).then(function (antwort) {
+                }).then(function (ergebnis) {
                     Dashboard.hideLoadingMsg();
+                    meldung('Done');
                     benutzerLaden();
-                    return antwort;
+                    return ergebnis;
                 }, function () {
                     Dashboard.hideLoadingMsg();
-                    alert('That did not work.');
+                    meldung('That did not work.', true);
                 });
             }
 
@@ -497,17 +668,53 @@
                 });
             });
 
-            Array.prototype.forEach.call(page.querySelectorAll('.mkipw-regel'), function (e) {
-                e.addEventListener('change', function () { vorlagenZeigen(); testen(); });
-                e.addEventListener('input', function () { vorlagenZeigen(); testen(); });
+            // Profile for all users: saved right away, after asking when it would lock accounts without a password.
+            var standardVorher = null;
+            $('#DefaultProfile').addEventListener('change', function () {
+                var neu = $('#DefaultProfile').value;
+                var betroffen = daten.Users.filter(function (u) { return u.Profile === 'default'; });
+                sperrFrage(wirdGesperrt(betroffen, neu)).then(function (ok) {
+                    if (!ok) {
+                        $('#DefaultProfile').value = standardVorher;
+                        return;
+                    }
+                    standardVorher = neu;
+                    speichern(function (c) { c.DefaultProfile = neu; });
+                });
             });
+
+            // Custom profile: live preview while typing, saved when a field is left or a box is ticked.
+            Array.prototype.forEach.call(page.querySelectorAll('.mkipw-regel'), function (e) {
+                e.addEventListener('input', function () { vorlagenZeigen(); testen(); });
+                e.addEventListener('change', function () {
+                    vorlagenZeigen();
+                    testen();
+                    var r = eigeneRegeln();
+                    speichern(function (c) { REGELN.forEach(function (k) { c[k] = r[k]; }); });
+                });
+            });
+
+            WEITERES_BOOL.concat(['ExpiryDays', 'GraceSeconds'], WEITERES_TEXT).forEach(function (k) {
+                $('#' + k).addEventListener('change', function () {
+                    var wert = lesen(k);
+                    speichern(function (c) { c[k] = wert; });
+                });
+            });
+
+            // Enter in a text field must not reload the page.
+            $('#MkiPwForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+                return false;
+            });
+
             $('#MkiPwTest').addEventListener('input', testen);
             $('#MkiPwTestProfil').addEventListener('change', testen);
 
             $('#MkiPwLinkKopieren').addEventListener('click', function () {
                 var feld = $('#MkiPwLink');
                 feld.select();
-                if (navigator.clipboard) navigator.clipboard.writeText(feld.value); else document.execCommand('copy');
+                if (navigator.clipboard) navigator.clipboard.writeText(feld.value).then(function () { meldung('Copied'); }); else document.execCommand('copy');
             });
 
             function frist() {
@@ -520,7 +727,7 @@
 
             function fristSatz() {
                 return frist()
-                    ? 'They keep access for ' + frist() + (frist() === 1 ? ' day' : ' days') + ' and every app they use is reminded with the link, at most once a day per device. After that, every device is signed out until they set one.'
+                    ? 'They keep access for ' + frist() + (frist() === 1 ? ' day' : ' days') + ' and every app they use shows a message with the link, at most once a day per device. After that, every device is signed out until they set one. Accounts without a password are locked right away.'
                     : 'Open apps get a message, then every device is signed out. Nobody affected can sign in until they set a new password.';
             }
 
@@ -530,11 +737,8 @@
 
             $('#NoticeDays').addEventListener('change', function () {
                 fristZeigen();
-                // Remembered right away, like the profile choices in the table.
-                ApiClient.getPluginConfiguration(pluginId).then(function (c) {
-                    c.NoticeDays = frist();
-                    return ApiClient.updatePluginConfiguration(pluginId, c);
-                });
+                var tage = frist();
+                speichern(function (c) { c.NoticeDays = tage; });
             });
 
             $('#MkiPwNachrichtKopieren').addEventListener('click', function () {
@@ -550,40 +754,37 @@
                 }
             });
 
-            var modus = 'alle';
-            function fragen(m, titel, text) {
-                modus = m;
-                $('#MkiPwMitAdmins').checked = false;
-                $('#MkiPwFrageTitel').textContent = titel;
-                $('#MkiPwFrageText').textContent = text + ' ' + fristSatz() + ' You can cancel it per user.';
-                $('#MkiPwFrage').classList.add('mkipw-aktiv');
+            function massenAnfrage(modus, titel, text) {
+                dialog({
+                    titel: titel,
+                    text: text + ' ' + fristSatz() + ' You can cancel it per user.',
+                    ja: 'Yes, require it',
+                    gefahr: true,
+                    mitAdmins: true
+                }).then(function (r) {
+                    if (!r.ja) return;
+                    var nutzdaten = { IncludeAdministrators: r.mitAdmins, NoticeDays: frist() };
+                    if (modus === 'alle') nutzdaten.All = true; else nutzdaten.OnlyNotMeetingRules = true;
+                    senden('Require', nutzdaten).then(function (ergebnis) {
+                        if (ergebnis && ergebnis.Count != null) {
+                            Dashboard.alert({ title: 'MKI Password Policy', message: ergebnis.Count + ' user(s) must now set a new password.' });
+                        }
+                    });
+                });
             }
             $('#MkiPwAlle').addEventListener('click', function () {
-                fragen('alle', 'Require a new password from all users?', 'Every user must set a new password. Disabled accounts are included and must set one once they are enabled again.');
+                massenAnfrage('alle', 'Require a new password from all users?', 'Every user must set a new password. Disabled accounts are included and must set one once they are enabled again.');
             });
             $('#MkiPwUnsichere').addEventListener('click', function () {
-                fragen('unsicher', 'Require a new password from users with unchecked passwords?', 'Every user (disabled accounts included) with a profile whose password is not known to meet it (Unknown, Older rules, No password) must set a new one. Saved profile changes count, unsaved ones do not.');
-            });
-            $('#MkiPwNein').addEventListener('click', function () {
-                $('#MkiPwFrage').classList.remove('mkipw-aktiv');
-            });
-            $('#MkiPwJa').addEventListener('click', function () {
-                $('#MkiPwFrage').classList.remove('mkipw-aktiv');
-                var nutzdaten = { IncludeAdministrators: $('#MkiPwMitAdmins').checked, NoticeDays: frist() };
-                if (modus === 'alle') nutzdaten.All = true; else nutzdaten.OnlyNotMeetingRules = true;
-                senden('Require', nutzdaten).then(function (antwort) {
-                    if (antwort && antwort.Count != null) {
-                        Dashboard.alert({ title: 'MKI Password Policy', message: antwort.Count + ' user(s) must now set a new password.' });
-                    }
-                });
+                massenAnfrage('unsicher', 'Require a new password from users with unchecked passwords?', 'Every user (disabled accounts included) with a profile whose password is not known to meet it (Unknown, Older rules) must set a new one.');
             });
 
             page.addEventListener('pageshow', function () {
                 Dashboard.showLoadingMsg();
                 ApiClient.getPluginConfiguration(pluginId).then(function (c) {
-                    config = c;
-                    REGELN.concat(WEITERES_BOOL, WEITERES_ZAHL, WEITERES_TEXT).forEach(function (k) { setzen(k, c[k]); });
+                    REGELN.concat(WEITERES_BOOL, ['ExpiryDays', 'GraceSeconds'], WEITERES_TEXT).forEach(function (k) { setzen(k, c[k]); });
                     optionen($('#DefaultProfile'), false, c.DefaultProfile);
+                    standardVorher = $('#DefaultProfile').value;
                     optionen($('#MkiPwTestProfil'), false, 'standard');
                     $('#NoticeDays').value = String([0, 1, 3, 7, 14].indexOf(c.NoticeDays) >= 0 ? c.NoticeDays : 0);
                     fristZeigen();
@@ -591,30 +792,9 @@
                 }).then(function () {
                     Dashboard.hideLoadingMsg();
                     markieren(true);
+                }, function () {
+                    Dashboard.hideLoadingMsg();
                 });
-            });
-
-            $('#MkiPwForm').addEventListener('submit', function (e) {
-                e.preventDefault();
-                Dashboard.showLoadingMsg();
-                ApiClient.getPluginConfiguration(pluginId).then(function (c) {
-                    REGELN.concat(WEITERES_BOOL, WEITERES_ZAHL, WEITERES_TEXT).forEach(function (k) { c[k] = lesen(k); });
-                    c.MinLength = Math.max(1, c.MinLength);
-                    c.DefaultProfile = $('#DefaultProfile').value;
-                    c.NoticeDays = frist();
-                    var wahlen = page.querySelectorAll('#MkiPwListe select[data-user]');
-                    // Without a loaded user list keep the stored assignments instead of wiping them.
-                    if (wahlen.length) {
-                        c.UserProfiles = Array.prototype.map.call(wahlen, function (s) {
-                            return { UserId: s.getAttribute('data-user'), Profile: s.value };
-                        }).filter(function (e) { return e.Profile !== 'default'; });
-                    }
-                    ApiClient.updatePluginConfiguration(pluginId, c).then(function (result) {
-                        Dashboard.processPluginConfigurationUpdateResult(result);
-                        benutzerLaden();
-                    });
-                });
-                return false;
             });
         })();
     </script>

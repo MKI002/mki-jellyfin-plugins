@@ -16,6 +16,14 @@
         admin: 'Your administrator requires a new password before you can continue.',
         expired: 'Your password has expired. Please set a new one.',
         'new': 'Please set your own password for your new account.',
+        nopassword: 'This account has no password, so it is locked for your safety: anyone who knows your username could otherwise take it over. Ask your administrator for a temporary password, sign in with it and then choose your own.',
+        nopasswordTitle: 'Account locked',
+        temporary: 'You signed in with a password someone else knows (a temporary password, a reset PIN or one your administrator set). Please choose your own now.',
+        ok: 'OK',
+        noticeTitle: 'Please set a new password',
+        noticeText: 'Your administrator requires a new password by {date}. Until then you can keep using Jellyfin as usual. After that you can only sign in again once you have set a new one.',
+        noticeNow: 'Set new password now',
+        noticeLater: 'Later',
         standalone: 'Set a new password here when your administrator asks for one. Afterwards you can sign in again in every Jellyfin app.',
         username: 'Username',
         current: 'Current password',
@@ -44,12 +52,14 @@
         shortStatus: 'Password',
         shortRequest: 'New password',
         shortPending: 'Requested, not set yet',
+        shortLocked: 'Locked: no password. Give it a temporary password to unlock it.',
         shortDue: 'Requested, keeps access until ',
         shortNone: 'Not requested',
         shortSameAsAll: ' (same as all users)',
         shortExempt: 'Exempt (administrator)',
         shortDisabled: 'This account is disabled in Jellyfin. Rules and requests still apply once it is enabled again.',
-        shortReset: 'Jellyfin\u2019s \u201cReset password\u201d removes the password completely: the account can then be signed in to without one.',
+        shortReset: 'Jellyfin\u2019s \u201cReset password\u201d removes the password completely. Because this user has a profile or an open request, the account is then locked until you give it a password. Any password you set here counts as temporary: the user has to replace it with their own at the next sign-in. Easiest: \u201cTemporary password\u201d in the plugin.',
+        shortResetFree: 'Jellyfin\u2019s \u201cReset password\u201d removes the password completely. This user has no profile, so the plugin does not step in: the account can then be signed in to without a password.',
         shortOpen: 'Open in MKI Password Policy',
         profiles: { none: 'No rules', basic: 'Basic', standard: 'Standard', strong: 'Strong', verystrong: 'Very strong', passphrase: 'Passphrase', custom: 'Custom profile' },
         statuses: { ok: 'Meets the rules', older: 'Older rules', unknown: 'Unknown', none: 'No password', norules: 'No rules' },
@@ -217,6 +227,24 @@
             var rules = null;
             var step = 1;
 
+            // An account without a password cannot set one here: only the administrator can unlock it.
+            if (opts.reason === 'nopassword' && !opts.standalone) {
+                box.appendChild(el('h2', null, T.nopasswordTitle));
+                box.appendChild(el('p', null, T.nopassword));
+                var row = el('div', { 'class': 'mkipw-buttons' });
+                var okBtn = el('button', { type: 'submit', 'class': 'mkipw-primary' }, T.ok);
+                row.appendChild(okBtn);
+                box.appendChild(row);
+                box.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    if (back.parentNode) back.parentNode.removeChild(back);
+                    resolve(null);
+                });
+                (opts.container || document.body).appendChild(back);
+                okBtn.focus();
+                return;
+            }
+
             function close(value) {
                 current = null;
                 if (back.parentNode) back.parentNode.removeChild(back);
@@ -364,12 +392,55 @@
     var originalFetch = window.fetch.bind(window);
 
     // Sign-in hooks, only while the plugin is active (data-mode="full").
+    // Notice period: any API response carries the deadline. Show a popup that has to be answered,
+    // once per app start (and again after "Later" only when the app is started again).
+    var NOTICE_HEADER = 'X-Mki-Password-Notice';
+    var noticeShown = false;
+    function noticeFrom(deadline) {
+        if (!deadline || noticeShown || !window.ApiClient || !window.ApiClient.getCurrentUserId || !window.ApiClient.getCurrentUserId()) return;
+        try { if (sessionStorage.getItem('mkipw-later') === deadline) return; } catch (e) { /* storage blocked */ }
+        noticeShown = true;
+        var when = new Date(deadline);
+        addCss();
+        var back = el('div', { 'class': 'mkipw-back' });
+        var box = el('div', { 'class': 'mkipw-box', role: 'alertdialog', 'aria-modal': 'true' });
+        back.appendChild(box);
+        box.appendChild(el('h2', null, T.noticeTitle));
+        box.appendChild(el('p', null, T.noticeText.replace('{date}', isNaN(when) ? deadline : when.toLocaleString())));
+        var buttons = el('div', { 'class': 'mkipw-buttons' });
+        var now = el('button', { type: 'button', 'class': 'mkipw-primary' }, T.noticeNow);
+        var later = el('button', { type: 'button' }, T.noticeLater);
+        buttons.appendChild(now);
+        buttons.appendChild(later);
+        box.appendChild(buttons);
+        document.body.appendChild(back);
+        now.focus();
+        function close() {
+            if (back.parentNode) back.parentNode.removeChild(back);
+        }
+        later.addEventListener('click', function () {
+            try { sessionStorage.setItem('mkipw-later', deadline); } catch (e) { /* storage blocked */ }
+            close();
+        });
+        now.addEventListener('click', function () {
+            close();
+            window.ApiClient.getCurrentUser().then(function (u) {
+                return openDialog({ username: u && u.Name, reason: 'admin' });
+            }, function () {
+                return openDialog({ reason: 'admin' });
+            });
+        });
+        // This app shows the popup itself, so the server sends it no message on top.
+        window.ApiClient.ajax({ type: 'POST', url: window.ApiClient.getUrl('MkiPasswordPolicy/Seen') }).catch(function () {});
+    }
+
     function installSignInHooks() {
         // Sign-in hook for fetch: show the dialog, then repeat the sign-in with the new password so the user lands in the app.
         window.fetch = function (input, init) {
             var url = typeof input === 'string' ? input : (input && input.url) || '';
             var result = originalFetch(input, init);
             if (!AUTH_URL.test(url)) {
+                result.then(function (res) { noticeFrom(res.headers.get(NOTICE_HEADER)); }, function () {});
                 return result;
             }
             return result.then(function (res) {
@@ -399,6 +470,10 @@
             return xhrOpen.apply(this, arguments);
         };
         XMLHttpRequest.prototype.send = function (body) {
+            var self = this;
+            self.addEventListener('load', function () {
+                try { noticeFrom(self.getResponseHeader(NOTICE_HEADER)); } catch (e) { /* header not exposed */ }
+            });
             if (this.__mkipwAuth) {
                 var xhr = this;
                 xhr.addEventListener('load', function () {
@@ -515,10 +590,11 @@
             row(T.shortProfile, profil);
             row(T.shortStatus, T.statuses[u.PasswordStatus] || u.PasswordStatus);
             row(T.shortRequest, !u.MustChange ? T.shortNone
+                : u.PasswordStatus === 'none' ? T.shortLocked
                 : u.Deadline && new Date(u.Deadline) > new Date() ? T.shortDue + new Date(u.Deadline).toLocaleString() : T.shortPending);
             box.appendChild(table);
             if (u.IsDisabled) box.appendChild(el('p', null, T.shortDisabled));
-            box.appendChild(el('p', null, T.shortReset));
+            box.appendChild(el('p', null, u.MustChange || (!u.IsExempt && u.EffectiveProfile !== 'none') ? T.shortReset : T.shortResetFree));
             var open = el('button', { type: 'button', 'class': 'raised emby-button' }, T.shortOpen);
             open.addEventListener('click', function () {
                 location.hash = '#/configurationpage?name=' + encodeURIComponent(T.shortTitle) + '&user=' + id;

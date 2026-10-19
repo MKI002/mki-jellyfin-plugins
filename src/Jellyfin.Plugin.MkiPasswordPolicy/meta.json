@@ -2,10 +2,10 @@
   "guid": "ea705ff9-2793-4156-a253-3720f294ec89",
   "name": "MKI Password Policy",
   "overview": "Password rules and forced password changes for Jellyfin users.",
-  "description": "Enforces password rules (length, character types, no username, common passwords) on the server for every client, with ready-made profiles. Lets an administrator require a new password from all users or from single users: they cannot sign in on any device until they have set one. Optional password expiry and a forced change for new users. The web client shows the rules live and a change dialog; TV and native apps use a change page that opens in any browser.",
+  "description": "Enforces password rules (length, character types, no username, common passwords) on the server for every client, with ready-made profiles. Lets an administrator require a new password from all users or from single users, right away or with a notice period: they cannot sign in on any device until they have set one. Accounts without a password are locked until they get a temporary password. Web-based apps show a popup users must answer; TVs get Jellyfin's message window and a change page that opens in any browser.",
   "owner": "MKI",
   "category": "Authentication",
   "targetAbi": "12.0.0.0",
-  "version": "1.0.4.0",
-  "changelog": "New notice period when requiring a new password (right away, or 1, 3, 7 or 14 days): users keep access until the deadline and every app they use, TVs included, shows a message with the deadline and the change link, at most once a day per device. The list shows the deadline and which devices were reminded. New Copy message for users button with a ready text to send."
+  "version": "1.0.5.0",
+  "changelog": "Accounts without a password that have a profile or a request are now locked right away on every sign-in path (apps, TVs, Quick Connect, existing sessions), with no notice period, and nobody can claim them by name: new Temporary password button shows a random password once and the user replaces it at the next sign-in. Passwords an administrator sets (Jellyfin's Password tab or new users) and reset PINs now count as temporary for users with a profile. A second request can only bring a deadline forward. Bulk requests never include the admin who sends them. Web-based apps show a popup that must be answered during a notice period; TVs get Jellyfin's message window instead of a fading toast. Settings page: every change applies immediately, no Save button, with a question before anything locks accounts."
 }

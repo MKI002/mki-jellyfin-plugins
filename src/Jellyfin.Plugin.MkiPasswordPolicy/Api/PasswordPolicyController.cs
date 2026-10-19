@@ -172,6 +172,19 @@ public class PasswordPolicyController : ControllerBase
 		return Datei("client.js", "application/javascript; charset=utf-8");
 	}
 
+	// Called by the plugin's script in web-based apps when it showed its popup, so these sessions get no server message on top.
+	[HttpPost("Seen")]
+	[Authorize]
+	public ActionResult Seen()
+	{
+		var id = NutzerId();
+		if (id != Guid.Empty && _store.InNotice(id))
+		{
+			_enforcer.MarkWeb(id, User.FindFirstValue("Jellyfin-DeviceId"));
+		}
+		return NoContent();
+	}
+
 	[HttpGet("Users")]
 	[Authorize(Policy = "RequiresElevation")]
 	public ActionResult GetUsers()
@@ -216,12 +229,31 @@ public class PasswordPolicyController : ControllerBase
 			// Disabled accounts are included: they have to set a new password once they are enabled again.
 			? _users.GetUsers()
 				.Where(u => anfrage.IncludeAdministrators || !Enforcer.IsAdmin(u))
+				// Never the administrator who clicks: a bulk request must not lock them out mid-way.
+				.Where(u => u.Id != NutzerId())
 				.Where(u => !anfrage.OnlyNotMeetingRules || Status(u, _store.Get(u.Id)) is "unknown" or "older" or "none")
 				.Select(u => u.Id)
 			: anfrage.UserIds ?? new List<Guid>();
 		int tage = Math.Clamp(anfrage.NoticeDays ?? c.NoticeDays, 0, 30);
 		int anzahl = _enforcer.Require(ids, "admin", Links.ChangeUrl(Request, Request.PathBase.Value ?? string.Empty), tage);
 		return new JsonResult(new { Count = anzahl });
+	}
+
+	// Sets a random temporary password and shows it once to the administrator. The user must replace it at the next sign-in.
+	[HttpPost("TemporaryPassword")]
+	[Authorize(Policy = "RequiresElevation")]
+	public async Task<ActionResult> TemporaryPassword([FromBody] RequireRequest anfrage)
+	{
+		Response.Headers.CacheControl = "no-store";
+		var id = anfrage.UserIds?.Count == 1 ? anfrage.UserIds[0] : Guid.Empty;
+		var user = _users.GetUserById(id);
+		if (user == null || id == NutzerId())
+		{
+			return BadRequest();
+		}
+		string passwort = await _enforcer.SetTemporaryPassword(user).ConfigureAwait(false);
+		_logger.LogInformation("Temporary password set for {User}", user.Username);
+		return new JsonResult(new { Password = passwort, ChangeUrl = Links.ChangeUrl(Request, Request.PathBase.Value ?? string.Empty) });
 	}
 
 	[HttpPost("Release")]
@@ -234,6 +266,12 @@ public class PasswordPolicyController : ControllerBase
 			_store.Release(id);
 			// Lifting an expired password would trip again at the next sign-in, so restart its clock.
 			_store.RestartClock(id);
+			// An account without a password stays blocked while it has rules.
+			var user = _users.GetUserById(id);
+			if (user != null)
+			{
+				_enforcer.EnforceNoPassword(user);
+			}
 		}
 		_patcher.Sync();
 		return NoContent();
@@ -251,7 +289,9 @@ public class PasswordPolicyController : ControllerBase
 		var benutzer = string.IsNullOrWhiteSpace(anfrage.Username) ? null : _users.GetUserByName(anfrage.Username.Trim());
 		bool ok = false;
 		// The password is only checked for accounts with an open request, so this is no general password oracle.
-		if (benutzer != null && _store.MustChange(benutzer.Id))
+		// An account without any password cannot be claimed here: anyone who knows the name could do that.
+		// Its owner gets a temporary password from the administrator instead.
+		if (benutzer != null && _store.MustChange(benutzer.Id) && !Policy.HasNoPassword(benutzer))
 		{
 			try
 			{
@@ -300,7 +340,8 @@ public class PasswordPolicyController : ControllerBase
 	// unknown: never checked; the plugin cannot judge a stored password and does not try.
 	private static string Status(User u, UserState s)
 	{
-		if (s.KnownEmpty)
+		// Read from Jellyfin itself: no stored hash means no password. The plugin's own record could be out of date.
+		if (Policy.HasNoPassword(u))
 		{
 			return "none";
 		}

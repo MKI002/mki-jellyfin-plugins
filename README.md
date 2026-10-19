@@ -57,7 +57,7 @@ Updates show up in the catalog automatically when a new version is released.
 ### Requirements
 
 - Jellyfin **12.x** (plugin ABI `12.0.0.0`). Older servers will not list the plugins.
-- **MKI Media Hero** and **MKI Seerr Bridge** add a small script to the Jellyfin web client by writing to its `index.html`. **MKI Password Policy** does the same, but only while a profile is assigned or a password change is pending, and removes it again afterwards. The Jellyfin process needs write access to the web folder for that; the official Docker image has it.
+- **MKI Media Hero** and **MKI Seerr Bridge** add a small script to the Jellyfin web client by writing to its `index.html`. **MKI Password Policy** does the same; its sign-in dialog and popups only switch on while a profile is assigned or a password change is pending (otherwise the script only adds the administrator's shortcut on user pages), and uninstalling removes it. The Jellyfin process needs write access to the web folder for that; the official Docker image has it.
 - **MKI Seerr Bridge**, and MKI Media Hero's trending source, need a running [Seerr](https://github.com/seerr-team/seerr) instance and its API key.
 
 ## Building from source

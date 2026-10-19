@@ -6,8 +6,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.MkiPasswordPolicy.Services;
 
-// Checks once a minute for apps of users in a notice period that have not seen the reminder yet.
-// Does nothing while no password request is open.
+// Once a minute and whenever the settings are saved: blocks accounts without a password that have rules or a request,
+// and reminds apps of users in a notice period. Does nothing while the plugin is switched off.
 public class Reminder : IHostedService, IDisposable
 {
 	private readonly Enforcer _enforcer;
@@ -24,12 +24,14 @@ public class Reminder : IHostedService, IDisposable
 
 	public Task StartAsync(CancellationToken cancellationToken)
 	{
-		_uhr = new Timer(_ => Tick(), null, TimeSpan.FromSeconds(30), TimeSpan.FromMinutes(1));
+		Plugin.ConfigSaved += Tick;
+		_uhr = new Timer(_ => Tick(), null, TimeSpan.FromSeconds(5), TimeSpan.FromMinutes(1));
 		return Task.CompletedTask;
 	}
 
 	public Task StopAsync(CancellationToken cancellationToken)
 	{
+		Plugin.ConfigSaved -= Tick;
 		_uhr?.Change(Timeout.Infinite, Timeout.Infinite);
 		return Task.CompletedTask;
 	}
@@ -44,6 +46,8 @@ public class Reminder : IHostedService, IDisposable
 	{
 		try
 		{
+			// Profiles may just have been given to accounts without a password: those are blocked right away.
+			_enforcer.SweepNoPassword();
 			_enforcer.Remind();
 		}
 		catch (Exception ex)

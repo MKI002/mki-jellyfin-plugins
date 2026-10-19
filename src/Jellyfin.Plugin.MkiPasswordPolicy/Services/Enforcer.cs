@@ -21,8 +21,9 @@ public class Enforcer
 
 	public const string DefaultNoticeText = "Your administrator requires a new password by {date}. Until then everything works as usual. Set it on your phone or computer here: {url}";
 
-	// Reminders sent during notice periods: session id -> (user, device name, sent at).
-	private readonly ConcurrentDictionary<string, (Guid User, string Device, DateTime Sent)> _erinnert = new();
+	// Reminders during notice periods: session id -> (user, device name, sent at, web). "Web" sessions run the
+	// plugin's own script, which shows its popup itself, so they get no server message on top.
+	private readonly ConcurrentDictionary<string, (Guid User, string Device, DateTime Sent, bool Web)> _erinnert = new();
 
 	private readonly PolicyStore _store;
 
@@ -65,22 +66,93 @@ public class Enforcer
 		}
 		_patcher.Sync();
 		_logger.LogInformation("New password required from {Count} user(s), reason {Reason}, notice {Days} day(s)", ids.Count, reason, noticeDays);
+		// Accounts without any password get no notice period and no grace time.
+		var ohne = ids.Select(id => _users.GetUserById(id)).Where(u => u != null && EnforceNoPassword(u)).Select(u => u!.Id).ToList();
+		ids = ids.Except(ohne).ToList();
 
 		if (frist)
 		{
-			Remind();
-			return ids.Count;
+			// A short head start lets the plugin's own popup in web-based apps report itself first.
+			_ = Task.Delay(TimeSpan.FromSeconds(20)).ContinueWith(_ => Remind(), TaskScheduler.Default);
+			return ids.Count + ohne.Count;
 		}
 		if (c.NotifySessions)
 		{
 			string text = (string.IsNullOrWhiteSpace(c.NotifyText) ? DefaultNotifyText : c.NotifyText).Replace("{url}", changeUrl, StringComparison.OrdinalIgnoreCase);
 			foreach (var sitzung in _sessions.Sessions.Where(s => ids.Contains(s.UserId)).ToList())
 			{
-				_ = Benachrichtigen(sitzung.Id, text, gnade);
+				_ = Benachrichtigen(sitzung.Id, text);
 			}
 		}
 		_ = Abmelden(ids, gnade);
-		return ids.Count;
+		return ids.Count + ohne.Count;
+	}
+
+	// An account without any password that has rules or an open request is blocked right away, on every sign-in path,
+	// until a password is set. Returns true when this call blocked it.
+	public bool EnforceNoPassword(User user)
+	{
+		if (!Policy.HasNoPassword(user) || _store.BlockedNow(user.Id))
+		{
+			return false;
+		}
+		if (!_store.MustChange(user.Id) && Policy.RulesFor(user) == null)
+		{
+			return false;
+		}
+		_store.RequireNow(user.Id, "nopassword");
+		_patcher.Sync();
+		_logger.LogInformation("{User} has no password: blocked until one is set", user.Username);
+		_ = SignOutEverywhere(user.Id);
+		return true;
+	}
+
+	// A password someone else knows (set by an administrator, a temporary password, a reset PIN) has to be replaced
+	// by the user at the next sign-in. Their devices are signed out right away.
+	public void RequireOwnPassword(User user, string reason)
+	{
+		_store.RequireNow(user.Id, reason);
+		_patcher.Sync();
+		_logger.LogInformation("{User} must replace a password set by someone else ({Reason})", user.Username, reason);
+		_ = SignOutEverywhere(user.Id);
+	}
+
+	// Sets a random temporary password that meets the user's rules and returns it once. Only Jellyfin keeps it, as a hash.
+	public async Task<string> SetTemporaryPassword(User user)
+	{
+		var regeln = Policy.RulesFor(user);
+		string passwort;
+		int versuch = 0;
+		do
+		{
+			passwort = TemporaryPasswords.Create(regeln?.MinLength ?? 0);
+		}
+		while (regeln != null && PasswordRules.Check(passwort, user.Username, regeln).Count > 0 && ++versuch < 50);
+		await _users.ChangePassword(user.Id, passwort).ConfigureAwait(false);
+		RequireOwnPassword(user, "temporary");
+		return passwort;
+	}
+
+	// Applies EnforceNoPassword to everyone. Does nothing while the plugin is switched off.
+	public void SweepNoPassword()
+	{
+		if (!Policy.Configured(Plugin.Config) && !_store.AnyMustChange())
+		{
+			return;
+		}
+		foreach (var user in _users.GetUsers().ToList())
+		{
+			EnforceNoPassword(user);
+		}
+	}
+
+	// The plugin's popup was shown in this web-based app: no server message for these sessions.
+	public void MarkWeb(Guid userId, string? deviceId)
+	{
+		foreach (var sitzung in _sessions.Sessions.Where(s => s.UserId == userId && (deviceId == null || s.DeviceId == deviceId)).ToList())
+		{
+			_erinnert[sitzung.Id] = (userId, string.IsNullOrEmpty(sitzung.DeviceName) ? sitzung.Client : sitzung.DeviceName, DateTime.UtcNow, true);
+		}
 	}
 
 	// Sends the notice to every connected app of a user in a notice period: once right away, then again at most
@@ -102,7 +174,7 @@ public class Enforcer
 				continue;
 			}
 			if (_erinnert.TryGetValue(sitzung.Id, out var zuletzt)
-				&& (DateTime.UtcNow - zuletzt.Sent < TimeSpan.FromHours(20) || sitzung.LastActivityDate <= zuletzt.Sent.AddMinutes(1)))
+				&& (zuletzt.Web || DateTime.UtcNow - zuletzt.Sent < TimeSpan.FromHours(20) || sitzung.LastActivityDate <= zuletzt.Sent.AddMinutes(1)))
 			{
 				continue;
 			}
@@ -112,8 +184,8 @@ public class Enforcer
 			string text = (string.IsNullOrWhiteSpace(c.NotifyText) ? DefaultNoticeText : c.NotifyText)
 				.Replace("{url}", s.ChangeUrl ?? "/MkiPasswordPolicy/Change", StringComparison.OrdinalIgnoreCase)
 				.Replace("{date}", datum, StringComparison.OrdinalIgnoreCase);
-			_erinnert[sitzung.Id] = (sitzung.UserId, string.IsNullOrEmpty(sitzung.DeviceName) ? sitzung.Client : sitzung.DeviceName, DateTime.UtcNow);
-			_ = Benachrichtigen(sitzung.Id, text, 60);
+			_erinnert[sitzung.Id] = (sitzung.UserId, string.IsNullOrEmpty(sitzung.DeviceName) ? sitzung.Client : sitzung.DeviceName, DateTime.UtcNow, false);
+			_ = Benachrichtigen(sitzung.Id, text);
 		}
 	}
 
@@ -134,15 +206,15 @@ public class Enforcer
 		}
 	}
 
-	private async Task Benachrichtigen(string sitzung, string text, int gnade)
+	private async Task Benachrichtigen(string sitzung, string text)
 	{
 		try
 		{
+			// No timeout: Jellyfin's apps then show a dialog that has to be closed instead of a toast that fades away.
 			await _sessions.SendMessageCommand(null!, sitzung, new MessageCommand
 			{
 				Header = "New password required",
-				Text = text,
-				TimeoutMs = Math.Max(gnade, 10) * 1000
+				Text = text
 			}, CancellationToken.None).ConfigureAwait(false);
 		}
 		catch (Exception ex)
