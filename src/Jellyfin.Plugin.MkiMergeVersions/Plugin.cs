@@ -4,6 +4,7 @@ using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
+using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.MkiMergeVersions;
 
@@ -17,10 +18,14 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 
 	public override Guid Id => Guid.Parse("b8e2f3a1-6c47-4d59-9f0e-7a1c2d3e4b5f");
 
-	public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer)
+	public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger<Plugin> logger)
 		: base(applicationPaths, xmlSerializer)
 	{
 		Instance = this;
+		if (!DuplicateGuard.IsSuperseded)
+		{
+			DuplicateGuard.RetireOlderCopies(Id, logger);
+		}
 	}
 
 	public IEnumerable<PluginPageInfo> GetPages()

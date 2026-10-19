@@ -5,6 +5,7 @@ using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
+using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.MediaHero;
 
@@ -18,10 +19,14 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 
 	public override string Description => "Home screen banner with a server-side prepared list, whitelists, blacklists and optional trending titles from Seerr.";
 
-	public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer)
+	public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger<Plugin> logger)
 		: base(applicationPaths, xmlSerializer)
 	{
 		Instance = this;
+		if (!DuplicateGuard.IsSuperseded)
+		{
+			DuplicateGuard.RetireOlderCopies(Id, logger);
+		}
 	}
 
 	public IEnumerable<PluginPageInfo> GetPages()

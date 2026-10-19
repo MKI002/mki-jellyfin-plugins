@@ -54,6 +54,11 @@ public class MergeTask : IScheduledTask
 
 	public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
 	{
+		if (DuplicateGuard.IsSuperseded)
+		{
+			return;
+		}
+
 		PluginConfiguration pluginConfiguration = ((BasePlugin<PluginConfiguration>)(object)Plugin.Instance)?.Configuration ?? new PluginConfiguration();
 		await new MergeService(_library, (ILogger)(object)_log).RunAsync(pluginConfiguration.DryRun, pluginConfiguration.FixPrimaryOrder, progress, cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
 	}
