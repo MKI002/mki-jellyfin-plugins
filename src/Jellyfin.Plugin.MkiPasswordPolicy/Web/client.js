@@ -36,6 +36,7 @@
         noUser: 'Does not contain the username',
         common: 'Not a common, easy to guess password',
         repeat: 'At most {n} identical characters in a row',
+        rulesTitle: 'Your password must have:',
         strength: ['Very weak', 'Weak', 'Fair', 'Strong', 'Very strong']
     };
 
@@ -121,7 +122,8 @@
     }
 
     var CSS = [
-        '.mkipw-back{position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box}',
+        // Highest possible layer: Jellyfin's own loading spinner (.docspinner) sits at 9999999.
+        '.mkipw-back{position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box}',
         '.mkipw-box{background:#202020;color:#eee;border-radius:12px;max-width:440px;width:100%;max-height:100%;overflow:auto;padding:24px;box-sizing:border-box;font-family:inherit;box-shadow:0 10px 40px rgba(0,0,0,.6)}',
         '.mkipw-standalone .mkipw-box{box-shadow:none}',
         '.mkipw-box h2{margin:0 0 8px;font-size:1.4em;font-weight:500}',
@@ -129,6 +131,8 @@
         '.mkipw-box label{display:block;margin:12px 0 4px;font-size:.9em;color:#ccc}',
         '.mkipw-box input{width:100%;box-sizing:border-box;padding:10px 12px;border-radius:6px;border:1px solid #444;background:#2c2c2c;color:#fff;font-size:1em}',
         '.mkipw-box input:focus{outline:none;border-color:#00a4dc}',
+        'body:has(.mkipw-back) .docspinner{display:none!important}',
+        '.mkipw-rules-title{margin:16px 0 0;font-size:.9em;color:#ccc}',
         '.mkipw-hints{list-style:none;margin:8px 0 0;padding:0;font-size:.85em}',
         '.mkipw-hints li{margin:3px 0;color:#d66}',
         '.mkipw-hints li:before{content:"\\2717  "}',
@@ -248,6 +252,7 @@
                 box.appendChild(meter);
                 var meterLabel = el('div', { 'class': 'mkipw-meter-label' });
                 box.appendChild(meterLabel);
+                if (check('', username, rules).length) box.appendChild(el('p', { 'class': 'mkipw-rules-title' }, T.rulesTitle));
                 var hints = el('ul', { 'class': 'mkipw-hints' });
                 box.appendChild(hints);
                 var confIn = field(T.confirm, 'password', '', 'new-password');
