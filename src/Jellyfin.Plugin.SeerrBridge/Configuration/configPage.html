@@ -22,6 +22,7 @@
         #SeerrBridgeConfig .sb-neutral { background: rgba(128,128,128,.25); }
         #SeerrBridgeConfig .sb-meldung { flex: 1 1 240px; opacity: .8; font-size: .9em; }
         #SeerrBridgeConfig code { font-size: .92em; }
+        .mki-geheim{display:flex;align-items:flex-end;gap:.25em}.mki-geheim>:first-child{flex:1}
     </style>
     <div data-role="content">
         <div class="content-primary">
@@ -72,7 +73,7 @@
                         <h3>Access</h3>
                         <div class="inputContainer">
                             <label class="inputLabel inputLabelUnfocused" for="ApiKey">API key</label>
-                            <input is="emby-input" type="text" id="ApiKey" autocomplete="off" />
+                            <div class="mki-geheim"><input is="emby-input" type="password" id="ApiKey" autocomplete="new-password" /><button is="paper-icon-button-light" type="button" class="paper-icon-button-light" data-mki-zeigen="ApiKey" title="Show" aria-label="Show or hide"><span class="material-icons" aria-hidden="true">visibility</span></button></div>
                             <div class="fieldDescription">Find it in Seerr under Settings &rarr; General. It stays on the server; browsers never see it.</div>
                         </div>
                         <div class="sb-pruefen">
@@ -162,6 +163,16 @@
 
     <script type="text/javascript">
         (function () {
+  // Eye buttons: flip a secret field between hidden and shown.
+  Array.prototype.forEach.call(document.querySelectorAll('button[data-mki-zeigen]'), function (b) {
+    b.addEventListener('click', function () {
+      var feld = document.getElementById(b.getAttribute('data-mki-zeigen'));
+      var zeigen = feld.type === 'password';
+      feld.type = zeigen ? 'text' : 'password';
+      b.title = zeigen ? 'Hide' : 'Show';
+      b.querySelector('.material-icons').textContent = zeigen ? 'visibility_off' : 'visibility';
+    });
+  });
             var PLUGIN = 'b7d41e02-9c58-4f6a-8d13-5a2c7e9f4610';
             var seite = document.querySelector('#SeerrBridgeConfig');
 

@@ -6,6 +6,6 @@
   "owner": "MKI",
   "category": "General",
   "targetAbi": "12.0.0.0",
-  "version": "1.4.0.0",
-  "changelog": "Cleans up an older copy of this plugin left behind by an update or rename: the old copy is marked for removal and stays inactive, so it can no longer break requests. Restart Jellyfin once to finish the cleanup. Settings are kept. Single sign-on now steps aside on any error instead of blocking sign-in."
+  "version": "1.4.1.0",
+  "changelog": "The API key on the settings page is hidden by default; the eye button shows it."
 }
