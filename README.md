@@ -35,7 +35,7 @@ Four plugins for [Jellyfin](https://jellyfin.org) 12, installable from one plugi
     <td width="25%" valign="top">
       <a href="src/Jellyfin.Plugin.MkiPasswordPolicy"><img src="src/Jellyfin.Plugin.MkiPasswordPolicy/logo.png?v=1.0.0" alt="MKI Password Policy"></a>
       <h3><a href="src/Jellyfin.Plugin.MkiPasswordPolicy">MKI Password Policy</a></h3>
-      Password rules per user and forced password changes that hold on every device. Does nothing until you assign a profile or ask for a new password.
+      Password rules per user and forced password changes that hold on every device. Changes nothing about sign-ins until you assign a profile or ask for a new password.
     </td>
   </tr>
 </table>

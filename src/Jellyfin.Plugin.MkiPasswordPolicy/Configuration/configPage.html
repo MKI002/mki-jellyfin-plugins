@@ -24,6 +24,9 @@
         #MkiPwConfigPage .mkipw-neutral { background: rgba(128,128,128,.25); }
         #MkiPwConfigPage .mkipw-schlecht { background: rgba(220,60,60,.2); color: #e55; }
         #MkiPwConfigPage .mkipw-grau { opacity: .55; }
+        #MkiPwConfigPage .mkipw-nebenbei { margin-left: .5em; }
+        #MkiPwConfigPage tr.mkipw-markiert td { background: rgba(0,164,220,.15); }
+        #MkiPwConfigPage td select:disabled { opacity: .6; cursor: not-allowed; }
         #MkiPwConfigPage .mkipw-zusammenfassung { display: flex; gap: .5em; flex-wrap: wrap; margin: .5em 0 1em; }
         #MkiPwConfigPage .mkipw-link { display: flex; gap: .5em; align-items: center; }
         #MkiPwConfigPage .mkipw-link input { flex: 1; }
@@ -39,7 +42,7 @@
             <div class="verticalSection">
                 <h2 class="sectionTitle">MKI Password Policy</h2>
                 <div class="mkipw-hinweis">
-                    Installing the plugin changes nothing. Rules only apply to users you assign a profile to,
+                    Installing the plugin changes nothing about sign-ins or passwords. Rules only apply to users you assign a profile to,
                     and a password change is only required when you ask for one. It is then enforced on the server, so it
                     holds on every client: browser, phone, TV and all apps.
                 </div>
@@ -364,13 +367,20 @@
                 var zaehler = {};
                 daten.Users.forEach(function (u) {
                     var tr = document.createElement('tr');
-                    if (u.IsDisabled) tr.className = 'mkipw-grau';
-                    zelle(tr, u.Name + (u.IsAdmin ? ' (Admin)' : '') + (u.IsDisabled ? ' – disabled' : ''));
+                    tr.setAttribute('data-user', u.Id);
+                    // Exempt administrators are greyed out: no profile applies to them. Disabled users stay fully usable.
+                    if (u.IsExempt) tr.className = 'mkipw-grau';
+                    var name = zelle(tr, u.Name + (u.IsAdmin ? ' (Admin)' : ''));
+                    if (u.IsDisabled) name.appendChild(marke('mkipw-neutral mkipw-nebenbei', 'Disabled', 'Disabled in Jellyfin. Rules and requests still apply and take effect once the account is enabled again.'));
+                    if (u.IsExempt) name.appendChild(marke('mkipw-neutral mkipw-nebenbei', 'Exempt', 'Administrators are exempt under “More settings”: no profile and no expiry. An explicit request for a new password still applies.'));
 
                     var wahl = document.createElement('select');
                     wahl.setAttribute('data-user', u.Id);
                     optionen(wahl, true, u.Profile);
-                    if (u.IsExempt) wahl.title = 'Administrators are exempt under “More settings”.';
+                    if (u.IsExempt) {
+                        wahl.disabled = true;
+                        wahl.title = 'Administrators are exempt under “More settings”.';
+                    }
                     zelle(tr, wahl);
                     // Save the choice right away: the buttons in this table reload the list and would drop an unsaved choice.
                     wahl.addEventListener('change', function () { profilSpeichern(u.Id, wahl.value); });
@@ -394,6 +404,7 @@
                     zelle(tr, knopf);
                     tbody.appendChild(tr);
                 });
+                markieren(false);
                 var zf = $('#MkiPwZusammenfassung');
                 zf.innerHTML = '';
                 ['ok', 'older', 'unknown', 'none', 'norules'].forEach(function (k) {
@@ -413,6 +424,18 @@
                 }, function () {
                     Dashboard.hideLoadingMsg();
                     alert('That did not work.');
+                });
+            }
+
+            // The shortcut on a user's Password tab opens this page with &user=<id>: highlight that row.
+            function markieren(scrollen) {
+                var m = /[?&]user=([0-9a-f-]{32,36})/i.exec(location.href);
+                if (!m) return;
+                var id = m[1].replace(/-/g, '').toLowerCase();
+                Array.prototype.forEach.call(page.querySelectorAll('#MkiPwListe tr[data-user]'), function (tr) {
+                    var treffer = tr.getAttribute('data-user').replace(/-/g, '').toLowerCase() === id;
+                    tr.classList.toggle('mkipw-markiert', treffer);
+                    if (treffer && scrollen) tr.scrollIntoView({ block: 'center' });
                 });
             }
 
@@ -475,10 +498,10 @@
                 $('#MkiPwFrage').classList.add('mkipw-aktiv');
             }
             $('#MkiPwAlle').addEventListener('click', function () {
-                fragen('alle', 'Require a new password from all users?', 'Every active user must set a new password.');
+                fragen('alle', 'Require a new password from all users?', 'Every user must set a new password. Disabled accounts are included and must set one once they are enabled again.');
             });
             $('#MkiPwUnsichere').addEventListener('click', function () {
-                fragen('unsicher', 'Require a new password from users with unchecked passwords?', 'Every active user with a profile whose password is not known to meet it (Unknown, Older rules, No password) must set a new one. Saved profile changes count, unsaved ones do not.');
+                fragen('unsicher', 'Require a new password from users with unchecked passwords?', 'Every user (disabled accounts included) with a profile whose password is not known to meet it (Unknown, Older rules, No password) must set a new one. Saved profile changes count, unsaved ones do not.');
             });
             $('#MkiPwNein').addEventListener('click', function () {
                 $('#MkiPwFrage').classList.remove('mkipw-aktiv');
@@ -504,6 +527,7 @@
                     return benutzerLaden();
                 }).then(function () {
                     Dashboard.hideLoadingMsg();
+                    markieren(true);
                 });
             });
 

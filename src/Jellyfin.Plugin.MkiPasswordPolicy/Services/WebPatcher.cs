@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -9,11 +10,12 @@ using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.MkiPasswordPolicy.Services;
 
-// The web client script is only added to index.html while the plugin has something to do,
-// and removed again when everything is switched off. A fresh install leaves the web client untouched.
+// The web client script runs in one of two modes. "link" (nothing configured, nothing pending) only adds the
+// administrator's shortcut on a user's Password tab and changes nothing else. "full" adds the sign-in dialog and
+// the live password hints while the plugin has something to enforce.
 public class WebPatcher : IHostedService
 {
-	private const string Skript = "<script src=\"../MkiPasswordPolicy/client.js\" data-mki-password-policy-injected=\"1\" defer></script>";
+	private const string Skript = "<script src=\"../MkiPasswordPolicy/client.js\" data-mki-password-policy-injected=\"1\" data-mode=\"{0}\" defer></script>";
 
 	private static readonly Regex Eintrag = new("\\s*<script[^>]*mki-password-policy-injected[^>]*></script>", RegexOptions.IgnoreCase);
 
@@ -49,10 +51,10 @@ public class WebPatcher : IHostedService
 	{
 		try
 		{
-			bool noetig = Policy.Configured(Plugin.Config) || _store.AnyMustChange();
+			bool aktiv = Policy.Configured(Plugin.Config) || _store.AnyMustChange();
 			lock (_sperre)
 			{
-				Schreiben(noetig);
+				Schreiben(aktiv ? "full" : "link");
 			}
 		}
 		catch (Exception ex)
@@ -61,42 +63,55 @@ public class WebPatcher : IHostedService
 		}
 	}
 
-	private void Schreiben(bool eintragen)
+	private void Schreiben(string modus)
 	{
 		string? wurzel = WebWurzel();
 		if (wurzel == null)
 		{
-			if (eintragen)
-			{
-				_logger.LogWarning("Web client folder not found - the password dialog will be missing in browsers");
-			}
+			_logger.LogWarning("Web client folder not found - the password dialog will be missing in browsers");
 			return;
 		}
 		string datei = Path.Combine(wurzel, "index.html");
 		string alt = File.ReadAllText(datei);
 		string neu = Eintrag.Replace(alt, string.Empty);
-		if (eintragen)
+		int ende = neu.LastIndexOf("</body>", StringComparison.OrdinalIgnoreCase);
+		if (ende < 0)
 		{
-			int ende = neu.LastIndexOf("</body>", StringComparison.OrdinalIgnoreCase);
-			if (ende < 0)
-			{
-				_logger.LogWarning("No </body> found in index.html");
-				return;
-			}
-			neu = neu.Insert(ende, Skript);
+			_logger.LogWarning("No </body> found in index.html");
+			return;
 		}
+		neu = neu.Insert(ende, string.Format(CultureInfo.InvariantCulture, Skript, modus));
 		if (neu != alt)
 		{
 			File.WriteAllText(datei, neu);
-			_logger.LogInformation(eintragen ? "MKI Password Policy added to the web client ({Path})" : "MKI Password Policy removed from the web client ({Path})", datei);
+			_logger.LogInformation("MKI Password Policy web client script set to {Mode} mode ({Path})", modus, datei);
 		}
 	}
 
-	private string? WebWurzel()
+	// Called when the plugin is uninstalled, so the web client does not keep loading a script that is gone.
+	public static void Entfernen(IApplicationPaths paths)
+	{
+		string? wurzel = WebWurzel(paths);
+		if (wurzel == null)
+		{
+			return;
+		}
+		string datei = Path.Combine(wurzel, "index.html");
+		string alt = File.ReadAllText(datei);
+		string neu = Eintrag.Replace(alt, string.Empty);
+		if (neu != alt)
+		{
+			File.WriteAllText(datei, neu);
+		}
+	}
+
+	private string? WebWurzel() => WebWurzel(_paths);
+
+	private static string? WebWurzel(IApplicationPaths paths)
 	{
 		string?[] kandidaten =
 		{
-			TryGet(() => _paths.WebPath),
+			TryGet(() => paths.WebPath),
 			"/jellyfin/jellyfin-web",
 			"/usr/share/jellyfin/web",
 			"/usr/lib/jellyfin/bin/jellyfin-web"
