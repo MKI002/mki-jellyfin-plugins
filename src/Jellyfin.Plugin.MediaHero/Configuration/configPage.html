@@ -54,6 +54,7 @@
         #MediaHeroConfig .mhc-fuss { margin-top: 2em; }
         #MediaHeroConfig .mhc-reihe { display: flex; gap: .8em; align-items: center; flex-wrap: wrap; margin-top: .8em; }
         #MediaHeroConfig .mhc-reihe button { margin: 0; }
+        .mki-geheim{display:flex;align-items:flex-end;gap:.25em}.mki-geheim>:first-child{flex:1}
     </style>
     <div data-role="content">
         <div class="content-primary">
@@ -134,7 +135,7 @@
                                 <input is="emby-input" type="text" id="JellyseerrUrl" label="Address" placeholder="http://192.168.1.10:5055" />
                             </div>
                             <div class="inputContainer">
-                                <input is="emby-input" type="password" id="JellyseerrApiKey" label="API key" />
+                                <div class="mki-geheim"><div><input is="emby-input" type="password" id="JellyseerrApiKey" label="API key" autocomplete="new-password" /></div><button is="paper-icon-button-light" type="button" class="paper-icon-button-light" data-mki-zeigen="JellyseerrApiKey" title="Show" aria-label="Show or hide"><span class="material-icons" aria-hidden="true">visibility</span></button></div>
                             </div>
                             <div class="inputContainer">
                                 <input is="emby-input" type="number" id="JellyseerrMinPopularity" min="0" label="Minimum popularity" />
@@ -414,6 +415,16 @@
 
 <script type="text/javascript">
 (function () {
+  // Eye buttons: flip a secret field between hidden and shown.
+  Array.prototype.forEach.call(document.querySelectorAll('button[data-mki-zeigen]'), function (b) {
+    b.addEventListener('click', function () {
+      var feld = document.getElementById(b.getAttribute('data-mki-zeigen'));
+      var zeigen = feld.type === 'password';
+      feld.type = zeigen ? 'text' : 'password';
+      b.title = zeigen ? 'Hide' : 'Show';
+      b.querySelector('.material-icons').textContent = zeigen ? 'visibility_off' : 'visibility';
+    });
+  });
   var PLUGIN = '6f3a1d84-2b57-4c19-9a0e-7d51c8e4b2f6';
 
   var QUELLEN = [
