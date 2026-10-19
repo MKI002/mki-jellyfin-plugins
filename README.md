@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="assets/banner.png" alt="MKI Jellyfin Plugins: Media Hero, Merge Versions, Seerr Bridge" width="100%">
+<img src="assets/banner.png" alt="MKI Jellyfin Plugins: Media Hero, Merge Versions, Seerr Bridge, Password Policy" width="100%">
 
 # MKI Jellyfin Plugins
 
-Three plugins for [Jellyfin](https://jellyfin.org) 12, installable from one plugin repository.
+Four plugins for [Jellyfin](https://jellyfin.org) 12, installable from one plugin repository.
 
 [![Build](https://github.com/MKI002/mki-jellyfin-plugins/actions/workflows/build.yml/badge.svg)](https://github.com/MKI002/mki-jellyfin-plugins/actions/workflows/build.yml)
 [![Release](https://img.shields.io/github/v/release/MKI002/mki-jellyfin-plugins?label=release)](https://github.com/MKI002/mki-jellyfin-plugins/releases)
@@ -17,20 +17,25 @@ Three plugins for [Jellyfin](https://jellyfin.org) 12, installable from one plug
 
 <table>
   <tr>
-    <td width="33%" valign="top">
+    <td width="25%" valign="top">
       <a href="src/Jellyfin.Plugin.MediaHero"><img src="src/Jellyfin.Plugin.MediaHero/logo.png?v=1.1.0" alt="MKI Media Hero"></a>
       <h3><a href="src/Jellyfin.Plugin.MediaHero">MKI Media Hero</a></h3>
       A cinematic hero carousel on the home screen, built on the server from recent, top rated and Seerr trending titles, with per-library whitelists and blacklists.
     </td>
-    <td width="33%" valign="top">
+    <td width="25%" valign="top">
       <a href="src/Jellyfin.Plugin.MkiMergeVersions"><img src="src/Jellyfin.Plugin.MkiMergeVersions/logo.png?v=1.1.0" alt="MKI Merge Versions"></a>
       <h3><a href="src/Jellyfin.Plugin.MkiMergeVersions">MKI Merge Versions</a></h3>
       Merges movies that exist in several resolutions into one entry, matched by TMDb or IMDb ID. The highest resolution becomes the primary version.
     </td>
-    <td width="33%" valign="top">
+    <td width="25%" valign="top">
       <a href="src/Jellyfin.Plugin.SeerrBridge"><img src="src/Jellyfin.Plugin.SeerrBridge/logo.png?v=1.1.0" alt="MKI Seerr Bridge"></a>
       <h3><a href="src/Jellyfin.Plugin.SeerrBridge">MKI Seerr Bridge</a></h3>
       Seerr inside the Jellyfin web client: a menu button, an embedded view, request suggestions in search, and optional single sign-on.
+    </td>
+    <td width="25%" valign="top">
+      <a href="src/Jellyfin.Plugin.MkiPasswordPolicy"><img src="src/Jellyfin.Plugin.MkiPasswordPolicy/logo.png?v=1.0.0" alt="MKI Password Policy"></a>
+      <h3><a href="src/Jellyfin.Plugin.MkiPasswordPolicy">MKI Password Policy</a></h3>
+      Password rules per user and forced password changes that hold on every device. Does nothing until you assign a profile or ask for a new password.
     </td>
   </tr>
 </table>
@@ -52,7 +57,7 @@ Updates show up in the catalog automatically when a new version is released.
 ### Requirements
 
 - Jellyfin **12.x** (plugin ABI `12.0.0.0`). Older servers will not list the plugins.
-- **MKI Media Hero** and **MKI Seerr Bridge** add a small script to the Jellyfin web client by writing to its `index.html`. The Jellyfin process needs write access to the web folder for that; the official Docker image has it.
+- **MKI Media Hero** and **MKI Seerr Bridge** add a small script to the Jellyfin web client by writing to its `index.html`. **MKI Password Policy** does the same, but only while a profile is assigned or a password change is pending, and removes it again afterwards. The Jellyfin process needs write access to the web folder for that; the official Docker image has it.
 - **MKI Seerr Bridge**, and MKI Media Hero's trending source, need a running [Seerr](https://github.com/seerr-team/seerr) instance and its API key.
 
 > [!NOTE]
@@ -87,6 +92,7 @@ The [Release workflow](.github/workflows/release.yml) builds every plugin whose 
 └── src/
     ├── Jellyfin.Plugin.MediaHero/
     ├── Jellyfin.Plugin.MkiMergeVersions/
+    ├── Jellyfin.Plugin.MkiPasswordPolicy/
     └── Jellyfin.Plugin.SeerrBridge/
         ├── meta.json                name, description, version and changelog
         ├── logo.png                 catalog image

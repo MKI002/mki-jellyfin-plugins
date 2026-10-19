@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8" />
+    <title>MKI Password Policy</title>
+</head>
+<body>
+<div id="MkiPwConfigPage" data-role="page" class="page type-interior pluginConfigurationPage">
+    <style>
+        #MkiPwConfigPage .mkipw-tabs { display: flex; gap: .5em; flex-wrap: wrap; margin: 1em 0 1.5em; }
+        #MkiPwConfigPage .mkipw-tabs button { margin: 0; }
+        #MkiPwConfigPage .mkipw-tabs button.mkipw-aktiv { background: #00a4dc; color: #fff; }
+        #MkiPwConfigPage .mkipw-panel { display: none; }
+        #MkiPwConfigPage .mkipw-panel.mkipw-aktiv { display: block; }
+        #MkiPwConfigPage .mkipw-zwei { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 2em; }
+        #MkiPwConfigPage .mkipw-tabelle { overflow-x: auto; }
+        #MkiPwConfigPage table { width: 100%; border-collapse: collapse; }
+        #MkiPwConfigPage th, #MkiPwConfigPage td { text-align: left; padding: .55em .5em; border-bottom: 1px solid rgba(128,128,128,.25); vertical-align: middle; }
+        #MkiPwConfigPage td button { margin: 0; padding: .4em .9em; font-size: .9em; white-space: nowrap; }
+        #MkiPwConfigPage td select { background: #292929; color: inherit; border: 1px solid rgba(128,128,128,.4); border-radius: 4px; padding: .35em .4em; font: inherit; }
+        #MkiPwConfigPage .mkipw-marke { display: inline-block; padding: .15em .6em; border-radius: 1em; font-size: .85em; white-space: nowrap; }
+        #MkiPwConfigPage .mkipw-ok { background: rgba(80,190,80,.2); color: #6c6; }
+        #MkiPwConfigPage .mkipw-offen { background: rgba(230,150,40,.2); color: #e93; }
+        #MkiPwConfigPage .mkipw-neutral { background: rgba(128,128,128,.25); }
+        #MkiPwConfigPage .mkipw-schlecht { background: rgba(220,60,60,.2); color: #e55; }
+        #MkiPwConfigPage .mkipw-grau { opacity: .55; }
+        #MkiPwConfigPage .mkipw-zusammenfassung { display: flex; gap: .5em; flex-wrap: wrap; margin: .5em 0 1em; }
+        #MkiPwConfigPage .mkipw-link { display: flex; gap: .5em; align-items: center; }
+        #MkiPwConfigPage .mkipw-link input { flex: 1; }
+        #MkiPwConfigPage .mkipw-gefahr { background: #b33 !important; color: #fff !important; }
+        #MkiPwConfigPage .mkipw-hinweis { border-left: 3px solid #00a4dc; padding: .6em 1em; background: rgba(0,164,220,.08); margin: 1em 0; }
+        #MkiPwConfigPage .mkipw-ueberlagerung { position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,.7); display: none; align-items: center; justify-content: center; padding: 16px; }
+        #MkiPwConfigPage .mkipw-ueberlagerung.mkipw-aktiv { display: flex; }
+        #MkiPwConfigPage .mkipw-frage { background: #202020; color: #eee; border-radius: 10px; padding: 1.5em; max-width: 480px; width: 100%; }
+        #MkiPwConfigPage .mkipw-frage h3 { margin-top: 0; }
+    </style>
+    <div data-role="content">
+        <div class="content-primary">
+            <div class="verticalSection">
+                <h2 class="sectionTitle">MKI Password Policy</h2>
+                <div class="mkipw-hinweis">
+                    Nach der Installation passiert nichts. Regeln gelten erst fuer Benutzer, denen du ein Profil zuweist,
+                    und ein Passwortwechsel wird nur verlangt, wenn du ihn ausloest. Dann gilt er auf dem Server und damit
+                    fuer jeden Client: Browser, Handy, Fernseher und alle Apps.
+                </div>
+            </div>
+
+            <div class="mkipw-tabs">
+                <button is="emby-button" type="button" class="raised emby-button mkipw-aktiv" data-tab="benutzer"><span>Benutzer</span></button>
+                <button is="emby-button" type="button" class="raised emby-button" data-tab="profile"><span>Profile</span></button>
+                <button is="emby-button" type="button" class="raised emby-button" data-tab="weiteres"><span>Weitere Einstellungen</span></button>
+            </div>
+
+            <form id="MkiPwForm">
+                <div class="mkipw-panel mkipw-aktiv" data-panel="benutzer">
+                    <div class="selectContainer">
+                        <label class="selectLabel" for="DefaultProfile">Profil fuer alle Benutzer</label>
+                        <select is="emby-select" id="DefaultProfile" class="emby-select-withcolor emby-select mkipw-profilwahl"></select>
+                        <div class="fieldDescription">Gilt fuer jeden Benutzer, bei dem unten „Wie fuer alle“ steht, und fuer neu angelegte Konten. „Keine Regeln“ heisst: das Plugin prueft nichts.</div>
+                    </div>
+
+                    <div class="verticalSection">
+                        <h3>Uebersicht</h3>
+                        <p class="fieldDescription">
+                            Das Plugin speichert keine Passwoerter und bewertet gespeicherte Passwoerter nie nachtraeglich;
+                            Jellyfin selbst legt nur einen Hash ab. Ein Passwort wird ausschliesslich in dem Moment geprueft,
+                            in dem es neu festgelegt wird. Danach merkt sich das Plugin nur, gegen welche Regeln es geprueft wurde.
+                            Deshalb steht bei Passwoertern, die vorher gesetzt wurden, ehrlich „Unbekannt“.
+                        </p>
+                        <div class="mkipw-zusammenfassung" id="MkiPwZusammenfassung"></div>
+                        <div class="mkipw-tabelle">
+                            <table>
+                                <thead><tr><th>Benutzer</th><th>Profil</th><th>Passwort</th><th>Wechsel</th><th>Geaendert</th><th></th></tr></thead>
+                                <tbody id="MkiPwListe"><tr><td colspan="6">Lade …</td></tr></tbody>
+                            </table>
+                        </div>
+                        <p class="fieldDescription">Profil-Aenderungen in der Tabelle gelten nach „Speichern“.</p>
+                    </div>
+
+                    <div class="verticalSection">
+                        <h3>Neues Passwort verlangen</h3>
+                        <p class="fieldDescription">
+                            Offene Apps bekommen eine Nachricht, danach werden alle Geraete abgemeldet. Bis das neue Passwort
+                            gesetzt ist, ist auf keinem Geraet eine Anmeldung moeglich. Laesst sich pro Benutzer wieder aufheben.
+                        </p>
+                        <button is="emby-button" type="button" id="MkiPwUnsichere" class="raised block emby-button">
+                            <span>Alle mit Profil, deren Passwort die Regeln nicht nachweislich erfuellt …</span>
+                        </button>
+                        <button is="emby-button" type="button" id="MkiPwAlle" class="raised block emby-button mkipw-gefahr">
+                            <span>Alle Benutzer …</span>
+                        </button>
+                    </div>
+
+                    <div class="verticalSection">
+                        <h3>Link fuer Fernseher und Apps</h3>
+                        <p class="fieldDescription">
+                            Im Browser (auch in den Jellyfin-Apps fuer Android, iOS und am PC) erscheint der Dialog direkt beim
+                            Anmelden. Fernseher und andere eigene Apps melden nur „Anmeldung fehlgeschlagen“. Diese Benutzer
+                            legen ihr Passwort ueber diesen Link fest, zum Beispiel am Handy, und melden sich danach normal an:
+                        </p>
+                        <div class="mkipw-link">
+                            <input is="emby-input" type="text" id="MkiPwLink" readonly />
+                            <button is="emby-button" type="button" id="MkiPwLinkKopieren" class="raised emby-button"><span>Kopieren</span></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mkipw-panel" data-panel="profile">
+                    <div class="verticalSection">
+                        <h3>Fertige Profile</h3>
+                        <div class="mkipw-tabelle">
+                            <table><tbody id="MkiPwVorlagen"></tbody></table>
+                        </div>
+                    </div>
+
+                    <div class="verticalSection">
+                        <h3>Eigenes Profil</h3>
+                        <div class="mkipw-zwei">
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="MinLength">Mindestlaenge</label>
+                                <input is="emby-input" type="number" id="MinLength" min="1" max="128" class="mkipw-regel" />
+                            </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="MaxRepeat">Hoechstens gleiche Zeichen hintereinander (0 = egal)</label>
+                                <input is="emby-input" type="number" id="MaxRepeat" min="0" max="20" class="mkipw-regel" />
+                            </div>
+                        </div>
+                        <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="RequireUpper" class="mkipw-regel" /><span>Grossbuchstabe verlangen</span></label></div>
+                        <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="RequireLower" class="mkipw-regel" /><span>Kleinbuchstabe verlangen</span></label></div>
+                        <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="RequireDigit" class="mkipw-regel" /><span>Ziffer verlangen</span></label></div>
+                        <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="RequireSymbol" class="mkipw-regel" /><span>Sonderzeichen verlangen</span></label></div>
+                        <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ForbidUsername" class="mkipw-regel" /><span>Benutzername darf nicht im Passwort stehen</span></label></div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="BlockCommon" class="mkipw-regel" /><span>Bekannte Passwoerter sperren</span></label>
+                            <div class="fieldDescription checkboxFieldDescription">Sperrt rund 200 der haeufigsten Passwoerter wie „passwort“, „123456“ oder „jellyfin“, auch mit Zahlen oder Zeichen davor oder dahinter („Sommer2024!“).</div>
+                        </div>
+                    </div>
+
+                    <div class="verticalSection">
+                        <h3>Ausprobieren</h3>
+                        <div class="selectContainer">
+                            <label class="selectLabel" for="MkiPwTestProfil">Profil</label>
+                            <select is="emby-select" id="MkiPwTestProfil" class="emby-select-withcolor emby-select"></select>
+                        </div>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="MkiPwTest">Beispielpasswort</label>
+                            <input is="emby-input" type="text" id="MkiPwTest" autocomplete="off" />
+                            <div class="fieldDescription" id="MkiPwTestErgebnis">Wird nur in deinem Browser geprueft und nirgends gespeichert.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mkipw-panel" data-panel="weiteres">
+                    <p class="fieldDescription">Alles hier gilt nur fuer Benutzer mit einem Profil, ausser es steht anders dabei.</p>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="ExpiryDays">Passwort laeuft ab nach Tagen (0 = nie)</label>
+                        <input is="emby-input" type="number" id="ExpiryDays" min="0" max="3650" />
+                        <div class="fieldDescription">Gezaehlt ab der letzten Aenderung. Fuer Passwoerter von vorher zaehlt der Tag, an dem das Plugin den Benutzer zuerst angemeldet gesehen hat.</div>
+                    </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="RequireChangeForNewUsers" /><span>Neue Benutzer muessen ihr Passwort selbst festlegen</span></label>
+                        <div class="fieldDescription checkboxFieldDescription">Gilt fuer alle neu angelegten Konten. Du vergibst ein Startpasswort (oder keins), der Benutzer ersetzt es bei der ersten Anmeldung.</div>
+                    </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ApplyToAdminChanges" /><span>Regeln auch fuer Passwoerter, die ein Administrator vergibt</span></label>
+                        <div class="fieldDescription checkboxFieldDescription">Beim Anlegen von Benutzern und wenn du das Passwort eines anderen Benutzers setzt.</div>
+                    </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ExemptAdministrators" /><span>Administratoren von den Regeln ausnehmen</span></label>
+                        <div class="fieldDescription checkboxFieldDescription">Fuer Administratorkonten gilt dann kein Profil und kein Ablauf. Eine ausdrueckliche Aufforderung gilt trotzdem.</div>
+                    </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="WebHints" /><span>Regeln im Browser live anzeigen</span></label>
+                        <div class="fieldDescription checkboxFieldDescription">Checkliste und Staerkeanzeige beim Aendern des eigenen Passworts und beim Anlegen von Benutzern.</div>
+                    </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="NotifySessions" /><span>Offene Apps vor dem Abmelden benachrichtigen</span></label>
+                        <div class="fieldDescription checkboxFieldDescription">Bei einer Aufforderung bekommen alle offenen Sitzungen eine Nachricht; abgemeldet wird nach der Wartezeit.</div>
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="GraceSeconds">Wartezeit bis zum Abmelden in Sekunden</label>
+                        <input is="emby-input" type="number" id="GraceSeconds" min="0" max="300" />
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="NotifyText">Nachrichtentext</label>
+                        <textarea is="emby-textarea" id="NotifyText" rows="3" class="emby-textarea"></textarea>
+                        <div class="fieldDescription">Leer lassen fuer den Standardtext. {url} wird durch den Link zur Passwortseite ersetzt.</div>
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="PublicUrl">Oeffentliche Serveradresse (optional)</label>
+                        <input is="emby-input" type="text" id="PublicUrl" placeholder="https://jellyfin.example.com" />
+                        <div class="fieldDescription">Fuer den Link zur Passwortseite. Leer lassen, dann nimmt das Plugin die Adresse, ueber die du diese Seite geoeffnet hast.</div>
+                    </div>
+                </div>
+
+                <div>
+                    <button is="emby-button" type="submit" class="raised button-submit block emby-button"><span>Speichern</span></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="mkipw-ueberlagerung" id="MkiPwFrage">
+        <div class="mkipw-frage">
+            <h3 id="MkiPwFrageTitel"></h3>
+            <p id="MkiPwFrageText"></p>
+            <div class="checkboxContainer">
+                <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="MkiPwMitAdmins" /><span>Auch Administratoren, inklusive deinem eigenen Konto</span></label>
+            </div>
+            <button is="emby-button" type="button" id="MkiPwJa" class="raised block emby-button mkipw-gefahr"><span>Ja, auffordern</span></button>
+            <button is="emby-button" type="button" id="MkiPwNein" class="raised block emby-button"><span>Abbrechen</span></button>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        (function () {
+            var pluginId = 'ea705ff9-2793-4156-a253-3720f294ec89';
+            var page = document.querySelector('#MkiPwConfigPage');
+            var $ = function (sel) { return page.querySelector(sel); };
+
+            var PROFILNAMEN = {
+                none: 'Keine Regeln',
+                basic: 'Einfach',
+                standard: 'Standard',
+                strong: 'Stark',
+                verystrong: 'Sehr stark',
+                passphrase: 'Passphrase',
+                custom: 'Eigenes Profil'
+            };
+            var REGELN = ['MinLength', 'MaxRepeat', 'RequireUpper', 'RequireLower', 'RequireDigit', 'RequireSymbol', 'ForbidUsername', 'BlockCommon'];
+            var WEITERES_BOOL = ['RequireChangeForNewUsers', 'ApplyToAdminChanges', 'ExemptAdministrators', 'WebHints', 'NotifySessions'];
+            var WEITERES_ZAHL = ['ExpiryDays', 'GraceSeconds'];
+            var WEITERES_TEXT = ['NotifyText', 'PublicUrl'];
+            var GRUENDE = { admin: 'verlangt', expired: 'abgelaufen', 'new': 'neues Konto' };
+            var STATUS = {
+                ok: ['mkipw-ok', 'Erfuellt die Regeln', 'Beim Festlegen gegen Regeln geprueft, die mindestens so streng waren wie das heutige Profil.'],
+                older: ['mkipw-offen', 'Aeltere Regeln', 'Beim Festlegen geprueft, aber das Profil ist seitdem strenger geworden.'],
+                unknown: ['mkipw-neutral', 'Unbekannt', 'Nie vom Plugin geprueft, zum Beispiel vor der Zuweisung des Profils gesetzt. Gespeicherte Passwoerter werden nicht nachtraeglich bewertet.'],
+                none: ['mkipw-schlecht', 'Kein Passwort', 'Das Plugin hat gesehen, dass das Konto ohne Passwort angelegt oder zurueckgesetzt wurde.'],
+                norules: ['mkipw-neutral', 'Keine Regeln', 'Fuer diesen Benutzer gilt kein Profil, das Plugin prueft nichts.']
+            };
+            var daten = { Presets: {}, Common: [], Users: [] };
+            var config = null;
+
+            function setzen(id, wert) {
+                var e = $('#' + id);
+                if (e.type === 'checkbox') e.checked = !!wert; else e.value = wert == null ? '' : wert;
+            }
+
+            function lesen(id) {
+                var e = $('#' + id);
+                if (e.type === 'checkbox') return e.checked;
+                if (e.type === 'number') return parseInt(e.value, 10) || 0;
+                return e.value;
+            }
+
+            function eigeneRegeln() {
+                var r = {};
+                REGELN.forEach(function (k) { r[k] = lesen(k); });
+                r.MinLength = Math.max(1, r.MinLength);
+                return r;
+            }
+
+            function regelnVon(name) {
+                if (name === 'custom') return eigeneRegeln();
+                return daten.Presets[name] || null;
+            }
+
+            function regelText(r) {
+                if (!r) return 'Keine Pruefung';
+                var t = ['mind. ' + r.MinLength + ' Zeichen'];
+                if (r.RequireUpper) t.push('Grossbuchstabe');
+                if (r.RequireLower) t.push('Kleinbuchstabe');
+                if (r.RequireDigit) t.push('Ziffer');
+                if (r.RequireSymbol) t.push('Sonderzeichen');
+                if (r.ForbidUsername) t.push('ohne Benutzername');
+                if (r.BlockCommon) t.push('keine bekannten Passwoerter');
+                if (r.MaxRepeat) t.push('max. ' + r.MaxRepeat + ' gleiche hintereinander');
+                return t.join(', ');
+            }
+
+            function optionen(select, mitStandard, wert) {
+                select.innerHTML = '';
+                var namen = (mitStandard ? ['default'] : []).concat(['none', 'basic', 'standard', 'strong', 'verystrong', 'passphrase', 'custom']);
+                namen.forEach(function (n) {
+                    var o = document.createElement('option');
+                    o.value = n;
+                    o.textContent = n === 'default' ? 'Wie fuer alle' : PROFILNAMEN[n];
+                    select.appendChild(o);
+                });
+                select.value = wert || (mitStandard ? 'default' : 'none');
+            }
+
+            function vorlagenZeigen() {
+                var tbody = $('#MkiPwVorlagen');
+                tbody.innerHTML = '';
+                ['basic', 'standard', 'strong', 'verystrong', 'passphrase', 'custom'].forEach(function (n) {
+                    var tr = document.createElement('tr');
+                    var a = document.createElement('td');
+                    a.textContent = PROFILNAMEN[n];
+                    var b = document.createElement('td');
+                    b.textContent = regelText(regelnVon(n));
+                    tr.appendChild(a);
+                    tr.appendChild(b);
+                    tbody.appendChild(tr);
+                });
+            }
+
+            function testen() {
+                var feld = $('#MkiPwTestErgebnis');
+                var pw = $('#MkiPwTest').value;
+                if (!pw) {
+                    feld.textContent = 'Wird nur in deinem Browser geprueft und nirgends gespeichert.';
+                    return;
+                }
+                var r = regelnVon($('#MkiPwTestProfil').value);
+                if (!r) {
+                    feld.textContent = 'Keine Regeln: alles erlaubt.';
+                    return;
+                }
+                if (!window.MkiPasswordPolicy) {
+                    feld.textContent = 'Pruefung wird geladen …';
+                    return;
+                }
+                r = window.MkiPasswordPolicy.prepare(Object.assign({ Active: true, Common: daten.Common }, r));
+                var offen = window.MkiPasswordPolicy.check(pw, '', r).filter(function (p) { return !p.ok; }).map(function (p) { return p.text; });
+                feld.textContent = offen.length ? 'Abgelehnt: ' + offen.join(', ') : 'Erlaubt.';
+            }
+
+            function skriptLaden() {
+                if (window.MkiPasswordPolicy || document.querySelector('script[data-mkipw-config]')) return;
+                var s = document.createElement('script');
+                s.src = ApiClient.getUrl('MkiPasswordPolicy/client.js');
+                s.setAttribute('data-mkipw-config', '1');
+                s.onload = testen;
+                document.head.appendChild(s);
+            }
+
+            function datum(wert) {
+                if (!wert) return '–';
+                var d = new Date(wert);
+                return isNaN(d) ? '–' : d.toLocaleDateString();
+            }
+
+            function marke(klasse, text, titel) {
+                var m = document.createElement('span');
+                m.className = 'mkipw-marke ' + klasse;
+                m.textContent = text;
+                if (titel) m.title = titel;
+                return m;
+            }
+
+            function zelle(tr, inhalt) {
+                var td = document.createElement('td');
+                if (typeof inhalt === 'string') td.textContent = inhalt; else if (inhalt) td.appendChild(inhalt);
+                tr.appendChild(td);
+                return td;
+            }
+
+            function benutzerZeigen() {
+                $('#MkiPwLink').value = daten.ChangeUrl || '';
+                var tbody = $('#MkiPwListe');
+                tbody.innerHTML = '';
+                var zaehler = {};
+                daten.Users.forEach(function (u) {
+                    var tr = document.createElement('tr');
+                    if (u.IsDisabled) tr.className = 'mkipw-grau';
+                    zelle(tr, u.Name + (u.IsAdmin ? ' (Admin)' : '') + (u.IsDisabled ? ' – deaktiviert' : ''));
+
+                    var wahl = document.createElement('select');
+                    wahl.setAttribute('data-user', u.Id);
+                    optionen(wahl, true, u.Profile);
+                    if (u.IsExempt) wahl.title = 'Administratoren sind unter „Weitere Einstellungen“ ausgenommen.';
+                    zelle(tr, wahl);
+
+                    var st = STATUS[u.PasswordStatus] || STATUS.unknown;
+                    zelle(tr, marke(st[0], st[1], st[2] + (u.VerifiedRules ? ' Geprueft gegen: ' + regelText(u.VerifiedRules) + '.' : '')));
+                    zaehler[u.PasswordStatus] = (zaehler[u.PasswordStatus] || 0) + 1;
+
+                    zelle(tr, u.MustChange ? marke('mkipw-offen', 'Offen (' + (GRUENDE[u.Reason] || u.Reason || '') + ')') : marke('mkipw-neutral', '–'));
+                    zelle(tr, datum(u.LastChangedUtc));
+
+                    var knopf = document.createElement('button');
+                    knopf.setAttribute('is', 'emby-button');
+                    knopf.type = 'button';
+                    knopf.className = 'raised emby-button';
+                    knopf.textContent = u.MustChange ? 'Aufforderung aufheben' : 'Neues Passwort verlangen';
+                    knopf.addEventListener('click', function () {
+                        if (!u.MustChange && !confirm('Von ' + u.Name + ' ein neues Passwort verlangen? Alle Geraete dieses Benutzers werden abgemeldet.')) return;
+                        senden(u.MustChange ? 'Release' : 'Require', { UserIds: [u.Id] });
+                    });
+                    zelle(tr, knopf);
+                    tbody.appendChild(tr);
+                });
+                var zf = $('#MkiPwZusammenfassung');
+                zf.innerHTML = '';
+                ['ok', 'older', 'unknown', 'none', 'norules'].forEach(function (k) {
+                    zf.appendChild(marke(STATUS[k][0], STATUS[k][1] + ': ' + (zaehler[k] || 0), STATUS[k][2]));
+                });
+            }
+
+            function benutzerLaden() {
+                return ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('MkiPasswordPolicy/Users'), dataType: 'json' }).then(function (d) {
+                    daten = d;
+                    benutzerZeigen();
+                    vorlagenZeigen();
+                }, function () {
+                    $('#MkiPwListe').innerHTML = '<tr><td colspan="6">Benutzerliste nicht ladbar. Nach der Installation muss Jellyfin neu gestartet werden.</td></tr>';
+                });
+            }
+
+            function senden(aktion, nutzdaten) {
+                Dashboard.showLoadingMsg();
+                return ApiClient.ajax({
+                    type: 'POST',
+                    url: ApiClient.getUrl('MkiPasswordPolicy/' + aktion),
+                    data: JSON.stringify(nutzdaten),
+                    contentType: 'application/json',
+                    dataType: aktion === 'Require' ? 'json' : undefined
+                }).then(function (antwort) {
+                    Dashboard.hideLoadingMsg();
+                    benutzerLaden();
+                    return antwort;
+                }, function () {
+                    Dashboard.hideLoadingMsg();
+                    alert('Das hat nicht geklappt.');
+                });
+            }
+
+            Array.prototype.forEach.call(page.querySelectorAll('.mkipw-tabs button'), function (b) {
+                b.addEventListener('click', function () {
+                    Array.prototype.forEach.call(page.querySelectorAll('.mkipw-tabs button, .mkipw-panel'), function (e) {
+                        e.classList.toggle('mkipw-aktiv', e.getAttribute('data-tab') === b.getAttribute('data-tab') || e.getAttribute('data-panel') === b.getAttribute('data-tab'));
+                    });
+                    if (b.getAttribute('data-tab') === 'profile') skriptLaden();
+                });
+            });
+
+            Array.prototype.forEach.call(page.querySelectorAll('.mkipw-regel'), function (e) {
+                e.addEventListener('change', function () { vorlagenZeigen(); testen(); });
+                e.addEventListener('input', function () { vorlagenZeigen(); testen(); });
+            });
+            $('#MkiPwTest').addEventListener('input', testen);
+            $('#MkiPwTestProfil').addEventListener('change', testen);
+
+            $('#MkiPwLinkKopieren').addEventListener('click', function () {
+                var feld = $('#MkiPwLink');
+                feld.select();
+                if (navigator.clipboard) navigator.clipboard.writeText(feld.value); else document.execCommand('copy');
+            });
+
+            var modus = 'alle';
+            function fragen(m, titel, text) {
+                modus = m;
+                $('#MkiPwMitAdmins').checked = false;
+                $('#MkiPwFrageTitel').textContent = titel;
+                $('#MkiPwFrageText').textContent = text + ' Offene Apps bekommen eine Nachricht und werden danach abgemeldet. Bis zum neuen Passwort ist keine Anmeldung moeglich. Das laesst sich pro Benutzer wieder aufheben.';
+                $('#MkiPwFrage').classList.add('mkipw-aktiv');
+            }
+            $('#MkiPwAlle').addEventListener('click', function () {
+                fragen('alle', 'Wirklich alle Benutzer auffordern?', 'Alle aktiven Benutzer muessen ein neues Passwort festlegen.');
+            });
+            $('#MkiPwUnsichere').addEventListener('click', function () {
+                fragen('unsicher', 'Benutzer mit ungeprueftem Passwort auffordern?', 'Alle aktiven Benutzer mit Profil, deren Passwort nicht nachweislich ihr Profil erfuellt (Unbekannt, Aeltere Regeln, Kein Passwort), muessen ein neues festlegen. Gespeicherte Profil-Aenderungen zaehlen, ungespeicherte nicht.');
+            });
+            $('#MkiPwNein').addEventListener('click', function () {
+                $('#MkiPwFrage').classList.remove('mkipw-aktiv');
+            });
+            $('#MkiPwJa').addEventListener('click', function () {
+                $('#MkiPwFrage').classList.remove('mkipw-aktiv');
+                var nutzdaten = { IncludeAdministrators: $('#MkiPwMitAdmins').checked };
+                if (modus === 'alle') nutzdaten.All = true; else nutzdaten.OnlyNotMeetingRules = true;
+                senden('Require', nutzdaten).then(function (antwort) {
+                    if (antwort && antwort.Count != null) {
+                        Dashboard.alert({ title: 'MKI Password Policy', message: antwort.Count + ' Benutzer muessen jetzt ein neues Passwort festlegen.' });
+                    }
+                });
+            });
+
+            page.addEventListener('pageshow', function () {
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(pluginId).then(function (c) {
+                    config = c;
+                    REGELN.concat(WEITERES_BOOL, WEITERES_ZAHL, WEITERES_TEXT).forEach(function (k) { setzen(k, c[k]); });
+                    optionen($('#DefaultProfile'), false, c.DefaultProfile);
+                    optionen($('#MkiPwTestProfil'), false, 'standard');
+                    return benutzerLaden();
+                }).then(function () {
+                    Dashboard.hideLoadingMsg();
+                });
+            });
+
+            $('#MkiPwForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(pluginId).then(function (c) {
+                    REGELN.concat(WEITERES_BOOL, WEITERES_ZAHL, WEITERES_TEXT).forEach(function (k) { c[k] = lesen(k); });
+                    c.MinLength = Math.max(1, c.MinLength);
+                    c.DefaultProfile = $('#DefaultProfile').value;
+                    var wahlen = page.querySelectorAll('#MkiPwListe select[data-user]');
+                    // Without a loaded user list keep the stored assignments instead of wiping them.
+                    if (wahlen.length) {
+                        c.UserProfiles = Array.prototype.map.call(wahlen, function (s) {
+                            return { UserId: s.getAttribute('data-user'), Profile: s.value };
+                        }).filter(function (e) { return e.Profile !== 'default'; });
+                    }
+                    ApiClient.updatePluginConfiguration(pluginId, c).then(function (result) {
+                        Dashboard.processPluginConfigurationUpdateResult(result);
+                        benutzerLaden();
+                    });
+                });
+                return false;
+            });
+        })();
+    </script>
+</div>
+</body>
+</html>
