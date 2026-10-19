@@ -70,7 +70,7 @@ Each plugin's DLL lands in `src/<Plugin>/bin/Release/net10.0/`. To install by ha
 
 1. Raise `version` and update `changelog` in the plugin's `src/<Plugin>/meta.json`.
 2. Merge to `main`.
-3. Push a tag that starts with `v`, for example `git tag v1.1.0 && git push origin v1.1.0`.
+3. Start the release: either open **Actions → Release → Run workflow** and enter a tag such as `v1.1.0`, or push that tag yourself (`git tag v1.1.0 && git push origin v1.1.0`).
 
 The [Release workflow](.github/workflows/release.yml) builds every plugin whose version is not yet in `manifest.json`, attaches the zips to a GitHub release for that tag and commits the updated `manifest.json` to `main`. Plugins whose version did not change are left alone.
 
