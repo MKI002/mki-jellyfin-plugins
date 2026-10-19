@@ -1,0 +1,15 @@
+# Build output
+bin/
+obj/
+*.zip
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.user
+
+# Never commit live server config (holds API keys)
+*.xml
+!**/*.csproj
+.env

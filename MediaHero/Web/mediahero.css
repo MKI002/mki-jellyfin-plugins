@@ -1,0 +1,370 @@
+/*
+ * Media Hero - Darstellung
+ *
+ * Bewusst ohne Bibliothek und ohne teure Filter: die Uebergaenge laufen ueber
+ * opacity und transform, also auf der Grafikkarte. Kein backdrop-filter auf
+ * grossen Flaechen - das ist der haeufigste Grund, warum solche Leisten auf
+ * schwachen Geraeten ruckeln.
+ */
+
+.mh-host {
+  margin: 0 0 1.6em 0;
+}
+
+.mh-wrap {
+  position: relative;
+  height: var(--mh-h, 56vh);
+  max-height: var(--mh-maxh, 720px);
+  min-height: 240px;
+  border-radius: var(--mh-radius, 0px);
+  overflow: hidden;
+  isolation: isolate;
+  /* KEIN eigener Hintergrund: er laege unter dem ausblendenden Bild und
+     wuerde als harte Kante sichtbar. Die Platzhalterfarbe sitzt stattdessen
+     auf .mh-bild und wird von derselben Maske miterfasst. */
+  background: transparent;
+}
+
+.mh-buehne {
+  position: absolute;
+  inset: 0;
+}
+
+/* Ohne Ausblendung soll die Maske gar nicht erst greifen - sonst kaeme es
+   an manchen Browsern zu einem kaum sichtbaren Saum an der Unterkante. */
+.mh-wrap[data-fade="0"] .mh-bild,
+.mh-wrap[data-fade="0"] .mh-scrim {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+/* --- Folien ------------------------------------------------------------- */
+.mh-folie {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity, transform;
+}
+
+.mh-folie.mh-aktiv {
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 1;
+}
+
+.mh-uebergang-fade { transition: opacity .55s ease; }
+
+.mh-uebergang-slide {
+  transition: opacity .45s ease, transform .55s cubic-bezier(.22, .61, .36, 1);
+  transform: translate3d(3%, 0, 0);
+}
+.mh-uebergang-slide.mh-aktiv { transform: translate3d(0, 0, 0); }
+
+.mh-uebergang-kenburns { transition: opacity .7s ease; }
+.mh-uebergang-kenburns.mh-aktiv .mh-bild {
+  animation: mh-kb 18s ease-out forwards;
+}
+@keyframes mh-kb {
+  from { transform: scale(1.02); }
+  to { transform: scale(1.11); }
+}
+
+.mh-uebergang-none { transition: none; }
+
+/* Ausblenden zum unteren Rand.
+   Die Maske liegt auf Bild und Abdunklung, nicht auf der ganzen Folie - sonst
+   waeren Titel und Knoepfe gleich mit durchsichtig. Bei --mh-fade: 0% bleibt
+   die harte Kante. */
+.mh-bild, .mh-scrim {
+  -webkit-mask-image: linear-gradient(to bottom,
+    #000 calc(100% - var(--mh-fade, 18%)), transparent 100%);
+  mask-image: linear-gradient(to bottom,
+    #000 calc(100% - var(--mh-fade, 18%)), transparent 100%);
+}
+
+.mh-bild {
+  position: absolute;
+  inset: 0;
+  background-color: #0d0f12;
+  background-size: cover;
+  background-position: center 22%;
+  background-repeat: no-repeat;
+  transform: scale(1.02);
+}
+
+.mh-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg,
+      rgba(0, 0, 0, calc(var(--mh-scrim, .7) * 1.05)) 0%,
+      rgba(0, 0, 0, calc(var(--mh-scrim, .7) * .75)) 38%,
+      rgba(0, 0, 0, 0) 72%),
+    linear-gradient(0deg,
+      rgba(0, 0, 0, calc(var(--mh-scrim, .7) * .95)) 0%,
+      rgba(0, 0, 0, 0) 45%);
+}
+
+/* --- Text --------------------------------------------------------------- */
+.mh-text {
+  position: absolute;
+  left: var(--mh-text-l, 4%);
+  right: calc(100% - var(--mh-text-l, 4%) - var(--mh-text-w, 52%));
+  bottom: var(--mh-text-b, 8%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--mh-gap, .7em);
+  align-items: flex-start;
+  color: #fff;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, .75);
+}
+
+.mh-logo {
+  max-width: var(--mh-logo-w, 34%);
+  max-height: var(--mh-logo-h, 40%);
+  object-fit: contain;
+  object-position: left bottom;
+  filter: drop-shadow(0 3px 12px rgba(0, 0, 0, .7));
+}
+
+.mh-titel {
+  margin: 0;
+  font-size: calc(clamp(1.6rem, 3.4vw, 3.1rem) * var(--mh-titel-s, 1));
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -.01em;
+  text-wrap: balance;
+}
+
+.mh-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5em;
+  font-size: calc(.82rem * var(--mh-text-s, 1));
+  opacity: .92;
+}
+
+.mh-chip {
+  padding: .16em .6em;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .14);
+  backdrop-filter: none;
+  white-space: nowrap;
+}
+
+.mh-stern { color: #ffd479; }
+
+.mh-fsk {
+  border: 1px solid rgba(255, 255, 255, .45);
+  background: transparent;
+}
+
+.mh-inhalt {
+  margin: 0;
+  max-width: 46ch;
+  font-size: calc(.95rem * var(--mh-text-s, 1));
+  line-height: 1.5;
+  opacity: .9;
+  display: -webkit-box;
+  -webkit-line-clamp: var(--mh-zeilen, 3);
+  line-clamp: var(--mh-zeilen, 3);
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.mh-knoepfe {
+  display: flex;
+  gap: .55em;
+  flex-wrap: wrap;
+  margin-top: .2em;
+}
+
+.mh-knopf {
+  font: inherit;
+  font-size: calc(.9rem * var(--mh-knopf-s, 1));
+  font-weight: 600;
+  padding: .62em 1.25em;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, .3);
+  background: rgba(255, 255, 255, .13);
+  color: #fff;
+  cursor: pointer;
+  transition: transform .14s ease, background .14s ease;
+}
+
+.mh-knopf:hover { background: rgba(255, 255, 255, .24); transform: translateY(-1px); }
+.mh-knopf:active { transform: translateY(0); }
+.mh-knopf:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+.mh-primaer {
+  background: #fff;
+  color: #111;
+  border-color: #fff;
+}
+.mh-primaer:hover { background: #f0f0f0; }
+
+.mh-rund { border-radius: 999px; padding: .62em .85em; }
+
+/* --- Positionsanzeige --------------------------------------------------- */
+.mh-anzeige {
+  position: absolute;
+  right: 3.5%;
+  bottom: 7%;
+  display: flex;
+  gap: .45em;
+  z-index: 2;
+  align-items: center;
+}
+
+.mh-punkt {
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  background: rgba(255, 255, 255, .35);
+  transition: background .2s ease, width .25s ease, transform .2s ease;
+}
+
+/* Wanderndes Fenster statt einer Punktereihe ueber die ganze Breite.
+   Der aktive Punkt ist ein voller Strich, die Nachbarn verlaufen nach aussen
+   ins Nichts. Punkte ab Abstand 3 bekommen Breite und Abstand 0 und fallen
+   damit aus dem Fluss - dadurch wandert das Fenster von selbst mit. */
+.mh-anzeige-dots { overflow: hidden; max-width: 45%; justify-content: flex-end; }
+
+.mh-anzeige-dots .mh-punkt {
+  width: 8px; height: 8px; border-radius: 999px;
+  flex: 0 0 auto;
+  transition: width .3s cubic-bezier(.4, 0, .2, 1),
+              opacity .3s ease, transform .3s ease, margin .3s ease;
+}
+
+.mh-anzeige-dots .mh-punkt[data-fern="0"] { width: 26px; background: #fff; opacity: 1; }
+.mh-anzeige-dots .mh-punkt[data-fern="1"] { opacity: .70; transform: scale(1); }
+.mh-anzeige-dots .mh-punkt[data-fern="2"] { opacity: .38; transform: scale(.78); }
+.mh-anzeige-dots .mh-punkt[data-fern="3"] { opacity: .16; transform: scale(.55); }
+.mh-anzeige-dots .mh-punkt[data-fern="4"] {
+  opacity: 0; width: 0; margin-left: -.45em; transform: scale(.3); pointer-events: none;
+}
+
+.mh-anzeige-numbers .mh-punkt {
+  width: 26px; height: 26px; border-radius: 6px;
+  color: #fff; font-size: .74rem; font-weight: 600;
+  background: rgba(255, 255, 255, .18);
+}
+.mh-anzeige-numbers .mh-punkt.mh-aktiv { background: #fff; color: #111; }
+
+.mh-anzeige-thumbnails .mh-punkt {
+  width: 62px; height: 35px; border-radius: 5px;
+  background-size: cover; background-position: center;
+  opacity: .5; background-color: #222;
+}
+.mh-anzeige-thumbnails .mh-punkt.mh-aktiv { opacity: 1; transform: scale(1.07); }
+
+.mh-anzeige-progressbar {
+  left: 4%; right: 4%; bottom: 0;
+  gap: 3px;
+}
+.mh-anzeige-progressbar .mh-punkt { flex: 1; height: 3px; border-radius: 2px; }
+.mh-anzeige-progressbar .mh-punkt.mh-aktiv { background: #fff; }
+
+/* --- Grundformen -------------------------------------------------------- */
+.mh-layout-contained { margin: 0 2%; }
+
+.mh-layout-compact {
+  height: min(var(--mh-h, 40vh), 340px);
+}
+.mh-layout-compact .mh-text { right: 30%; bottom: 10%; gap: .45em; }
+.mh-layout-compact .mh-inhalt { display: none; }
+
+.mh-layout-centered .mh-text {
+  left: 8%; right: 8%; bottom: 12%;
+  align-items: center;
+  text-align: center;
+}
+.mh-layout-centered .mh-logo { object-position: center bottom; }
+.mh-layout-centered .mh-scrim {
+  background: linear-gradient(0deg,
+    rgba(0, 0, 0, calc(var(--mh-scrim, .7) * 1)) 0%,
+    rgba(0, 0, 0, calc(var(--mh-scrim, .7) * .35)) 55%,
+    rgba(0, 0, 0, .1) 100%);
+}
+
+.mh-layout-posterleft .mh-text { left: 26%; right: 8%; }
+.mh-layout-posterleft .mh-folie.mh-aktiv::after {
+  content: '';
+  position: absolute;
+  left: 4%;
+  bottom: 8%;
+  width: 17%;
+  aspect-ratio: 2 / 3;
+  border-radius: 10px;
+  background-image: var(--mh-poster);
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .6);
+}
+
+.mh-leer {
+  padding: 2.5em 1em;
+  text-align: center;
+  opacity: .6;
+  font-size: .95rem;
+}
+
+/* --- Schmale Fenster ---------------------------------------------------- */
+@media (max-width: 800px) {
+  .mh-wrap { height: min(var(--mh-h, 56vh), 46vh); min-height: 210px; }
+  .mh-text { right: 6%; bottom: 12%; }
+  .mh-inhalt { display: none; }
+  .mh-anzeige-thumbnails .mh-punkt { width: 44px; height: 25px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mh-folie, .mh-knopf, .mh-punkt { transition: none !important; }
+  .mh-uebergang-kenburns.mh-aktiv .mh-bild { animation: none; }
+}
+
+/* --- Verschmelzung mit der Kopfleiste ------------------------------------
+ * Die Leiste wird um die Kopfhoehe nach oben gezogen und waechst um denselben
+ * Betrag, damit die sichtbare Flaeche gleich bleibt. Zusaetzlich ein Verlauf
+ * oben, damit die Navigation auf hellen Bildern lesbar bleibt.
+ */
+.mh-host.mh-verschmolzen {
+  margin-top: calc(-1 * var(--mh-kopf, 0px));
+}
+
+.mh-host.mh-verschmolzen .mh-wrap {
+  height: calc(var(--mh-h, 56vh) + var(--mh-kopf, 0px));
+  border-radius: 0;
+}
+
+.mh-host.mh-verschmolzen .mh-scrim::after {
+  /* eigener Verlauf oben - die Maske unten darf ihn nicht abschneiden */
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  /* Deutlich hoeher als die Kopfleiste und mit weichem Ausklang: bei einem
+     kurzen Verlauf sieht man die Kante, an der er endet. Die mittleren
+     Stuetzpunkte nehmen die harte Mitte aus dem Uebergang. */
+  height: calc(var(--mh-kopf, 0px) * 2.6 + 90px);
+  background: linear-gradient(180deg,
+    rgba(0, 0, 0, .62) 0%,
+    rgba(0, 0, 0, .46) 26%,
+    rgba(0, 0, 0, .24) 52%,
+    rgba(0, 0, 0, .09) 76%,
+    rgba(0, 0, 0, 0) 100%);
+  pointer-events: none;
+}
+
+/* Kopfleiste durchsichtig, solange oben nicht gescrollt wurde */
+/* Auf das gefundene Element, nicht auf einen geratenen Klassennamen */
+body.mh-kopf-frei .mh-kopf-el,
+body.mh-kopf-frei .skinHeader {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border-bottom: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  transition: background-color .25s ease;
+}

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8" />
+    <title>MKI Merge Versions</title>
+</head>
+<body>
+<div id="MkiMergeConfigPage" data-role="page" class="page type-interior pluginConfigurationPage">
+    <div data-role="content">
+        <div class="content-primary">
+
+            <form id="MkiMergeConfigForm">
+                <div class="verticalSection">
+                    <h2 class="sectionTitle">MKI Merge Versions</h2>
+                    <p class="fieldDescription">
+                        Filme, die in mehreren Aufloesungen vorliegen, werden zu einem Eintrag
+                        zusammengefasst. Haupteintrag wird immer die hoechste Aufloesung.
+                        Zugeordnet wird ueber die TMDb-, ersatzweise die IMDb-Kennung &ndash;
+                        nie ueber Titel und Jahr. Serien bleiben unberuehrt.
+                    </p>
+                </div>
+
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label class="emby-checkbox-label">
+                        <input is="emby-checkbox" type="checkbox" id="FixPrimaryOrder" />
+                        <span>Haupteintrag korrigieren</span>
+                    </label>
+                    <div class="fieldDescription checkboxFieldDescription">
+                        Baut bestehende Verknuepfungen um, falls nicht die hoechste Aufloesung
+                        der Haupteintrag ist.
+                    </div>
+                </div>
+
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label class="emby-checkbox-label">
+                        <input is="emby-checkbox" type="checkbox" id="DryRun" />
+                        <span>Nur testen, nichts schreiben</span>
+                    </label>
+                    <div class="fieldDescription checkboxFieldDescription">
+                        Der Lauf protokolliert nur, was er tun wuerde. Ergebnis steht im
+                        Jellyfin-Protokoll.
+                    </div>
+                </div>
+
+                <div>
+                    <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                        <span>Speichern</span>
+                    </button>
+                    <button is="emby-button" type="button" id="MkiMergeRunNow" class="raised block emby-button">
+                        <span>Jetzt ausfuehren</span>
+                    </button>
+                </div>
+
+                <div class="verticalSection">
+                    <div class="fieldDescription" id="MkiMergeStatus"></div>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        (function () {
+            var pluginId = 'b8e2f3a1-6c47-4d59-9f0e-7a1c2d3e4b5f';
+            var taskKey = 'MkiMergeVersionsMovies';
+            var page = document.querySelector('#MkiMergeConfigPage');
+
+            function melde(text) {
+                page.querySelector('#MkiMergeStatus').textContent = text;
+            }
+
+            page.addEventListener('pageshow', function () {
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                    page.querySelector('#FixPrimaryOrder').checked = config.FixPrimaryOrder !== false;
+                    page.querySelector('#DryRun').checked = config.DryRun === true;
+                    Dashboard.hideLoadingMsg();
+                });
+            });
+
+            page.querySelector('#MkiMergeConfigForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                    config.FixPrimaryOrder = page.querySelector('#FixPrimaryOrder').checked;
+                    config.DryRun = page.querySelector('#DryRun').checked;
+                    ApiClient.updatePluginConfiguration(pluginId, config).then(function (result) {
+                        Dashboard.processPluginConfigurationUpdateResult(result);
+                    });
+                });
+                return false;
+            });
+
+            page.querySelector('#MkiMergeRunNow').addEventListener('click', function () {
+                melde('Aufgabe wird gestartet …');
+                ApiClient.getScheduledTasks().then(function (tasks) {
+                    var task = tasks.filter(function (t) { return t.Key === taskKey; })[0];
+                    if (!task) {
+                        melde('Aufgabe nicht gefunden. Laeuft das Plugin?');
+                        return;
+                    }
+                    ApiClient.ajax({
+                        type: 'POST',
+                        url: ApiClient.getUrl('ScheduledTasks/Running/' + task.Id)
+                    }).then(function () {
+                        melde('Laeuft. Ergebnis steht danach im Protokoll unter "MKI Merge".');
+                    });
+                });
+            });
+        })();
+    </script>
+</div>
+</body>
+</html>

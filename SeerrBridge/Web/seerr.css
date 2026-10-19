@@ -1,0 +1,153 @@
+/* Jellyseerr Bridge - Darstellung.
+   Bewusst sparsam: die Oberflaeche gehoert Jellyfin, hier wird nur ergaenzt. */
+
+.sb-ansicht {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* top wird zur Laufzeit gesetzt, weil die Kopfleiste je nach Geraet und
+     Zustand unterschiedlich hoch ist. */
+  z-index: 1;
+  background: #111827;
+}
+
+.sb-rahmen {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+/* Solange die eingebettete Ansicht laeuft, soll darunter nichts durchscheinen
+   und die Seite selbst nicht mitscrollen. */
+body.sb-aktiv .mainAnimatedPages,
+body.sb-aktiv .skinBody > .mainAnimatedPages {
+  visibility: hidden;
+}
+
+body.sb-aktiv {
+  overflow: hidden;
+}
+
+/* ------------------------------------------------------------ Suchvorschlaege */
+
+.sb-abschnitt {
+  margin: 2.2em 0 1.2em;
+}
+
+/* Groesse und Schnitt kommen aus Jellyfins .sectionTitle - hier nur der
+   Abstand nach unten, damit die Kacheln nicht an der Ueberschrift kleben. */
+.sb-ueberschrift {
+  margin-bottom: .5em;
+}
+
+.sb-reihe {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1em;
+}
+
+.sb-kachel {
+  display: flex;
+  flex-direction: column;
+  gap: .45em;
+  /* Es ist ein Link, soll aber nicht wie einer aussehen - die Kachel selbst
+     ist das Bedienelement. */
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.sb-kachel:hover .sb-bild {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .5);
+}
+
+.sb-kachel:focus-visible {
+  outline: 2px solid #00a4dc;
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+.sb-bild {
+  aspect-ratio: 2 / 3;
+  border-radius: 8px;
+  background: #1b1f27 center/cover no-repeat;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .35);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.sb-titel {
+  font-size: .86em;
+  line-height: 1.25;
+  /* Zwei Zeilen und dann Schluss - sonst schieben lange Titel die Kacheln
+     unterschiedlich hoch und die Reihe franst aus. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.sb-unten {
+  margin-top: auto;
+}
+
+.sb-knopf {
+  width: 100%;
+  padding: .45em .6em;
+  font: inherit;
+  font-size: .82em;
+  color: #fff;
+  background: #00a4dc;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.sb-knopf:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+
+.sb-knopf:disabled {
+  cursor: default;
+  opacity: .85;
+}
+
+.sb-knopf.sb-ok {
+  background: #2e7d32;
+}
+
+.sb-knopf.sb-fehler {
+  background: #8c2f2f;
+}
+
+.sb-hinweis {
+  display: block;
+  font-size: .78em;
+  opacity: .6;
+  padding: .4em 0;
+}
+
+.sb-notfall {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .4em;
+  padding: 2em;
+  text-align: center;
+  color: #cfd6e4;
+  background: #111827;
+}
+
+.sb-notfall .sb-adresse {
+  font-family: monospace;
+  opacity: .75;
+}
+
+.sb-notfall a {
+  color: #4aa8ff;
+}
