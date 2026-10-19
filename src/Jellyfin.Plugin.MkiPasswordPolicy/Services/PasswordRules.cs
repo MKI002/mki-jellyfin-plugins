@@ -58,36 +58,36 @@ public static class PasswordRules
 		var fehler = new List<string>();
 		if (pw.Length < c.MinLength)
 		{
-			fehler.Add($"mindestens {c.MinLength} Zeichen");
+			fehler.Add($"at least {c.MinLength} characters");
 		}
 		if (c.RequireUpper && !pw.Any(char.IsUpper))
 		{
-			fehler.Add("ein Grossbuchstabe");
+			fehler.Add("an uppercase letter");
 		}
 		if (c.RequireLower && !pw.Any(char.IsLower))
 		{
-			fehler.Add("ein Kleinbuchstabe");
+			fehler.Add("a lowercase letter");
 		}
 		if (c.RequireDigit && !pw.Any(char.IsDigit))
 		{
-			fehler.Add("eine Ziffer");
+			fehler.Add("a digit");
 		}
 		if (c.RequireSymbol && !pw.Any(ch => !char.IsLetterOrDigit(ch)))
 		{
-			fehler.Add("ein Sonderzeichen");
+			fehler.Add("a symbol");
 		}
 		if (c.ForbidUsername && !string.IsNullOrEmpty(username) && username.Length >= 3
 			&& pw.Contains(username, StringComparison.OrdinalIgnoreCase))
 		{
-			fehler.Add("darf den Benutzernamen nicht enthalten");
+			fehler.Add("must not contain the username");
 		}
 		if (c.BlockCommon && pw.Length > 0 && IsCommon(pw))
 		{
-			fehler.Add("darf kein bekanntes, leicht zu erratendes Passwort sein");
+			fehler.Add("must not be a common, easy-to-guess password");
 		}
 		if (c.MaxRepeat > 0 && LongestRun(pw) > c.MaxRepeat)
 		{
-			fehler.Add($"hoechstens {c.MaxRepeat} gleiche Zeichen hintereinander");
+			fehler.Add($"no more than {c.MaxRepeat} identical characters in a row");
 		}
 		return fehler;
 	}
@@ -119,7 +119,7 @@ public static class PasswordRules
 
 	public static string Describe(IReadOnlyList<string> fehler)
 	{
-		return "Das Passwort erfuellt die Regeln nicht: " + string.Join(", ", fehler) + ".";
+		return "The password does not meet the rules: " + string.Join(", ", fehler) + ".";
 	}
 
 	// "Sommer2024!" counts as "sommer": trailing digits and symbols do not make a common word safe.

@@ -153,12 +153,12 @@ public class LoginGate : IStartupFilter
 				// Fail closed while anyone is waiting for a new password.
 				if (_store.AnyMustChange())
 				{
-					_logger.LogError(ex, "Anmeldung nicht pruefbar - abgewiesen, weil Passwortwechsel offen sind");
+					_logger.LogError(ex, "Could not check sign-in - refused because password changes are pending");
 					grund = "admin";
 				}
 				else
 				{
-					_logger.LogError(ex, "Anmeldung nicht pruefbar - durchgelassen, kein Passwortwechsel offen");
+					_logger.LogError(ex, "Could not check sign-in - allowed, no password changes pending");
 				}
 			}
 		}
@@ -178,7 +178,7 @@ public class LoginGate : IStartupFilter
 		kontext.Response.Headers.CacheControl = "no-store";
 		kontext.Response.ContentType = "text/plain; charset=utf-8";
 		await kontext.Response.WriteAsync(
-			"Neues Passwort erforderlich. Bitte im Browser festlegen: " + Links.ChangeUrl(kontext.Request, basePath)).ConfigureAwait(false);
+			"New password required. Please set it in a browser: " + Links.ChangeUrl(kontext.Request, basePath)).ConfigureAwait(false);
 	}
 
 	// Returns the reason the sign-in is refused, or null to let it through.
@@ -189,9 +189,9 @@ public class LoginGate : IStartupFilter
 		string? token = Text(wurzel, "AccessToken");
 		if (!TryProp(wurzel, "User", out var benutzerDto) || !Guid.TryParse(Text(benutzerDto, "Id"), out var id))
 		{
-			throw new InvalidDataException("Anmeldeantwort ohne Benutzer");
+			throw new InvalidDataException("Sign-in response without user");
 		}
-		var benutzer = _users.GetUserById(id) ?? throw new InvalidDataException("Unbekannter Benutzer in der Anmeldeantwort");
+		var benutzer = _users.GetUserById(id) ?? throw new InvalidDataException("Unknown user in sign-in response");
 
 		string? grund = null;
 		var stand = _store.Get(id);
@@ -213,7 +213,7 @@ public class LoginGate : IStartupFilter
 			{
 				await _sessions.Logout(token).ConfigureAwait(false);
 			}
-			_logger.LogInformation("Anmeldung von {Benutzer} abgewiesen: neues Passwort erforderlich ({Grund})", benutzer.Username, grund);
+			_logger.LogInformation("Sign-in of {User} refused: new password required ({Reason})", benutzer.Username, grund);
 		}
 		return grund;
 	}
@@ -340,7 +340,7 @@ public class LoginGate : IStartupFilter
 		}
 		catch (Exception ex)
 		{
-			_logger.LogDebug(ex, "Aufrufer nicht ermittelbar");
+			_logger.LogDebug(ex, "Caller could not be determined");
 			return null;
 		}
 	}

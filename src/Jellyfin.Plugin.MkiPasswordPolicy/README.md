@@ -35,4 +35,4 @@ A fresh install changes nothing. No rules apply, no password is checked, nothing
 
 1. Install from the plugin catalog and restart Jellyfin.
 2. Open **Dashboard → Plugins → MKI Password Policy**.
-3. Pick a profile for all users or for single users and save. To replace existing passwords, use **Neues Passwort verlangen** for one user or one of the buttons for many.
+3. Pick a profile for all users or for single users and save. To replace existing passwords, use **Require new password** for one user or one of the buttons for many.

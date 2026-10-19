@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="utf-8" />
     <title>MKI Password Policy</title>
@@ -39,162 +39,162 @@
             <div class="verticalSection">
                 <h2 class="sectionTitle">MKI Password Policy</h2>
                 <div class="mkipw-hinweis">
-                    Nach der Installation passiert nichts. Regeln gelten erst fuer Benutzer, denen du ein Profil zuweist,
-                    und ein Passwortwechsel wird nur verlangt, wenn du ihn ausloest. Dann gilt er auf dem Server und damit
-                    fuer jeden Client: Browser, Handy, Fernseher und alle Apps.
+                    Installing the plugin changes nothing. Rules only apply to users you assign a profile to,
+                    and a password change is only required when you ask for one. It is then enforced on the server, so it
+                    holds on every client: browser, phone, TV and all apps.
                 </div>
             </div>
 
             <div class="mkipw-tabs">
-                <button is="emby-button" type="button" class="raised emby-button mkipw-aktiv" data-tab="benutzer"><span>Benutzer</span></button>
-                <button is="emby-button" type="button" class="raised emby-button" data-tab="profile"><span>Profile</span></button>
-                <button is="emby-button" type="button" class="raised emby-button" data-tab="weiteres"><span>Weitere Einstellungen</span></button>
+                <button is="emby-button" type="button" class="raised emby-button mkipw-aktiv" data-tab="benutzer"><span>Users</span></button>
+                <button is="emby-button" type="button" class="raised emby-button" data-tab="profile"><span>Profiles</span></button>
+                <button is="emby-button" type="button" class="raised emby-button" data-tab="weiteres"><span>More settings</span></button>
             </div>
 
             <form id="MkiPwForm">
                 <div class="mkipw-panel mkipw-aktiv" data-panel="benutzer">
                     <div class="selectContainer">
-                        <label class="selectLabel" for="DefaultProfile">Profil fuer alle Benutzer</label>
+                        <label class="selectLabel" for="DefaultProfile">Profile for all users</label>
                         <select is="emby-select" id="DefaultProfile" class="emby-select-withcolor emby-select mkipw-profilwahl"></select>
-                        <div class="fieldDescription">Gilt fuer jeden Benutzer, bei dem unten „Wie fuer alle“ steht, und fuer neu angelegte Konten. „Keine Regeln“ heisst: das Plugin prueft nichts.</div>
+                        <div class="fieldDescription">Applies to every user set to “Same as all users” below and to newly created accounts. “No rules” means the plugin checks nothing.</div>
                     </div>
 
                     <div class="verticalSection">
-                        <h3>Uebersicht</h3>
+                        <h3>Overview</h3>
                         <p class="fieldDescription">
-                            Das Plugin speichert keine Passwoerter und bewertet gespeicherte Passwoerter nie nachtraeglich;
-                            Jellyfin selbst legt nur einen Hash ab. Ein Passwort wird ausschliesslich in dem Moment geprueft,
-                            in dem es neu festgelegt wird. Danach merkt sich das Plugin nur, gegen welche Regeln es geprueft wurde.
-                            Deshalb steht bei Passwoertern, die vorher gesetzt wurden, ehrlich „Unbekannt“.
+                            The plugin never stores passwords and never judges a stored password after the fact;
+                            Jellyfin itself only keeps a hash. A password is checked only at the moment it is set.
+                            After that the plugin only remembers which rules it was checked against.
+                            That is why passwords set before then honestly show “Unknown”.
                         </p>
                         <div class="mkipw-zusammenfassung" id="MkiPwZusammenfassung"></div>
                         <div class="mkipw-tabelle">
                             <table>
-                                <thead><tr><th>Benutzer</th><th>Profil</th><th>Passwort</th><th>Wechsel</th><th>Geaendert</th><th></th></tr></thead>
-                                <tbody id="MkiPwListe"><tr><td colspan="6">Lade …</td></tr></tbody>
+                                <thead><tr><th>User</th><th>Profile</th><th>Password</th><th>Change</th><th>Changed</th><th></th></tr></thead>
+                                <tbody id="MkiPwListe"><tr><td colspan="6">Loading …</td></tr></tbody>
                             </table>
                         </div>
-                        <p class="fieldDescription">Profil-Aenderungen in der Tabelle gelten nach „Speichern“.</p>
+                        <p class="fieldDescription">Profile changes in the table apply after “Save”.</p>
                     </div>
 
                     <div class="verticalSection">
-                        <h3>Neues Passwort verlangen</h3>
+                        <h3>Require a new password</h3>
                         <p class="fieldDescription">
-                            Offene Apps bekommen eine Nachricht, danach werden alle Geraete abgemeldet. Bis das neue Passwort
-                            gesetzt ist, ist auf keinem Geraet eine Anmeldung moeglich. Laesst sich pro Benutzer wieder aufheben.
+                            Open apps get a message, then every device is signed out. Until the new password is set,
+                            the user cannot sign in on any device. You can cancel it per user.
                         </p>
                         <button is="emby-button" type="button" id="MkiPwUnsichere" class="raised block emby-button">
-                            <span>Alle mit Profil, deren Passwort die Regeln nicht nachweislich erfuellt …</span>
+                            <span>Everyone with a profile whose password is not known to meet its rules …</span>
                         </button>
                         <button is="emby-button" type="button" id="MkiPwAlle" class="raised block emby-button mkipw-gefahr">
-                            <span>Alle Benutzer …</span>
+                            <span>All users …</span>
                         </button>
                     </div>
 
                     <div class="verticalSection">
-                        <h3>Link fuer Fernseher und Apps</h3>
+                        <h3>Link for TVs and apps</h3>
                         <p class="fieldDescription">
-                            Im Browser (auch in den Jellyfin-Apps fuer Android, iOS und am PC) erscheint der Dialog direkt beim
-                            Anmelden. Fernseher und andere eigene Apps melden nur „Anmeldung fehlgeschlagen“. Diese Benutzer
-                            legen ihr Passwort ueber diesen Link fest, zum Beispiel am Handy, und melden sich danach normal an:
+                            In a browser (and in the Jellyfin apps for Android, iOS and desktop) the dialog appears right at
+                            sign-in. TVs and other native apps only report “sign-in failed”. Those users set their password
+                            through this link, for example on their phone, and then sign in as usual:
                         </p>
                         <div class="mkipw-link">
                             <input is="emby-input" type="text" id="MkiPwLink" readonly />
-                            <button is="emby-button" type="button" id="MkiPwLinkKopieren" class="raised emby-button"><span>Kopieren</span></button>
+                            <button is="emby-button" type="button" id="MkiPwLinkKopieren" class="raised emby-button"><span>Copy</span></button>
                         </div>
                     </div>
                 </div>
 
                 <div class="mkipw-panel" data-panel="profile">
                     <div class="verticalSection">
-                        <h3>Fertige Profile</h3>
+                        <h3>Ready-made profiles</h3>
                         <div class="mkipw-tabelle">
                             <table><tbody id="MkiPwVorlagen"></tbody></table>
                         </div>
                     </div>
 
                     <div class="verticalSection">
-                        <h3>Eigenes Profil</h3>
+                        <h3>Custom profile</h3>
                         <div class="mkipw-zwei">
                             <div class="inputContainer">
-                                <label class="inputLabel inputLabelUnfocused" for="MinLength">Mindestlaenge</label>
+                                <label class="inputLabel inputLabelUnfocused" for="MinLength">Minimum length</label>
                                 <input is="emby-input" type="number" id="MinLength" min="1" max="128" class="mkipw-regel" />
                             </div>
                             <div class="inputContainer">
-                                <label class="inputLabel inputLabelUnfocused" for="MaxRepeat">Hoechstens gleiche Zeichen hintereinander (0 = egal)</label>
+                                <label class="inputLabel inputLabelUnfocused" for="MaxRepeat">Max identical characters in a row (0 = any)</label>
                                 <input is="emby-input" type="number" id="MaxRepeat" min="0" max="20" class="mkipw-regel" />
                             </div>
                         </div>
-                        <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="RequireUpper" class="mkipw-regel" /><span>Grossbuchstabe verlangen</span></label></div>
-                        <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="RequireLower" class="mkipw-regel" /><span>Kleinbuchstabe verlangen</span></label></div>
-                        <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="RequireDigit" class="mkipw-regel" /><span>Ziffer verlangen</span></label></div>
-                        <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="RequireSymbol" class="mkipw-regel" /><span>Sonderzeichen verlangen</span></label></div>
-                        <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ForbidUsername" class="mkipw-regel" /><span>Benutzername darf nicht im Passwort stehen</span></label></div>
+                        <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="RequireUpper" class="mkipw-regel" /><span>Require an uppercase letter</span></label></div>
+                        <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="RequireLower" class="mkipw-regel" /><span>Require a lowercase letter</span></label></div>
+                        <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="RequireDigit" class="mkipw-regel" /><span>Require a digit</span></label></div>
+                        <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="RequireSymbol" class="mkipw-regel" /><span>Require a symbol</span></label></div>
+                        <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ForbidUsername" class="mkipw-regel" /><span>Password must not contain the username</span></label></div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="BlockCommon" class="mkipw-regel" /><span>Bekannte Passwoerter sperren</span></label>
-                            <div class="fieldDescription checkboxFieldDescription">Sperrt rund 200 der haeufigsten Passwoerter wie „passwort“, „123456“ oder „jellyfin“, auch mit Zahlen oder Zeichen davor oder dahinter („Sommer2024!“).</div>
+                            <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="BlockCommon" class="mkipw-regel" /><span>Block common passwords</span></label>
+                            <div class="fieldDescription checkboxFieldDescription">Blocks about 200 of the most common passwords such as “password”, “123456” or “jellyfin”, also with digits or symbols before or after them (“Summer2024!”).</div>
                         </div>
                     </div>
 
                     <div class="verticalSection">
-                        <h3>Ausprobieren</h3>
+                        <h3>Try it</h3>
                         <div class="selectContainer">
-                            <label class="selectLabel" for="MkiPwTestProfil">Profil</label>
+                            <label class="selectLabel" for="MkiPwTestProfil">Profile</label>
                             <select is="emby-select" id="MkiPwTestProfil" class="emby-select-withcolor emby-select"></select>
                         </div>
                         <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="MkiPwTest">Beispielpasswort</label>
+                            <label class="inputLabel inputLabelUnfocused" for="MkiPwTest">Sample password</label>
                             <input is="emby-input" type="text" id="MkiPwTest" autocomplete="off" />
-                            <div class="fieldDescription" id="MkiPwTestErgebnis">Wird nur in deinem Browser geprueft und nirgends gespeichert.</div>
+                            <div class="fieldDescription" id="MkiPwTestErgebnis">Checked only in your browser and never saved.</div>
                         </div>
                     </div>
                 </div>
 
                 <div class="mkipw-panel" data-panel="weiteres">
-                    <p class="fieldDescription">Alles hier gilt nur fuer Benutzer mit einem Profil, ausser es steht anders dabei.</p>
+                    <p class="fieldDescription">Everything here only applies to users with a profile unless stated otherwise.</p>
                     <div class="inputContainer">
-                        <label class="inputLabel inputLabelUnfocused" for="ExpiryDays">Passwort laeuft ab nach Tagen (0 = nie)</label>
+                        <label class="inputLabel inputLabelUnfocused" for="ExpiryDays">Password expires after days (0 = never)</label>
                         <input is="emby-input" type="number" id="ExpiryDays" min="0" max="3650" />
-                        <div class="fieldDescription">Gezaehlt ab der letzten Aenderung. Fuer Passwoerter von vorher zaehlt der Tag, an dem das Plugin den Benutzer zuerst angemeldet gesehen hat.</div>
+                        <div class="fieldDescription">Counted from the last change. For passwords set earlier, it counts from the day the plugin first saw the user sign in.</div>
                     </div>
                     <div class="checkboxContainer checkboxContainer-withDescription">
-                        <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="RequireChangeForNewUsers" /><span>Neue Benutzer muessen ihr Passwort selbst festlegen</span></label>
-                        <div class="fieldDescription checkboxFieldDescription">Gilt fuer alle neu angelegten Konten. Du vergibst ein Startpasswort (oder keins), der Benutzer ersetzt es bei der ersten Anmeldung.</div>
+                        <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="RequireChangeForNewUsers" /><span>New users must set their own password</span></label>
+                        <div class="fieldDescription checkboxFieldDescription">Applies to every newly created account. You give a starting password (or none) and the user replaces it at first sign-in.</div>
                     </div>
                     <div class="checkboxContainer checkboxContainer-withDescription">
-                        <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ApplyToAdminChanges" /><span>Regeln auch fuer Passwoerter, die ein Administrator vergibt</span></label>
-                        <div class="fieldDescription checkboxFieldDescription">Beim Anlegen von Benutzern und wenn du das Passwort eines anderen Benutzers setzt.</div>
+                        <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ApplyToAdminChanges" /><span>Apply rules to passwords set by an administrator</span></label>
+                        <div class="fieldDescription checkboxFieldDescription">When creating users and when you set another user’s password.</div>
                     </div>
                     <div class="checkboxContainer checkboxContainer-withDescription">
-                        <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ExemptAdministrators" /><span>Administratoren von den Regeln ausnehmen</span></label>
-                        <div class="fieldDescription checkboxFieldDescription">Fuer Administratorkonten gilt dann kein Profil und kein Ablauf. Eine ausdrueckliche Aufforderung gilt trotzdem.</div>
+                        <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ExemptAdministrators" /><span>Exempt administrators from the rules</span></label>
+                        <div class="fieldDescription checkboxFieldDescription">Administrator accounts then have no profile and no expiry. An explicit request for a new password still applies.</div>
                     </div>
                     <div class="checkboxContainer checkboxContainer-withDescription">
-                        <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="WebHints" /><span>Regeln im Browser live anzeigen</span></label>
-                        <div class="fieldDescription checkboxFieldDescription">Checkliste und Staerkeanzeige beim Aendern des eigenen Passworts und beim Anlegen von Benutzern.</div>
+                        <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="WebHints" /><span>Show rules live in the browser</span></label>
+                        <div class="fieldDescription checkboxFieldDescription">Checklist and strength meter when changing your own password and when creating users.</div>
                     </div>
                     <div class="checkboxContainer checkboxContainer-withDescription">
-                        <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="NotifySessions" /><span>Offene Apps vor dem Abmelden benachrichtigen</span></label>
-                        <div class="fieldDescription checkboxFieldDescription">Bei einer Aufforderung bekommen alle offenen Sitzungen eine Nachricht; abgemeldet wird nach der Wartezeit.</div>
+                        <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="NotifySessions" /><span>Notify open apps before signing out</span></label>
+                        <div class="fieldDescription checkboxFieldDescription">When a new password is required, every open session gets a message; sign-out happens after the grace period.</div>
                     </div>
                     <div class="inputContainer">
-                        <label class="inputLabel inputLabelUnfocused" for="GraceSeconds">Wartezeit bis zum Abmelden in Sekunden</label>
+                        <label class="inputLabel inputLabelUnfocused" for="GraceSeconds">Grace period before sign-out (seconds)</label>
                         <input is="emby-input" type="number" id="GraceSeconds" min="0" max="300" />
                     </div>
                     <div class="inputContainer">
-                        <label class="inputLabel inputLabelUnfocused" for="NotifyText">Nachrichtentext</label>
+                        <label class="inputLabel inputLabelUnfocused" for="NotifyText">Message text</label>
                         <textarea is="emby-textarea" id="NotifyText" rows="3" class="emby-textarea"></textarea>
-                        <div class="fieldDescription">Leer lassen fuer den Standardtext. {url} wird durch den Link zur Passwortseite ersetzt.</div>
+                        <div class="fieldDescription">Leave empty for the default text. {url} is replaced with the link to the password page.</div>
                     </div>
                     <div class="inputContainer">
-                        <label class="inputLabel inputLabelUnfocused" for="PublicUrl">Oeffentliche Serveradresse (optional)</label>
+                        <label class="inputLabel inputLabelUnfocused" for="PublicUrl">Public server address (optional)</label>
                         <input is="emby-input" type="text" id="PublicUrl" placeholder="https://jellyfin.example.com" />
-                        <div class="fieldDescription">Fuer den Link zur Passwortseite. Leer lassen, dann nimmt das Plugin die Adresse, ueber die du diese Seite geoeffnet hast.</div>
+                        <div class="fieldDescription">Used for the link to the password page. Leave empty to use the address you opened this page with.</div>
                     </div>
                 </div>
 
                 <div>
-                    <button is="emby-button" type="submit" class="raised button-submit block emby-button"><span>Speichern</span></button>
+                    <button is="emby-button" type="submit" class="raised button-submit block emby-button"><span>Save</span></button>
                 </div>
             </form>
         </div>
@@ -205,10 +205,10 @@
             <h3 id="MkiPwFrageTitel"></h3>
             <p id="MkiPwFrageText"></p>
             <div class="checkboxContainer">
-                <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="MkiPwMitAdmins" /><span>Auch Administratoren, inklusive deinem eigenen Konto</span></label>
+                <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="MkiPwMitAdmins" /><span>Include administrators, including your own account</span></label>
             </div>
-            <button is="emby-button" type="button" id="MkiPwJa" class="raised block emby-button mkipw-gefahr"><span>Ja, auffordern</span></button>
-            <button is="emby-button" type="button" id="MkiPwNein" class="raised block emby-button"><span>Abbrechen</span></button>
+            <button is="emby-button" type="button" id="MkiPwJa" class="raised block emby-button mkipw-gefahr"><span>Yes, require it</span></button>
+            <button is="emby-button" type="button" id="MkiPwNein" class="raised block emby-button"><span>Cancel</span></button>
         </div>
     </div>
 
@@ -219,25 +219,25 @@
             var $ = function (sel) { return page.querySelector(sel); };
 
             var PROFILNAMEN = {
-                none: 'Keine Regeln',
-                basic: 'Einfach',
+                none: 'No rules',
+                basic: 'Basic',
                 standard: 'Standard',
-                strong: 'Stark',
-                verystrong: 'Sehr stark',
+                strong: 'Strong',
+                verystrong: 'Very strong',
                 passphrase: 'Passphrase',
-                custom: 'Eigenes Profil'
+                custom: 'Custom profile'
             };
             var REGELN = ['MinLength', 'MaxRepeat', 'RequireUpper', 'RequireLower', 'RequireDigit', 'RequireSymbol', 'ForbidUsername', 'BlockCommon'];
             var WEITERES_BOOL = ['RequireChangeForNewUsers', 'ApplyToAdminChanges', 'ExemptAdministrators', 'WebHints', 'NotifySessions'];
             var WEITERES_ZAHL = ['ExpiryDays', 'GraceSeconds'];
             var WEITERES_TEXT = ['NotifyText', 'PublicUrl'];
-            var GRUENDE = { admin: 'verlangt', expired: 'abgelaufen', 'new': 'neues Konto' };
+            var GRUENDE = { admin: 'requested', expired: 'expired', 'new': 'new account' };
             var STATUS = {
-                ok: ['mkipw-ok', 'Erfuellt die Regeln', 'Beim Festlegen gegen Regeln geprueft, die mindestens so streng waren wie das heutige Profil.'],
-                older: ['mkipw-offen', 'Aeltere Regeln', 'Beim Festlegen geprueft, aber das Profil ist seitdem strenger geworden.'],
-                unknown: ['mkipw-neutral', 'Unbekannt', 'Nie vom Plugin geprueft, zum Beispiel vor der Zuweisung des Profils gesetzt. Gespeicherte Passwoerter werden nicht nachtraeglich bewertet.'],
-                none: ['mkipw-schlecht', 'Kein Passwort', 'Das Plugin hat gesehen, dass das Konto ohne Passwort angelegt oder zurueckgesetzt wurde.'],
-                norules: ['mkipw-neutral', 'Keine Regeln', 'Fuer diesen Benutzer gilt kein Profil, das Plugin prueft nichts.']
+                ok: ['mkipw-ok', 'Meets the rules', 'Checked when set against rules at least as strict as the current profile.'],
+                older: ['mkipw-offen', 'Older rules', 'Checked when set, but the profile has become stricter since.'],
+                unknown: ['mkipw-neutral', 'Unknown', 'Never checked by the plugin, for example set before the profile was assigned. Stored passwords are never judged after the fact.'],
+                none: ['mkipw-schlecht', 'No password', 'The plugin saw the account being created or reset without a password.'],
+                norules: ['mkipw-neutral', 'No rules', 'This user has no profile, so the plugin checks nothing.']
             };
             var daten = { Presets: {}, Common: [], Users: [] };
             var config = null;
@@ -267,15 +267,15 @@
             }
 
             function regelText(r) {
-                if (!r) return 'Keine Pruefung';
-                var t = ['mind. ' + r.MinLength + ' Zeichen'];
-                if (r.RequireUpper) t.push('Grossbuchstabe');
-                if (r.RequireLower) t.push('Kleinbuchstabe');
-                if (r.RequireDigit) t.push('Ziffer');
-                if (r.RequireSymbol) t.push('Sonderzeichen');
-                if (r.ForbidUsername) t.push('ohne Benutzername');
-                if (r.BlockCommon) t.push('keine bekannten Passwoerter');
-                if (r.MaxRepeat) t.push('max. ' + r.MaxRepeat + ' gleiche hintereinander');
+                if (!r) return 'No checks';
+                var t = ['at least ' + r.MinLength + ' characters'];
+                if (r.RequireUpper) t.push('uppercase');
+                if (r.RequireLower) t.push('lowercase');
+                if (r.RequireDigit) t.push('digit');
+                if (r.RequireSymbol) t.push('symbol');
+                if (r.ForbidUsername) t.push('no username');
+                if (r.BlockCommon) t.push('no common passwords');
+                if (r.MaxRepeat) t.push('max ' + r.MaxRepeat + ' identical in a row');
                 return t.join(', ');
             }
 
@@ -285,7 +285,7 @@
                 namen.forEach(function (n) {
                     var o = document.createElement('option');
                     o.value = n;
-                    o.textContent = n === 'default' ? 'Wie fuer alle' : PROFILNAMEN[n];
+                    o.textContent = n === 'default' ? 'Same as all users' : PROFILNAMEN[n];
                     select.appendChild(o);
                 });
                 select.value = wert || (mitStandard ? 'default' : 'none');
@@ -310,21 +310,21 @@
                 var feld = $('#MkiPwTestErgebnis');
                 var pw = $('#MkiPwTest').value;
                 if (!pw) {
-                    feld.textContent = 'Wird nur in deinem Browser geprueft und nirgends gespeichert.';
+                    feld.textContent = 'Checked only in your browser and never saved.';
                     return;
                 }
                 var r = regelnVon($('#MkiPwTestProfil').value);
                 if (!r) {
-                    feld.textContent = 'Keine Regeln: alles erlaubt.';
+                    feld.textContent = 'No rules: anything is allowed.';
                     return;
                 }
                 if (!window.MkiPasswordPolicy) {
-                    feld.textContent = 'Pruefung wird geladen …';
+                    feld.textContent = 'Loading the checker …';
                     return;
                 }
                 r = window.MkiPasswordPolicy.prepare(Object.assign({ Active: true, Common: daten.Common }, r));
                 var offen = window.MkiPasswordPolicy.check(pw, '', r).filter(function (p) { return !p.ok; }).map(function (p) { return p.text; });
-                feld.textContent = offen.length ? 'Abgelehnt: ' + offen.join(', ') : 'Erlaubt.';
+                feld.textContent = offen.length ? 'Rejected: ' + offen.join(', ') : 'Allowed.';
             }
 
             function skriptLaden() {
@@ -365,28 +365,28 @@
                 daten.Users.forEach(function (u) {
                     var tr = document.createElement('tr');
                     if (u.IsDisabled) tr.className = 'mkipw-grau';
-                    zelle(tr, u.Name + (u.IsAdmin ? ' (Admin)' : '') + (u.IsDisabled ? ' – deaktiviert' : ''));
+                    zelle(tr, u.Name + (u.IsAdmin ? ' (Admin)' : '') + (u.IsDisabled ? ' – disabled' : ''));
 
                     var wahl = document.createElement('select');
                     wahl.setAttribute('data-user', u.Id);
                     optionen(wahl, true, u.Profile);
-                    if (u.IsExempt) wahl.title = 'Administratoren sind unter „Weitere Einstellungen“ ausgenommen.';
+                    if (u.IsExempt) wahl.title = 'Administrators are exempt under “More settings”.';
                     zelle(tr, wahl);
 
                     var st = STATUS[u.PasswordStatus] || STATUS.unknown;
-                    zelle(tr, marke(st[0], st[1], st[2] + (u.VerifiedRules ? ' Geprueft gegen: ' + regelText(u.VerifiedRules) + '.' : '')));
+                    zelle(tr, marke(st[0], st[1], st[2] + (u.VerifiedRules ? ' Checked against: ' + regelText(u.VerifiedRules) + '.' : '')));
                     zaehler[u.PasswordStatus] = (zaehler[u.PasswordStatus] || 0) + 1;
 
-                    zelle(tr, u.MustChange ? marke('mkipw-offen', 'Offen (' + (GRUENDE[u.Reason] || u.Reason || '') + ')') : marke('mkipw-neutral', '–'));
+                    zelle(tr, u.MustChange ? marke('mkipw-offen', 'Pending (' + (GRUENDE[u.Reason] || u.Reason || '') + ')') : marke('mkipw-neutral', '–'));
                     zelle(tr, datum(u.LastChangedUtc));
 
                     var knopf = document.createElement('button');
                     knopf.setAttribute('is', 'emby-button');
                     knopf.type = 'button';
                     knopf.className = 'raised emby-button';
-                    knopf.textContent = u.MustChange ? 'Aufforderung aufheben' : 'Neues Passwort verlangen';
+                    knopf.textContent = u.MustChange ? 'Cancel request' : 'Require new password';
                     knopf.addEventListener('click', function () {
-                        if (!u.MustChange && !confirm('Von ' + u.Name + ' ein neues Passwort verlangen? Alle Geraete dieses Benutzers werden abgemeldet.')) return;
+                        if (!u.MustChange && !confirm('Require a new password from ' + u.Name + '? All of this user’s devices will be signed out.')) return;
                         senden(u.MustChange ? 'Release' : 'Require', { UserIds: [u.Id] });
                     });
                     zelle(tr, knopf);
@@ -405,7 +405,7 @@
                     benutzerZeigen();
                     vorlagenZeigen();
                 }, function () {
-                    $('#MkiPwListe').innerHTML = '<tr><td colspan="6">Benutzerliste nicht ladbar. Nach der Installation muss Jellyfin neu gestartet werden.</td></tr>';
+                    $('#MkiPwListe').innerHTML = '<tr><td colspan="6">Could not load the user list. Jellyfin must be restarted after installing the plugin.</td></tr>';
                 });
             }
 
@@ -423,7 +423,7 @@
                     return antwort;
                 }, function () {
                     Dashboard.hideLoadingMsg();
-                    alert('Das hat nicht geklappt.');
+                    alert('That did not work.');
                 });
             }
 
@@ -454,14 +454,14 @@
                 modus = m;
                 $('#MkiPwMitAdmins').checked = false;
                 $('#MkiPwFrageTitel').textContent = titel;
-                $('#MkiPwFrageText').textContent = text + ' Offene Apps bekommen eine Nachricht und werden danach abgemeldet. Bis zum neuen Passwort ist keine Anmeldung moeglich. Das laesst sich pro Benutzer wieder aufheben.';
+                $('#MkiPwFrageText').textContent = text + ' Open apps get a message and are then signed out. Nobody affected can sign in until they set a new password. You can cancel it per user.';
                 $('#MkiPwFrage').classList.add('mkipw-aktiv');
             }
             $('#MkiPwAlle').addEventListener('click', function () {
-                fragen('alle', 'Wirklich alle Benutzer auffordern?', 'Alle aktiven Benutzer muessen ein neues Passwort festlegen.');
+                fragen('alle', 'Require a new password from all users?', 'Every active user must set a new password.');
             });
             $('#MkiPwUnsichere').addEventListener('click', function () {
-                fragen('unsicher', 'Benutzer mit ungeprueftem Passwort auffordern?', 'Alle aktiven Benutzer mit Profil, deren Passwort nicht nachweislich ihr Profil erfuellt (Unbekannt, Aeltere Regeln, Kein Passwort), muessen ein neues festlegen. Gespeicherte Profil-Aenderungen zaehlen, ungespeicherte nicht.');
+                fragen('unsicher', 'Require a new password from users with unchecked passwords?', 'Every active user with a profile whose password is not known to meet it (Unknown, Older rules, No password) must set a new one. Saved profile changes count, unsaved ones do not.');
             });
             $('#MkiPwNein').addEventListener('click', function () {
                 $('#MkiPwFrage').classList.remove('mkipw-aktiv');
@@ -472,7 +472,7 @@
                 if (modus === 'alle') nutzdaten.All = true; else nutzdaten.OnlyNotMeetingRules = true;
                 senden('Require', nutzdaten).then(function (antwort) {
                     if (antwort && antwort.Count != null) {
-                        Dashboard.alert({ title: 'MKI Password Policy', message: antwort.Count + ' Benutzer muessen jetzt ein neues Passwort festlegen.' });
+                        Dashboard.alert({ title: 'MKI Password Policy', message: antwort.Count + ' user(s) must now set a new password.' });
                     }
                 });
             });
