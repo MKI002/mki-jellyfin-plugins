@@ -1,4 +1,4 @@
-<img src="logo.png" alt="Media Hero" width="100%">
+<img src="logo.png?v=1.1.0" alt="Media Hero" width="100%">
 
 # Media Hero
 

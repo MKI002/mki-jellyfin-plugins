@@ -1,4 +1,4 @@
-<img src="logo.png" alt="MKI Merge Versions" width="100%">
+<img src="logo.png?v=1.1.0" alt="MKI Merge Versions" width="100%">
 
 # MKI Merge Versions
 

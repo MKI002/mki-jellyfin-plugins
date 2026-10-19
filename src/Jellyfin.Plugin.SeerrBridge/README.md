@@ -1,4 +1,4 @@
-<img src="logo.png" alt="Seerr Bridge" width="100%">
+<img src="logo.png?v=1.1.0" alt="Seerr Bridge" width="100%">
 
 # Seerr Bridge
 
