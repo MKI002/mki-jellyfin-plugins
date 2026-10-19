@@ -7,6 +7,7 @@ A cinematic hero carousel at the top of the Jellyfin home screen.
 ## Features
 
 - **Server-side list.** The carousel is assembled and cached on the server, so the home screen loads it in one request. A background pre-warmer keeps it fresh.
+- **Per user.** Every user gets their own list that follows their library access, parental controls and blocked tags, so nobody sees a title they could not open. Lists are never shared between accounts, also not in the browser cache when several people use one device.
 - **Sources.** Mix recently added, recently released, next up, favorites, top rated, random, Seerr trending, Seerr popular movies or series, and a hand-picked whitelist. Each source has its own upper limit.
 - **Per-library targets.** Choose how many titles each library contributes.
 - **Filters.** Whitelists and blacklists for titles, genres and tags, blocked age ratings, minimum community rating, minimum production year, hide watched items, and require a backdrop or logo.

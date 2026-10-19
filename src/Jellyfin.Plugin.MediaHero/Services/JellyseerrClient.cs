@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -12,52 +13,56 @@ namespace Jellyfin.Plugin.MediaHero.Services;
 
 public class JellyseerrClient
 {
-	private readonly IHttpClientFactory _httpClientFactory;
+	// Discover pages are a few kilobytes; anything far bigger is not Seerr.
+	private const int MaxAntwort = 4 * 1024 * 1024;
+
+	// Its own client: no redirects (the API key would follow them to wherever they point) and no cookie jar.
+	private static readonly HttpClient Netz = new HttpClient(new SocketsHttpHandler
+	{
+		AllowAutoRedirect = false,
+		UseCookies = false,
+		PooledConnectionLifetime = TimeSpan.FromMinutes(5)
+	})
+	{
+		Timeout = TimeSpan.FromSeconds(15L),
+		MaxResponseContentBufferSize = MaxAntwort
+	};
+
+	// Pages are the same for every user, so each one is fetched once for all of them.
+	private static readonly TimeSpan Haltbar = TimeSpan.FromMinutes(10);
+
+	private readonly ConcurrentDictionary<string, (DateTime Geholt, IReadOnlyList<TrendEntry> Eintraege)> _seiten = new ConcurrentDictionary<string, (DateTime, IReadOnlyList<TrendEntry>)>();
 
 	private readonly ILogger<JellyseerrClient> _logger;
 
-	public JellyseerrClient(IHttpClientFactory httpClientFactory, ILogger<JellyseerrClient> logger)
+	public JellyseerrClient(ILogger<JellyseerrClient> logger)
 	{
-		_httpClientFactory = httpClientFactory;
 		_logger = logger;
-	}
-
-	public async Task<IReadOnlyList<TrendEntry>> FetchAsync(string baseUrl, string apiKey, string route, CancellationToken ct, int tiefe = 20)
-	{
-		if (string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(apiKey))
-		{
-			return Array.Empty<TrendEntry>();
-		}
-		List<TrendEntry> alle = new List<TrendEntry>();
-		int seiten = Math.Clamp((tiefe + 19) / 20, 1, 20);
-		for (int seite = 1; seite <= seiten; seite++)
-		{
-			IReadOnlyList<TrendEntry> readOnlyList = await SeiteAsync(baseUrl, apiKey, route, seite, ct).ConfigureAwait(continueOnCapturedContext: false);
-			if (readOnlyList.Count == 0)
-			{
-				break;
-			}
-			alle.AddRange(readOnlyList);
-			if (alle.Count >= tiefe)
-			{
-				break;
-			}
-		}
-		return alle;
 	}
 
 	public async Task<IReadOnlyList<TrendEntry>> SeiteAsync(string baseUrl, string apiKey, string route, int seite, CancellationToken ct)
 	{
+		if (string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(apiKey)
+			|| !Uri.TryCreate(baseUrl.Trim(), UriKind.Absolute, out Uri basis) || (basis.Scheme != Uri.UriSchemeHttp && basis.Scheme != Uri.UriSchemeHttps))
+		{
+			return Array.Empty<TrendEntry>();
+		}
 		string text = (route.Contains('?', StringComparison.Ordinal) ? "&" : "?");
-		string requestUri = baseUrl.TrimEnd('/') + route + text + "page=" + seite.ToString(CultureInfo.InvariantCulture);
+		string requestUri = baseUrl.Trim().TrimEnd('/') + route + text + "page=" + seite.ToString(CultureInfo.InvariantCulture);
+		if (_seiten.TryGetValue(requestUri, out var gemerkt) && DateTime.UtcNow - gemerkt.Geholt < Haltbar)
+		{
+			return gemerkt.Eintraege;
+		}
+		if (_seiten.Count > 500)
+		{
+			_seiten.Clear();
+		}
 		try
 		{
-			using (HttpClient client = HttpClientFactoryExtensions.CreateClient(_httpClientFactory))
 			{
-				client.Timeout = TimeSpan.FromSeconds(15L);
 				using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, requestUri);
 				request.Headers.Add("X-Api-Key", apiKey);
-				using HttpResponseMessage response = await client.SendAsync(request, ct).ConfigureAwait(continueOnCapturedContext: false);
+				using HttpResponseMessage response = await Netz.SendAsync(request, ct).ConfigureAwait(continueOnCapturedContext: false);
 				if (!response.IsSuccessStatusCode)
 				{
 					LoggerExtensions.LogWarning((ILogger)(object)_logger, "Seerr answered {Route} (page {Page}) with {Code}", new object[3]
@@ -68,8 +73,15 @@ public class JellyseerrClient
 					});
 					return Array.Empty<TrendEntry>();
 				}
+				if (response.Content.Headers.ContentLength > MaxAntwort)
+				{
+					LoggerExtensions.LogWarning((ILogger)(object)_logger, "Seerr answered {Route} (page {Page}) with an oversized response", new object[2] { route, seite });
+					return Array.Empty<TrendEntry>();
+				}
 				IReadOnlyList<TrendEntry> result;
-				await using (Stream stream = await response.Content.ReadAsStreamAsync(ct).ConfigureAwait(continueOnCapturedContext: false))
+				// Already read in full by the client, which refuses anything above MaxResponseContentBufferSize.
+				byte[] rumpf = await response.Content.ReadAsByteArrayAsync(ct).ConfigureAwait(continueOnCapturedContext: false);
+				await using (Stream stream = new MemoryStream(rumpf, writable: false))
 				{
 					using JsonDocument jsonDocument = await JsonDocument.ParseAsync(stream, default(JsonDocumentOptions), ct).ConfigureAwait(continueOnCapturedContext: false);
 					if (!jsonDocument.RootElement.TryGetProperty("results", out var value) || value.ValueKind != JsonValueKind.Array)
@@ -100,17 +112,19 @@ public class JellyseerrClient
 						result = list;
 					}
 				}
+				_seiten[requestUri] = (DateTime.UtcNow, result);
 				return result;
 			}
-			IL_0550:;
 		}
-		catch (OperationCanceledException)
+		catch (OperationCanceledException) when (ct.IsCancellationRequested)
 		{
 			throw;
 		}
-		catch (Exception ex2)
+		catch (Exception ex2) when (ex2 is not OperationCanceledException || !ct.IsCancellationRequested)
 		{
 			LoggerExtensions.LogWarning((ILogger)(object)_logger, ex2, "Seerr ({Route}, page {Page}) unreachable", new object[2] { route, seite });
+			// Remembered as empty for a minute, so an unreachable Seerr costs one timeout per minute, not one per user.
+			_seiten[requestUri] = (DateTime.UtcNow - Haltbar + TimeSpan.FromMinutes(1), Array.Empty<TrendEntry>());
 			return Array.Empty<TrendEntry>();
 		}
 		throw null;

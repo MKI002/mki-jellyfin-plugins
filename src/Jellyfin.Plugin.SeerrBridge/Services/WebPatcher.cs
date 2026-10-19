@@ -68,7 +68,7 @@ public class WebPatcher : IHostedService
 		text3 = text3.Insert(num, value);
 		if (!(text3 == text4))
 		{
-			File.WriteAllText(text2, text3);
+			DateiSchreiben(text2, text3);
 			LoggerExtensions.LogInformation((ILogger)(object)_logger, "Seerr Bridge injected into the web client ({Pfad})", new object[1] { text2 });
 		}
 	}
@@ -102,5 +102,32 @@ public class WebPatcher : IHostedService
 		{
 			return null;
 		}
+	}
+
+	// Through a temporary file, so a crash mid-write cannot leave a cut-off index.html behind. Where the folder
+	// allows no new files, the file is written in place as before.
+	private static void DateiSchreiben(string datei, string inhalt)
+	{
+		string tmp = datei + ".mki.tmp";
+		try
+		{
+			File.WriteAllText(tmp, inhalt);
+			File.Move(tmp, datei, overwrite: true);
+			return;
+		}
+		catch (UnauthorizedAccessException)
+		{
+		}
+		catch (IOException)
+		{
+		}
+		try
+		{
+			File.Delete(tmp);
+		}
+		catch (Exception)
+		{
+		}
+		File.WriteAllText(datei, inhalt);
 	}
 }

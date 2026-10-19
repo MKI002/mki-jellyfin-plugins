@@ -7,6 +7,7 @@ Two resolutions, one entry. If a movie exists as 1080p and 2160p in separate fol
 ## Features
 
 - **Safe matching.** Movies are grouped by TMDb ID, falling back to IMDb ID. Never by title and year. TV series are left untouched.
+- **Respects permissions.** Versions are only linked when exactly the same users can see them (library access, parental controls, tags) and they share a production year, so merging never shows anyone a file they could not open before. Links that break this rule, for example after a library's access changed, are split again. Groups of more than eight versions are skipped as suspicious.
 - **Highest resolution leads.** The best version becomes the primary entry. Optionally, existing links are rebuilt if a lower resolution is currently primary.
 - **Runs on its own.** A scheduled task (*Library → Merge movie versions (MKI)*) runs at startup and every hour, and an extra run starts once the library has been quiet for five minutes after changes.
 - **Dry run.** Log what would be merged without writing anything.

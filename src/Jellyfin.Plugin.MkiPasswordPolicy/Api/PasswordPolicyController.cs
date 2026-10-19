@@ -6,10 +6,13 @@ using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Jellyfin.Data;
+using Jellyfin.Data.Queries;
 using Jellyfin.Database.Implementations.Entities;
 using Jellyfin.Database.Implementations.Enums;
 using Jellyfin.Plugin.MkiPasswordPolicy.Services;
+using MediaBrowser.Controller.Devices;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Controller.Session;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -34,15 +37,21 @@ public class PasswordPolicyController : ControllerBase
 
 	private readonly IUserManager _users;
 
+	private readonly ISessionManager _sessions;
+
+	private readonly IDeviceManager _devices;
+
 	private readonly ILogger<PasswordPolicyController> _logger;
 
-	public PasswordPolicyController(PolicyStore store, Enforcer enforcer, Throttle throttle, WebPatcher patcher, IUserManager users, ILogger<PasswordPolicyController> logger)
+	public PasswordPolicyController(PolicyStore store, Enforcer enforcer, Throttle throttle, WebPatcher patcher, IUserManager users, ISessionManager sessions, IDeviceManager devices, ILogger<PasswordPolicyController> logger)
 	{
 		_store = store;
 		_enforcer = enforcer;
 		_throttle = throttle;
 		_patcher = patcher;
 		_users = users;
+		_sessions = sessions;
+		_devices = devices;
 		_logger = logger;
 	}
 
@@ -87,6 +96,17 @@ public class PasswordPolicyController : ControllerBase
 			_store.MarkVerified(benutzer.Id, regeln);
 		}
 		_patcher.Sync();
+		// Like Jellyfin's own password change: every other device is signed out, so whoever knew the old password
+		// loses access too. The app the change was made in stays signed in.
+		string? behalten = LoginGate.Tokens(Request).FirstOrDefault(t => _devices.GetDevices(new DeviceQuery { AccessToken = t, Limit = 1 }).Items.FirstOrDefault()?.UserId == benutzer.Id);
+		try
+		{
+			await _sessions.RevokeUserTokens(benutzer.Id, behalten!).ConfigureAwait(false);
+		}
+		catch (Exception ex)
+		{
+			_logger.LogWarning(ex, "Signing out the other devices of {User} failed", benutzer.Username);
+		}
 		_logger.LogInformation("{User} set a new password", benutzer.Username);
 		return NoContent();
 	}
@@ -302,11 +322,11 @@ public class PasswordPolicyController : ControllerBase
 				_logger.LogInformation("Password change for {User} rejected: {Reason}", benutzer.Username, ex.Message);
 			}
 		}
+		// Evens out the time between unknown names, accounts without a request, wrong passwords and success.
+		await Task.Delay(Random.Shared.Next(400, 900)).ConfigureAwait(false);
 		if (!ok)
 		{
 			_throttle.Fail(ip);
-			// Evens out the time between unknown names, accounts without a request and wrong passwords.
-			await Task.Delay(Random.Shared.Next(400, 900)).ConfigureAwait(false);
 			return (null, Fehler(StatusCodes.Status403Forbidden, AllgemeinerFehler));
 		}
 		return (benutzer, null);

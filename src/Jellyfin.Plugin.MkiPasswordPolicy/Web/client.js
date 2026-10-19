@@ -81,9 +81,15 @@
     }
 
     function post(path, data) {
+        var headers = { 'Content-Type': 'application/json' };
+        // A password change signs out every other device; the app it was made in keeps its session.
+        try {
+            var token = window.ApiClient && window.ApiClient.accessToken && window.ApiClient.accessToken();
+            if (token) headers['Authorization'] = 'MediaBrowser Token="' + token + '"';
+        } catch (e) { /* no session */ }
         return originalFetch(BASE + path, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: headers,
             credentials: 'omit',
             cache: 'no-store',
             body: JSON.stringify(data)

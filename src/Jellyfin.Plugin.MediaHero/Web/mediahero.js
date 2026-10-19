@@ -350,6 +350,8 @@
   }
 
   var daten = null;
+  // Whose list `daten` is. After signing out and in as someone else in the same tab it must not be shown again.
+  var datenFuer = '';
   var laeuft = false;
   var netzLaeuft = null;
 
@@ -392,8 +394,10 @@
     return '';
   }
 
-  function speicherSchluessel() {
-    return 'mediahero.liste.v1.' + nutzerKennung();
+  var SPEICHER_PRAEFIX = 'mediahero.liste.v1.';
+
+  function speicherSchluessel(wer) {
+    return SPEICHER_PRAEFIX + (wer == null ? nutzerKennung() : wer);
   }
 
   function ausSpeicher() {
@@ -407,9 +411,15 @@
     } catch (e) { return null; }
   }
 
-  function inSpeicher(j) {
+  function inSpeicher(j, wer) {
     try {
-      localStorage.setItem(speicherSchluessel(),
+      if (!wer) return;
+      // Only the current user's list stays on the device: on a shared one nobody can read another user's titles.
+      for (var i = localStorage.length - 1; i >= 0; i--) {
+        var k = localStorage.key(i);
+        if (k && k.indexOf(SPEICHER_PRAEFIX) === 0 && k !== speicherSchluessel(wer)) localStorage.removeItem(k);
+      }
+      localStorage.setItem(speicherSchluessel(wer),
         JSON.stringify({ stand: Date.now(), daten: j }));
     } catch (e) { /* full or blocked - then do without */ }
   }
@@ -440,7 +450,9 @@
 
   function vomServer() {
     if (netzLaeuft) return netzLaeuft;
+    var fuer = '';
     netzLaeuft = sobaldBereit().then(function () {
+      fuer = nutzerKennung();
       var kopf = {};
       try {
         if (window.ApiClient && ApiClient.accessToken()) {
@@ -452,7 +464,9 @@
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) {
         netzLaeuft = null;
-        if (j && j.Items && j.Items.length) { inSpeicher(j); vorladen(j); }
+        // Someone else signed in while the request was under way: this list is not theirs.
+        if (!fuer || fuer !== nutzerKennung()) return null;
+        if (j && j.Items && j.Items.length) { inSpeicher(j, fuer); vorladen(j); }
         return j;
       })
       .catch(function () { netzLaeuft = null; return null; });
@@ -488,7 +502,10 @@
   }
 
   function holen() {
-    if (daten) return Promise.resolve(daten);
+    var wer = nutzerKennung();
+    if (daten && datenFuer === wer) return Promise.resolve(daten);
+    daten = null;
+    datenFuer = wer;
 
     var alt = ausSpeicher();
     if (alt && alt.Items && alt.Items.length) {
@@ -496,7 +513,7 @@
       vorladen(alt);
       // Refresh alongside. Redraw only on a real change.
       vomServer().then(function (j) {
-        if (!j || !j.Items) return;
+        if (!j || !j.Items || datenFuer !== wer) return;
         if (j.BuiltAtUnix && alt.BuiltAtUnix && j.BuiltAtUnix === alt.BuiltAtUnix) return;
         daten = j;
         neuZeichnen();
@@ -504,7 +521,11 @@
       return Promise.resolve(alt);
     }
 
-    return vomServer().then(function (j) { daten = j; return j; });
+    return vomServer().then(function (j) {
+      if (datenFuer !== wer) return null;
+      daten = j;
+      return j;
+    });
   }
 
   function einhaengen() {
@@ -516,7 +537,14 @@
     }
     var ort = anker();
     if (!ort) return;
-    if (document.getElementById(WURZEL)) return;
+    var vorhanden = document.getElementById(WURZEL);
+    if (vorhanden && vorhanden.getAttribute('data-nutzer') !== nutzerKennung()) {
+      // A banner drawn for the previous user of this tab.
+      if (vorhanden.parentNode) vorhanden.parentNode.removeChild(vorhanden);
+      if (zustand) { zustand.zerstoeren(); zustand = null; }
+      vorhanden = null;
+    }
+    if (vorhanden) return;
 
     laeuft = true;
     holen().then(function (j) {
@@ -528,6 +556,7 @@
 
       var host = el('div', 'mh-host');
       host.id = WURZEL;
+      host.setAttribute('data-nutzer', datenFuer);
       // as a sibling BEFORE it, not as a child - otherwise the next
       // innerHTML rebuild of the sections removes the banner
       ort2.parentNode.insertBefore(host, ort2);
@@ -659,8 +688,9 @@
          missing. Now the existing one stays and is checked alongside. */
       vomServer().then(function (j) {
         if (!j || !j.Items) return;
-        if (daten && j.BuiltAtUnix && daten.BuiltAtUnix === j.BuiltAtUnix) return;
+        if (daten && datenFuer === nutzerKennung() && j.BuiltAtUnix && daten.BuiltAtUnix === j.BuiltAtUnix) return;
         daten = j;
+        datenFuer = nutzerKennung();
         neuZeichnen();
       });
       setTimeout(einhaengen, 60);

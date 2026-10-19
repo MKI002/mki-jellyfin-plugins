@@ -6,6 +6,6 @@
   "owner": "MKI",
   "category": "Authentication",
   "targetAbi": "12.0.0.0",
-  "version": "1.0.5.0",
-  "changelog": "Accounts without a password that have a profile or a request are now locked right away on every sign-in path (apps, TVs, Quick Connect, existing sessions), with no notice period, and nobody can claim them by name: new Temporary password button shows a random password once and the user replaces it at the next sign-in. Passwords an administrator sets (Jellyfin's Password tab or new users) and reset PINs now count as temporary for users with a profile. A second request can only bring a deadline forward. Bulk requests never include the admin who sends them. Web-based apps show a popup that must be answered during a notice period; TVs get Jellyfin's message window instead of a fading toast. Settings page: every change applies immediately, no Save button, with a question before anything locks accounts."
+  "version": "1.0.6.0",
+  "changelog": "Security update. A blocked user's token is now refused however it is sent (any authorization header, the older header names or the query string), and a request carrying tokens of several users is refused. When a deadline passes, the user's tokens are revoked within a minute, a sign-in that gets through on any path is undone at once, and setting a new password signs out every other device."
 }

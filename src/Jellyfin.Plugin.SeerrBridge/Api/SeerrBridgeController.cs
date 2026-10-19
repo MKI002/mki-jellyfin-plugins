@@ -7,11 +7,14 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Database.Implementations.Entities;
 using Jellyfin.Plugin.SeerrBridge.Configuration;
 using Jellyfin.Plugin.SeerrBridge.Services;
+using MediaBrowser.Common.Extensions;
+using MediaBrowser.Common.Net;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Controller.Library;
 using Microsoft.AspNetCore.Authorization;
@@ -34,18 +37,30 @@ public class SeerrBridgeController : ControllerBase
 
 	private readonly MkiRepository _repo;
 
-	private static readonly ConcurrentDictionary<string, byte> Gesehen = new ConcurrentDictionary<string, byte>(StringComparer.Ordinal);
+	private readonly INetworkManager _network;
 
-	public SeerrBridgeController(SeerrClient seerr, IUserManager userManager, ILogger<SeerrBridgeController> logger, MkiRepository repo)
+	// TMDB poster paths look like "/abc123.jpg"; anything else is not put into a page.
+	private static readonly Regex PosterPfad = new Regex("^/[A-Za-z0-9._-]{1,200}$", RegexOptions.Compiled);
+
+	// Per user: the last single sign-on, and the requests of the last hour.
+	private static readonly ConcurrentDictionary<Guid, DateTime> LetzteAnmeldung = new ConcurrentDictionary<Guid, DateTime>();
+
+	private static readonly ConcurrentDictionary<Guid, Queue<DateTime>> LetzteAnfragen = new ConcurrentDictionary<Guid, Queue<DateTime>>();
+
+	private const int AnfragenProStunde = 30;
+
+	public SeerrBridgeController(SeerrClient seerr, IUserManager userManager, ILogger<SeerrBridgeController> logger, MkiRepository repo, INetworkManager network)
 	{
 		_seerr = seerr;
 		_userManager = userManager;
 		_logger = logger;
 		_repo = repo;
+		_network = network;
 	}
 
+	// Signed-in users only: before sign-in nobody learns where Seerr lives or what is switched on.
 	[HttpGet("config")]
-	[AllowAnonymous]
+	[Authorize]
 	public ActionResult GetConfig()
 	{
 		//IL_002b: Unknown result type (might be due to invalid IL or missing references)
@@ -53,10 +68,12 @@ public class SeerrBridgeController : ControllerBase
 		//IL_00c9: Expected O, but got Unknown
 		PluginConfiguration pluginConfiguration = ((BasePlugin<PluginConfiguration>)(object)Plugin.Instance)?.Configuration ?? new PluginConfiguration();
 		((ControllerBase)this).Response.Headers.CacheControl = ("private, max-age=30");
+		((ControllerBase)this).Response.Headers.Vary = ("Authorization");
+		string url = SeerrClient.WebAdresse(pluginConfiguration.PublicUrl);
 		return (ActionResult)new JsonResult((object)new
 		{
-			enabled = (pluginConfiguration.Enabled && !string.IsNullOrWhiteSpace(pluginConfiguration.PublicUrl)),
-			url = (pluginConfiguration.PublicUrl ?? string.Empty).TrimEnd('/'),
+			enabled = (pluginConfiguration.Enabled && !string.IsNullOrEmpty(url)),
+			url = url,
 			label = (pluginConfiguration.Label ?? string.Empty).Trim(),
 			showInHeader = pluginConfiguration.ShowInHeader,
 			showInDrawer = pluginConfiguration.ShowInDrawer,
@@ -94,7 +111,7 @@ public class SeerrBridgeController : ControllerBase
 					mediaType = t.MediaType,
 					title = t.Title,
 					year = t.Year,
-					poster = (string.IsNullOrEmpty(t.PosterPath) ? null : ("https://image.tmdb.org/t/p/w300" + t.PosterPath)),
+					poster = ((t.PosterPath == null || !PosterPfad.IsMatch(t.PosterPath)) ? null : ("https://image.tmdb.org/t/p/w300" + t.PosterPath)),
 					overview = t.Overview,
 					rating = Math.Round(t.Rating, 1),
 					status = t.Status,
@@ -116,15 +133,59 @@ public class SeerrBridgeController : ControllerBase
 				text = "Requests are disabled"
 			});
 		}
-		var (ok, text) = await _seerr.AnfragenAsync(rumpf.MediaType, rumpf.TmdbId, Benutzername(), ct).ConfigureAwait(continueOnCapturedContext: false);
+		Guid nutzer = NutzerId();
+		if (nutzer == Guid.Empty || rumpf == null)
+		{
+			return (ActionResult)new JsonResult((object)new
+			{
+				ok = false,
+				text = "no signed-in account"
+			});
+		}
+		if (!AnfrageErlaubt(nutzer))
+		{
+			return (ActionResult)new JsonResult((object)new
+			{
+				ok = false,
+				text = "Too many requests in the last hour. Please try again later."
+			});
+		}
+		var (ok, text) = await _seerr.AnfragenAsync(rumpf.MediaType, rumpf.TmdbId, nutzer, ct).ConfigureAwait(continueOnCapturedContext: false);
 		return (ActionResult)new JsonResult((object)new { ok, text });
 	}
 
-	[HttpGet("sso")]
+	private static bool AnfrageErlaubt(Guid nutzer)
+	{
+		Queue<DateTime> liste = LetzteAnfragen.GetOrAdd(nutzer, (Guid _) => new Queue<DateTime>());
+		lock (liste)
+		{
+			while (liste.Count > 0 && DateTime.UtcNow - liste.Peek() > TimeSpan.FromHours(1))
+			{
+				liste.Dequeue();
+			}
+			if (liste.Count >= AnfragenProStunde)
+			{
+				return false;
+			}
+			liste.Enqueue(DateTime.UtcNow);
+			return true;
+		}
+	}
+
+	// POST, and only with the token in a header: a link or a form on another site must not be able to sign this
+	// browser in to Seerr with somebody else's account.
+	[HttpPost("sso")]
 	[Authorize]
 	public async Task<ActionResult> Sso(CancellationToken ct)
 	{
 		PluginConfiguration pluginConfiguration = ((BasePlugin<PluginConfiguration>)(object)Plugin.Instance)?.Configuration ?? new PluginConfiguration();
+		((ControllerBase)this).Response.Headers.CacheControl = ("no-store");
+		HttpRequest anfrage = ((ControllerBase)this).Request;
+		if (anfrage.Query.ContainsKey("ApiKey") || anfrage.Query.ContainsKey("api_key")
+			|| string.Equals(anfrage.Headers["Sec-Fetch-Site"].ToString(), "cross-site", StringComparison.OrdinalIgnoreCase))
+		{
+			return (ActionResult)(object)((ControllerBase)this).StatusCode(403);
+		}
 		if (!pluginConfiguration.Enabled || !pluginConfiguration.EnableSso)
 		{
 			return (ActionResult)new JsonResult((object)new
@@ -143,6 +204,17 @@ public class SeerrBridgeController : ControllerBase
 				text = "no signed-in account"
 			});
 		}
+		// Each sign-on issues a new Jellyfin token for Seerr, so one every few seconds per user is plenty.
+		DateTime jetzt = DateTime.UtcNow;
+		if (LetzteAnmeldung.TryGetValue(guid, out DateTime zuletzt) && jetzt - zuletzt < TimeSpan.FromSeconds(10))
+		{
+			return (ActionResult)new JsonResult((object)new
+			{
+				ok = false,
+				text = "too soon"
+			});
+		}
+		LetzteAnmeldung[guid] = jetzt;
 		string bereich = KeksBereich(pluginConfiguration);
 		if (string.IsNullOrEmpty(bereich))
 		{
@@ -162,17 +234,31 @@ public class SeerrBridgeController : ControllerBase
 				text = text3
 			});
 		}
-		List<string> list = new List<string>();
+		// Rebuilt from Seerr's cookie, keeping only its value, lifetime and path. It is always HttpOnly, Secure whenever
+		// Seerr is reached over https, and SameSite=Lax unless Seerr asked for something stricter.
 		string[] array = text2.Split(';');
-		for (int i = 0; i < array.Length; i++)
+		List<string> list = new List<string> { array[0].Trim() };
+		string sameSite = "Lax";
+		for (int i = 1; i < array.Length; i++)
 		{
 			string text4 = array[i].Trim();
-			if (text4.Length != 0 && !text4.StartsWith("Domain=", StringComparison.OrdinalIgnoreCase))
+			string name = text4.Split('=')[0].Trim();
+			if (name.Equals("Expires", StringComparison.OrdinalIgnoreCase) || name.Equals("Max-Age", StringComparison.OrdinalIgnoreCase) || name.Equals("Path", StringComparison.OrdinalIgnoreCase))
 			{
 				list.Add(text4);
 			}
+			else if (name.Equals("SameSite", StringComparison.OrdinalIgnoreCase) && text4.EndsWith("Strict", StringComparison.OrdinalIgnoreCase))
+			{
+				sameSite = "Strict";
+			}
 		}
 		list.Add("Domain=" + bereich);
+		list.Add("HttpOnly");
+		list.Add("SameSite=" + sameSite);
+		if (SeerrClient.WebAdresse(pluginConfiguration.PublicUrl).StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+		{
+			list.Add("Secure");
+		}
 		HeaderDictionaryExtensions.Append(((ControllerBase)this).Response.Headers, "Set-Cookie", (string.Join("; ", list)));
 		return (ActionResult)new JsonResult((object)new
 		{
@@ -195,7 +281,7 @@ public class SeerrBridgeController : ControllerBase
 		string host3;
 		try
 		{
-			host3 = new Uri(c.PublicUrl).Host;
+			host3 = new Uri(SeerrClient.WebAdresse(c.PublicUrl)).Host;
 		}
 		catch (UriFormatException)
 		{
@@ -240,10 +326,29 @@ public class SeerrBridgeController : ControllerBase
 		return (ActionResult)new JsonResult((object)new { ok, text });
 	}
 
+	// The plugin repository answers only inside the home network: from the internet nobody can list or download
+	// what is installed here.
+	private bool ImHeimnetz()
+	{
+		try
+		{
+			IPAddress ip = ((ControllerBase)this).HttpContext.GetNormalizedRemoteIP();
+			return IPAddress.IsLoopback(ip) || _network.IsInLocalNetwork(ip);
+		}
+		catch (Exception)
+		{
+			return false;
+		}
+	}
+
 	[HttpGet("repository.json")]
 	[AllowAnonymous]
 	public ActionResult Repository()
 	{
+		if (!ImHeimnetz())
+		{
+			return (ActionResult)(object)((ControllerBase)this).NotFound();
+		}
 		//IL_001d: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
 		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
@@ -283,6 +388,10 @@ public class SeerrBridgeController : ControllerBase
 	[AllowAnonymous]
 	public ActionResult RepositoryBild(string guid)
 	{
+		if (!ImHeimnetz())
+		{
+			return (ActionResult)(object)((ControllerBase)this).NotFound();
+		}
 		//IL_003f: Unknown result type (might be due to invalid IL or missing references)
 		MkiPaket mkiPaket = _repo.Finden(guid);
 		if (mkiPaket?.Bild == null || !System.IO.File.Exists(mkiPaket.Bild))
@@ -297,6 +406,10 @@ public class SeerrBridgeController : ControllerBase
 	[AllowAnonymous]
 	public ActionResult RepositoryPaket(string guid, string version)
 	{
+		if (!ImHeimnetz())
+		{
+			return (ActionResult)(object)((ControllerBase)this).NotFound();
+		}
 		MkiPaket mkiPaket = _repo.Finden(guid);
 		if (mkiPaket == null || !string.Equals(mkiPaket.Version, version, StringComparison.OrdinalIgnoreCase))
 		{
@@ -311,11 +424,6 @@ public class SeerrBridgeController : ControllerBase
 	{
 		//IL_000b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0010: Unknown result type (might be due to invalid IL or missing references)
-		string text = ((object)((ControllerBase)this).Request.Headers.UserAgent/*cast due to .constrained prefix*/).ToString();
-		if (!string.IsNullOrEmpty(text) && Gesehen.TryAdd(text, 0))
-		{
-			LoggerExtensions.LogInformation((ILogger)(object)_logger, "Client script fetched by: {Kennung}", new object[1] { text });
-		}
 		return Ressource("seerr.js", "application/javascript");
 	}
 

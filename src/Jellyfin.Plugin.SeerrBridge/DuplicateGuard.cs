@@ -48,18 +48,28 @@ internal static class DuplicateGuard
 					continue;
 				}
 
-				var meta = JsonNode.Parse(File.ReadAllText(metaPath)) as JsonObject;
-				if (meta == null
-					|| !Guid.TryParse(meta["guid"]?.GetValue<string>(), out var guid) || guid != id
-					|| !Version.TryParse(meta["version"]?.GetValue<string>(), out var version) || version >= ownVersion
-					|| string.Equals(meta["status"]?.ToString(), "Deleted", StringComparison.OrdinalIgnoreCase))
+				// One unreadable meta.json must not stop the check of the other folders.
+				try
 				{
-					continue;
-				}
+					var meta = JsonNode.Parse(File.ReadAllText(metaPath)) as JsonObject;
+					if (meta == null
+						|| !Guid.TryParse(meta["guid"]?.ToString(), out var guid) || guid != id
+						|| !Version.TryParse(meta["version"]?.ToString(), out var version) || version >= ownVersion
+						|| string.Equals(meta["status"]?.ToString(), "Deleted", StringComparison.OrdinalIgnoreCase))
+					{
+						continue;
+					}
 
-				meta["status"] = "Deleted";
-				File.WriteAllText(metaPath, meta.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
-				logger.LogWarning("Found an older copy of this plugin in {Folder}. It is marked for removal; restart Jellyfin to finish.", folder);
+					meta["status"] = "Deleted";
+					var tmp = metaPath + ".tmp";
+					File.WriteAllText(tmp, meta.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+					File.Move(tmp, metaPath, overwrite: true);
+					logger.LogWarning("Found an older copy of this plugin in {Folder}. It is marked for removal; restart Jellyfin to finish.", folder);
+				}
+				catch (Exception ex)
+				{
+					logger.LogWarning(ex, "Could not check {Folder} for an older copy of this plugin", folder);
+				}
 			}
 		}
 		catch (Exception ex)

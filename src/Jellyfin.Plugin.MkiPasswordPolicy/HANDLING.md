@@ -1,6 +1,6 @@
 # How MKI Password Policy handles every combination
 
-Version 1.0.5.0. Rows marked ✓ were tested end to end on Jellyfin 12.2 (sign-ins, tokens and the web client).
+Version 1.0.6.0. Rows marked ✓ were tested end to end on Jellyfin 12.2 (sign-ins, tokens and the web client).
 
 ## The five rules behind every case
 
@@ -46,7 +46,7 @@ Version 1.0.5.0. Rows marked ✓ were tested end to end on Jellyfin 12.2 (sign-i
 | Request pending or locked | Make the profile **looser** or *No rules* | The request stays until it is done or cancelled. | ✓ |
 | Has a password | **Require new password**, right away | Open apps get a message, all devices are signed out after the grace time, no sign-in until a new one is set. | ✓ |
 | Has a password | **Require new password** with 1 to 14 days | Full access until the deadline; popup or message in every app; then blocked. | ✓ |
-| Notice period running | Deadline passes | Every token is refused and sign-ins fail until a new password is set. | ✓ |
+| Notice period running | Deadline passes | Every token is refused at once and revoked within a minute; sign-ins fail until a new password is set. | ✓ |
 | No password | **Require new password** (any notice) | Locked at once; no notice period. | ✓ |
 | Notice period running | Require again **right away** | The shorter deadline wins: blocked now. | ✓ |
 | Blocked | Require again with **14 days** | Stays blocked: a deadline never moves back. | ✓ |
@@ -67,8 +67,10 @@ Version 1.0.5.0. Rows marked ✓ were tested end to end on Jellyfin 12.2 (sign-i
 | Browser, Jellyfin app for Android, iOS, desktop | Dialog: set the new password and continue; for an account without a password, "Account locked, ask your administrator for a temporary password". | ✓ |
 | TV and other native apps | "Sign-in failed". The user sets the password at the change link on a phone or computer. | |
 | Quick Connect | Refused; a blocked account also cannot approve a Quick Connect code. | ✓ |
-| Sessions already signed in | Signed out, and any further request with the old token is refused. | ✓ |
+| Sessions already signed in | Signed out, and any further request with the old token is refused, however the token is sent. | ✓ |
+| Any other sign-in that gets through | Undone right away: the new token is revoked. | |
 | Change page (link) | Needs the current password. An empty password is never accepted, so an account without a password cannot be claimed there. | ✓ |
+| New password set (dialog or change page) | Every other device is signed out. | |
 | Your API keys | Unaffected. | |
 
 ## What users see during a notice period

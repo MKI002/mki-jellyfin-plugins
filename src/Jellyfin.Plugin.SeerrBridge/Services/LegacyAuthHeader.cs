@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.SeerrBridge.Configuration;
 using MediaBrowser.Common.Plugins;
+using MediaBrowser.Controller.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -13,13 +15,20 @@ namespace Jellyfin.Plugin.SeerrBridge.Services;
 
 public class LegacyAuthHeader : IStartupFilter
 {
+	// Jellyfin tokens and API keys are hex strings. Anything else is not copied, so a header cannot smuggle extra
+	// fields into the Authorization header it is turned into.
+	private static readonly Regex TokenForm = new Regex("^[A-Za-z0-9]{16,128}$", RegexOptions.Compiled);
+
 	private readonly ILogger<LegacyAuthHeader> _logger;
+
+	private readonly IServerConfigurationManager _server;
 
 	private bool _gemeldet;
 
-	public LegacyAuthHeader(ILogger<LegacyAuthHeader> logger)
+	public LegacyAuthHeader(ILogger<LegacyAuthHeader> logger, IServerConfigurationManager server)
 	{
 		_logger = logger;
+		_server = server;
 	}
 
 	public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
@@ -51,6 +60,11 @@ public class LegacyAuthHeader : IStartupFilter
 		{
 			return;
 		}
+		// With legacy sign-in switched on in Jellyfin itself, Jellyfin reads these headers on its own.
+		if (_server.Configuration.EnableLegacyAuthorization)
+		{
+			return;
+		}
 		IHeaderDictionary headers = kontext.Request.Headers;
 		if (((IDictionary<string, StringValues>)headers).TryGetValue("Authorization", out StringValues value) && !string.IsNullOrWhiteSpace(value.ToString()))
 		{
@@ -68,7 +82,10 @@ public class LegacyAuthHeader : IStartupFilter
 			{
 				if (((IDictionary<string, StringValues>)headers).TryGetValue(key, out StringValues value3) && !string.IsNullOrWhiteSpace(value3.ToString()))
 				{
-					text = "MediaBrowser Token=\"" + value3.ToString() + "\"";
+					if (value3.Count == 1 && TokenForm.IsMatch(value3.ToString().Trim()))
+					{
+						text = "MediaBrowser Token=\"" + value3.ToString().Trim() + "\"";
+					}
 					break;
 				}
 			}

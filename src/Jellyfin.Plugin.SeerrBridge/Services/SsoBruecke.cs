@@ -24,6 +24,9 @@ namespace Jellyfin.Plugin.SeerrBridge.Services;
 
 public class SsoBruecke : IStartupFilter
 {
+	// A sign-in body is a few hundred bytes. Bigger ones are left to Jellyfin unread.
+	private const int MaxRumpf = 16 * 1024;
+
 	private static readonly ConcurrentDictionary<string, Ausweis> Ausweise = new ConcurrentDictionary<string, Ausweis>(StringComparer.Ordinal);
 
 	private readonly IServiceProvider _dienste;
@@ -105,13 +108,23 @@ public class SsoBruecke : IStartupFilter
 			PathString path = kontext.Request.Path;
 			if (path.StartsWithSegments(("/Users/AuthenticateByName")) && HttpMethods.IsPost(kontext.Request.Method))
 			{
+				if (kontext.Request.ContentLength > MaxRumpf)
+				{
+					return false;
+				}
 				string json;
 				try
 				{
 					HttpRequestRewindExtensions.EnableBuffering(kontext.Request);
 					using StreamReader leser = new StreamReader(kontext.Request.Body, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, 1024, leaveOpen: true);
-					json = await leser.ReadToEndAsync().ConfigureAwait(continueOnCapturedContext: false);
+					char[] puffer = new char[MaxRumpf + 1];
+					int laenge = await leser.ReadBlockAsync(puffer, 0, puffer.Length).ConfigureAwait(continueOnCapturedContext: false);
 					kontext.Request.Body.Position = 0L;
+					if (laenge > MaxRumpf)
+					{
+						return false;
+					}
+					json = new string(puffer, 0, laenge);
 				}
 				catch (Exception)
 				{

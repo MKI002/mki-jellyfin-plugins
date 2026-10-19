@@ -48,7 +48,9 @@ A second request can only bring a deadline forward, never push it back. Bulk req
 - Rules are enforced on the server, before Jellyfin saves the password. The web hints are only a convenience.
 - Request bodies are read the way Jellyfin reads them (case-insensitive keys, last duplicate wins, numbers as text). A body the plugin cannot read is refused rather than passed on unchecked.
 - The anonymous change endpoints answer every failure the same way, only check passwords of accounts with an open request, and lock a client address out for 15 minutes after 10 failures, on top of Jellyfin's own lockout.
-- While a change is pending, every request with that user's token is refused, whichever endpoint it targets.
+- Once access is blocked, every request carrying that user's token is refused, whichever endpoint it targets and however the token is sent (any authorization header, the older header names or the query string). A request whose tokens cannot be matched to exactly one user is refused too.
+- When a deadline passes, the user's tokens are revoked within a minute, and a sign-in that gets through on any path is undone right away.
+- Setting a new password signs the account out on every other device, so a token someone else may hold stops working.
 - The change page sends a strict Content Security Policy and cannot be framed.
 
 ## Setup

@@ -46,6 +46,13 @@ public class PolicyStore
 		return _offen.Count > 0;
 	}
 
+	// Users with an open change request. The set is replaced on every change, never modified, so it can be handed out.
+	public IReadOnlyCollection<Guid> OpenUsers()
+	{
+		EnsureLoaded();
+		return _offen;
+	}
+
 	// True when existing sessions of the user must be refused now.
 	public bool SessionsBlocked(Guid userId)
 	{

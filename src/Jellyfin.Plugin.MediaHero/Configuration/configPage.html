@@ -530,6 +530,13 @@
     });
   }
 
+  /* Library names are free text: escape them before they go into markup. */
+  function esc(t) {
+    return String(t).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
   /* Libraries come live from the server - hard-coded names would be wrong as
      soon as someone adds or renames one. Saved entries supply the tick and
      count; new libraries appear switched off so they do not rebuild the banner
@@ -554,9 +561,9 @@
         var tr = document.createElement('tr');
         tr.innerHTML =
           '<td class="mhc-an"><input type="checkbox" id="' + kennung + '" data-lib="' + id + '"'
-          + ' data-name="' + (b.Name || id).replace(/"/g, '&quot;') + '"'
+          + ' data-name="' + esc(b.Name || id) + '"'
           + (v.Enabled ? ' checked' : '') + ' /></td>'
-          + '<td class="mh-quelle-name"><label for="' + kennung + '">' + (b.Name || id) + '</label></td>'
+          + '<td class="mh-quelle-name"><label for="' + kennung + '">' + esc(b.Name || id) + '</label></td>'
           + '<td class="mhc-zahl"><input type="number" min="1" max="40" is="emby-input" '
           + 'data-lib-take="' + id + '" value="' + (v.Count || 10) + '" /></td>';
         tb.appendChild(tr);
