@@ -12,7 +12,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 {
 	public static Plugin? Instance { get; private set; }
 
-	public override string Name => "Seerr Bridge";
+	public override string Name => "MKI Seerr Bridge";
 
 	public override Guid Id => Guid.Parse("b7d41e02-9c58-4f6a-8d13-5a2c7e9f4610");
 

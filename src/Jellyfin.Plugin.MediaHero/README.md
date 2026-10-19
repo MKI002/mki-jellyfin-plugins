@@ -1,6 +1,6 @@
-<img src="logo.png?v=1.1.0" alt="Media Hero" width="100%">
+<img src="logo.png?v=1.1.0" alt="MKI Media Hero" width="100%">
 
-# Media Hero
+# MKI Media Hero
 
 A cinematic hero carousel at the top of the Jellyfin home screen.
 
@@ -17,7 +17,7 @@ A cinematic hero carousel at the top of the Jellyfin home screen.
 ## Setup
 
 1. Install from the plugin catalog and restart Jellyfin.
-2. Open **Dashboard → Plugins → Media Hero**, pick your libraries and sources, and save.
+2. Open **Dashboard → Plugins → MKI Media Hero**, pick your libraries and sources, and save.
 3. For Seerr sources, enter your Seerr URL and API key (Seerr → Settings → General). The key stays on the server.
 
 The carousel appears on the home screen after a page reload.
