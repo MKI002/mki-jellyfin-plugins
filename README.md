@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/banner.png" alt="MKI Jellyfin Plugins: Media Hero, Merge Versions, Jellyseerr Bridge" width="100%">
+<img src="assets/banner.png" alt="MKI Jellyfin Plugins: Media Hero, Merge Versions, Seerr Bridge" width="100%">
 
 # MKI Jellyfin Plugins
 
