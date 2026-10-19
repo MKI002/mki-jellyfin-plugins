@@ -42,7 +42,7 @@ public class RuheWache : IHostedService, IDisposable
 		{
 			_ = PruefeAsync();
 		}, null, Takt, Takt);
-		LoggerExtensions.LogInformation((ILogger)(object)_log, "MKI Merge: Ruhewache aktiv - fuehrt zusammen, sobald {Minuten} Minuten lang nichts mehr an der Bibliothek passiert", new object[1] { Ruhezeit.TotalMinutes });
+		LoggerExtensions.LogInformation((ILogger)(object)_log, "MKI Merge: quiet watcher active - merges once the library has been unchanged for {Minutes} minutes", new object[1] { Ruhezeit.TotalMinutes });
 		return Task.CompletedTask;
 	}
 
@@ -74,12 +74,12 @@ public class RuheWache : IHostedService, IDisposable
 		{
 			_schmutzig = false;
 			PluginConfiguration pluginConfiguration = ((BasePlugin<PluginConfiguration>)(object)Plugin.Instance)?.Configuration ?? new PluginConfiguration();
-			LoggerExtensions.LogInformation((ILogger)(object)_log, "MKI Merge: Bibliothek ist zur Ruhe gekommen, fuehre zusammen", Array.Empty<object>());
+			LoggerExtensions.LogInformation((ILogger)(object)_log, "MKI Merge: library is quiet, merging", Array.Empty<object>());
 			await new MergeService(_library, (ILogger)(object)_log).RunAsync(pluginConfiguration.DryRun, pluginConfiguration.FixPrimaryOrder, null, CancellationToken.None).ConfigureAwait(continueOnCapturedContext: false);
 		}
 		catch (Exception ex)
 		{
-			LoggerExtensions.LogError((ILogger)(object)_log, ex, "MKI Merge: Lauf nach Ruhephase fehlgeschlagen", Array.Empty<object>());
+			LoggerExtensions.LogError((ILogger)(object)_log, ex, "MKI Merge: run after quiet period failed", Array.Empty<object>());
 		}
 		finally
 		{

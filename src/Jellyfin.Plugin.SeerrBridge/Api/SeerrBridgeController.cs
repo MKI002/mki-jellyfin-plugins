@@ -113,7 +113,7 @@ public class SeerrBridgeController : ControllerBase
 			return (ActionResult)new JsonResult((object)new
 			{
 				ok = false,
-				text = "Anfragen sind abgeschaltet"
+				text = "Requests are disabled"
 			});
 		}
 		var (ok, text) = await _seerr.AnfragenAsync(rumpf.MediaType, rumpf.TmdbId, Benutzername(), ct).ConfigureAwait(continueOnCapturedContext: false);
@@ -130,7 +130,7 @@ public class SeerrBridgeController : ControllerBase
 			return (ActionResult)new JsonResult((object)new
 			{
 				ok = false,
-				text = "abgeschaltet"
+				text = "disabled"
 			});
 		}
 		string text = Benutzername();
@@ -140,7 +140,7 @@ public class SeerrBridgeController : ControllerBase
 			return (ActionResult)new JsonResult((object)new
 			{
 				ok = false,
-				text = "kein angemeldetes Konto"
+				text = "no signed-in account"
 			});
 		}
 		string bereich = KeksBereich(pluginConfiguration);
@@ -149,7 +149,7 @@ public class SeerrBridgeController : ControllerBase
 			return (ActionResult)new JsonResult((object)new
 			{
 				ok = false,
-				text = "Jellyfin und Seerr teilen keine gemeinsame Domaene"
+				text = "Jellyfin and Seerr do not share a common domain"
 			});
 		}
 		string ausweis = SsoBruecke.Ausstellen(guid, text);
@@ -177,7 +177,7 @@ public class SeerrBridgeController : ControllerBase
 		return (ActionResult)new JsonResult((object)new
 		{
 			ok = true,
-			text = "angemeldet",
+			text = "signed in",
 			domain = bereich
 		});
 	}
@@ -314,7 +314,7 @@ public class SeerrBridgeController : ControllerBase
 		string text = ((object)((ControllerBase)this).Request.Headers.UserAgent/*cast due to .constrained prefix*/).ToString();
 		if (!string.IsNullOrEmpty(text) && Gesehen.TryAdd(text, 0))
 		{
-			LoggerExtensions.LogInformation((ILogger)(object)_logger, "Client-Skript geholt von: {Kennung}", new object[1] { text });
+			LoggerExtensions.LogInformation((ILogger)(object)_logger, "Client script fetched by: {Kennung}", new object[1] { text });
 		}
 		return Ressource("seerr.js", "application/javascript");
 	}

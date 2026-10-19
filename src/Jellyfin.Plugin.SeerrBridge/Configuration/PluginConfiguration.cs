@@ -28,7 +28,7 @@ public class PluginConfiguration : BasePluginConfiguration
 
 	public bool MapUsers { get; set; } = true;
 
-	public string Language { get; set; } = "de";
+	public string Language { get; set; } = "en";
 
 	public bool LegacyAuthHeader { get; set; } = true;
 

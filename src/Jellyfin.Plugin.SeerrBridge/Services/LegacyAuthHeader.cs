@@ -34,7 +34,7 @@ public class LegacyAuthHeader : IStartupFilter
 				}
 				catch (Exception ex)
 				{
-					LoggerExtensions.LogWarning((ILogger)(object)_logger, ex, "Kopfzeilen-Bruecke uebersprungen", Array.Empty<object>());
+					LoggerExtensions.LogWarning((ILogger)(object)_logger, ex, "Header bridge skipped", Array.Empty<object>());
 				}
 				await weiter().ConfigureAwait(continueOnCapturedContext: false);
 			});
@@ -79,7 +79,7 @@ public class LegacyAuthHeader : IStartupFilter
 			if (!_gemeldet)
 			{
 				_gemeldet = true;
-				LoggerExtensions.LogInformation((ILogger)(object)_logger, "Alte Anmeldekopfzeile uebersetzt (erstmals von {Pfad}) - aeltere Anwendungen wie Seerr koennen sich wieder anmelden", new object[1] { ((object)kontext.Request.Path/*cast due to .constrained prefix*/).ToString() });
+				LoggerExtensions.LogInformation((ILogger)(object)_logger, "Translated legacy auth header (first seen from {Pfad}) - older apps like Seerr can sign in again", new object[1] { ((object)kontext.Request.Path/*cast due to .constrained prefix*/).ToString() });
 			}
 		}
 	}

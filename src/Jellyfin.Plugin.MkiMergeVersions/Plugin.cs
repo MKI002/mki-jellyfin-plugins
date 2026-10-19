@@ -13,7 +13,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 
 	public override string Name => "MKI Merge Versions";
 
-	public override string Description => "Fuehrt Filme mit mehreren Aufloesungen zu einem Eintrag zusammen. Die hoechste Aufloesung wird der Haupteintrag.";
+	public override string Description => "Merges movies that exist in several resolutions into a single entry. The highest resolution becomes the primary entry.";
 
 	public override Guid Id => Guid.Parse("b8e2f3a1-6c47-4d59-9f0e-7a1c2d3e4b5f");
 

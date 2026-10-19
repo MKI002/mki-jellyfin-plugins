@@ -48,7 +48,7 @@ public class Vorwaermer : IHostedService, IDisposable
 		}
 		catch (Exception ex)
 		{
-			LoggerExtensions.LogWarning((ILogger)(object)_logger, ex, "Vorwaermen uebersprungen", Array.Empty<object>());
+			LoggerExtensions.LogWarning((ILogger)(object)_logger, ex, "Cache pre-warm skipped", Array.Empty<object>());
 		}
 	}
 

@@ -149,12 +149,12 @@ public class SsoBruecke : IStartupFilter
 					kontext.Response.StatusCode = 200;
 					kontext.Response.ContentType = "application/json; charset=utf-8";
 					await HttpResponseWritingExtensions.WriteAsync(kontext.Response, text, default(CancellationToken)).ConfigureAwait(continueOnCapturedContext: false);
-					LoggerExtensions.LogInformation((ILogger)(object)_logger, "Anmeldung fuer {Benutzer} ueber Einmal-Ausweis an Seerr weitergereicht", new object[1] { ausweis.Benutzer });
+					LoggerExtensions.LogInformation((ILogger)(object)_logger, "Passed sign-in for {Benutzer} to Seerr via one-time pass", new object[1] { ausweis.Benutzer });
 					return true;
 				}
 				catch (Exception ex3)
 				{
-					LoggerExtensions.LogError((ILogger)(object)_logger, ex3, "Weiterreichen der Anmeldung fehlgeschlagen", Array.Empty<object>());
+					LoggerExtensions.LogError((ILogger)(object)_logger, ex3, "Passing on the sign-in failed", Array.Empty<object>());
 					return false;
 				}
 			}
@@ -167,12 +167,12 @@ public class SsoBruecke : IStartupFilter
 		IQuickConnect qc = ServiceProviderServiceExtensions.GetService<IQuickConnect>(_dienste);
 		if (qc == null)
 		{
-			LoggerExtensions.LogWarning((ILogger)(object)_logger, "Quick Connect nicht verfuegbar", Array.Empty<object>());
+			LoggerExtensions.LogWarning((ILogger)(object)_logger, "Quick Connect not available", Array.Empty<object>());
 			return null;
 		}
 		if (!qc.IsEnabled)
 		{
-			LoggerExtensions.LogWarning((ILogger)(object)_logger, "Quick Connect ist am Server abgeschaltet - ohne das kann die Anmeldung nicht weitergereicht werden", Array.Empty<object>());
+			LoggerExtensions.LogWarning((ILogger)(object)_logger, "Quick Connect is disabled on the server - without it the sign-in cannot be passed on", Array.Empty<object>());
 			return null;
 		}
 		AuthorizationInfo val = new AuthorizationInfo

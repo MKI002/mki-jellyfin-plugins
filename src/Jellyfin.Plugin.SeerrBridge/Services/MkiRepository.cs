@@ -110,7 +110,7 @@ public class MkiRepository
 			}
 			catch (Exception ex2)
 			{
-				LoggerExtensions.LogWarning((ILogger)(object)_logger, ex2, "Plugin-Ordner {Ordner} uebersprungen", new object[1] { text });
+				LoggerExtensions.LogWarning((ILogger)(object)_logger, ex2, "Plugin folder {Ordner} skipped", new object[1] { text });
 			}
 		}
 		return list;

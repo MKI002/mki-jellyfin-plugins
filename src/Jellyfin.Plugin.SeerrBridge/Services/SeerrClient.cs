@@ -73,7 +73,7 @@ public class SeerrClient
 	{
 		if (!Eingerichtet)
 		{
-			return (Ok: false, Text: "Adresse oder API-Schluessel fehlt");
+			return (Ok: false, Text: "Address or API key missing");
 		}
 		try
 		{
@@ -82,16 +82,16 @@ public class SeerrClient
 			using HttpResponseMessage antwort = await client.SendAsync(m, ct).ConfigureAwait(continueOnCapturedContext: false);
 			if (!antwort.IsSuccessStatusCode)
 			{
-				return (Ok: false, Text: "Seerr antwortete mit " + (int)antwort.StatusCode + ((antwort.StatusCode == HttpStatusCode.Forbidden) ? " (API-Schluessel falsch?)" : string.Empty));
+				return (Ok: false, Text: "Seerr responded with " + (int)antwort.StatusCode + ((antwort.StatusCode == HttpStatusCode.Forbidden) ? " (wrong API key?)" : string.Empty));
 			}
 			using JsonDocument jsonDocument = JsonDocument.Parse(await antwort.Content.ReadAsStringAsync(ct).ConfigureAwait(continueOnCapturedContext: false));
 			JsonElement value;
 			string text = (jsonDocument.RootElement.TryGetProperty("version", out value) ? value.GetString() : "?");
-			return (Ok: true, Text: "Verbunden, Seerr " + text);
+			return (Ok: true, Text: "Connected, Seerr " + text);
 		}
 		catch (Exception ex)
 		{
-			return (Ok: false, Text: "Nicht erreichbar: " + ex.Message);
+			return (Ok: false, Text: "Unreachable: " + ex.Message);
 		}
 	}
 
@@ -102,7 +102,7 @@ public class SeerrClient
 			return Array.Empty<SeerrTreffer>();
 		}
 		PluginConfiguration c = Cfg;
-		string pfad = "/api/v1/search?query=" + Uri.EscapeDataString(begriff) + "&page=1&language=" + Uri.EscapeDataString(string.IsNullOrWhiteSpace(c.Language) ? "de" : c.Language);
+		string pfad = "/api/v1/search?query=" + Uri.EscapeDataString(begriff) + "&page=1&language=" + Uri.EscapeDataString(string.IsNullOrWhiteSpace(c.Language) ? "en" : c.Language);
 		try
 		{
 			using (HttpClient client = Client())
@@ -111,7 +111,7 @@ public class SeerrClient
 				using HttpResponseMessage antwort = await client.SendAsync(m, ct).ConfigureAwait(continueOnCapturedContext: false);
 				if (!antwort.IsSuccessStatusCode)
 				{
-					LoggerExtensions.LogWarning((ILogger)(object)_logger, "Seerr-Suche antwortete mit {Code}", new object[1] { (int)antwort.StatusCode });
+					LoggerExtensions.LogWarning((ILogger)(object)_logger, "Seerr search responded with {Code}", new object[1] { (int)antwort.StatusCode });
 					return Array.Empty<SeerrTreffer>();
 				}
 				IReadOnlyList<SeerrTreffer> result;
@@ -162,7 +162,7 @@ public class SeerrClient
 		}
 		catch (Exception ex2)
 		{
-			LoggerExtensions.LogWarning((ILogger)(object)_logger, ex2, "Seerr-Suche fehlgeschlagen", Array.Empty<object>());
+			LoggerExtensions.LogWarning((ILogger)(object)_logger, ex2, "Seerr search failed", Array.Empty<object>());
 			return Array.Empty<SeerrTreffer>();
 		}
 		throw null;
@@ -189,11 +189,11 @@ public class SeerrClient
 	{
 		if (!Eingerichtet)
 		{
-			return (Ok: false, Text: "Seerr ist nicht eingerichtet");
+			return (Ok: false, Text: "Seerr is not configured");
 		}
 		if (mediaType != "movie" && mediaType != "tv")
 		{
-			return (Ok: false, Text: "Unbekannte Medienart");
+			return (Ok: false, Text: "Unknown media type");
 		}
 		StringBuilder rumpf = new StringBuilder();
 		rumpf.Append("{\"mediaType\":\"").Append(mediaType).Append("\",\"mediaId\":")
@@ -220,7 +220,7 @@ public class SeerrClient
 			string json = await antwort.Content.ReadAsStringAsync(ct).ConfigureAwait(continueOnCapturedContext: false);
 			if (antwort.IsSuccessStatusCode)
 			{
-				return (Ok: true, Text: "Angefragt");
+				return (Ok: true, Text: "Requested");
 			}
 			string text = string.Empty;
 			try
@@ -231,12 +231,12 @@ public class SeerrClient
 			catch (JsonException)
 			{
 			}
-			return (Ok: false, Text: string.IsNullOrEmpty(text) ? ("Seerr antwortete mit " + (int)antwort.StatusCode) : text);
+			return (Ok: false, Text: string.IsNullOrEmpty(text) ? ("Seerr responded with " + (int)antwort.StatusCode) : text);
 		}
 		catch (Exception ex2)
 		{
-			LoggerExtensions.LogWarning((ILogger)(object)_logger, ex2, "Anfrage an Seerr fehlgeschlagen", Array.Empty<object>());
-			return (Ok: false, Text: "Nicht erreichbar");
+			LoggerExtensions.LogWarning((ILogger)(object)_logger, ex2, "Request to Seerr failed", Array.Empty<object>());
+			return (Ok: false, Text: "Unreachable");
 		}
 	}
 
@@ -244,7 +244,7 @@ public class SeerrClient
 	{
 		if (!Eingerichtet)
 		{
-			return (Ok: false, Keks: null, Text: "Seerr ist nicht eingerichtet");
+			return (Ok: false, Keks: null, Text: "Seerr is not configured");
 		}
 		try
 		{
@@ -255,30 +255,30 @@ public class SeerrClient
 			if (!antwort.IsSuccessStatusCode)
 			{
 				string text = await antwort.Content.ReadAsStringAsync(ct).ConfigureAwait(continueOnCapturedContext: false);
-				LoggerExtensions.LogWarning((ILogger)(object)_logger, "Anmeldung bei Seerr fehlgeschlagen ({Code}): {Text}", new object[2]
+				LoggerExtensions.LogWarning((ILogger)(object)_logger, "Sign-in to Seerr failed ({Code}): {Text}", new object[2]
 				{
 					(int)antwort.StatusCode,
 					text
 				});
-				return (Ok: false, Keks: null, Text: "Seerr antwortete mit " + (int)antwort.StatusCode);
+				return (Ok: false, Keks: null, Text: "Seerr responded with " + (int)antwort.StatusCode);
 			}
 			if (!antwort.Headers.TryGetValues("Set-Cookie", out IEnumerable<string> values))
 			{
-				return (Ok: false, Keks: null, Text: "Seerr hat keinen Sitzungskeks geschickt");
+				return (Ok: false, Keks: null, Text: "Seerr did not send a session cookie");
 			}
 			foreach (string item in values)
 			{
 				if (item.StartsWith("connect.sid=", StringComparison.OrdinalIgnoreCase))
 				{
-					return (Ok: true, Keks: item, Text: "angemeldet");
+					return (Ok: true, Keks: item, Text: "signed in");
 				}
 			}
-			return (Ok: false, Keks: null, Text: "Kein Sitzungskeks in der Antwort");
+			return (Ok: false, Keks: null, Text: "No session cookie in the response");
 		}
 		catch (Exception ex)
 		{
-			LoggerExtensions.LogWarning((ILogger)(object)_logger, ex, "Anmeldung bei Seerr fehlgeschlagen", Array.Empty<object>());
-			return (Ok: false, Keks: null, Text: "Seerr nicht erreichbar");
+			LoggerExtensions.LogWarning((ILogger)(object)_logger, ex, "Sign-in to Seerr failed", Array.Empty<object>());
+			return (Ok: false, Keks: null, Text: "Seerr unreachable");
 		}
 	}
 
@@ -343,7 +343,7 @@ public class SeerrClient
 		}
 		catch (Exception ex)
 		{
-			LoggerExtensions.LogWarning((ILogger)(object)_logger, ex, "Benutzerzuordnung aus Seerr nicht ladbar", Array.Empty<object>());
+			LoggerExtensions.LogWarning((ILogger)(object)_logger, ex, "Could not load user mapping from Seerr", Array.Empty<object>());
 		}
 	}
 
