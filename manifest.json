@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/MKI002/mki-jellyfin-plugins/main/src/Jellyfin.Plugin.MediaHero/logo.png",
     "versions": [
       {
+        "version": "1.4.0.0",
+        "changelog": "Cleans up an older copy of this plugin left behind by an update or rename: the old copy is marked for removal and stays inactive, so it can no longer break requests. Restart Jellyfin once to finish the cleanup. Settings are kept.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/MKI002/mki-jellyfin-plugins/releases/download/v1.5.0/mediahero_1.4.0.0.zip",
+        "checksum": "0f01d0defe280f0b5cbd611839b185ab",
+        "timestamp": "2026-10-19T20:50:01Z"
+      },
+      {
         "version": "1.3.0.0",
         "changelog": "English only: settings page, labels and log messages are now in English. Redesigned, cleaner settings page with tabs and status indicators. Settings are kept.",
         "targetAbi": "12.0.0.0",
@@ -51,6 +59,14 @@
     "category": "General",
     "imageUrl": "https://raw.githubusercontent.com/MKI002/mki-jellyfin-plugins/main/src/Jellyfin.Plugin.MkiMergeVersions/logo.png",
     "versions": [
+      {
+        "version": "1.2.0.0",
+        "changelog": "Cleans up an older copy of this plugin left behind by an update or rename: the old copy is marked for removal and stays inactive, so it can no longer break requests. Restart Jellyfin once to finish the cleanup. Settings are kept.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/MKI002/mki-jellyfin-plugins/releases/download/v1.5.0/mkimergeversions_1.2.0.0.zip",
+        "checksum": "1d75874b8d83cf4e4900af4911ffbbc4",
+        "timestamp": "2026-10-19T20:50:01Z"
+      },
       {
         "version": "1.1.0.0",
         "changelog": "English only: settings page, labels and log messages are now in English. Redesigned, cleaner settings page with tabs and status indicators. Settings are kept.",
@@ -105,6 +121,14 @@
     "category": "General",
     "imageUrl": "https://raw.githubusercontent.com/MKI002/mki-jellyfin-plugins/main/src/Jellyfin.Plugin.SeerrBridge/logo.png",
     "versions": [
+      {
+        "version": "1.4.0.0",
+        "changelog": "Cleans up an older copy of this plugin left behind by an update or rename: the old copy is marked for removal and stays inactive, so it can no longer break requests. Restart Jellyfin once to finish the cleanup. Settings are kept. Single sign-on now steps aside on any error instead of blocking sign-in.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/MKI002/mki-jellyfin-plugins/releases/download/v1.5.0/seerrbridge_1.4.0.0.zip",
+        "checksum": "a48a8f87a43e18abaebbc7552236e16a",
+        "timestamp": "2026-10-19T20:50:01Z"
+      },
       {
         "version": "1.3.0.0",
         "changelog": "English only: settings page, labels and log messages are now in English. Redesigned, cleaner settings page with tabs and status indicators. Settings are kept.",
