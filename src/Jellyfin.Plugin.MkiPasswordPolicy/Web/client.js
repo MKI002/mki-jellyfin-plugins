@@ -8,37 +8,8 @@
     var script = document.currentScript;
     var BASE = script && script.src ? script.src.replace(/\/MkiPasswordPolicy\/client\.js.*$/i, '') : '';
     var AUTH_URL = /\/Users\/(AuthenticateByName|AuthenticateWithQuickConnect|[^\/?]+\/Authenticate)(\?|$)/i;
-    var DE = /^de/i.test(navigator.language || '');
 
-    var T = DE ? {
-        title: 'Neues Passwort festlegen',
-        admin: 'Dein Administrator verlangt ein neues Passwort, bevor du weitermachen kannst.',
-        expired: 'Dein Passwort ist abgelaufen. Bitte lege ein neues fest.',
-        'new': 'Bitte lege für dein neues Konto ein eigenes Passwort fest.',
-        standalone: 'Hier legst du ein neues Passwort fest, wenn dein Administrator es verlangt. Danach kannst du dich in jeder Jellyfin-App wieder anmelden.',
-        username: 'Benutzername',
-        current: 'Bisheriges Passwort',
-        newPw: 'Neues Passwort',
-        confirm: 'Neues Passwort wiederholen',
-        next: 'Weiter',
-        save: 'Passwort speichern',
-        cancel: 'Abbrechen',
-        mismatch: 'Die beiden neuen Passwörter stimmen nicht überein.',
-        rulesFail: 'Das neue Passwort erfüllt noch nicht alle Regeln.',
-        failed: 'Das hat nicht geklappt.',
-        done: 'Fertig! Dein neues Passwort ist gespeichert.',
-        doneStandalone: 'Fertig! Du kannst dich jetzt in jeder Jellyfin-App mit dem neuen Passwort anmelden.',
-        doneRelogin: 'Fertig! Melde dich jetzt mit dem neuen Passwort an.',
-        len: 'Mindestens {n} Zeichen',
-        upper: 'Ein Großbuchstabe',
-        lower: 'Ein Kleinbuchstabe',
-        digit: 'Eine Ziffer',
-        symbol: 'Ein Sonderzeichen',
-        noUser: 'Enthält nicht den Benutzernamen',
-        common: 'Kein bekanntes, leicht zu erratendes Passwort',
-        repeat: 'Höchstens {n} gleiche Zeichen hintereinander',
-        strength: ['Sehr schwach', 'Schwach', 'Mittel', 'Stark', 'Sehr stark']
-    } : {
+    var T = {
         title: 'Set a new password',
         admin: 'Your administrator requires a new password before you can continue.',
         expired: 'Your password has expired. Please set a new one.',

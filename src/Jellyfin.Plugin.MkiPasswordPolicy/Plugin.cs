@@ -16,7 +16,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 
 	public override Guid Id => Guid.Parse("ea705ff9-2793-4156-a253-3720f294ec89");
 
-	public override string Description => "Passwortregeln fuer alle Clients und erzwungener Passwortwechsel fuer einzelne oder alle Benutzer.";
+	public override string Description => "Password rules on every client and forced password changes for single users or everyone.";
 
 	public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer)
 		: base(applicationPaths, xmlSerializer)

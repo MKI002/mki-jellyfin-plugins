@@ -22,7 +22,7 @@ namespace Jellyfin.Plugin.MkiPasswordPolicy.Api;
 public class PasswordPolicyController : ControllerBase
 {
 	// One answer for every failure, so the anonymous endpoints reveal neither usernames nor who has an open request.
-	private const string AllgemeinerFehler = "Benutzername oder Passwort ist falsch, oder fuer dieses Konto ist kein Passwortwechsel offen.";
+	private const string AllgemeinerFehler = "Wrong username or password, or no password change is pending for this account.";
 
 	private readonly PolicyStore _store;
 
@@ -68,7 +68,7 @@ public class PasswordPolicyController : ControllerBase
 		string neu = anfrage.NewPassword ?? string.Empty;
 		if (neu.Length == 0 || neu == (anfrage.CurrentPassword ?? string.Empty))
 		{
-			return Fehler(StatusCodes.Status400BadRequest, "Das neue Passwort darf nicht leer sein und muss sich vom bisherigen unterscheiden.");
+			return Fehler(StatusCodes.Status400BadRequest, "The new password must not be empty and must differ from the current one.");
 		}
 		var regeln = Policy.RulesFor(benutzer);
 		if (regeln != null)
@@ -87,7 +87,7 @@ public class PasswordPolicyController : ControllerBase
 			_store.MarkVerified(benutzer.Id, regeln);
 		}
 		_patcher.Sync();
-		_logger.LogInformation("{Benutzer} hat ein neues Passwort festgelegt", benutzer.Username);
+		_logger.LogInformation("{User} set a new password", benutzer.Username);
 		return NoContent();
 	}
 
@@ -243,7 +243,7 @@ public class PasswordPolicyController : ControllerBase
 		string ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? string.Empty;
 		if (_throttle.Blocked(ip))
 		{
-			return (null, Fehler(StatusCodes.Status429TooManyRequests, "Zu viele Fehlversuche. Bitte in 15 Minuten erneut versuchen."));
+			return (null, Fehler(StatusCodes.Status429TooManyRequests, "Too many failed attempts. Please try again in 15 minutes."));
 		}
 		var benutzer = string.IsNullOrWhiteSpace(anfrage.Username) ? null : _users.GetUserByName(anfrage.Username.Trim());
 		bool ok = false;
@@ -256,7 +256,7 @@ public class PasswordPolicyController : ControllerBase
 			}
 			catch (Exception ex)
 			{
-				_logger.LogInformation("Passwortwechsel fuer {Benutzer} abgewiesen: {Grund}", benutzer.Username, ex.Message);
+				_logger.LogInformation("Password change for {User} rejected: {Reason}", benutzer.Username, ex.Message);
 			}
 		}
 		if (!ok)
