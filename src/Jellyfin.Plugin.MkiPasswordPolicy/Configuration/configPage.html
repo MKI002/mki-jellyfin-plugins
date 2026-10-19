@@ -372,6 +372,8 @@
                     optionen(wahl, true, u.Profile);
                     if (u.IsExempt) wahl.title = 'Administrators are exempt under “More settings”.';
                     zelle(tr, wahl);
+                    // Save the choice right away: the buttons in this table reload the list and would drop an unsaved choice.
+                    wahl.addEventListener('change', function () { profilSpeichern(u.Id, wahl.value); });
 
                     var st = STATUS[u.PasswordStatus] || STATUS.unknown;
                     zelle(tr, marke(st[0], st[1], st[2] + (u.VerifiedRules ? ' Checked against: ' + regelText(u.VerifiedRules) + '.' : '')));
@@ -396,6 +398,21 @@
                 zf.innerHTML = '';
                 ['ok', 'older', 'unknown', 'none', 'norules'].forEach(function (k) {
                     zf.appendChild(marke(STATUS[k][0], STATUS[k][1] + ': ' + (zaehler[k] || 0), STATUS[k][2]));
+                });
+            }
+
+            function profilSpeichern(userId, profil) {
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(pluginId).then(function (c) {
+                    c.UserProfiles = (c.UserProfiles || []).filter(function (e) { return e.UserId !== userId; });
+                    if (profil !== 'default') c.UserProfiles.push({ UserId: userId, Profile: profil });
+                    return ApiClient.updatePluginConfiguration(pluginId, c);
+                }).then(function () {
+                    Dashboard.hideLoadingMsg();
+                    benutzerLaden();
+                }, function () {
+                    Dashboard.hideLoadingMsg();
+                    alert('That did not work.');
                 });
             }
 

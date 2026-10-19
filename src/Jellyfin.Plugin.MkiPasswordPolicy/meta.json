@@ -7,5 +7,5 @@
   "category": "Authentication",
   "targetAbi": "12.0.0.0",
   "version": "1.0.2.0",
-  "changelog": "The change dialog now stays above everything, including the Jellyfin loading spinner, and lists the password rules for your account."
+  "changelog": "The change dialog now stays above everything, including the Jellyfin loading spinner, and lists the password rules for your account. A profile picked for a user in the list is saved immediately, so requiring a new password right after picking it no longer drops the choice."
 }
