@@ -2,10 +2,10 @@
   "guid": "ea705ff9-2793-4156-a253-3720f294ec89",
   "name": "MKI Password Policy",
   "overview": "Password rules and forced password changes for Jellyfin users.",
-  "description": "Enforces password rules (length, character types, no username, common passwords) on the server for every client, with ready-made profiles. Lets an administrator require a new password from all users or from single users: they cannot sign in on any device until they have set one. Optional password expiry, a check at sign-in and a forced change for new users. The web client shows the rules live and a change dialog; TV and native apps use a change page that opens in any browser. Settings page is in German.",
+  "description": "Enforces password rules (length, character types, no username, common passwords) on the server for every client, with ready-made profiles. Lets an administrator require a new password from all users or from single users: they cannot sign in on any device until they have set one. Optional password expiry and a forced change for new users. The web client shows the rules live and a change dialog; TV and native apps use a change page that opens in any browser.",
   "owner": "MKI",
   "category": "Authentication",
   "targetAbi": "12.0.0.0",
-  "version": "1.0.0.0",
-  "changelog": "First release."
+  "version": "1.0.1.0",
+  "changelog": "All text is now in English."
 }

@@ -15,7 +15,7 @@ namespace Jellyfin.Plugin.MkiPasswordPolicy.Services;
 
 public class Enforcer
 {
-	public const string DefaultNotifyText = "Dein Administrator verlangt ein neues Passwort. Du wirst gleich abgemeldet. Lege dein neues Passwort beim naechsten Anmelden im Browser fest oder hier: {url}";
+	public const string DefaultNotifyText = "Your administrator requires a new password. You will be signed out shortly. Set your new password the next time you sign in from a browser, or here: {url}";
 
 	private readonly PolicyStore _store;
 
@@ -55,7 +55,7 @@ public class Enforcer
 			_store.Require(id, reason, TimeSpan.FromSeconds(gnade));
 		}
 		_patcher.Sync();
-		_logger.LogInformation("Neues Passwort verlangt von {Anzahl} Benutzer(n), Grund {Grund}", ids.Count, reason);
+		_logger.LogInformation("New password required from {Count} user(s), reason {Reason}", ids.Count, reason);
 
 		if (c.NotifySessions)
 		{
@@ -77,7 +77,7 @@ public class Enforcer
 		}
 		catch (Exception ex)
 		{
-			_logger.LogWarning(ex, "Abmelden von {Benutzer} fehlgeschlagen", userId);
+			_logger.LogWarning(ex, "Signing out {User} failed", userId);
 		}
 	}
 
@@ -87,14 +87,14 @@ public class Enforcer
 		{
 			await _sessions.SendMessageCommand(null!, sitzung, new MessageCommand
 			{
-				Header = "Neues Passwort erforderlich",
+				Header = "New password required",
 				Text = text,
 				TimeoutMs = Math.Max(gnade, 10) * 1000
 			}, CancellationToken.None).ConfigureAwait(false);
 		}
 		catch (Exception ex)
 		{
-			_logger.LogDebug(ex, "Nachricht an Sitzung {Sitzung} nicht zugestellt", sitzung);
+			_logger.LogDebug(ex, "Could not deliver message to session {Session}", sitzung);
 		}
 	}
 

@@ -57,7 +57,7 @@ public class WebPatcher : IHostedService
 		}
 		catch (Exception ex)
 		{
-			_logger.LogError(ex, "MKI Password Policy konnte den Web-Client nicht anpassen");
+			_logger.LogError(ex, "MKI Password Policy could not update the web client");
 		}
 	}
 
@@ -68,7 +68,7 @@ public class WebPatcher : IHostedService
 		{
 			if (eintragen)
 			{
-				_logger.LogWarning("Web-Verzeichnis nicht gefunden - Passwort-Dialog im Browser fehlt");
+				_logger.LogWarning("Web client folder not found - the password dialog will be missing in browsers");
 			}
 			return;
 		}
@@ -80,7 +80,7 @@ public class WebPatcher : IHostedService
 			int ende = neu.LastIndexOf("</body>", StringComparison.OrdinalIgnoreCase);
 			if (ende < 0)
 			{
-				_logger.LogWarning("Kein </body> in der index.html gefunden");
+				_logger.LogWarning("No </body> found in index.html");
 				return;
 			}
 			neu = neu.Insert(ende, Skript);
@@ -88,7 +88,7 @@ public class WebPatcher : IHostedService
 		if (neu != alt)
 		{
 			File.WriteAllText(datei, neu);
-			_logger.LogInformation(eintragen ? "MKI Password Policy in den Web-Client eingetragen ({Pfad})" : "MKI Password Policy aus dem Web-Client entfernt ({Pfad})", datei);
+			_logger.LogInformation(eintragen ? "MKI Password Policy added to the web client ({Path})" : "MKI Password Policy removed from the web client ({Path})", datei);
 		}
 	}
 

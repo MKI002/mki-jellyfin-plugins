@@ -186,7 +186,7 @@ public class PolicyStore
 		}
 		catch (Exception ex)
 		{
-			_logger.LogError(ex, "Benutzerstaende aus {Datei} nicht lesbar - starte leer", Datei);
+			_logger.LogError(ex, "Could not read user states from {File} - starting empty", Datei);
 		}
 		_staende = new Dictionary<Guid, UserState>();
 		return _staende;
@@ -203,7 +203,7 @@ public class PolicyStore
 		}
 		catch (Exception ex)
 		{
-			_logger.LogError(ex, "Benutzerstaende konnten nicht gespeichert werden");
+			_logger.LogError(ex, "Could not save user states");
 		}
 	}
 
