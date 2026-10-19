@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="assets/banner.png" alt="MKI Jellyfin Plugins: Media Hero, Merge Versions, Jellyseerr Bridge" width="100%">
+
 # MKI Jellyfin Plugins
 
 Three plugins for [Jellyfin](https://jellyfin.org) 12, installable from one plugin repository.
