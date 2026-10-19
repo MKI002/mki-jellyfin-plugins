@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Text.Json;
@@ -27,6 +28,9 @@ public class LoginGate : IStartupFilter
 
 	public const string ReasonHeader = "X-Mki-Password-Reason";
 
+	// Deadline of a notice period, on every response to a user who is in one.
+	public const string NoticeHeader = "X-Mki-Password-Notice";
+
 	// Bodies of password requests are tiny; anything bigger is not a real client.
 	private const int MaxRumpf = 64 * 1024;
 
@@ -36,6 +40,9 @@ public class LoginGate : IStartupFilter
 	private static readonly Regex Passwort = new(@"/Users/(?:(?<id>[^/]+)/)?Password/?$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
 	private static readonly Regex NeuerBenutzer = new(@"/Users/New/?$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+	// Jellyfin's "forgot password": redeeming the PIN sets the password to the PIN itself.
+	private static readonly Regex PinEinloesen = new(@"/Users/ForgotPassword/Pin/?$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
 	// What a blocked user may still reach: signing in (handled below), the change page and its script, and signing out.
 	private static readonly Regex Frei = new(@"/(Users/(AuthenticateByName|AuthenticateWithQuickConnect|[^/]+/Authenticate)|MkiPasswordPolicy/(Change|ChangeRules|client\.js)|Sessions/Logout|System/Info/Public)/?$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -68,11 +75,24 @@ public class LoginGate : IStartupFilter
 				string pfad = kontext.Request.Path.Value ?? string.Empty;
 				bool offen = _store.AnyMustChange();
 
-				if (offen && !Frei.IsMatch(pfad) && await GesperrteSitzung(kontext).ConfigureAwait(false))
+				if (offen && !Frei.IsMatch(pfad))
 				{
-					kontext.Response.StatusCode = StatusCodes.Status401Unauthorized;
-					kontext.Response.Headers[MarkerHeader] = "required";
-					return;
+					var info = await Aufrufer(kontext).ConfigureAwait(false);
+					if (info != null && !info.IsApiKey && info.UserId != Guid.Empty)
+					{
+						if (_store.SessionsBlocked(info.UserId))
+						{
+							kontext.Response.StatusCode = StatusCodes.Status401Unauthorized;
+							kontext.Response.Headers[MarkerHeader] = "required";
+							return;
+						}
+						if (_store.InNotice(info.UserId))
+						{
+							// Lets the plugin's script in web-based apps show its popup on any response.
+							kontext.Response.Headers[NoticeHeader] = _store.Get(info.UserId).EnforceAfterUtc!.Value.ToString("o", CultureInfo.InvariantCulture);
+							kontext.Response.Headers.Append("Access-Control-Expose-Headers", NoticeHeader);
+						}
+					}
 				}
 
 				// Fresh install or everything switched off: nothing to do, not even a look at the request.
@@ -90,7 +110,8 @@ public class LoginGate : IStartupFilter
 				Match m;
 				if ((m = Anmeldung.Match(pfad)).Success)
 				{
-					if (offen || Plugin.Config.ExpiryDays > 0)
+					// Also when only profiles are set: an account without a password is blocked at its first sign-in.
+					if (offen || Plugin.Config.ExpiryDays > 0 || Policy.Configured(Plugin.Config))
 					{
 						await Anmelden(kontext, weiter, m.Groups["base"].Value).ConfigureAwait(false);
 					}
@@ -107,6 +128,10 @@ public class LoginGate : IStartupFilter
 				{
 					await BenutzerAnlegen(kontext, weiter).ConfigureAwait(false);
 				}
+				else if (PinEinloesen.IsMatch(pfad))
+				{
+					await PinEingeloest(kontext, weiter).ConfigureAwait(false);
+				}
 				else
 				{
 					await weiter().ConfigureAwait(false);
@@ -114,13 +139,6 @@ public class LoginGate : IStartupFilter
 			});
 			next(app);
 		};
-	}
-
-	// Backstop for every route, including ones this gate does not know: a token of a blocked user is worthless.
-	private async Task<bool> GesperrteSitzung(HttpContext kontext)
-	{
-		var info = await Aufrufer(kontext).ConfigureAwait(false);
-		return info != null && !info.IsApiKey && info.UserId != Guid.Empty && _store.SessionsBlocked(info.UserId);
 	}
 
 	private async Task Anmelden(HttpContext kontext, Func<Task> weiter, string basePath)
@@ -194,11 +212,13 @@ public class LoginGate : IStartupFilter
 		var benutzer = _users.GetUserById(id) ?? throw new InvalidDataException("Unknown user in sign-in response");
 
 		string? grund = null;
+		_enforcer.EnforceNoPassword(benutzer);
 		var stand = _store.Get(id);
 		// During a notice period sign-ins still work; the new session gets a reminder instead.
 		if (stand.MustChange && !_store.InNotice(id))
 		{
-			grund = stand.Reason ?? "admin";
+			// Without a password the user cannot set one themselves; the dialog says to ask for a temporary password.
+			grund = Policy.HasNoPassword(benutzer) ? "nopassword" : stand.Reason == "nopassword" ? "temporary" : stand.Reason ?? "admin";
 		}
 		else if (Plugin.Config.ExpiryDays > 0 && Policy.RulesFor(benutzer) != null
 			&& _store.LastChangedOrBaseline(id).AddDays(Plugin.Config.ExpiryDays) < DateTime.UtcNow)
@@ -282,6 +302,12 @@ public class LoginGate : IStartupFilter
 		{
 			_store.Release(ziel.Id);
 		}
+		// A password an administrator set for someone with rules is known to that administrator: the user replaces it
+		// at the next sign-in. An open request stays open in any case.
+		else if (!selbst && !string.IsNullOrEmpty(Feld(rumpf, "NewPw")) && (Policy.RulesFor(ziel) != null || _store.MustChange(ziel.Id)))
+		{
+			_enforcer.RequireOwnPassword(ziel, "temporary");
+		}
 	}
 
 	private async Task BenutzerAnlegen(HttpContext kontext, Func<Task> weiter)
@@ -317,12 +343,62 @@ public class LoginGate : IStartupFilter
 			if (string.IsNullOrEmpty(passwort))
 			{
 				_store.MarkEmpty(neu.Id);
+				_enforcer.EnforceNoPassword(neu);
 			}
-			else if (pruefen)
+			else
 			{
-				_store.MarkVerified(neu.Id, regeln!);
+				if (pruefen)
+				{
+					_store.MarkVerified(neu.Id, regeln!);
+				}
+				// The administrator chose this password, so a user with rules sets their own at the first sign-in.
+				if (Policy.RulesFor(neu) != null || _store.MustChange(neu.Id))
+				{
+					_enforcer.RequireOwnPassword(neu, "new");
+				}
 			}
 		}
+	}
+
+	// After a PIN reset the password is the PIN, which was readable in a file on the server: users with rules replace it at the next sign-in.
+	private async Task PinEingeloest(HttpContext kontext, Func<Task> weiter)
+	{
+		kontext.Request.Headers.Remove("Accept-Encoding");
+		var original = kontext.Response.Body;
+		using var puffer = new MemoryStream();
+		kontext.Response.Body = puffer;
+		try
+		{
+			await weiter().ConfigureAwait(false);
+		}
+		finally
+		{
+			kontext.Response.Body = original;
+		}
+		try
+		{
+			if (kontext.Response.StatusCode == StatusCodes.Status200OK && puffer.Length > 0)
+			{
+				using var doc = JsonDocument.Parse(puffer.ToArray());
+				if (TryProp(doc.RootElement, "UsersReset", out var namen) && namen.ValueKind == JsonValueKind.Array)
+				{
+					foreach (var n in namen.EnumerateArray())
+					{
+						var user = n.ValueKind == JsonValueKind.String ? _users.GetUserByName(n.GetString()!) : null;
+						if (user != null && (Policy.RulesFor(user) != null || _store.MustChange(user.Id)))
+						{
+							_enforcer.RequireOwnPassword(user, "temporary");
+						}
+					}
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			_logger.LogWarning(ex, "Could not read the result of a password reset PIN");
+		}
+		puffer.Position = 0;
+		await puffer.CopyToAsync(original).ConfigureAwait(false);
 	}
 
 	private static async Task Ablehnen(HttpContext kontext, IReadOnlyList<string> fehler)

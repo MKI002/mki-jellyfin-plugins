@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Jellyfin.Data.Events.Users;
 using MediaBrowser.Controller.Events;
+using MediaBrowser.Controller.Library;
 
 namespace Jellyfin.Plugin.MkiPasswordPolicy.Services;
 
@@ -9,9 +10,15 @@ public class UserEvents : IEventConsumer<UserPasswordChangedEventArgs>, IEventCo
 {
 	private readonly PolicyStore _store;
 
-	public UserEvents(PolicyStore store)
+	private readonly Enforcer _enforcer;
+
+	private readonly IUserManager _users;
+
+	public UserEvents(PolicyStore store, Enforcer enforcer, IUserManager users)
 	{
 		_store = store;
+		_enforcer = enforcer;
+		_users = users;
 	}
 
 	// Any password change restarts the expiry clock. It does not lift a required change:
@@ -22,6 +29,16 @@ public class UserEvents : IEventConsumer<UserPasswordChangedEventArgs>, IEventCo
 		if (Policy.Configured(Plugin.Config))
 		{
 			_store.MarkChanged(eventArgs.Argument.Id);
+		}
+		// A reset to no password blocks a user with rules or an open request right away.
+		var user = _users.GetUserById(eventArgs.Argument.Id);
+		if (user != null)
+		{
+			if (!Policy.HasNoPassword(user))
+			{
+				_store.PasswordGivenToLocked(user.Id);
+			}
+			_enforcer.EnforceNoPassword(user);
 		}
 		return Task.CompletedTask;
 	}
@@ -35,6 +52,11 @@ public class UserEvents : IEventConsumer<UserPasswordChangedEventArgs>, IEventCo
 		if (Plugin.Config.RequireChangeForNewUsers)
 		{
 			_store.Require(eventArgs.Argument.Id, "new", TimeSpan.Zero);
+		}
+		var user = _users.GetUserById(eventArgs.Argument.Id);
+		if (user != null)
+		{
+			_enforcer.EnforceNoPassword(user);
 		}
 		return Task.CompletedTask;
 	}
