@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/MKI002/mki-jellyfin-plugins/main/src/Jellyfin.Plugin.MediaHero/logo.png",
     "versions": [
       {
+        "version": "1.4.1.0",
+        "changelog": "The API key on the settings page is hidden by default; the eye button shows it.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/MKI002/mki-jellyfin-plugins/releases/download/v1.6.0/mediahero_1.4.1.0.zip",
+        "checksum": "32c175a8ec43bcc1d2797308ce5cd853",
+        "timestamp": "2026-10-19T21:04:06Z"
+      },
+      {
         "version": "1.4.0.0",
         "changelog": "Cleans up an older copy of this plugin left behind by an update or rename: the old copy is marked for removal and stays inactive, so it can no longer break requests. Restart Jellyfin once to finish the cleanup. Settings are kept.",
         "targetAbi": "12.0.0.0",
@@ -95,6 +103,14 @@
     "imageUrl": "https://raw.githubusercontent.com/MKI002/mki-jellyfin-plugins/main/src/Jellyfin.Plugin.MkiPasswordPolicy/logo.png",
     "versions": [
       {
+        "version": "1.0.2.0",
+        "changelog": "The change dialog now stays above everything, including the Jellyfin loading spinner, and lists the password rules for your account. A profile picked for a user in the list is saved immediately, so requiring a new password right after picking it no longer drops the choice.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/MKI002/mki-jellyfin-plugins/releases/download/v1.6.0/mkipasswordpolicy_1.0.2.0.zip",
+        "checksum": "4f7a430cd8fa727cabf672308fe159f9",
+        "timestamp": "2026-10-19T21:04:06Z"
+      },
+      {
         "version": "1.0.1.0",
         "changelog": "All text is now in English.",
         "targetAbi": "12.0.0.0",
@@ -121,6 +137,14 @@
     "category": "General",
     "imageUrl": "https://raw.githubusercontent.com/MKI002/mki-jellyfin-plugins/main/src/Jellyfin.Plugin.SeerrBridge/logo.png",
     "versions": [
+      {
+        "version": "1.4.1.0",
+        "changelog": "The API key on the settings page is hidden by default; the eye button shows it.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/MKI002/mki-jellyfin-plugins/releases/download/v1.6.0/seerrbridge_1.4.1.0.zip",
+        "checksum": "7f9adc8ff457cd7b52d9de3c46c27fb0",
+        "timestamp": "2026-10-19T21:04:06Z"
+      },
       {
         "version": "1.4.0.0",
         "changelog": "Cleans up an older copy of this plugin left behind by an update or rename: the old copy is marked for removal and stays inactive, so it can no longer break requests. Restart Jellyfin once to finish the cleanup. Settings are kept. Single sign-on now steps aside on any error instead of blocking sign-in.",
