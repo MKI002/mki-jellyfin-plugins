@@ -191,6 +191,8 @@ public class PasswordPolicyController : ControllerBase
 				EffectiveProfile = Enforcer.IsExempt(u) ? "none" : Policy.EffectiveProfile(u.Id, c),
 				s.MustChange,
 				s.Reason,
+				Deadline = s.MustChange && s.Notice ? s.EnforceAfterUtc : null,
+				RemindedOn = _enforcer.RemindedDevices(u.Id),
 				s.LastChangedUtc,
 				PasswordStatus = Status(u, s),
 				s.VerifiedRules
@@ -217,7 +219,8 @@ public class PasswordPolicyController : ControllerBase
 				.Where(u => !anfrage.OnlyNotMeetingRules || Status(u, _store.Get(u.Id)) is "unknown" or "older" or "none")
 				.Select(u => u.Id)
 			: anfrage.UserIds ?? new List<Guid>();
-		int anzahl = _enforcer.Require(ids, "admin", Links.ChangeUrl(Request, Request.PathBase.Value ?? string.Empty));
+		int tage = Math.Clamp(anfrage.NoticeDays ?? c.NoticeDays, 0, 30);
+		int anzahl = _enforcer.Require(ids, "admin", Links.ChangeUrl(Request, Request.PathBase.Value ?? string.Empty), tage);
 		return new JsonResult(new { Count = anzahl });
 	}
 
@@ -353,6 +356,9 @@ public class RequireRequest
 	public bool OnlyNotMeetingRules { get; set; }
 
 	public List<Guid>? UserIds { get; set; }
+
+	// Days the users keep access, with reminders, before they are signed out. Null = the saved setting.
+	public int? NoticeDays { get; set; }
 }
 
 public class ValidateRequest

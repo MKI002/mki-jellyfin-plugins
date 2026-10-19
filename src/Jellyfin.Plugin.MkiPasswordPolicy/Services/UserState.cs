@@ -16,6 +16,12 @@ public class UserState
 	// Existing sessions keep working until then, so open apps can show the notice first.
 	public DateTime? EnforceAfterUtc { get; set; }
 
+	// Notice period: until EnforceAfterUtc the user keeps full access, including new sign-ins,
+	// and every app they open gets a reminder with the deadline and ChangeUrl.
+	public bool Notice { get; set; }
+
+	public string? ChangeUrl { get; set; }
+
 	public DateTime? LastChangedUtc { get; set; }
 
 	// The rules the current password was checked against when it was set. Null means it was never checked:

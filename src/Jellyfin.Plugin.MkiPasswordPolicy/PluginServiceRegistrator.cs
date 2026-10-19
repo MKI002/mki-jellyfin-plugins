@@ -21,5 +21,6 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
 		serviceCollection.AddScoped<IEventConsumer<UserDeletedEventArgs>, UserEvents>();
 		serviceCollection.AddSingleton<WebPatcher>();
 		serviceCollection.AddHostedService(sp => sp.GetRequiredService<WebPatcher>());
+		serviceCollection.AddHostedService<Reminder>();
 	}
 }

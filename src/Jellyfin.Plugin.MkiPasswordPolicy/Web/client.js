@@ -44,6 +44,7 @@
         shortStatus: 'Password',
         shortRequest: 'New password',
         shortPending: 'Requested, not set yet',
+        shortDue: 'Requested, keeps access until ',
         shortNone: 'Not requested',
         shortSameAsAll: ' (same as all users)',
         shortExempt: 'Exempt (administrator)',
@@ -513,7 +514,8 @@
                 : (T.profiles[u.EffectiveProfile] || u.EffectiveProfile) + (u.Profile === 'default' ? T.shortSameAsAll : '');
             row(T.shortProfile, profil);
             row(T.shortStatus, T.statuses[u.PasswordStatus] || u.PasswordStatus);
-            row(T.shortRequest, u.MustChange ? T.shortPending : T.shortNone);
+            row(T.shortRequest, !u.MustChange ? T.shortNone
+                : u.Deadline && new Date(u.Deadline) > new Date() ? T.shortDue + new Date(u.Deadline).toLocaleString() : T.shortPending);
             box.appendChild(table);
             if (u.IsDisabled) box.appendChild(el('p', null, T.shortDisabled));
             box.appendChild(el('p', null, T.shortReset));

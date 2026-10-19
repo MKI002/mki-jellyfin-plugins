@@ -195,7 +195,8 @@ public class LoginGate : IStartupFilter
 
 		string? grund = null;
 		var stand = _store.Get(id);
-		if (stand.MustChange)
+		// During a notice period sign-ins still work; the new session gets a reminder instead.
+		if (stand.MustChange && !_store.InNotice(id))
 		{
 			grund = stand.Reason ?? "admin";
 		}
