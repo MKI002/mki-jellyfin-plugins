@@ -78,7 +78,18 @@ public class SsoBruecke : IStartupFilter
 		{
 			UseExtensions.Use(app, (Func<HttpContext, Func<Task>, Task>)async delegate(HttpContext kontext, Func<Task> weiter)
 			{
-				if (!(await BehandeltAsync(kontext).ConfigureAwait(continueOnCapturedContext: false)))
+				bool behandelt;
+				try
+				{
+					behandelt = await BehandeltAsync(kontext).ConfigureAwait(continueOnCapturedContext: false);
+				}
+				catch (Exception ex) when (!kontext.Response.HasStarted)
+				{
+					// Never let single sign-on break normal sign-in.
+					LoggerExtensions.LogWarning((ILogger)(object)_logger, ex, "Single sign-on skipped", Array.Empty<object>());
+					behandelt = false;
+				}
+				if (!behandelt)
 				{
 					await weiter().ConfigureAwait(continueOnCapturedContext: false);
 				}

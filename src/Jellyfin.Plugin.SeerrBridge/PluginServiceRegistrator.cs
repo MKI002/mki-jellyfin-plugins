@@ -10,6 +10,12 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
 {
 	public void RegisterServices(IServiceCollection serviceCollection, IServerApplicationHost applicationHost)
 	{
+		if (DuplicateGuard.IsSuperseded)
+		{
+			// A newer copy of this plugin is loaded; leave all hooks to it.
+			return;
+		}
+
 		ServiceCollectionServiceExtensions.AddSingleton<SeerrClient>(serviceCollection);
 		ServiceCollectionServiceExtensions.AddSingleton<MkiRepository>(serviceCollection);
 		ServiceCollectionServiceExtensions.AddSingleton<IStartupFilter, LegacyAuthHeader>(serviceCollection);
