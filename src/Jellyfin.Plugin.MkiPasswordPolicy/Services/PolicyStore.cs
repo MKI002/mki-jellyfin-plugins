@@ -57,7 +57,7 @@ public class PolicyStore
 		return s.MustChange && (s.EnforceAfterUtc == null || s.EnforceAfterUtc <= DateTime.UtcNow);
 	}
 
-	public void Require(Guid userId, string reason, TimeSpan grace)
+	public void Require(Guid userId, string reason, TimeSpan grace, bool notice = false, string? changeUrl = null)
 	{
 		Aendern(userId, s =>
 		{
@@ -65,10 +65,23 @@ public class PolicyStore
 			{
 				s.RequiredSinceUtc = DateTime.UtcNow;
 				s.EnforceAfterUtc = DateTime.UtcNow + grace;
+				s.Notice = notice;
 			}
 			s.MustChange = true;
 			s.Reason = reason;
+			s.ChangeUrl = changeUrl ?? s.ChangeUrl;
 		});
+	}
+
+	// True while the user is in a notice period: still allowed in, but reminded.
+	public bool InNotice(Guid userId)
+	{
+		if (!MustChange(userId))
+		{
+			return false;
+		}
+		var s = Get(userId);
+		return s.MustChange && s.Notice && s.EnforceAfterUtc > DateTime.UtcNow;
 	}
 
 	public void Release(Guid userId)
@@ -79,6 +92,8 @@ public class PolicyStore
 			s.Reason = null;
 			s.RequiredSinceUtc = null;
 			s.EnforceAfterUtc = null;
+			s.Notice = false;
+			s.ChangeUrl = null;
 		});
 	}
 
@@ -215,6 +230,8 @@ public class PolicyStore
 		RequiredSinceUtc = s.RequiredSinceUtc,
 		LastChangedUtc = s.LastChangedUtc,
 		EnforceAfterUtc = s.EnforceAfterUtc,
+		Notice = s.Notice,
+		ChangeUrl = s.ChangeUrl,
 		VerifiedRules = s.VerifiedRules,
 		KnownEmpty = s.KnownEmpty
 	};

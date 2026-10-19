@@ -6,6 +6,6 @@
   "owner": "MKI",
   "category": "Authentication",
   "targetAbi": "12.0.0.0",
-  "version": "1.0.3.0",
-  "changelog": "Disabled users can get profiles and password requests, also from the buttons for many users; they apply once the account is enabled again. With exempt administrators on, administrators are greyed out in the list. Each user's Password tab in the dashboard now shows their profile, password status and any request, with a shortcut to them in the plugin settings. Live hints on that tab now use the rules of the user being edited."
+  "version": "1.0.4.0",
+  "changelog": "New notice period when requiring a new password (right away, or 1, 3, 7 or 14 days): users keep access until the deadline and every app they use, TVs included, shows a message with the deadline and the change link, at most once a day per device. The list shows the deadline and which devices were reminded. New Copy message for users button with a ready text to send."
 }

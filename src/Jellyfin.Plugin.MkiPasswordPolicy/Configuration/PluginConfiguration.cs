@@ -43,6 +43,9 @@ public class PluginConfiguration : BasePluginConfiguration
 
 	public int GraceSeconds { get; set; } = 20;
 
+	// Last notice period picked on the settings page: 0 = sign out right away, otherwise days of continued access with reminders.
+	public int NoticeDays { get; set; }
+
 	public string NotifyText { get; set; } = string.Empty;
 
 	public string PublicUrl { get; set; } = string.Empty;

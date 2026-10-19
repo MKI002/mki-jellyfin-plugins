@@ -82,10 +82,17 @@
 
                     <div class="verticalSection">
                         <h3>Require a new password</h3>
-                        <p class="fieldDescription">
-                            Open apps get a message, then every device is signed out. Until the new password is set,
-                            the user cannot sign in on any device. You can cancel it per user.
-                        </p>
+                        <div class="selectContainer">
+                            <label class="selectLabel" for="NoticeDays">Time to set it</label>
+                            <select is="emby-select" id="NoticeDays" class="emby-select-withcolor emby-select">
+                                <option value="0">Right away: sign out now</option>
+                                <option value="1">1 day</option>
+                                <option value="3">3 days</option>
+                                <option value="7">7 days</option>
+                                <option value="14">14 days</option>
+                            </select>
+                            <div class="fieldDescription" id="MkiPwFristText"></div>
+                        </div>
                         <button is="emby-button" type="button" id="MkiPwUnsichere" class="raised block emby-button">
                             <span>Everyone with a profile whose password is not known to meet its rules …</span>
                         </button>
@@ -98,13 +105,19 @@
                         <h3>Link for TVs and apps</h3>
                         <p class="fieldDescription">
                             In a browser (and in the Jellyfin apps for Android, iOS and desktop) the dialog appears right at
-                            sign-in. TVs and other native apps only report “sign-in failed”. Those users set their password
-                            through this link, for example on their phone, and then sign in as usual:
+                            sign-in. TVs and other native apps can only show a short message while the user still has access,
+                            and after that only “sign-in failed”. Those users set their password through this link, for
+                            example on their phone, and then sign in as usual. Pick a notice period above so their apps
+                            remind them first, or send them the message below yourself.
                         </p>
                         <div class="mkipw-link">
                             <input is="emby-input" type="text" id="MkiPwLink" readonly />
                             <button is="emby-button" type="button" id="MkiPwLinkKopieren" class="raised emby-button"><span>Copy</span></button>
                         </div>
+                        <button is="emby-button" type="button" id="MkiPwNachrichtKopieren" class="raised block emby-button">
+                            <span>Copy message for users</span>
+                        </button>
+                        <div class="fieldDescription">A short text with the link and the deadline from “Time to set it”, for a chat or an email.</div>
                     </div>
                 </div>
 
@@ -187,7 +200,7 @@
                     <div class="inputContainer">
                         <label class="inputLabel inputLabelUnfocused" for="NotifyText">Message text</label>
                         <textarea is="emby-textarea" id="NotifyText" rows="3" class="emby-textarea"></textarea>
-                        <div class="fieldDescription">Leave empty for the default text. {url} is replaced with the link to the password page.</div>
+                        <div class="fieldDescription">Leave empty for the default text. {url} is replaced with the link to the password page, {date} with the deadline of a notice period.</div>
                     </div>
                     <div class="inputContainer">
                         <label class="inputLabel inputLabelUnfocused" for="PublicUrl">Public server address (optional)</label>
@@ -389,7 +402,15 @@
                     zelle(tr, marke(st[0], st[1], st[2] + (u.VerifiedRules ? ' Checked against: ' + regelText(u.VerifiedRules) + '.' : '')));
                     zaehler[u.PasswordStatus] = (zaehler[u.PasswordStatus] || 0) + 1;
 
-                    zelle(tr, u.MustChange ? marke('mkipw-offen', 'Pending (' + (GRUENDE[u.Reason] || u.Reason || '') + ')') : marke('mkipw-neutral', '–'));
+                    var wechsel = u.MustChange
+                        ? marke('mkipw-offen', u.Deadline && new Date(u.Deadline) > new Date()
+                            ? 'Until ' + new Date(u.Deadline).toLocaleDateString()
+                            : 'Pending (' + (GRUENDE[u.Reason] || u.Reason || '') + ')',
+                            u.Deadline ? 'Keeps access until ' + new Date(u.Deadline).toLocaleString() + ', then is signed out until a new password is set. '
+                                + (u.RemindedOn && u.RemindedOn.length ? 'Reminded on: ' + u.RemindedOn.join(', ') + '.' : 'No app has been reminded yet: none was open since the request.')
+                                : '')
+                        : marke('mkipw-neutral', '–');
+                    zelle(tr, wechsel);
                     zelle(tr, datum(u.LastChangedUtc));
 
                     var knopf = document.createElement('button');
@@ -398,8 +419,8 @@
                     knopf.className = 'raised emby-button';
                     knopf.textContent = u.MustChange ? 'Cancel request' : 'Require new password';
                     knopf.addEventListener('click', function () {
-                        if (!u.MustChange && !confirm('Require a new password from ' + u.Name + '? All of this user’s devices will be signed out.')) return;
-                        senden(u.MustChange ? 'Release' : 'Require', { UserIds: [u.Id] });
+                        if (!u.MustChange && !confirm('Require a new password from ' + u.Name + '? ' + fristSatz())) return;
+                        senden(u.MustChange ? 'Release' : 'Require', { UserIds: [u.Id], NoticeDays: frist() });
                     });
                     zelle(tr, knopf);
                     tbody.appendChild(tr);
@@ -489,12 +510,52 @@
                 if (navigator.clipboard) navigator.clipboard.writeText(feld.value); else document.execCommand('copy');
             });
 
+            function frist() {
+                return parseInt($('#NoticeDays').value, 10) || 0;
+            }
+
+            function fristEnde() {
+                return new Date(Date.now() + frist() * 86400000);
+            }
+
+            function fristSatz() {
+                return frist()
+                    ? 'They keep access for ' + frist() + (frist() === 1 ? ' day' : ' days') + ' and every app they use is reminded with the link, at most once a day per device. After that, every device is signed out until they set one.'
+                    : 'Open apps get a message, then every device is signed out. Nobody affected can sign in until they set a new password.';
+            }
+
+            function fristZeigen() {
+                $('#MkiPwFristText').textContent = fristSatz();
+            }
+
+            $('#NoticeDays').addEventListener('change', function () {
+                fristZeigen();
+                // Remembered right away, like the profile choices in the table.
+                ApiClient.getPluginConfiguration(pluginId).then(function (c) {
+                    c.NoticeDays = frist();
+                    return ApiClient.updatePluginConfiguration(pluginId, c);
+                });
+            });
+
+            $('#MkiPwNachrichtKopieren').addEventListener('click', function () {
+                var bis = frist() ? ' by ' + fristEnde().toLocaleDateString() : '';
+                var text = 'Hi! Please set a new password for Jellyfin' + bis + '. Open ' + (daten.ChangeUrl || '') + ' on your phone or computer, '
+                    + 'enter your username and current password, and choose a new one. Then sign in again on your TV and other devices with the new password.';
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(text).then(function () {
+                        Dashboard.alert({ title: 'MKI Password Policy', message: 'Copied:\n\n' + text });
+                    }, function () { prompt('Copy this message:', text); });
+                } else {
+                    prompt('Copy this message:', text);
+                }
+            });
+
             var modus = 'alle';
             function fragen(m, titel, text) {
                 modus = m;
                 $('#MkiPwMitAdmins').checked = false;
                 $('#MkiPwFrageTitel').textContent = titel;
-                $('#MkiPwFrageText').textContent = text + ' Open apps get a message and are then signed out. Nobody affected can sign in until they set a new password. You can cancel it per user.';
+                $('#MkiPwFrageText').textContent = text + ' ' + fristSatz() + ' You can cancel it per user.';
                 $('#MkiPwFrage').classList.add('mkipw-aktiv');
             }
             $('#MkiPwAlle').addEventListener('click', function () {
@@ -508,7 +569,7 @@
             });
             $('#MkiPwJa').addEventListener('click', function () {
                 $('#MkiPwFrage').classList.remove('mkipw-aktiv');
-                var nutzdaten = { IncludeAdministrators: $('#MkiPwMitAdmins').checked };
+                var nutzdaten = { IncludeAdministrators: $('#MkiPwMitAdmins').checked, NoticeDays: frist() };
                 if (modus === 'alle') nutzdaten.All = true; else nutzdaten.OnlyNotMeetingRules = true;
                 senden('Require', nutzdaten).then(function (antwort) {
                     if (antwort && antwort.Count != null) {
@@ -524,6 +585,8 @@
                     REGELN.concat(WEITERES_BOOL, WEITERES_ZAHL, WEITERES_TEXT).forEach(function (k) { setzen(k, c[k]); });
                     optionen($('#DefaultProfile'), false, c.DefaultProfile);
                     optionen($('#MkiPwTestProfil'), false, 'standard');
+                    $('#NoticeDays').value = String([0, 1, 3, 7, 14].indexOf(c.NoticeDays) >= 0 ? c.NoticeDays : 0);
+                    fristZeigen();
                     return benutzerLaden();
                 }).then(function () {
                     Dashboard.hideLoadingMsg();
@@ -538,6 +601,7 @@
                     REGELN.concat(WEITERES_BOOL, WEITERES_ZAHL, WEITERES_TEXT).forEach(function (k) { c[k] = lesen(k); });
                     c.MinLength = Math.max(1, c.MinLength);
                     c.DefaultProfile = $('#DefaultProfile').value;
+                    c.NoticeDays = frist();
                     var wahlen = page.querySelectorAll('#MkiPwListe select[data-user]');
                     // Without a loaded user list keep the stored assignments instead of wiping them.
                     if (wahlen.length) {
