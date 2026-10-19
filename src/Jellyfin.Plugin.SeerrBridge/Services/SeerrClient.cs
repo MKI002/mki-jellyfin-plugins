@@ -82,12 +82,12 @@ public class SeerrClient
 			using HttpResponseMessage antwort = await client.SendAsync(m, ct).ConfigureAwait(continueOnCapturedContext: false);
 			if (!antwort.IsSuccessStatusCode)
 			{
-				return (Ok: false, Text: "Jellyseerr antwortete mit " + (int)antwort.StatusCode + ((antwort.StatusCode == HttpStatusCode.Forbidden) ? " (API-Schluessel falsch?)" : string.Empty));
+				return (Ok: false, Text: "Seerr antwortete mit " + (int)antwort.StatusCode + ((antwort.StatusCode == HttpStatusCode.Forbidden) ? " (API-Schluessel falsch?)" : string.Empty));
 			}
 			using JsonDocument jsonDocument = JsonDocument.Parse(await antwort.Content.ReadAsStringAsync(ct).ConfigureAwait(continueOnCapturedContext: false));
 			JsonElement value;
 			string text = (jsonDocument.RootElement.TryGetProperty("version", out value) ? value.GetString() : "?");
-			return (Ok: true, Text: "Verbunden, Jellyseerr " + text);
+			return (Ok: true, Text: "Verbunden, Seerr " + text);
 		}
 		catch (Exception ex)
 		{
@@ -111,7 +111,7 @@ public class SeerrClient
 				using HttpResponseMessage antwort = await client.SendAsync(m, ct).ConfigureAwait(continueOnCapturedContext: false);
 				if (!antwort.IsSuccessStatusCode)
 				{
-					LoggerExtensions.LogWarning((ILogger)(object)_logger, "Jellyseerr-Suche antwortete mit {Code}", new object[1] { (int)antwort.StatusCode });
+					LoggerExtensions.LogWarning((ILogger)(object)_logger, "Seerr-Suche antwortete mit {Code}", new object[1] { (int)antwort.StatusCode });
 					return Array.Empty<SeerrTreffer>();
 				}
 				IReadOnlyList<SeerrTreffer> result;
@@ -162,7 +162,7 @@ public class SeerrClient
 		}
 		catch (Exception ex2)
 		{
-			LoggerExtensions.LogWarning((ILogger)(object)_logger, ex2, "Jellyseerr-Suche fehlgeschlagen", Array.Empty<object>());
+			LoggerExtensions.LogWarning((ILogger)(object)_logger, ex2, "Seerr-Suche fehlgeschlagen", Array.Empty<object>());
 			return Array.Empty<SeerrTreffer>();
 		}
 		throw null;
@@ -189,7 +189,7 @@ public class SeerrClient
 	{
 		if (!Eingerichtet)
 		{
-			return (Ok: false, Text: "Jellyseerr ist nicht eingerichtet");
+			return (Ok: false, Text: "Seerr ist nicht eingerichtet");
 		}
 		if (mediaType != "movie" && mediaType != "tv")
 		{
@@ -231,11 +231,11 @@ public class SeerrClient
 			catch (JsonException)
 			{
 			}
-			return (Ok: false, Text: string.IsNullOrEmpty(text) ? ("Jellyseerr antwortete mit " + (int)antwort.StatusCode) : text);
+			return (Ok: false, Text: string.IsNullOrEmpty(text) ? ("Seerr antwortete mit " + (int)antwort.StatusCode) : text);
 		}
 		catch (Exception ex2)
 		{
-			LoggerExtensions.LogWarning((ILogger)(object)_logger, ex2, "Anfrage an Jellyseerr fehlgeschlagen", Array.Empty<object>());
+			LoggerExtensions.LogWarning((ILogger)(object)_logger, ex2, "Anfrage an Seerr fehlgeschlagen", Array.Empty<object>());
 			return (Ok: false, Text: "Nicht erreichbar");
 		}
 	}
@@ -244,7 +244,7 @@ public class SeerrClient
 	{
 		if (!Eingerichtet)
 		{
-			return (Ok: false, Keks: null, Text: "Jellyseerr ist nicht eingerichtet");
+			return (Ok: false, Keks: null, Text: "Seerr ist nicht eingerichtet");
 		}
 		try
 		{
@@ -255,16 +255,16 @@ public class SeerrClient
 			if (!antwort.IsSuccessStatusCode)
 			{
 				string text = await antwort.Content.ReadAsStringAsync(ct).ConfigureAwait(continueOnCapturedContext: false);
-				LoggerExtensions.LogWarning((ILogger)(object)_logger, "Anmeldung bei Jellyseerr fehlgeschlagen ({Code}): {Text}", new object[2]
+				LoggerExtensions.LogWarning((ILogger)(object)_logger, "Anmeldung bei Seerr fehlgeschlagen ({Code}): {Text}", new object[2]
 				{
 					(int)antwort.StatusCode,
 					text
 				});
-				return (Ok: false, Keks: null, Text: "Jellyseerr antwortete mit " + (int)antwort.StatusCode);
+				return (Ok: false, Keks: null, Text: "Seerr antwortete mit " + (int)antwort.StatusCode);
 			}
 			if (!antwort.Headers.TryGetValues("Set-Cookie", out IEnumerable<string> values))
 			{
-				return (Ok: false, Keks: null, Text: "Jellyseerr hat keinen Sitzungskeks geschickt");
+				return (Ok: false, Keks: null, Text: "Seerr hat keinen Sitzungskeks geschickt");
 			}
 			foreach (string item in values)
 			{
@@ -277,8 +277,8 @@ public class SeerrClient
 		}
 		catch (Exception ex)
 		{
-			LoggerExtensions.LogWarning((ILogger)(object)_logger, ex, "Anmeldung bei Jellyseerr fehlgeschlagen", Array.Empty<object>());
-			return (Ok: false, Keks: null, Text: "Jellyseerr nicht erreichbar");
+			LoggerExtensions.LogWarning((ILogger)(object)_logger, ex, "Anmeldung bei Seerr fehlgeschlagen", Array.Empty<object>());
+			return (Ok: false, Keks: null, Text: "Seerr nicht erreichbar");
 		}
 	}
 
@@ -343,7 +343,7 @@ public class SeerrClient
 		}
 		catch (Exception ex)
 		{
-			LoggerExtensions.LogWarning((ILogger)(object)_logger, ex, "Benutzerzuordnung aus Jellyseerr nicht ladbar", Array.Empty<object>());
+			LoggerExtensions.LogWarning((ILogger)(object)_logger, ex, "Benutzerzuordnung aus Seerr nicht ladbar", Array.Empty<object>());
 		}
 	}
 

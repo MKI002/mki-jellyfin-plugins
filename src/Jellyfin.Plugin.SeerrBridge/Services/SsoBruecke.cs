@@ -149,7 +149,7 @@ public class SsoBruecke : IStartupFilter
 					kontext.Response.StatusCode = 200;
 					kontext.Response.ContentType = "application/json; charset=utf-8";
 					await HttpResponseWritingExtensions.WriteAsync(kontext.Response, text, default(CancellationToken)).ConfigureAwait(continueOnCapturedContext: false);
-					LoggerExtensions.LogInformation((ILogger)(object)_logger, "Anmeldung fuer {Benutzer} ueber Einmal-Ausweis an Jellyseerr weitergereicht", new object[1] { ausweis.Benutzer });
+					LoggerExtensions.LogInformation((ILogger)(object)_logger, "Anmeldung fuer {Benutzer} ueber Einmal-Ausweis an Seerr weitergereicht", new object[1] { ausweis.Benutzer });
 					return true;
 				}
 				catch (Exception ex3)
@@ -177,9 +177,9 @@ public class SsoBruecke : IStartupFilter
 		}
 		AuthorizationInfo val = new AuthorizationInfo
 		{
-			Client = "Jellyseerr",
+			Client = "Seerr",
 			Version = "1.0",
-			Device = "Jellyseerr Bridge",
+			Device = "Seerr Bridge",
 			DeviceId = "seerrbridge-" + ausweis.UserId.ToString("N")
 		};
 		QuickConnectResult start = qc.TryConnect(val);

@@ -7,7 +7,7 @@ A cinematic hero carousel at the top of the Jellyfin home screen.
 ## Features
 
 - **Server-side list.** The carousel is assembled and cached on the server, so the home screen loads it in one request. A background pre-warmer keeps it fresh.
-- **Sources.** Mix recently added, recently released, next up, favorites, top rated, random, Jellyseerr trending, Jellyseerr popular movies or series, and a hand-picked whitelist. Each source has its own upper limit.
+- **Sources.** Mix recently added, recently released, next up, favorites, top rated, random, Seerr trending, Seerr popular movies or series, and a hand-picked whitelist. Each source has its own upper limit.
 - **Per-library targets.** Choose how many titles each library contributes.
 - **Filters.** Whitelists and blacklists for titles, genres and tags, blocked age ratings, minimum community rating, minimum production year, hide watched items, and require a backdrop or logo.
 - **Looks.** Five layouts (full width, contained, compact, poster left, centered), four transitions (fade, slide, Ken Burns, none) and five indicators (dots, thumbnails, progress bar, numbers, none). Height, corner radius, scrim, text position and scale, and custom CSS are all adjustable.
@@ -18,6 +18,6 @@ A cinematic hero carousel at the top of the Jellyfin home screen.
 
 1. Install from the plugin catalog and restart Jellyfin.
 2. Open **Dashboard → Plugins → Media Hero**, pick your libraries and sources, and save.
-3. For Jellyseerr sources, enter your Jellyseerr URL and API key (Jellyseerr → Settings → General). The key stays on the server.
+3. For Seerr sources, enter your Seerr URL and API key (Seerr → Settings → General). The key stays on the server.
 
 The carousel appears on the home screen after a page reload.

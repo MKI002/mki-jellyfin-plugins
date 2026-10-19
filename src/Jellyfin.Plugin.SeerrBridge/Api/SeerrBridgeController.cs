@@ -149,7 +149,7 @@ public class SeerrBridgeController : ControllerBase
 			return (ActionResult)new JsonResult((object)new
 			{
 				ok = false,
-				text = "Jellyfin und Jellyseerr teilen keine gemeinsame Domaene"
+				text = "Jellyfin und Seerr teilen keine gemeinsame Domaene"
 			});
 		}
 		string ausweis = SsoBruecke.Ausstellen(guid, text);
