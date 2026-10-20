@@ -22,3 +22,4 @@ obj/
 
 # Release packages
 dist/
+_site/

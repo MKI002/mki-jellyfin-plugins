@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{NAME}} · settings page demo</title>
+<meta name="description" content="A clickable demo of the {{NAME}} settings page for Jellyfin, with made-up example data.">
+<link rel="icon" href="{{LOGO}}">
+<link rel="stylesheet" href="assets/shell.css">
+<script src="assets/shell.js"></script>
+<script src="assets/mocks/{{MOCK}}"></script>
+</head>
+<body class="demo-page">
+<header class="skinHeader demo-header">
+  <button type="button" class="demo-iconbtn demo-menu" id="demoMenu" aria-label="Plugins" aria-expanded="false" aria-controls="demoDrawer"><span class="material-icons" aria-hidden="true">menu</span></button>
+  <a class="demo-brand" href="./"><span class="demo-mark" aria-hidden="true">MKI</span><span>Jellyfin Plugins</span></a>
+  <span class="demo-chip"><span class="material-icons" aria-hidden="true">science</span>Demo</span>
+  <span class="demo-spacer"></span>
+  <button type="button" class="demo-iconbtn" id="demoTheme" aria-label="Switch theme"><span class="material-icons" aria-hidden="true">light_mode</span></button>
+  <a class="demo-iconbtn" href="{{REPO}}" aria-label="Source code on GitHub" title="Source code on GitHub"><span class="material-icons" aria-hidden="true">code</span></a>
+</header>
+<nav class="demo-drawer" id="demoDrawer" aria-label="Plugins">
+  <div class="demo-drawer__inner">
+    <p class="demo-drawer__head">Plugins</p>
+{{NAV}}
+    <a class="demo-drawer__link demo-drawer__all" href="./"><span class="material-icons" aria-hidden="true">apps</span><span>All plugins</span></a>
+  </div>
+</nav>
+<main class="demo-main">
+  <p class="demo-banner"><span class="material-icons" aria-hidden="true">info</span><span>This is a demo of the real settings page with made-up example data. Nothing is sent anywhere, and your changes are gone when you reload. <a href="{{README}}">About {{NAME}}</a></span></p>
+{{PAGE}}
+</main>
+<div class="demo-note" id="demoNote" role="status" hidden><span class="material-icons" aria-hidden="true">info</span><span></span></div>
+</body>
+</html>

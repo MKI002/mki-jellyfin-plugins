@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MKI Jellyfin Plugins · settings page demos</title>
+<meta name="description" content="Clickable demos of the MKI Jellyfin plugins' settings pages, with made-up example data.">
+<link rel="stylesheet" href="assets/shell.css">
+<script src="assets/shell.js"></script>
+</head>
+<body class="demo-index">
+<header class="skinHeader demo-header">
+  <a class="demo-brand" href="./"><span class="demo-mark" aria-hidden="true">MKI</span><span>Jellyfin Plugins</span></a>
+  <span class="demo-chip"><span class="material-icons" aria-hidden="true">science</span>Demo</span>
+  <span class="demo-spacer"></span>
+  <button type="button" class="demo-iconbtn" id="demoTheme" aria-label="Switch theme"><span class="material-icons" aria-hidden="true">light_mode</span></button>
+  <a class="demo-iconbtn" href="{{REPO}}" aria-label="Source code on GitHub" title="Source code on GitHub"><span class="material-icons" aria-hidden="true">code</span></a>
+</header>
+<main class="demo-main">
+  <div class="demo-home">
+    <img class="demo-hero" src="assets/banner.png" width="1600" height="520" alt="MKI Jellyfin Plugins">
+    <h1>Try the settings pages</h1>
+    <p class="demo-lede">Each demo is the plugin's real settings page from this repository, filled with made-up example data. Click around, change settings, run the actions: nothing is sent anywhere, and everything resets when you reload.</p>
+    <div class="demo-cards">
+{{CARDS}}
+    </div>
+    <p class="demo-foot">To install the plugins, add <code>{{MANIFEST}}</code> as a repository in Jellyfin (Dashboard → Plugins → Repositories). Source code and documentation are on <a href="{{REPO}}">GitHub</a>.</p>
+  </div>
+</main>
+</body>
+</html>

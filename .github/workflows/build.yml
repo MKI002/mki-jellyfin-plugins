@@ -21,6 +21,8 @@ jobs:
           dotnet-version: 10.0.x
       - name: Validate metadata
         run: python3 build/package.py --check
+      - name: Settings page demos build
+        run: python3 build/demo.py --check
       - name: Release gates (plugins, English only, personal data, security)
         run: python3 build/checks.py
       - name: Version bump and release checklist
