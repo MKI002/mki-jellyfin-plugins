@@ -214,7 +214,7 @@ function MkiKit(page, o) {
     tagsSet(box, []);
     box.addEventListener('click', function (e) { if (e.target === box) input.focus(); });
     function add(raw) {
-      var parts = String(raw).split(/\n|,(?=\s*\S)/).map(function (s) { return s.trim(); }).filter(Boolean), l = box._tags.slice(), changed = false;
+      var parts = String(raw).split(/\n/).map(function (s) { return s.trim(); }).filter(Boolean), l = box._tags.slice(), changed = false;
       parts.forEach(function (p) { if (l.map(function (x) { return x.toLowerCase(); }).indexOf(p.toLowerCase()) < 0) { l.push(p); changed = true; } });
       input.value = ''; if (changed) { tagsSet(box, l); box.dispatchEvent(new Event('change', { bubbles: true })); }
     }
@@ -404,12 +404,18 @@ function MkiKit(page, o) {
   }
   /* what the server has, or will have once the save on its way lands */
   function base(k) { return Object.prototype.hasOwnProperty.call(sending, k) ? sending[k] : committed[k]; }
+  /* a failed save is over once nothing is waiting to be sent any more */
+  function settleFailed() {
+    if (!failed || count(pending)) return;
+    failed = false; if (failToast) { dropToast(failToast); failToast = null; } renderLog();
+  }
+  /* Undo only while the change is still what the server has; a later change of the same key would be lost */
+  function current(k, to) { return same(committed[k], to) && !pending[k] && !Object.prototype.hasOwnProperty.call(sending, k); }
   function queue(k, opt) {
     var v = read(k);
     /* back to that value: nothing to send */
     if (same(v, base(k))) {
-      delete pending[k];
-      if (failed && !count(pending)) { failed = false; if (failToast) { dropToast(failToast); failToast = null; } renderLog(); }
+      delete pending[k]; settleFailed();
       restState(); return;
     }
     pending[k] = { from: pending[k] ? pending[k].from : base(k), to: v, undo: !!(opt && opt.undo) };
@@ -420,7 +426,7 @@ function MkiKit(page, o) {
     clearTimeout(flushTimer); flushTimer = null;
     if (inFlight) { again = true; return; }
     var keys = Object.keys(pending);
-    if (!keys.length) { restState(); return; }
+    if (!keys.length) { settleFailed(); restState(); return; }
     var batch = keys.map(function (k) { return { k: k, from: pending[k].from, to: pending[k].to, undo: pending[k].undo }; });
     setState('saving', 'Saving…');
     sending = {}; batch.forEach(function (b) { sending[b.k] = b.to; });
@@ -454,8 +460,12 @@ function MkiKit(page, o) {
     if (custom) { toast(custom.text, custom); return; }
     if (batch.length === 1) {
       var b0 = batch[0];
-      toast((b0.undo ? 'Undone: ' : 'Saved: ') + labelOf(b0.k) + ' → ' + show(b0.k, b0.to), b0.undo ? {} : { action: 'Undo', onAction: function () { undoTo(b0.k, b0.from); } });
+      toast((b0.undo ? 'Undone: ' : 'Saved: ') + labelOf(b0.k) + ' → ' + show(b0.k, b0.to), b0.undo ? {} : { action: 'Undo', onAction: function () { undoIfCurrent(b0.k, b0.from, b0.to); } });
     } else toast(batch.length + ' changes saved', { action: 'Show', onAction: openPop });
+  }
+  function undoIfCurrent(k, from, to) {
+    if (current(k, to)) { undoTo(k, from); return; }
+    toast('Not undone: ' + labelOf(k) + ' has changed again since. Undo the newer change first (Changes this visit).', { bad: true, icon: 'history', action: 'Show', onAction: openPop });
   }
   /* an undo asks the same question as the change itself (e.g. going live, locking an account) */
   function undoTo(k, v) {
@@ -469,9 +479,11 @@ function MkiKit(page, o) {
     var c = e.target.closest && e.target.closest('[data-key]'); if (!c || !page.contains(c) || c.hasAttribute('data-nosave')) return;
     var k = c.getAttribute('data-key');
     trim(c);
-    if (c.hasAttribute('data-validate') && !validate(c)) { invalid[k] = 1; delete pending[k]; restState(); return; }
+    if (c.hasAttribute('data-validate') && !validate(c)) { invalid[k] = 1; delete pending[k]; settleFailed(); restState(); return; }
     delete invalid[k];
     var hook = o.confirm && o.confirm[k];
+    /* the page is gone (a field left focused loses it now): a change that would need a question is put back, never asked */
+    if (hook && away) { if (quiet(k)) queue(k); else write(k, pending[k] ? pending[k].to : base(k)); restState(); return; }
     if (hook && !same(read(k), base(k))) {
       var to = read(k), answer = hook(toServer(k, to), toServer(k, base(k)));
       if (answer === true) { queue(k); return; }
@@ -499,25 +511,35 @@ function MkiKit(page, o) {
     var c = e.target; if (!isText(c) || !c.hasAttribute('data-key')) return;
     var k = c.getAttribute('data-key'); if (same(read(k), base(k))) return;
     e.preventDefault(); e.stopPropagation();
-    write(k, base(k)); delete pending[k]; delete invalid[k]; validate(c); restState();
+    write(k, base(k)); delete pending[k]; delete invalid[k]; validate(c); settleFailed(); restState();
   });
 
-  /* leaving the page: a valid draft in the focused field is saved, waiting changes go out at once */
-  function leave() {
+  /* leaving the page: a valid draft in the focused field is saved, waiting changes go out at once.
+     No question can be asked while the page goes away, and a hidden page must not keep a modal dialog open (it would
+     block the whole web client): open dialogs are cancelled, and a draft of a key with a question is put back unsaved. */
+  var away = false;
+  /* o.quiet[k](to, from): true when this change of a key with a question surely needs none. It must only look at the values
+     (no dialogs, no requests); without it, a draft of such a key is not saved when the page is left. */
+  function quiet(k) { var q = o.quiet && o.quiet[k]; return !!q && q(toServer(k, read(k)), toServer(k, base(k))) === true; }
+  function leave(unloading) {
+    /* the browser may still keep the page (the admin can choose to stay), so an unload only saves */
+    if (unloading !== true) { away = true; openDialogs.slice().forEach(function (f) { f(); }); }
     var a = document.activeElement;
     if (a && page.contains(a) && isText(a) && a.hasAttribute('data-key') && loaded) {
-      var k = a.getAttribute('data-key'), hook = o.confirm && o.confirm[k];
+      var k = a.getAttribute('data-key');
       trim(a);
-      /* no dialog can be shown while the page goes away: a key with a question is only saved when its hook says
-         synchronously that no question is needed (returns true, not a promise) */
-      if (!same(read(k), base(k)) && validate(a) && (!hook || hook(toServer(k, read(k)), toServer(k, base(k))) === true)) { delete invalid[k]; queue(k); }
+      if (!same(read(k), base(k))) {
+        var ok = validate(a) && (!(o.confirm && o.confirm[k]) || quiet(k));
+        if (ok) { delete invalid[k]; queue(k); }
+        else if (o.confirm && o.confirm[k]) { write(k, pending[k] ? pending[k].to : base(k)); delete invalid[k]; }
+      }
     }
     if (count(pending)) flush();
     closePop();
   }
-  page.addEventListener('viewbeforehide', leave);
+  page.addEventListener('viewbeforehide', function () { leave(); });
   listen(window, 'beforeunload', function (e) {
-    leave();
+    leave(true);
     if (count(pending) || inFlight || count(invalid) || failed) { e.preventDefault(); e.returnValue = ''; }
   });
 
@@ -561,6 +583,7 @@ function MkiKit(page, o) {
     return loading;
   }
   page.addEventListener('pageshow', function () {
+    away = false;
     tone(); stickyTop(); setTimeout(tabOverflow, 0);
     var busy = count(pending) || inFlight || count(invalid) || failed;
     if (!loaded || !busy) load();
@@ -587,7 +610,7 @@ function MkiKit(page, o) {
       else {
         t.appendChild(el('b', null, labelOf(x.k))); t.appendChild(document.createTextNode(' ' + show(x.k, x.from) + ' → ' + show(x.k, x.to)));
         li.appendChild(t);
-        if (same(committed[x.k], x.to)) { var b = btn('Undo', 'mk-btn--sm mk-btn--ghost', 'undo'); b.addEventListener('click', function () { undoTo(x.k, x.from); }); li.appendChild(b); }
+        if (current(x.k, x.to)) { var b = btn('Undo', 'mk-btn--sm mk-btn--ghost', 'undo'); b.addEventListener('click', function () { undoTo(x.k, x.from); }); li.appendChild(b); }
       }
       rows.push(li);
     });
@@ -644,6 +667,7 @@ function MkiKit(page, o) {
   }
 
   /* ---------- dialogs (native <dialog>, built fresh for every question) ---------- */
+  var openDialogs = [];
   function dialog(d) {
     return new Promise(function (resolve) {
       var dlg = el('dialog', 'mk-dialog'), result = null, done = false;
@@ -662,7 +686,10 @@ function MkiKit(page, o) {
         foot.appendChild(x);
       });
       dlg.appendChild(head); dlg.appendChild(body); dlg.appendChild(foot);
-      function finish(v) { if (done) return; done = true; result = v; if (dlg.open) dlg.close(); if (dlg.parentNode) dlg.parentNode.removeChild(dlg); resolve(v); }
+      function finish(v) { if (done) return; done = true; result = v; openDialogs = openDialogs.filter(function (f) { return f !== cancel; }); if (dlg.open) dlg.close(); if (dlg.parentNode) dlg.parentNode.removeChild(dlg); resolve(v); }
+      /* leaving the page cancels the dialog, also a locked one */
+      function cancel() { finish(d.cancelValue === undefined ? null : d.cancelValue); }
+      openDialogs.push(cancel);
       /* a locked dialog (a one-time password) cannot be closed by Esc or by anything but its own buttons */
       dlg.addEventListener('cancel', function (e) { if (d.locked) e.preventDefault(); });
       dlg.addEventListener('close', function () {
@@ -688,7 +715,7 @@ function MkiKit(page, o) {
     return new Promise(function (resolve) {
       function fallback() {
         var ta = el('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.top = '-1000px'; ta.style.opacity = '0';
-        var host = document.querySelector('dialog[open]') || page; host.appendChild(ta); ta.select();
+        var host = $('dialog[open]') || page; host.appendChild(ta); ta.select();
         var ok = false; try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
         host.removeChild(ta); resolve(ok);
       }
@@ -781,7 +808,7 @@ function MkiKit(page, o) {
   kit.loaded = function () { return loaded; };
   kit.reload = load;
   /* undo a saved change from a custom toast (toastFor): asks the key's question like the kit's own Undo */
-  kit.undo = function (k, from) { undoTo(k, toDom(k, from)); };
+  kit.undo = function (k, from, to) { undoIfCurrent(k, toDom(k, from), toDom(k, to)); };
   kit.whenSaved = whenSaved; kit.flush = flush; kit.busy = busy; kit.logAction = logAction; kit.api = api;
   kit.warn = function (k, text) { if (text) warns[k] = text; else delete warns[k]; restState(); };
   kit.selectTab = function (name) { selectTab(tabByName(name)); };
