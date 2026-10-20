@@ -774,7 +774,8 @@ function MkiKit(page, o) {
   kit.hhmm = hhmm; kit.day = day; kit.dayTime = dayTime; kit.span = span; kit.plural = plural; kit.num = num; kit.param = param; kit.store = store;
   kit.toast = toast; kit.dropToast = dropToast; kit.confirm = confirmBox; kit.dialog = dialog; kit.copy = copy;
   kit.read = read; kit.write = write; kit.validate = validate; kit.rules = RULES; kit.label = labelOf; kit.show = show;
-  kit.saved = function (k) { return cfg ? cfg[k] : undefined; };
+  /* a copy for structured values, so a page can never change what the kit counts as saved */
+  kit.saved = function (k) { var v = cfg ? cfg[k] : undefined; return v !== null && typeof v === 'object' ? copyJson(v) : v; };
   kit.value = function (k) { return toServer(k, read(k)); };
   kit.config = function () { return cfg; };
   kit.loaded = function () { return loaded; };

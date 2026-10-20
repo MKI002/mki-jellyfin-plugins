@@ -6,6 +6,6 @@
   "owner": "MKI",
   "category": "General",
   "targetAbi": "12.0.0.0",
-  "version": "1.4.2.0",
-  "changelog": "Security update. Every user now gets their own banner that follows their library access, parental controls and blocked tags, instead of one list for everyone, and banners are never shared between accounts in the browser cache. Calls to Seerr no longer follow redirects or keep cookies, and library names on the settings page are escaped."
+  "version": "1.5.0.0",
+  "changelog": "New settings page in the shared MKI design, with tabs for Sources, Filters, Look, Details & buttons and Behavior. A live preview draws your own list with the banner's own code at the size of your window and follows every slider while you drag; a small copy stays in the corner while you scroll. The header shows how many titles your list has, how old it is, and how many sources and library places are in use. Text placement is set by dragging the text block, layouts are picked from drawings, and Find a setting jumps to any option. The Seerr address and key can be taken over from MKI Seerr Bridge in one click. Settings save as soon as you change them, with undo, and the list is rebuilt once after each change; turning the banner off asks first. Works on phones and in light and dark themes."
 }

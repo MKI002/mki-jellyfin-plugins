@@ -1189,9 +1189,14 @@ function MkiKit(page, o) {
 
   /* ---------- reading and writing controls ---------- */
   function keyEls(k) { return $$('[data-key="' + k + '"]'); }
+  /* single-line text is saved without leading or trailing spaces (data-notrim keeps them) */
+  function trim(e) { if (e && e.tagName === 'INPUT' && /^(text|url|password|search|email|tel)$/.test(e.type) && !e.hasAttribute('data-notrim') && e.value !== e.value.trim()) e.value = e.value.trim(); }
   function isText(e) { return e && (e.tagName === 'TEXTAREA' || (e.tagName === 'INPUT' && /^(text|url|password|search|number|email|tel)$/.test(e.type))); }
+  function copyJson(v) { return v == null ? null : JSON.parse(JSON.stringify(v)); }
   function read(k) {
     var els = keyEls(k), e = els[0]; if (!e) return undefined;
+    /* data-type="json": the page keeps a structured value (e.g. a list of objects) on the element as mkValue */
+    if (e.getAttribute('data-type') === 'json') return copyJson(e.mkValue);
     if (e.classList.contains('mk-tags')) return (e._tags || []).slice();
     if (e.type === 'radio') { var c = els.filter(function (x) { return x.checked; })[0]; return c ? c.value : null; }
     if (e.type === 'checkbox') return els.length > 1 ? els.filter(function (x) { return x.checked; }).map(function (x) { return x.value; }) : e.checked;
@@ -1199,7 +1204,8 @@ function MkiKit(page, o) {
   }
   function write(k, v) {
     var els = keyEls(k), e = els[0]; if (!e) return;
-    if (e.classList.contains('mk-tags')) tagsSet(e, v || []);
+    if (e.getAttribute('data-type') === 'json') e.mkValue = copyJson(v);
+    else if (e.classList.contains('mk-tags')) tagsSet(e, v || []);
     else if (e.type === 'radio') els.forEach(function (x) { x.checked = x.value === String(v); });
     else if (e.type === 'checkbox') { if (els.length > 1) els.forEach(function (x) { x.checked = (v || []).indexOf(x.value) >= 0; }); else e.checked = !!v; }
     else if (e.tagName === 'SELECT' && v != null && !$$('option', e).some(function (op) { return op.value === String(v); })) {
@@ -1213,7 +1219,8 @@ function MkiKit(page, o) {
   function typeOf(k) {
     var e = keyEls(k)[0], t = e && e.getAttribute('data-type'); if (t) return t;
     var v = cfg ? cfg[k] : undefined;
-    if (Array.isArray(v)) return v.length && typeof v[0] === 'number' ? 'number[]' : 'string[]';
+    if (Array.isArray(v)) return v.length && typeof v[0] === 'number' ? 'number[]' : v.length && v[0] !== null && typeof v[0] === 'object' ? 'json' : 'string[]';
+    if (v !== null && typeof v === 'object') return 'json';
     if (typeof v === 'boolean') return 'bool';
     if (typeof v === 'number') return 'number';
     return 'string';
@@ -1224,11 +1231,13 @@ function MkiKit(page, o) {
       case 'number': return v === '' || v == null || isNaN(+v) ? (cfg && typeof cfg[k] === 'number' ? cfg[k] : 0) : +v;
       case 'number[]': return (v || []).map(Number);
       case 'string[]': return (v || []).map(String);
+      case 'json': return copyJson(v);
       default: return v == null ? '' : String(v);
     }
   }
   function toDom(k, v) {
     var els = keyEls(k), e = els[0]; if (!e) return v;
+    if (e.getAttribute('data-type') === 'json') return copyJson(v);
     if (e.classList.contains('mk-tags') || (e.type === 'checkbox' && els.length > 1)) return (v || []).map(String);
     if (e.type === 'checkbox') return v === true || v === 'true';
     return v == null ? '' : String(v);
@@ -1243,7 +1252,8 @@ function MkiKit(page, o) {
     if (o.show) { var custom = o.show(k, toServer(k, v)); if (custom != null) return custom; }
     var els = keyEls(k), e = els[0];
     if (v === true) return 'On'; if (v === false) return 'Off';
-    if (Array.isArray(v)) return v.length ? (v.length > 3 ? v.length + ' entries' : v.join(', ')) : 'none';
+    if (Array.isArray(v)) return v.length ? (v.length > 3 || typeof v[0] === 'object' ? plural(v.length, 'entry', 'entries') : v.join(', ')) : 'none';
+    if (v !== null && typeof v === 'object') return 'changed';
     if (e && e.type === 'radio') {
       var r = els.filter(function (x) { return x.value === String(v); })[0], lb = r && r.labels && r.labels[0];
       var dn = lb && (lb.hasAttribute('data-name') ? lb : lb.querySelector('[data-name]'));
@@ -1299,16 +1309,22 @@ function MkiKit(page, o) {
     if (n) return setState('invalid', n === 1 ? '1 field needs a fix · not saved' : n + ' fields need a fix · not saved');
     if (inFlight || flushTimer || count(pending)) return setState('saving', 'Saving…');
     var a = document.activeElement;
-    if (a && page.contains(a) && isText(a) && a.hasAttribute('data-key') && !same(read(a.getAttribute('data-key')), committed[a.getAttribute('data-key')])) return setState('editing', 'Editing · saves when you leave the field');
+    if (a && page.contains(a) && isText(a) && a.hasAttribute('data-key') && !same(read(a.getAttribute('data-key')), base(a.getAttribute('data-key')))) return setState('editing', 'Editing · saves when you leave the field');
     var w = Object.keys(warns);
     if (w.length) return setState('warn', 'Saved · ' + (w.length === 1 ? warns[w[0]] : w.length + ' warnings'));
     setState('saved', 'All changes saved' + (lastSaved ? ' · ' + hhmm(lastSaved) : ''));
   }
+  /* what the server has, or will have once the save on its way lands */
+  function base(k) { return Object.prototype.hasOwnProperty.call(sending, k) ? sending[k] : committed[k]; }
   function queue(k, opt) {
     var v = read(k);
-    /* back to the saved value: nothing to send, unless a save of this key is on its way (then the old value goes after it) */
-    if (same(v, committed[k]) && !sending[k]) { delete pending[k]; restState(); return; }
-    pending[k] = { from: pending[k] ? pending[k].from : committed[k], to: v, undo: !!(opt && opt.undo) };
+    /* back to that value: nothing to send */
+    if (same(v, base(k))) {
+      delete pending[k];
+      if (failed && !count(pending)) { failed = false; if (failToast) { dropToast(failToast); failToast = null; } renderLog(); }
+      restState(); return;
+    }
+    pending[k] = { from: pending[k] ? pending[k].from : base(k), to: v, undo: !!(opt && opt.undo) };
     setState('saving', 'Saving…');
     clearTimeout(flushTimer); flushTimer = setTimeout(flush, 350);
   }
@@ -1319,7 +1335,7 @@ function MkiKit(page, o) {
     if (!keys.length) { restState(); return; }
     var batch = keys.map(function (k) { return { k: k, from: pending[k].from, to: pending[k].to, undo: pending[k].undo }; });
     setState('saving', 'Saving…');
-    sending = {}; batch.forEach(function (b) { sending[b.k] = 1; });
+    sending = {}; batch.forEach(function (b) { sending[b.k] = b.to; });
     inFlight = ApiClient.getPluginConfiguration(pluginId).then(function (c) {
       batch.forEach(function (b) { c[b.k] = toServer(b.k, b.to); });
       return ApiClient.updatePluginConfiguration(pluginId, c).then(function () { return c; });
@@ -1357,20 +1373,24 @@ function MkiKit(page, o) {
   function undoTo(k, v) {
     var go = function () { write(k, v); delete invalid[k]; queue(k, { undo: true }); };
     var hook = o.confirm && o.confirm[k];
-    if (hook && !same(v, committed[k])) Promise.resolve(hook(toServer(k, v), cfg ? cfg[k] : undefined)).then(function (ok) { if (ok) go(); });
+    if (hook && !same(v, base(k))) Promise.resolve(hook(toServer(k, v), toServer(k, base(k)))).then(function (ok) { if (ok) go(); });
     else go();
   }
   function onChange(e) {
     if (!loaded) return;
     var c = e.target.closest && e.target.closest('[data-key]'); if (!c || !page.contains(c) || c.hasAttribute('data-nosave')) return;
     var k = c.getAttribute('data-key');
+    trim(c);
     if (c.hasAttribute('data-validate') && !validate(c)) { invalid[k] = 1; delete pending[k]; restState(); return; }
     delete invalid[k];
     var hook = o.confirm && o.confirm[k];
-    if (hook && !same(read(k), committed[k])) {
-      var before = committed[k];
-      Promise.resolve(hook(toServer(k, read(k)), cfg ? cfg[k] : undefined)).then(function (ok) {
-        if (ok) queue(k); else { write(k, before); restState(); }
+    if (hook && !same(read(k), base(k))) {
+      var to = read(k), answer = hook(toServer(k, to), toServer(k, base(k)));
+      if (answer === true) { queue(k); return; }
+      /* a save can land while the question is open: yes saves what was asked about, no puts back the last
+         accepted value (a change still waiting to be sent, or what the server has) so the screen matches */
+      Promise.resolve(answer).then(function (ok) {
+        if (ok) { write(k, to); queue(k); } else { write(k, pending[k] ? pending[k].to : base(k)); restState(); }
       });
       return;
     }
@@ -1389,17 +1409,20 @@ function MkiKit(page, o) {
   page.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape') return;
     var c = e.target; if (!isText(c) || !c.hasAttribute('data-key')) return;
-    var k = c.getAttribute('data-key'); if (same(read(k), committed[k])) return;
+    var k = c.getAttribute('data-key'); if (same(read(k), base(k))) return;
     e.preventDefault(); e.stopPropagation();
-    write(k, committed[k]); delete invalid[k]; validate(c); restState();
+    write(k, base(k)); delete pending[k]; delete invalid[k]; validate(c); restState();
   });
 
   /* leaving the page: a valid draft in the focused field is saved, waiting changes go out at once */
   function leave() {
     var a = document.activeElement;
     if (a && page.contains(a) && isText(a) && a.hasAttribute('data-key') && loaded) {
-      var k = a.getAttribute('data-key');
-      if (!same(read(k), committed[k]) && !(o.confirm && o.confirm[k]) && validate(a)) { delete invalid[k]; queue(k); }
+      var k = a.getAttribute('data-key'), hook = o.confirm && o.confirm[k];
+      trim(a);
+      /* no dialog can be shown while the page goes away: a key with a question is only saved when its hook says
+         synchronously that no question is needed (returns true, not a promise) */
+      if (!same(read(k), base(k)) && validate(a) && (!hook || hook(toServer(k, read(k)), toServer(k, base(k))) === true)) { delete invalid[k]; queue(k); }
     }
     if (count(pending)) flush();
     closePop();
@@ -1508,7 +1531,7 @@ function MkiKit(page, o) {
           allKeys().forEach(function (k) {
             if (same(committed[k], opened[k]) && same(read(k), opened[k])) return;
             var hook = o.confirm && o.confirm[k];
-            if (hook) chain = chain.then(function () { return Promise.resolve(hook(toServer(k, opened[k]), cfg[k])).then(function (y) { if (y) { write(k, opened[k]); delete invalid[k]; queue(k, { undo: true }); } }); });
+            if (hook) chain = chain.then(function () { return Promise.resolve(hook(toServer(k, opened[k]), toServer(k, base(k)))).then(function (y) { if (y) { write(k, opened[k]); delete invalid[k]; queue(k, { undo: true }); } }); });
             else { write(k, opened[k]); delete invalid[k]; queue(k, { undo: true }); }
           });
         });
@@ -1663,11 +1686,14 @@ function MkiKit(page, o) {
   kit.hhmm = hhmm; kit.day = day; kit.dayTime = dayTime; kit.span = span; kit.plural = plural; kit.num = num; kit.param = param; kit.store = store;
   kit.toast = toast; kit.dropToast = dropToast; kit.confirm = confirmBox; kit.dialog = dialog; kit.copy = copy;
   kit.read = read; kit.write = write; kit.validate = validate; kit.rules = RULES; kit.label = labelOf; kit.show = show;
-  kit.saved = function (k) { return cfg ? cfg[k] : undefined; };
+  /* a copy for structured values, so a page can never change what the kit counts as saved */
+  kit.saved = function (k) { var v = cfg ? cfg[k] : undefined; return v !== null && typeof v === 'object' ? copyJson(v) : v; };
   kit.value = function (k) { return toServer(k, read(k)); };
   kit.config = function () { return cfg; };
   kit.loaded = function () { return loaded; };
   kit.reload = load;
+  /* undo a saved change from a custom toast (toastFor): asks the key's question like the kit's own Undo */
+  kit.undo = function (k, from) { undoTo(k, toDom(k, from)); };
   kit.whenSaved = whenSaved; kit.flush = flush; kit.busy = busy; kit.logAction = logAction; kit.api = api;
   kit.warn = function (k, text) { if (text) warns[k] = text; else delete warns[k]; restState(); };
   kit.selectTab = function (name) { selectTab(tabByName(name)); };
