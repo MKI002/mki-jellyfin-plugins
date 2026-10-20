@@ -1,5 +1,24 @@
 [
   {
+    "guid": "bfc7b26a-b0fb-4040-944c-c9417ac73c54",
+    "name": "MKI Continue Watching Cleanup",
+    "overview": "A Remove button on Continue Watching cards, and an optional cleanup of items nobody has touched for a while.",
+    "description": "Adds a Remove button to the Continue Watching cards of the Jellyfin web client, so people can take things off their own row, with Undo. Optionally clears, once a day, the videos each user has not played for a set number of days (30 by default, 7 at least). Removing only forgets the spot to resume from: files, library entries, watched marks, play counts, favourites and ratings are never touched, and every removal or cleanup run can be undone for 30 days. Everything starts turned off; the plugin changes nothing until an administrator turns a part on.",
+    "owner": "MKI",
+    "category": "General",
+    "imageUrl": "https://raw.githubusercontent.com/MKI002/mki-jellyfin-plugins/main/src/Jellyfin.Plugin.MkiContinueWatching/logo.png",
+    "versions": [
+      {
+        "version": "1.0.0.0",
+        "changelog": "First release. A Remove button on Continue Watching cards in the web client (on hover next to Mark played and Favorite, always visible on touch screens), with Undo. Optional daily auto cleanup of videos a user has not played for a set number of days, with a preview of what it would clear, Clean up now, and Undo for every run. Only the resume position is cleared; nothing is deleted or marked as watched. Everything starts turned off.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/MKI002/mki-jellyfin-plugins/releases/download/v1.8.0/mkicontinuewatching_1.0.0.0.zip",
+        "checksum": "2d15b9554bfd72786de45f3cc86eeabb",
+        "timestamp": "2026-10-20T18:43:49Z"
+      }
+    ]
+  },
+  {
     "guid": "6f3a1d84-2b57-4c19-9a0e-7d51c8e4b2f6",
     "name": "MKI Media Hero",
     "overview": "A cinematic hero banner on the Jellyfin home screen.",
