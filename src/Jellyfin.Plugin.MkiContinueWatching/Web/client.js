@@ -24,10 +24,14 @@
 
     var css = [
         '.mkicw-remove .mkicw-ic{font-size:1.4em}',
-        '.mkicw-x{position:absolute;top:.4em;left:.4em;z-index:3;width:2.2em;height:2.2em;margin:0;padding:0;border:0;border-radius:50%;',
-        'display:none;align-items:center;justify-content:center;cursor:pointer;color:#fff;background:rgba(0,0,0,.62);',
-        'box-shadow:0 0 0 1px rgba(255,255,255,.28);-webkit-tap-highlight-color:transparent}',
-        '.mkicw-x .mkicw-ic{font-size:1.25em}',
+        /* 44 px tap target, drawn as a smaller round button */
+        '.mkicw-x{position:absolute;top:0;left:0;z-index:3;width:44px;height:44px;margin:0;padding:0;border:0;background:transparent;',
+        'display:none;align-items:center;justify-content:center;cursor:pointer;color:#fff;-webkit-tap-highlight-color:transparent}',
+        '.mkicw-x .mkicw-ic{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;font-size:20px;',
+        'background:rgba(0,0,0,.62);box-shadow:0 0 0 1px rgba(255,255,255,.28)}',
+        /* the hover row also shows while one of its buttons has keyboard focus */
+        '.card[data-mkicw] .cardOverlayContainer:focus-within{opacity:1!important}',
+        '.card[data-mkicw] .cardOverlayButton-br .mkicw-remove:focus-visible{opacity:1!important;outline:2px solid #00a4dc!important;outline-offset:2px!important;box-shadow:0 0 0 4px rgba(0,164,220,.35)!important}',
         '.mkicw-x:focus-visible,.mkicw-remove:focus-visible{outline:2px solid #00a4dc;outline-offset:2px}',
         '@media (hover:none){.mkicw-x{display:flex}.mkicw-remove{display:none!important}}',
         '.layout-tv .mkicw-x{display:none!important}',
@@ -38,7 +42,8 @@
         'background:#202020;color:#fff;box-shadow:0 6px 24px rgba(0,0,0,.45);font-size:.95em;line-height:1.35;opacity:0;transition:opacity .2s,transform .2s}',
         '.mkicw-toast.is-on{opacity:1;transform:translate(-50%,0)}',
         '.mkicw-toast button{flex:none;margin:0;border:0;border-radius:.3em;padding:.45em .8em;font:inherit;font-weight:600;color:#00a4dc;background:transparent;cursor:pointer;text-transform:uppercase;letter-spacing:.04em}',
-        '.mkicw-toast button:hover,.mkicw-toast button:focus-visible{background:rgba(0,164,220,.16);outline:none}'
+        '.mkicw-toast button:hover{background:rgba(0,164,220,.16)}.mkicw-toast button:focus-visible{background:rgba(0,164,220,.22);outline:2px solid #00a4dc;outline-offset:1px}',
+        '@media (prefers-reduced-motion:reduce){.mkicw-gone,.mkicw-toast{transition:none}}'
     ].join('');
 
     function api() { return window.ApiClient; }
@@ -156,7 +161,8 @@
     function remove(card, id) {
         if (card.classList.contains('mkicw-busy')) return;
         card.classList.add('mkicw-busy');
-        request('POST', 'MkiContinueWatching/Remove', { ItemId: id }).then(function () {
+        request('POST', 'MkiContinueWatching/Remove', { ItemId: id }).then(function (res) {
+            var changed = !!(res && res.Removed);
             var section = card.closest('.verticalSection');
             var width = card.offsetWidth;
             card.style.maxWidth = width + 'px';
@@ -168,7 +174,12 @@
                 card.hidden = true;
                 if (section && !section.querySelector('.card[data-id]:not([hidden])')) section.style.display = 'none';
             }, 420);
-            toast(T.removed, T.undo, function () { undo(card, section, id); });
+            var hadFocus = card.contains(document.activeElement);
+            /* nothing was cleared (it was already gone, for example from another device): no Undo to offer */
+            if (changed) toast(T.removed, T.undo, function () { undo(card, section, id); });
+            else toast(T.removed);
+            /* keyboard users keep their place: focus moves to Undo instead of being lost with the card */
+            if (hadFocus && toastEl) { var u = toastEl.querySelector('button'); if (u) u.focus(); }
         }, function (err) {
             card.classList.remove('mkicw-busy');
             toast(err && err.status === 403 ? T.off : T.failed);
@@ -185,6 +196,11 @@
             card.classList.remove('mkicw-gone');
             card.style.maxWidth = '';
             toast(T.restored);
+            /* keyboard focus goes back to where it was: the card's own Remove button */
+            var back = card.querySelector('.mkicw-remove, .mkicw-x');
+            var x = card.querySelector('.mkicw-x');
+            if (x && getComputedStyle(x).display !== 'none') back = x;
+            if (back && (!document.activeElement || document.activeElement === document.body)) { try { back.focus(); } catch (e) { /* ignore */ } }
         }, function () { toast(T.undoFailed); });
     }
 
@@ -204,7 +220,13 @@
         document.body.appendChild(t);
         toastEl = t;
         requestAnimationFrame(function () { t.classList.add('is-on'); });
-        toastTimer = setTimeout(hide, action ? 8000 : 4000);
+        var wait = action ? 10000 : 4000;
+        toastTimer = setTimeout(hide, wait);
+        /* no timeout while the pointer or keyboard focus is on the toast */
+        function hold() { clearTimeout(toastTimer); }
+        function release() { if (!t.matches(':hover') && !t.contains(document.activeElement)) { clearTimeout(toastTimer); toastTimer = setTimeout(hide, 3000); } }
+        t.addEventListener('mouseenter', hold); t.addEventListener('focusin', hold);
+        t.addEventListener('mouseleave', release); t.addEventListener('focusout', function () { setTimeout(release, 0); });
         function hide() {
             clearTimeout(toastTimer);
             t.classList.remove('is-on');

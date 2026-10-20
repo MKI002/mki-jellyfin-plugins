@@ -105,18 +105,24 @@ public class WebPatcher : IHostedService
 		}
 	}
 
+	// Jellyfin's own web folder. The usual install folders are tried only when Jellyfin names none, so the plugin
+	// never edits a copy of the web client that Jellyfin does not serve.
 	private static string? WebRoot(IApplicationPaths paths)
 	{
-		string?[] candidates =
+		string? configured = TryGet(() => paths.WebPath);
+		if (!string.IsNullOrEmpty(configured))
 		{
-			TryGet(() => paths.WebPath),
+			return File.Exists(Path.Combine(configured, "index.html")) ? configured : null;
+		}
+		string[] candidates =
+		{
 			"/jellyfin/jellyfin-web",
 			"/usr/share/jellyfin/web",
 			"/usr/lib/jellyfin/bin/jellyfin-web"
 		};
-		foreach (string? path in candidates)
+		foreach (string path in candidates)
 		{
-			if (!string.IsNullOrEmpty(path) && File.Exists(Path.Combine(path, "index.html")))
+			if (File.Exists(Path.Combine(path, "index.html")))
 			{
 				return path;
 			}

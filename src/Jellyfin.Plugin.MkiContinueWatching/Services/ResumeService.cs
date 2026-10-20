@@ -90,7 +90,7 @@ public class ResumeService
 		if (cleared.Count > 0)
 		{
 			_store.Add(cleared);
-			_logger.LogInformation("MKI Continue Watching: {User} removed {Item} from Continue Watching", user.Username, item.Name);
+			_logger.LogDebug("MKI Continue Watching: {User} removed {Item} from Continue Watching", user.Username, item.Name);
 		}
 		return cleared.Count;
 	}
@@ -99,6 +99,10 @@ public class ResumeService
 	public int Restore(User user, Guid itemId)
 	{
 		var entries = _store.LatestManual(user.Id, itemId);
+		if (entries.Count == 0)
+		{
+			return 0;
+		}
 		int restored = RestoreEntries(entries, u => u == user.Id ? user : null);
 		_store.MarkRestored(entries);
 		return restored;
@@ -141,33 +145,60 @@ public class ResumeService
 		}
 		lock (_runLock)
 		{
+			// Asked again: a run that waited for the lock must not start after auto cleanup was turned off.
+			if (!Plugin.Config.EnableAutoCleanup)
+			{
+				return null;
+			}
 			int days = Plugin.Days;
 			var cutoff = DateTime.UtcNow.AddDays(-days);
 			var run = new CleanupRun { Id = Guid.NewGuid(), At = DateTime.UtcNow, Days = days, Trigger = trigger };
-			var all = new List<ClearedEntry>();
 			var users = _users.GetUsers().ToList();
-			for (int i = 0; i < users.Count; i++)
+			// The run is listed before anything is cleared, and each user's undo entries are saved as soon as that
+			// user is done, so a run that stops part-way can still be undone for what it did.
+			_store.Add(Array.Empty<ClearedEntry>(), run);
+			try
 			{
-				cancellationToken.ThrowIfCancellationRequested();
-				var user = users[i];
-				int before = all.Count;
-				foreach (var item in Resumable(user))
+				for (int i = 0; i < users.Count; i++)
 				{
-					var data = _userData.GetUserData(user, item);
-					if (data == null || data.PlaybackPositionTicks <= 0 || data.Played || !IsStale(data, cutoff))
+					cancellationToken.ThrowIfCancellationRequested();
+					var user = users[i];
+					var cleared = new List<ClearedEntry>();
+					foreach (var item in Resumable(user))
 					{
-						continue;
+						var data = _userData.GetUserData(user, item);
+						if (data == null || data.PlaybackPositionTicks <= 0 || data.Played || !IsStale(data, cutoff))
+						{
+							continue;
+						}
+						try
+						{
+							cleared.AddRange(Clear(user, item, item.Id, run.At, manual: false, runId: run.Id, onlyOlderThan: cutoff));
+						}
+						catch (Exception ex) when (ex is not OperationCanceledException)
+						{
+							_logger.LogWarning(ex, "MKI Continue Watching: could not clear {Item} for {User}", item.Name, user.Username);
+						}
 					}
-					all.AddRange(Clear(user, item, item.Id, run.At, manual: false, runId: run.Id, onlyOlderThan: cutoff));
+					if (cleared.Count > 0)
+					{
+						run.Users++;
+						run.Cleared += cleared.Count;
+						_store.Add(cleared);
+					}
+					progress?.Report(100.0 * (i + 1) / Math.Max(1, users.Count));
 				}
-				if (all.Count > before)
-				{
-					run.Users++;
-				}
-				progress?.Report(100.0 * (i + 1) / Math.Max(1, users.Count));
+				run.Finished = true;
 			}
-			run.Cleared = all.Count;
-			_store.Add(all, run);
+			finally
+			{
+				if (!run.Finished)
+				{
+					run.Partial = true;
+					_logger.LogWarning("MKI Continue Watching: the cleanup stopped part-way after clearing {Count} items; it can still be undone", run.Cleared);
+				}
+				_store.Add(Array.Empty<ClearedEntry>());
+			}
 			_logger.LogInformation("MKI Continue Watching: cleanup cleared {Count} items for {Users} users (not played for {Days} days)", run.Cleared, run.Users, days);
 			return run;
 		}
@@ -194,6 +225,8 @@ public class ResumeService
 		var cleared = new List<ClearedEntry>();
 		var seen = new HashSet<Guid>();
 		var target = item;
+		// Jellyfin finds a movie's other versions only from its primary version.
+		var primary = item is Video video && video.PrimaryVersionId.HasValue ? _library.GetItemById(video.PrimaryVersionId.Value) ?? item : item;
 		for (int i = 0; i < MaxVersions && target != null && seen.Add(target.Id); i++)
 		{
 			var data = _userData.GetUserData(user, target);
@@ -215,10 +248,18 @@ public class ResumeService
 				_userData.SaveUserData(user, target, new UpdateUserItemDataDto { PlaybackPositionTicks = 0 }, UserDataSaveReason.UpdateUserData);
 			}
 			// The next version that still has a resume position for this user, if any.
-			var resume = _userData.GetResumeUserData(user, item);
+			var resume = _userData.GetResumeUserData(user, primary);
 			target = resume != null && resume.UserData.PlaybackPositionTicks > 0 && !seen.Contains(resume.VersionId)
 				? _library.GetItemById(resume.VersionId)
 				: null;
+			if (target == null && !seen.Contains(primary.Id))
+			{
+				target = primary;
+			}
+			if (target != null && !target.IsVisibleStandalone(user))
+			{
+				target = null;
+			}
 		}
 		return cleared;
 	}

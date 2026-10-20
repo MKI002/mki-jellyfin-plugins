@@ -17,9 +17,9 @@ public class ClearedStore
 
 	private const int MaxManualPerUser = 200;
 
-	private const int MaxAutoEntries = 20000;
+	public const int MaxAutoEntries = 50000;
 
-	private const int MaxRuns = 20;
+	private const int MaxRuns = 100;
 
 	private readonly object _lock = new();
 
@@ -74,9 +74,14 @@ public class ClearedStore
 
 	public void MarkRestored(IEnumerable<ClearedEntry> entries, Guid? runId = null, int restoredCount = 0)
 	{
+		var list = entries.ToList();
+		if (list.Count == 0 && runId == null)
+		{
+			return;
+		}
 		lock (_lock)
 		{
-			foreach (var e in entries)
+			foreach (var e in list)
 			{
 				e.Restored = true;
 			}
@@ -121,6 +126,12 @@ public class ClearedStore
 		foreach (var old in auto)
 		{
 			_data.Entries.Remove(old);
+			// The run stays listed, marked so the page can say its undo is no longer complete.
+			var run = _data.Runs.FirstOrDefault(r => r.Id == old.RunId);
+			if (run != null)
+			{
+				run.UndoIncomplete = true;
+			}
 		}
 		if (_data.Runs.Count > MaxRuns)
 		{
@@ -145,7 +156,16 @@ public class ClearedStore
 		}
 		catch (Exception ex)
 		{
-			_logger.LogWarning(ex, "MKI Continue Watching Cleanup could not read its undo data; starting with none");
+			// Kept aside instead of being overwritten by the next save, so the undo data can still be recovered.
+			string aside = _file + ".broken-" + DateTime.UtcNow.ToString("yyyyMMddHHmmss", System.Globalization.CultureInfo.InvariantCulture);
+			try
+			{
+				File.Move(_file, aside);
+			}
+			catch (Exception)
+			{
+			}
+			_logger.LogWarning(ex, "MKI Continue Watching Cleanup could not read its undo data; it was moved to {File} and the plugin starts with none", aside);
 		}
 		return new Data();
 	}
@@ -161,7 +181,7 @@ public class ClearedStore
 		}
 		catch (Exception ex)
 		{
-			_logger.LogWarning(ex, "MKI Continue Watching Cleanup could not save its undo data");
+			_logger.LogError(ex, "MKI Continue Watching Cleanup could not save its undo data; Undo may not work for recent changes");
 		}
 	}
 
@@ -214,4 +234,12 @@ public class CleanupRun
 	public DateTime? UndoneAt { get; set; }
 
 	public int Restored { get; set; }
+
+	public bool Finished { get; set; }
+
+	// Stopped part-way (server shut down, error): what it cleared until then is in the undo data.
+	public bool Partial { get; set; }
+
+	// More entries than the undo data holds: Undo puts back only part of the run.
+	public bool UndoIncomplete { get; set; }
 }

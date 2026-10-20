@@ -728,10 +728,15 @@
 #MkiContinueWatchingConfigPage .cw-num { text-align: right; font-variant-numeric: tabular-nums; }
 #MkiContinueWatchingConfigPage .cw-meter { display: block; height: 6px; border-radius: 3px; background: var(--mk-surface-3); overflow: hidden; }
 #MkiContinueWatchingConfigPage .cw-meter i { display: block; height: 100%; background: var(--mk-grad); }
+#MkiContinueWatchingConfigPage .cw-undone { font-size: .8rem; color: var(--mk-dim); }
+#MkiContinueWatchingConfigPage .cw-bar { display: block; height: 5px; margin-top: 8px; border-radius: 3px; background: var(--mk-surface-3); overflow: hidden; }
+#MkiContinueWatchingConfigPage .cw-bar i { display: block; height: 100%; width: 40%; background: #00a4dc; }
+#MkiContinueWatchingConfigPage .cw-bar--empty i { width: 0; }
 #MkiContinueWatchingConfigPage .cw-more { margin: 8px 0 0; font-size: .8rem; color: var(--mk-faint); }
 
 /* runs */
 #MkiContinueWatchingConfigPage .cw-runs .mk-list__row { font-size: .88rem; }
+#MkiContinueWatchingConfigPage .cw-runs .mk-list__row > :last-child { justify-self: end; text-align: right; }
 #MkiContinueWatchingConfigPage .cw-runs .mk-chip { justify-self: start; }
 #MkiContinueWatchingConfigPage .cw-empty { display: flex; gap: 10px; align-items: flex-start; margin: 0; padding: 12px 14px; border-radius: 11px; border: 1px dashed var(--mk-line-2); color: var(--mk-dim); font-size: .88rem; line-height: 1.45; }
 #MkiContinueWatchingConfigPage .cw-empty .mk-ic { color: var(--mk-faint); }
@@ -742,8 +747,10 @@
 @media (max-width: 640px) {
   #MkiContinueWatchingConfigPage .cw-barinfo span { display: none; }
   #MkiContinueWatchingConfigPage .cw-barinfo::after { content: "Each change saves itself"; }
-  #MkiContinueWatchingConfigPage .cw-users .mk-list__row { grid-template-columns: minmax(0, 1fr) auto auto; }
   #MkiContinueWatchingConfigPage .cw-users .cw-meter { display: none; }
+  #MkiContinueWatchingConfigPage .cw-users .mk-list__row { grid-template-columns: minmax(0, 1fr) auto auto; gap: 4px 18px; }
+  #MkiContinueWatchingConfigPage .cw-users .cw-name { align-self: end; }
+  #MkiContinueWatchingConfigPage .cw-shot { flex: 1 1 100%; max-width: 280px; }
 }
 </style>
 
@@ -792,7 +799,7 @@
 </header>
 
 <div class="mk-bar">
-  <p class="cw-barinfo"><span class="material-icons mk-ic" aria-hidden="true">tune</span><span>3 settings · each change saves itself · everything starts turned off</span></p>
+  <p class="cw-barinfo"><span class="material-icons mk-ic" aria-hidden="true">tune</span><span>3 settings · each change saves itself, with undo</span></p>
 </div>
 
 <div class="mk-main cw-grid">
@@ -855,8 +862,8 @@
       <span class="mk-field__hint">7 days at least. Something never played at all (no date) is always kept.</span>
       <span class="mk-msg" data-auto></span>
     </div>
-    <div class="cw-preview" aria-live="polite">
-      <p class="cw-preview__big" id="cwPreviewBig">Counting…</p>
+    <div class="cw-preview">
+      <p class="cw-preview__big" id="cwPreviewBig" aria-live="polite">Counting…</p>
       <div class="mk-list cw-users" id="cwUsers" style="--cols: minmax(0,1fr) 92px 92px minmax(60px,.8fr)"></div>
       <p class="cw-more" id="cwPreviewMore"></p>
     </div>
@@ -874,18 +881,20 @@
         <span class="mk-flow__kicker"><span class="material-icons mk-ic" aria-hidden="true">movie</span>Before</span>
         <span class="mk-flow__title">In Continue Watching</span>
         <span class="mk-flow__sub">Resume at 47 min, played once, last played in March.</span>
+        <span class="cw-bar" aria-hidden="true"><i></i></span>
       </div>
       <span class="mk-flow__edge"></span>
       <div class="mk-flow__node mk-flow__node--accent">
         <span class="mk-flow__kicker"><span class="material-icons mk-ic" aria-hidden="true">check_circle</span>After</span>
         <span class="mk-flow__title">Off the row, nothing else changed</span>
         <span class="mk-flow__sub">Plays from the start next time. Still unwatched, still played once, still last played in March.</span>
+        <span class="cw-bar cw-bar--empty" aria-hidden="true"><i></i></span>
       </div>
     </div>
     <ul class="cw-rules">
       <li><span class="material-icons mk-ic mk-ic--sm" aria-hidden="true">lock</span><span>Never deletes files, library entries, watched marks, play counts, favourites or ratings. Only the resume position is set back to the start.</span></li>
       <li><span class="material-icons mk-ic mk-ic--sm" aria-hidden="true">person</span><span>People can only remove their own items. Other users' rows are never touched by a click.</span></li>
-      <li><span class="material-icons mk-ic mk-ic--sm" aria-hidden="true">undo</span><span>Every removal and every cleanup can be undone for <span id="cwKeepDays">30</span> days, unless the item was played again since.</span></li>
+      <li><span class="material-icons mk-ic mk-ic--sm" aria-hidden="true">undo</span><span>A removal can be undone from the Undo that follows it. A cleanup run can be undone below for <span id="cwKeepDays">30</span> days. An item played again since keeps its newer spot.</span></li>
       <li><span class="material-icons mk-ic mk-ic--sm" aria-hidden="true">movie_filter</span><span>Videos only: audiobooks and music keep their place.</span></li>
     </ul>
   </div>
@@ -897,7 +906,7 @@
     <div class="mk-card__titles"><h2 class="mk-card__title" id="cwRunsT">Recent cleanups</h2><p class="mk-card__desc" id="cwRunsDesc">Undo puts back what a run cleared, except items played again since.</p></div>
   </div>
   <div class="mk-card__body">
-    <div class="mk-list cw-runs" id="cwRuns" style="--cols: minmax(0,1.1fr) minmax(0,1fr) minmax(0,.9fr) auto"></div>
+    <div class="mk-list cw-runs" id="cwRuns" style="--cols: minmax(0,1.1fr) minmax(0,.8fr) minmax(0,.9fr) minmax(0,1.3fr)"></div>
     <p class="mk-msg" id="cwRunsMsg"></p>
   </div>
 </section>
@@ -1736,7 +1745,7 @@ if (!page || page.getAttribute('data-mki-bound')) return;
 page.setAttribute('data-mki-bound', '1');
 
 var TASK_KEY = 'MkiContinueWatchingCleanup', MIN = 7, MAX = 3650;
-var task = null, overview = null, previewDays = null, previewTimer = 0, previewSeq = 0;
+var task = null, overview = null, savedOverview = null, previewTimer = 0, previewSeq = 0;
 
 var kit = MkiKit(page, {
     pluginId: 'bfc7b26a-b0fb-4040-944c-c9417ac73c54',
@@ -1770,7 +1779,7 @@ function confirmAuto(to, from) {
         var next = nextRun();
         return kit.confirm({
             title: 'Turn on auto cleanup?',
-            body: ['Every day' + (next ? ' at about ' + kit.hhmm(next) : '') + ', videos nobody has played for ' + kit.plural(o.Days, 'day') + ' leave each person\'s Continue Watching. Right now that is ' + countText(o) + '.',
+            body: ['Every day' + (next ? ' at ' + next : '') + ', videos nobody has played for ' + kit.plural(o.Days, 'day') + ' leave each person\'s Continue Watching. Right now that is ' + countText(o) + '.',
                 'Only the resume position is cleared. Each run can be undone here for ' + o.KeepDays + ' days.'],
             ok: 'Turn on', okIcon: 'auto_delete', icon: 'auto_delete', tone: 'warn'
         });
@@ -1783,7 +1792,7 @@ function confirmDays(to, from) {
     return overviewFor(to).then(function (o) {
         return kit.confirm({
             title: 'Clear after ' + kit.plural(o.Days, 'day') + '?',
-            body: ['With auto cleanup on, the next run clears ' + countText(o) + ' (with ' + kit.plural(from, 'day') + ' it would be ' + (overview && overview.Days === from ? countText(overview) : 'fewer') + ').',
+            body: ['With auto cleanup on, the next run clears ' + countText(o) + (savedOverview && savedOverview.Days === from ? ' (with ' + kit.plural(from, 'day') + ' it is ' + countText(savedOverview) + ').' : '.'),
                 'Each run can be undone here for ' + o.KeepDays + ' days.'],
             ok: 'Use ' + kit.plural(o.Days, 'day'), okIcon: 'check', icon: 'auto_delete', tone: 'warn'
         });
@@ -1798,28 +1807,32 @@ function loadTask() {
         render();
     }, function () { task = null; render(); });
 }
+/* The daily trigger's time, as Jellyfin runs it: in the server's time zone, which may not be the browser's. */
 function nextRun() {
     if (!task || !task.Triggers) return null;
-    var now = new Date(), best = null;
+    var best = null;
     task.Triggers.forEach(function (t) {
         if (t.Type !== 'DailyTrigger') return;
-        var at = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0); at = new Date(at.getTime() + t.TimeOfDayTicks / 1e4);
-        if (at <= now) at = new Date(at.getTime() + 864e5);
-        if (!best || at < best) best = at;
+        var m = Math.round(t.TimeOfDayTicks / 6e8);
+        if (best === null || m < best) best = m;
     });
-    return best;
+    if (best === null) return null;
+    var hh = Math.floor(best / 60) % 24, mm = best % 60;
+    return (hh < 10 ? '0' : '') + hh + ':' + (mm < 10 ? '0' : '') + mm + ' server time';
 }
 
 /* ---------- preview: what a cleanup with the days on screen would clear now ---------- */
+page.addEventListener('viewbeforehide', function () { clearTimeout(previewTimer); previewSeq++; });
 function preview() {
     clearTimeout(previewTimer);
     previewTimer = setTimeout(function () {
         var d = kit.value('AutoCleanupDays'); d = d >= MIN && d <= MAX ? d : days();
         var seq = ++previewSeq;
-        overviewFor(d).then(function (o) { if (seq !== previewSeq) return; overview = o; previewDays = o.Days; renderPreview(); renderRuns(); render(); },
+        overviewFor(d).then(function (o) { if (seq !== previewSeq) return; overview = o; if (o.Days === days()) savedOverview = o; renderPreview(); renderRuns(); render(); },
             function () { if (seq !== previewSeq) return; overview = null; fill($('#cwPreviewBig'), [ic('error'), ' Could not count the items. Check that the server is reachable.']); });
-    }, 250);
+    }, 500);
 }
+page.addEventListener('change', function (e) { if (e.target && (e.target.id === 'cwRemove' || e.target.id === 'cwAuto')) setTimeout(render, 0); });
 page.addEventListener('input', function (e) { if (e.target && e.target.id === 'cwDays') { syncPresets(); preview(); } });
 page.addEventListener('change', function (e) { if (e.target && e.target.id === 'cwDays') { syncPresets(); preview(); } });
 
@@ -1837,9 +1850,9 @@ function renderPreview() {
     list.appendChild(head);
     rows.slice(0, 8).forEach(function (x) {
         var r = el('div', 'mk-list__row' + (x.Stale ? '' : ' is-dim'));
-        r.appendChild(el('span', null, x.Name));
-        r.appendChild(el('span', 'cw-num', kit.num(x.Total)));
-        r.appendChild(el('span', 'cw-num', kit.num(x.Stale)));
+        r.appendChild(el('span', 'cw-name', x.Name));
+        r.appendChild(cell('In the row', kit.num(x.Total)));
+        r.appendChild(cell('Would clear', kit.num(x.Stale)));
         var m = el('span', 'cw-meter'), i = el('i'); i.style.width = (x.Total ? Math.round(x.Stale / x.Total * 100) : 0) + '%'; m.appendChild(i); m.setAttribute('aria-hidden', 'true');
         r.appendChild(m);
         list.appendChild(r);
@@ -1847,6 +1860,7 @@ function renderPreview() {
     fill(more, rows.length > 8 ? 'And ' + kit.plural(rows.length - 8, 'more user') + '. ' : '');
 }
 
+function cell(label, value) { var c = el('span', 'cw-num'); c.appendChild(el('span', 'mk-cell-label', label)); c.appendChild(document.createTextNode(value)); return c; }
 function syncPresets() {
     var v = String(kit.read('AutoCleanupDays'));
     $$('#cwPresets [data-days]').forEach(function (b) { var on = b.getAttribute('data-days') === v; b.classList.toggle('is-on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
@@ -1878,12 +1892,12 @@ function renderRuns() {
         var keep = Date.now() - o.KeepDays * 864e5;
         runs.forEach(function (r) {
             var row = el('div', 'mk-list__row' + (r.UndoneAt ? ' is-dim' : ''));
-            var when = el('span'); when.appendChild(el('b', null, kit.dayTime(new Date(r.At)))); when.appendChild(document.createTextNode(r.Trigger === 'manual' ? ' · Clean up now' : ' · scheduled'));
+            var when = el('span', 'mk-span'); when.appendChild(el('b', null, kit.dayTime(new Date(r.At)))); when.appendChild(document.createTextNode(r.Trigger === 'manual' ? ' · Clean up now' : ' · scheduled'));
             row.appendChild(when);
-            row.appendChild(el('span', null, runText(r)));
-            row.appendChild(el('span', null, 'Not played for ' + kit.plural(r.Days, 'day')));
+            var c1 = el('span'); c1.appendChild(el('span', 'mk-cell-label', 'Cleared')); c1.appendChild(document.createTextNode(runText(r) + (r.Partial ? ' · stopped part-way' : '') + (r.UndoIncomplete ? ' · undo covers only part' : ''))); row.appendChild(c1);
+            var c2 = el('span'); c2.appendChild(el('span', 'mk-cell-label', 'Rule')); c2.appendChild(document.createTextNode('Not played for ' + kit.plural(r.Days, 'day'))); row.appendChild(c2);
             var ac = el('div', 'mk-list__actions');
-            if (r.UndoneAt) ac.appendChild(chip('plain', 'undo', 'Undone · ' + kit.plural(r.Restored || 0, 'item') + ' back'));
+            if (r.UndoneAt) ac.appendChild(el('span', 'cw-undone', r.Restored ? 'Undone · ' + kit.plural(r.Restored, 'item') + ' put back' : 'Undone · nothing to put back (played again since)'));
             else if (r.Cleared && new Date(r.At).getTime() > keep) {
                 var b = kit.btn('Undo', 'mk-btn--sm', 'undo');
                 b.addEventListener('click', function () { undoRun(r, b); });
@@ -1918,7 +1932,7 @@ function render() {
     fill($('#cwTileRemove'), r ? chip('ok', 'check_circle', 'On') : chip('plain', 'block', 'Off'));
     fill($('#cwTileRemoveSub'), r ? 'People can remove their own items' : 'Continue Watching looks as usual');
     fill($('#cwTileAuto'), a ? chip('ok', 'auto_delete', 'After ' + kit.plural(d, 'day')) : chip('plain', 'block', 'Off'));
-    fill($('#cwTileAutoSub'), a ? (next ? 'Daily, next at about ' + kit.hhmm(next) : 'Daily, from the scheduled task') : 'Nothing is cleared automatically');
+    fill($('#cwTileAutoSub'), a ? (next ? 'Daily at ' + next : 'Daily, from the scheduled task') : 'Nothing is cleared automatically');
     if (o) {
         var total = sum(o.Users, 'Total'), people = o.Users.filter(function (x) { return x.Total > 0; }).length;
         fill($('#cwTileNow'), kit.num(total));
@@ -1929,13 +1943,16 @@ function render() {
     }
     $('#cwRun').hidden = !a;
     $('#cwDemo').classList.toggle('cw-off-demo', !r);
-    fill($('#cwRemoveNoteT'), r
+    var screen = kit.value('EnableRemoveButton');
+    if (screen !== undefined && screen !== null && screen !== r) {
+        fill($('#cwRemoveNoteT'), 'Not saved yet: the server still has the button ' + (r ? 'on' : 'off') + '. Use Retry on the save chip above.');
+    } else fill($('#cwRemoveNoteT'), r
         ? 'On. Users may need to reload the web client once to see the button. Other apps (TV, Android TV, Swiftfin) do not show it, but auto cleanup works for them too.'
         : 'Off. The web client is left exactly as Jellyfin ships it; the plugin adds nothing to it.');
     var what;
     if (!r && !a) what = [el('b', null, 'Next: '), 'nothing. Both parts are off, so the plugin changes nothing until you turn one on.'];
     else if (!a) what = [el('b', null, 'Next: '), 'nothing is cleared automatically. People can remove items from their own Continue Watching.'];
-    else what = [el('b', null, 'Next: '), (next ? 'at about ' + kit.hhmm(next) + ', ' : 'at the next scheduled run, ') + 'videos not played for ' + kit.plural(d, 'day') + ' leave each person\'s row' + (o && o.Days === d ? ' (' + countText(o) + ' right now).' : '.')];
+    else what = [el('b', null, 'Next: '), (next ? 'at ' + next + ', ' : 'at the next scheduled run, ') + 'videos not played for ' + kit.plural(d, 'day') + ' leave each person\'s row' + (o && o.Days === d ? ' (' + countText(o) + ' right now).' : '.')];
     fill($('#cwNext'), what);
     syncPresets();
 }

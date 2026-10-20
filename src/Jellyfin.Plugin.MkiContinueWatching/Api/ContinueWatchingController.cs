@@ -86,6 +86,10 @@ public class ContinueWatchingController : ControllerBase
 		{
 			return Unauthorized();
 		}
+		if (!Plugin.Config.EnableRemoveButton)
+		{
+			return Error(StatusCodes.Status403Forbidden, "Removing from Continue Watching is turned off on this server.");
+		}
 		if (!Guid.TryParse(request?.ItemId, out var id) || id == Guid.Empty)
 		{
 			return Error(StatusCodes.Status400BadRequest, "No item given.");
@@ -122,6 +126,7 @@ public class ContinueWatchingController : ControllerBase
 		{
 			return Error(StatusCodes.Status409Conflict, "Auto cleanup is off. Turn it on first.");
 		}
+		// Not tied to the request: closing the page must not stop a run half-way.
 		var run = _resume.RunCleanup("manual", CancellationToken.None);
 		return run == null ? Error(StatusCodes.Status409Conflict, "Auto cleanup is off. Turn it on first.") : new JsonResult(run);
 	}
