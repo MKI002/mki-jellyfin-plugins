@@ -15,5 +15,5 @@ Two resolutions, one entry. If a movie exists as 1080p and 2160p in separate fol
 ## Setup
 
 1. Install from the plugin catalog and restart Jellyfin.
-2. Open **Dashboard → Plugins → MKI Merge Versions**. Turn on the dry run first if you want to check the result in the Jellyfin log.
+2. Open **Dashboard → Plugins → MKI Merge Versions**. Turn on the dry run first if you want to check the result in the Jellyfin log. Settings save as soon as you change them.
 3. Click **Run now** or wait for the scheduled task.

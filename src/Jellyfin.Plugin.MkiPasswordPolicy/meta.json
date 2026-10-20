@@ -6,6 +6,6 @@
   "owner": "MKI",
   "category": "Authentication",
   "targetAbi": "12.0.0.0",
-  "version": "1.0.6.0",
-  "changelog": "Security update. A blocked user's token is now refused however it is sent (any authorization header, the older header names or the query string), and a request carrying tokens of several users is refused. When a deadline passes, the user's tokens are revoked within a minute, a sign-in that gets through on any path is undone at once, and setting a new password signs out every other device."
+  "version": "1.1.0.0",
+  "changelog": "New settings page in the shared MKI design, with tabs for Users, Require a new password, Profiles and More settings. The header shows who the rules apply to, the state of everyone's password, open requests and the time left to set a new one. The Users tab lists everyone with search and filters, and flags accounts without a password with a Temporary password button. Before any change that could lock someone out, the page names the accounts and asks; your own account can never be locked from here. A request for everyone shows who gets one and who was already asked, with the notice period chosen in the same dialog. A temporary password is shown once, in a dialog that stays open until you confirm you copied it. Profiles can be compared side by side and tried with a test password, checked in the browser only. Settings save as soon as you change them, with undo. Works on phones and in light and dark themes."
 }
