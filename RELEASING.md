@@ -11,7 +11,7 @@ open.
 | 3. Security review | `build/checks.py` (unsafe HTML, HTTP clients, new anonymous endpoints and middleware) and the checklist |
 | 4. Functional test | the checklist |
 | 5. Settings page and design rating | `build/kit.py --check` and the checklist |
-| 6. Images | `build/checks.py` (logo size, banner names every plugin) and the checklist |
+| 6. Images | `build/checks.py` (logo size, banner present) and the checklist |
 | 7. Version and changelog | `build/checks.py --base` (changed plugin must have a higher version and a new changelog) |
 | 8. Release | the Release workflow refuses to run unless the Build workflow is green on that commit of main |
 
@@ -73,8 +73,10 @@ anything below 8 before release, and add the screenshots to the pull request.
 ## 6. Images
 
 Plugin images are 1200 x 675 PNGs in the neon NCS-grid style with the MKI mark, saved as `src/<Plugin>/logo.png`.
-`assets/banner.png` shows every plugin, and its alt text in the README names each one. Regenerate them when a plugin
-is added or renamed, or when its features change enough that the image no longer fits.
+`assets/banner.png` is the repository's hero banner in the same style; it deliberately lists no plugins, so it does not
+change when one is added. Every plugin gets a row in the README's plugin list (image on the left, name and description
+on the right). Regenerate the plugin image when a plugin is added or renamed, or when its features change enough that
+the image no longer fits.
 
 ## 7. Version and changelog
 
@@ -98,4 +100,4 @@ In addition to the steps above:
 - Added to `MkiJellyfinPlugins.sln`, so CI builds it.
 - A copy of `DuplicateGuard.cs`, so a renamed or older copy of the plugin stands down.
 - A settings page built on the kit (`MKI-KIT` markers in `Configuration/configPage.html`).
-- A `README.md` in the plugin folder, a section in the main README, a `logo.png`, and a banner that shows it.
+- A `README.md` in the plugin folder, a section in the main README, a `logo.png`, and a row in the README plugin list.
