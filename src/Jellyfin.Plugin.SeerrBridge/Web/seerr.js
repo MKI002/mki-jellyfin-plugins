@@ -251,7 +251,7 @@
     // If the server hangs, do not wait forever - better show the login form
     // than an empty box.
     var zeit = setTimeout(weiter, 4000);
-    holen('/SeerrBridge/sso')
+    holen('/SeerrBridge/sso', { method: 'POST' })
       .then(function () { clearTimeout(zeit); weiter(); })
       .catch(function () { clearTimeout(zeit); weiter(); });
   }
@@ -472,9 +472,17 @@
     }
   }
 
+  /* The settings are only given to signed-in users, so wait for the web client's
+     token first. Checking costs nothing; on the sign-in page it simply keeps waiting. */
+  function angemeldet() {
+    try {
+      return !!(window.ApiClient && window.ApiClient.accessToken && window.ApiClient.accessToken());
+    } catch (e) { return false; }
+  }
+
   function start() {
-    fetch(basis() + '/SeerrBridge/config', { headers: { Accept: 'application/json' } })
-      .then(function (r) { return r.json(); })
+    if (!angemeldet()) { setTimeout(start, 1000); return; }
+    holen('/SeerrBridge/config')
       .then(function (c) {
         cfg = c;
         if (!cfg || !cfg.enabled) { return; }
@@ -513,7 +521,10 @@
 
         auffrischen();
       })
-      .catch(function () { /* plugin not configured - then do nothing */ });
+      .catch(function () {
+        /* Not configured, or the token was no longer valid: try again after the next sign-in. */
+        setTimeout(start, 30000);
+      });
   }
 
   if (document.readyState === 'loading') {

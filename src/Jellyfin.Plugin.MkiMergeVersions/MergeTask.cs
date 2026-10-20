@@ -13,6 +13,8 @@ public class MergeTask : IScheduledTask
 {
 	private readonly ILibraryManager _library;
 
+	private readonly IUserManager _users;
+
 	private readonly ILogger<MergeTask> _log;
 
 	public string Name => "Merge movie versions (MKI)";
@@ -23,9 +25,10 @@ public class MergeTask : IScheduledTask
 
 	public string Category => "Library";
 
-	public MergeTask(ILibraryManager library, ILogger<MergeTask> log)
+	public MergeTask(ILibraryManager library, IUserManager users, ILogger<MergeTask> log)
 	{
 		_library = library;
+		_users = users;
 		_log = log;
 	}
 
@@ -60,6 +63,6 @@ public class MergeTask : IScheduledTask
 		}
 
 		PluginConfiguration pluginConfiguration = ((BasePlugin<PluginConfiguration>)(object)Plugin.Instance)?.Configuration ?? new PluginConfiguration();
-		await new MergeService(_library, (ILogger)(object)_log).RunAsync(pluginConfiguration.DryRun, pluginConfiguration.FixPrimaryOrder, progress, cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
+		await new MergeService(_library, _users, (ILogger)(object)_log).RunAsync(pluginConfiguration.DryRun, pluginConfiguration.FixPrimaryOrder, progress, warten: true, cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
 	}
 }

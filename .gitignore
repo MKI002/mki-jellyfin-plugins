@@ -13,6 +13,12 @@ obj/
 *.xml
 !**/*.csproj
 .env
+*.db
+*.db-*
+*.log
+*.pem
+*.key
+*.pfx
 
 # Release packages
 dist/

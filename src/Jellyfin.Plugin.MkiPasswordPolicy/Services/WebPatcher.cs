@@ -83,7 +83,7 @@ public class WebPatcher : IHostedService
 		neu = neu.Insert(ende, string.Format(CultureInfo.InvariantCulture, Skript, modus));
 		if (neu != alt)
 		{
-			File.WriteAllText(datei, neu);
+			DateiSchreiben(datei, neu);
 			_logger.LogInformation("MKI Password Policy web client script set to {Mode} mode ({Path})", modus, datei);
 		}
 	}
@@ -101,7 +101,7 @@ public class WebPatcher : IHostedService
 		string neu = Eintrag.Replace(alt, string.Empty);
 		if (neu != alt)
 		{
-			File.WriteAllText(datei, neu);
+			DateiSchreiben(datei, neu);
 		}
 	}
 
@@ -136,5 +136,32 @@ public class WebPatcher : IHostedService
 		{
 			return null;
 		}
+	}
+
+	// Through a temporary file, so a crash mid-write cannot leave a cut-off index.html behind. Where the folder
+	// allows no new files, the file is written in place as before.
+	private static void DateiSchreiben(string datei, string inhalt)
+	{
+		string tmp = datei + ".mki-passwordpolicy.tmp";
+		try
+		{
+			File.WriteAllText(tmp, inhalt);
+			File.Move(tmp, datei, overwrite: true);
+			return;
+		}
+		catch (UnauthorizedAccessException)
+		{
+		}
+		catch (IOException)
+		{
+		}
+		try
+		{
+			File.Delete(tmp);
+		}
+		catch (Exception)
+		{
+		}
+		File.WriteAllText(datei, inhalt);
 	}
 }

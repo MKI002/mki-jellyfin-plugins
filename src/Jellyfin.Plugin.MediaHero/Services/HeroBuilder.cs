@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -37,23 +38,22 @@ public class HeroBuilder
 
 	private readonly ILogger<HeroBuilder> _logger;
 
+	// One build at a time for the whole server, so a burst of requests cannot pile up work.
 	private readonly SemaphoreSlim _gate = new SemaphoreSlim(1, 1);
 
 	private readonly Random _random = new Random();
 
-	private IReadOnlyList<HeroItem> _cache = Array.Empty<HeroItem>();
+	// Each user gets a list built with their own permissions: library access, parental rating, blocked tags,
+	// their own favourites. A list is never handed to anyone else.
+	private readonly ConcurrentDictionary<Guid, Stand> _staende = new ConcurrentDictionary<Guid, Stand>();
 
-	private DateTime _builtUtc = DateTime.MinValue;
+	// When each user last asked; the pre-warmer keeps the lists of recent users fresh and drops the rest.
+	private readonly ConcurrentDictionary<Guid, DateTime> _gefragt = new ConcurrentDictionary<Guid, DateTime>();
 
-	private string _etag = string.Empty;
+	private readonly ConcurrentDictionary<Guid, byte> _erneuertGerade = new ConcurrentDictionary<Guid, byte>();
 
-	private int _erneuertGerade;
-
-	private Guid _letzterNutzer = Guid.Empty;
-
-	public string ETag => _etag;
-
-	public DateTime BuiltUtc => _builtUtc;
+	// Raised by Invalidate: a build that started before is thrown away instead of stored.
+	private int _generation;
 
 	public HeroBuilder(ILibraryManager libraryManager, IUserManager userManager, JellyseerrClient jellyseerr, ILogger<HeroBuilder> logger)
 	{
@@ -63,33 +63,48 @@ public class HeroBuilder
 		_logger = logger;
 	}
 
-	public void Invalidate()
+	public sealed class Stand
 	{
-		_builtUtc = DateTime.MinValue;
+		public Stand(IReadOnlyList<HeroItem> items, DateTime builtUtc, int generation)
+		{
+			Items = items;
+			BuiltUtc = builtUtc;
+			Generation = generation;
+		}
+
+		public IReadOnlyList<HeroItem> Items { get; }
+
+		public DateTime BuiltUtc { get; }
+
+		public int Generation { get; }
 	}
 
-	public async Task<IReadOnlyList<HeroItem>> GetAsync(Guid userId, CancellationToken ct)
+	public void Invalidate()
+	{
+		Interlocked.Increment(ref _generation);
+		_staende.Clear();
+	}
+
+	public async Task<Stand> GetAsync(User user, CancellationToken ct)
 	{
 		PluginConfiguration cfg = ((BasePlugin<PluginConfiguration>)(object)Plugin.Instance)?.Configuration ?? new PluginConfiguration();
-		bool flag = DateTime.UtcNow - _builtUtc < TimeSpan.FromMinutes(Math.Max(1, cfg.CacheMinutes));
-		if (_cache.Count > 0)
+		_gefragt[user.Id] = DateTime.UtcNow;
+		if (Aktuell(user.Id, out Stand stand))
 		{
-			if (!flag)
+			if (DateTime.UtcNow - stand.BuiltUtc >= Dauer(cfg))
 			{
-				ImHintergrundErneuern(userId);
+				ImHintergrundErneuern(user.Id);
 			}
-			return _cache;
+			return stand;
 		}
 		await _gate.WaitAsync(ct).ConfigureAwait(continueOnCapturedContext: false);
 		try
 		{
-			if (DateTime.UtcNow - _builtUtc < TimeSpan.FromMinutes(Math.Max(1, cfg.CacheMinutes)) && _cache.Count > 0)
+			if (Aktuell(user.Id, out stand))
 			{
-				return _cache;
+				return stand;
 			}
-			IReadOnlyList<HeroItem> readOnlyList = await BauenAsync(cfg, userId, ct).ConfigureAwait(continueOnCapturedContext: false);
-			Uebernehmen(readOnlyList, userId);
-			return readOnlyList;
+			return await BauenUndMerkenAsync(cfg, user, ct).ConfigureAwait(continueOnCapturedContext: false);
 		}
 		finally
 		{
@@ -97,35 +112,91 @@ public class HeroBuilder
 		}
 	}
 
-	private void Uebernehmen(IReadOnlyList<HeroItem> liste, Guid userId)
+	// The items of a list the user may still open right now. Permissions can change after a list was built.
+	public IReadOnlyList<HeroItem> Sichtbar(Stand stand, User user)
 	{
-		_cache = liste;
-		_builtUtc = DateTime.UtcNow;
-		_letzterNutzer = userId;
-		_etag = "\"" + _builtUtc.Ticks.ToString(CultureInfo.InvariantCulture) + "-" + liste.Count.ToString(CultureInfo.InvariantCulture) + "\"";
+		List<HeroItem> list = new List<HeroItem>(stand.Items.Count);
+		foreach (HeroItem item in stand.Items)
+		{
+			try
+			{
+				if (Guid.TryParse(item.Id, out var id) && _libraryManager.GetItemById(id) is BaseItem eintrag && eintrag.IsVisibleStandalone(user))
+				{
+					list.Add(item);
+				}
+			}
+			catch (Exception ex)
+			{
+				LoggerExtensions.LogDebug((ILogger)(object)_logger, ex, "Visibility check failed for {Id}", new object[1] { item.Id });
+			}
+		}
+		return list;
 	}
 
-	public void ImHintergrundErneuern(Guid userId)
+	// Keeps the lists of users who asked within the last day fresh; forgets everyone else.
+	public void Vorwaermen()
 	{
-		if (Interlocked.CompareExchange(ref _erneuertGerade, 1, 0) != 0)
+		PluginConfiguration cfg = ((BasePlugin<PluginConfiguration>)(object)Plugin.Instance)?.Configuration ?? new PluginConfiguration();
+		TimeSpan dauer = Dauer(cfg);
+		TimeSpan vorlauf = TimeSpan.FromSeconds(Math.Max(30.0, dauer.TotalSeconds * 0.15));
+		foreach (KeyValuePair<Guid, DateTime> eintrag in _gefragt.ToList())
+		{
+			if (DateTime.UtcNow - eintrag.Value > TimeSpan.FromDays(1) || _userManager.GetUserById(eintrag.Key) == null)
+			{
+				_gefragt.TryRemove(eintrag.Key, out _);
+				_staende.TryRemove(eintrag.Key, out _);
+			}
+			else if (!Aktuell(eintrag.Key, out Stand stand) || DateTime.UtcNow - stand.BuiltUtc >= dauer - vorlauf)
+			{
+				ImHintergrundErneuern(eintrag.Key);
+			}
+		}
+	}
+
+	private static TimeSpan Dauer(PluginConfiguration cfg)
+	{
+		return TimeSpan.FromMinutes(Math.Max(1, cfg.CacheMinutes));
+	}
+
+	private bool Aktuell(Guid userId, out Stand stand)
+	{
+		return _staende.TryGetValue(userId, out stand) && stand.Generation == Volatile.Read(ref _generation);
+	}
+
+	// Call only while holding _gate. An empty result is kept too, so filters that match nothing do not
+	// cause a full build on every request.
+	private async Task<Stand> BauenUndMerkenAsync(PluginConfiguration cfg, User user, CancellationToken ct)
+	{
+		int generation = Volatile.Read(ref _generation);
+		IReadOnlyList<HeroItem> items = await BauenAsync(cfg, user, ct).ConfigureAwait(continueOnCapturedContext: false);
+		Stand stand = new Stand(items, DateTime.UtcNow, generation);
+		if (generation == Volatile.Read(ref _generation))
+		{
+			_staende[user.Id] = stand;
+		}
+		return stand;
+	}
+
+	private void ImHintergrundErneuern(Guid userId)
+	{
+		if (!_erneuertGerade.TryAdd(userId, 0))
 		{
 			return;
 		}
-		Guid wer = ((userId == Guid.Empty) ? _letzterNutzer : userId);
 		Task.Run(async delegate
 		{
-			_ = 1;
 			try
 			{
+				User user = _userManager.GetUserById(userId);
+				if (user == null)
+				{
+					return;
+				}
 				PluginConfiguration cfg = ((BasePlugin<PluginConfiguration>)(object)Plugin.Instance)?.Configuration ?? new PluginConfiguration();
 				await _gate.WaitAsync(CancellationToken.None).ConfigureAwait(continueOnCapturedContext: false);
 				try
 				{
-					IReadOnlyList<HeroItem> readOnlyList = await BauenAsync(cfg, wer, CancellationToken.None).ConfigureAwait(continueOnCapturedContext: false);
-					if (readOnlyList.Count > 0)
-					{
-						Uebernehmen(readOnlyList, wer);
-					}
+					await BauenUndMerkenAsync(cfg, user, CancellationToken.None).ConfigureAwait(continueOnCapturedContext: false);
 				}
 				finally
 				{
@@ -138,14 +209,13 @@ public class HeroBuilder
 			}
 			finally
 			{
-				Interlocked.Exchange(ref _erneuertGerade, 0);
+				_erneuertGerade.TryRemove(userId, out _);
 			}
 		});
 	}
 
-	private async Task<IReadOnlyList<HeroItem>> BauenAsync(PluginConfiguration cfg, Guid userId, CancellationToken ct)
+	private async Task<IReadOnlyList<HeroItem>> BauenAsync(PluginConfiguration cfg, User user, CancellationToken ct)
 	{
-		User user = ((userId == Guid.Empty) ? null : _userManager.GetUserById(userId));
 		BaseItemKind[] typen = TypenAus(cfg.IncludeItemTypes);
 		List<(Guid Id, int Ziel)> ziele = (from b in BibliothekenVervollstaendigen(cfg)
 			where b.Enabled && b.Count > 0
@@ -163,6 +233,9 @@ public class HeroBuilder
 			korb.Koerbe[item.Id] = new List<(BaseItem, string)>();
 		}
 		Guid[] wurzeln = ziele.Select(((Guid Id, int Ziel) z) => z.Id).ToArray();
+		// Seerr gets one minute per build in total, so a slow or hanging Seerr cannot hold up every other user's list.
+		using CancellationTokenSource seerrFrist = CancellationTokenSource.CreateLinkedTokenSource(ct);
+		seerrFrist.CancelAfter(TimeSpan.FromMinutes(1));
 		foreach (SourceEntry quelle in from q in QuellenVervollstaendigen(cfg)
 			where q.Enabled
 			select q)
@@ -177,13 +250,13 @@ public class HeroBuilder
 				switch (quelle.Source)
 				{
 				case HeroSource.JellyseerrTrending:
-					await AusJellyseerrAsync(korb, cfg, quelle, typen, wurzeln, "/api/v1/discover/trending", user, ct).ConfigureAwait(continueOnCapturedContext: false);
+					await AusJellyseerrAsync(korb, cfg, quelle, typen, wurzeln, "/api/v1/discover/trending", user, seerrFrist.Token).ConfigureAwait(continueOnCapturedContext: false);
 					break;
 				case HeroSource.JellyseerrPopularMovies:
-					await AusJellyseerrAsync(korb, cfg, quelle, typen, wurzeln, "/api/v1/discover/movies", user, ct).ConfigureAwait(continueOnCapturedContext: false);
+					await AusJellyseerrAsync(korb, cfg, quelle, typen, wurzeln, "/api/v1/discover/movies", user, seerrFrist.Token).ConfigureAwait(continueOnCapturedContext: false);
 					break;
 				case HeroSource.JellyseerrPopularSeries:
-					await AusJellyseerrAsync(korb, cfg, quelle, typen, wurzeln, "/api/v1/discover/tv", user, ct).ConfigureAwait(continueOnCapturedContext: false);
+					await AusJellyseerrAsync(korb, cfg, quelle, typen, wurzeln, "/api/v1/discover/tv", user, seerrFrist.Token).ConfigureAwait(continueOnCapturedContext: false);
 					break;
 				case HeroSource.Whitelist:
 				{
@@ -206,6 +279,10 @@ public class HeroBuilder
 					AusBibliotheken(korb, cfg, quelle, typen, user);
 					break;
 				}
+			}
+			catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+			{
+				LoggerExtensions.LogWarning((ILogger)(object)_logger, "Source {Source} skipped: Seerr took too long", new object[1] { quelle.Source });
 			}
 			catch (OperationCanceledException)
 			{
@@ -460,7 +537,7 @@ public class HeroBuilder
 			if (Guid.TryParse(text, out var result))
 			{
 				BaseItem itemById = _libraryManager.GetItemById(result);
-				if (itemById != null)
+				if (itemById != null && !itemById.IsVirtualItem && ((ReadOnlySpan<BaseItemKind>)typen).Contains(itemById.GetBaseItemKind()))
 				{
 					yield return itemById;
 				}
@@ -558,6 +635,12 @@ public class HeroBuilder
 
 	private bool Passt(BaseItem item, PluginConfiguration cfg, User? user)
 	{
+		// Library access, parental rating and blocked tags of the user, for every source: a library query limited to
+		// one library, a whitelist entry or a Seerr match would otherwise skip some of them.
+		if (user == null || !Sichtbar(item, user))
+		{
+			return false;
+		}
 		string text = item.Name ?? string.Empty;
 		string text2 = item.Id.ToString("N");
 		string[] titleBlacklist = cfg.TitleBlacklist;
@@ -615,6 +698,19 @@ public class HeroBuilder
 			}
 		}
 		return true;
+	}
+
+	private bool Sichtbar(BaseItem item, User user)
+	{
+		try
+		{
+			return item.IsVisibleStandalone(user);
+		}
+		catch (Exception ex)
+		{
+			LoggerExtensions.LogDebug((ILogger)(object)_logger, ex, "Visibility check failed for {Id}", new object[1] { item.Id });
+			return false;
+		}
 	}
 
 	private static bool Gleich(string a, string b)

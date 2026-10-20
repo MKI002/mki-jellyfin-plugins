@@ -2,17 +2,20 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Jellyfin.Data.Queries;
+using Jellyfin.Database.Implementations.Entities;
+using MediaBrowser.Controller.Devices;
 using MediaBrowser.Controller.Library;
-using MediaBrowser.Controller.Net;
 using MediaBrowser.Controller.Session;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.MkiPasswordPolicy.Services;
@@ -33,6 +36,17 @@ public class LoginGate : IStartupFilter
 
 	// Bodies of password requests are tiny; anything bigger is not a real client.
 	private const int MaxRumpf = 64 * 1024;
+
+	// Real clients send one token, two at most. More is refused while anyone is blocked, so a pile of junk cannot hide one.
+	internal const int MaxTokens = 8;
+
+	// Every place a token can come from. Jellyfin reads some of them only with legacy sign-in switched on, and another
+	// plugin may copy one into another after this check has run (Seerr Bridge does), so all of them count.
+	private static readonly string[] SchemaKoepfe = { "Authorization", "X-Emby-Authorization" };
+
+	private static readonly string[] TokenKoepfe = { "X-Emby-Token", "X-MediaBrowser-Token" };
+
+	private static readonly string[] TokenParameter = { "ApiKey", "api_key" };
 
 	// Any path segment: Jellyfin binds route GUIDs in several spellings, e.g. with braces.
 	private static readonly Regex Anmeldung = new(@"^(?<base>.*)/Users/(AuthenticateByName|AuthenticateWithQuickConnect|[^/]+/Authenticate)/?$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -55,14 +69,17 @@ public class LoginGate : IStartupFilter
 
 	private readonly ISessionManager _sessions;
 
+	private readonly IDeviceManager _devices;
+
 	private readonly ILogger<LoginGate> _logger;
 
-	public LoginGate(PolicyStore store, Enforcer enforcer, IUserManager users, ISessionManager sessions, ILogger<LoginGate> logger)
+	public LoginGate(PolicyStore store, Enforcer enforcer, IUserManager users, ISessionManager sessions, IDeviceManager devices, ILogger<LoginGate> logger)
 	{
 		_store = store;
 		_enforcer = enforcer;
 		_users = users;
 		_sessions = sessions;
+		_devices = devices;
 		_logger = logger;
 	}
 
@@ -77,21 +94,22 @@ public class LoginGate : IStartupFilter
 
 				if (offen && !Frei.IsMatch(pfad))
 				{
-					var info = await Aufrufer(kontext).ConfigureAwait(false);
-					if (info != null && !info.IsApiKey && info.UserId != Guid.Empty)
+					var ids = Benutzer(kontext.Request);
+					if (ids == null || ids.Any(_store.SessionsBlocked))
 					{
-						if (_store.SessionsBlocked(info.UserId))
+						kontext.Response.StatusCode = StatusCodes.Status401Unauthorized;
+						if (ids != null)
 						{
-							kontext.Response.StatusCode = StatusCodes.Status401Unauthorized;
 							kontext.Response.Headers[MarkerHeader] = "required";
-							return;
 						}
-						if (_store.InNotice(info.UserId))
-						{
-							// Lets the plugin's script in web-based apps show its popup on any response.
-							kontext.Response.Headers[NoticeHeader] = _store.Get(info.UserId).EnforceAfterUtc!.Value.ToString("o", CultureInfo.InvariantCulture);
-							kontext.Response.Headers.Append("Access-Control-Expose-Headers", NoticeHeader);
-						}
+						return;
+					}
+					var hinweis = ids.FirstOrDefault(_store.InNotice);
+					if (hinweis != Guid.Empty)
+					{
+						// Lets the plugin's script in web-based apps show its popup on any response.
+						kontext.Response.Headers[NoticeHeader] = _store.Get(hinweis).EnforceAfterUtc!.Value.ToString("o", CultureInfo.InvariantCulture);
+						kontext.Response.Headers.Append("Access-Control-Expose-Headers", NoticeHeader);
 					}
 				}
 
@@ -241,19 +259,28 @@ public class LoginGate : IStartupFilter
 
 	private async Task PasswortAendern(HttpContext kontext, Func<Task> weiter, string routenId)
 	{
-		var info = await Aufrufer(kontext).ConfigureAwait(false);
+		// Tokens of different users in one request: nobody counts as the caller, so the strictest rules apply.
+		var ids = Benutzer(kontext.Request);
+		User? aufrufer = ids is { Count: 1 } ? _users.GetUserById(ids[0]) : null;
+		bool mehrdeutig = ids == null || ids.Count > 1;
 		Guid zielId = Guid.TryParse(routenId, out var r) ? r
 			: Guid.TryParse(kontext.Request.Query["userId"].ToString(), out var q) ? q
-			: info?.UserId ?? Guid.Empty;
+			: aufrufer?.Id ?? Guid.Empty;
 		var ziel = zielId == Guid.Empty ? null : _users.GetUserById(zielId);
 		if (ziel == null)
 		{
+			if (mehrdeutig && (Policy.Configured(Plugin.Config) || _store.AnyMustChange()))
+			{
+				// Jellyfin would pick one of the users itself, and that password would go in unchecked.
+				kontext.Response.StatusCode = StatusCodes.Status400BadRequest;
+				return;
+			}
 			await weiter().ConfigureAwait(false);
 			return;
 		}
 
-		bool selbst = info?.UserId == ziel.Id;
-		bool adminFuerAndere = !selbst && info?.User != null && Enforcer.IsAdmin(info.User);
+		bool selbst = aufrufer?.Id == ziel.Id;
+		bool adminFuerAndere = !selbst && aufrufer != null && Enforcer.IsAdmin(aufrufer);
 		var regeln = adminFuerAndere && !Plugin.Config.ApplyToAdminChanges ? null : Policy.RulesFor(ziel);
 		bool erfassen = regeln != null || Policy.Configured(Plugin.Config) || _store.MustChange(ziel.Id);
 		if (!erfassen)
@@ -408,18 +435,136 @@ public class LoginGate : IStartupFilter
 		await kontext.Response.WriteAsync(PasswordRules.Describe(fehler)).ConfigureAwait(false);
 	}
 
-	private async Task<AuthorizationInfo?> Aufrufer(HttpContext kontext)
+	// The users behind every token in the request, in Jellyfin's order of preference. API keys belong to no user.
+	// Null when the request carries more tokens than any real client sends.
+	// Null also when the lookup fails: while anyone is blocked, an unknown caller is refused rather than let through.
+	private List<Guid>? Benutzer(HttpRequest request)
 	{
 		try
 		{
-			var auth = kontext.RequestServices.GetService<IAuthorizationContext>();
-			return auth == null ? null : await auth.GetAuthorizationInfo(kontext).ConfigureAwait(false);
+			var tokens = Tokens(request, MaxTokens);
+			if (tokens.Count > MaxTokens)
+			{
+				return null;
+			}
+			var ids = new List<Guid>();
+			foreach (var token in tokens)
+			{
+				var geraet = _devices.GetDevices(new DeviceQuery { AccessToken = token, Limit = 1 }).Items.FirstOrDefault();
+				if (geraet != null && geraet.UserId != Guid.Empty && !ids.Contains(geraet.UserId))
+				{
+					ids.Add(geraet.UserId);
+				}
+			}
+			return ids;
 		}
 		catch (Exception ex)
 		{
-			_logger.LogDebug(ex, "Caller could not be determined");
+			_logger.LogWarning(ex, "Caller could not be determined");
 			return null;
 		}
+	}
+
+	// Stops once more than "grenze" tokens are found: the caller refuses such a request anyway, and a header packed
+	// with thousands of tokens must not cost more than reading it once.
+	internal static List<string> Tokens(HttpRequest request, int grenze)
+	{
+		var tokens = new List<string>();
+		var gesehen = new HashSet<string>(StringComparer.Ordinal);
+		void Dazu(string? token)
+		{
+			if (tokens.Count > grenze)
+			{
+				return;
+			}
+			if (!string.IsNullOrWhiteSpace(token) && gesehen.Add(token))
+			{
+				tokens.Add(token);
+			}
+			string kurz = token?.Trim().Trim('"') ?? string.Empty;
+			if (kurz.Length > 0 && gesehen.Add(kurz))
+			{
+				tokens.Add(kurz);
+			}
+		}
+		foreach (var name in SchemaKoepfe)
+		{
+			var werte = request.Headers[name];
+			foreach (var wert in werte.Append(werte.ToString()))
+			{
+				foreach (var token in TokensAusSchema(wert))
+				{
+					Dazu(token);
+				}
+			}
+		}
+		foreach (var name in TokenKoepfe)
+		{
+			var werte = request.Headers[name];
+			foreach (var wert in werte.Append(werte.ToString()))
+			{
+				Dazu(wert);
+			}
+		}
+		foreach (var name in TokenParameter)
+		{
+			var werte = request.Query[name];
+			foreach (var wert in werte.Append(werte.ToString()))
+			{
+				Dazu(wert);
+			}
+		}
+		return tokens;
+	}
+
+	// Every Token value of a "MediaBrowser Client=..., Token=..." header, split like Jellyfin splits it, whatever the scheme.
+	private static IEnumerable<string> TokensAusSchema(string? kopf)
+	{
+		int leer = kopf?.IndexOf(' ') ?? -1;
+		if (kopf == null || leer < 0)
+		{
+			return Array.Empty<string>();
+		}
+		var tokens = new List<string>();
+		string rest = kopf[(leer + 1)..];
+		bool inAnfuehrung = false;
+		int start = 0;
+		string schluessel = string.Empty;
+		int i;
+		void Teil(int ende)
+		{
+			if (string.Equals(schluessel.Trim(), "Token", StringComparison.OrdinalIgnoreCase))
+			{
+				tokens.Add(WebUtility.UrlDecode(rest[start..ende].Trim('"')));
+			}
+			schluessel = string.Empty;
+		}
+		for (i = 0; i < rest.Length; i++)
+		{
+			char c = rest[i];
+			if (c == '"')
+			{
+				inAnfuehrung = !inAnfuehrung;
+			}
+			else if (c == ',' && !inAnfuehrung)
+			{
+				if (start < i)
+				{
+					Teil(i);
+				}
+				start = i + 1;
+			}
+			else if (c == '=' && !inAnfuehrung)
+			{
+				schluessel = rest[start..i];
+				start = i + 1;
+			}
+		}
+		if (start < i)
+		{
+			Teil(i);
+		}
+		return tokens;
 	}
 
 	// (false, _) = body present but not readable as JSON; (true, null) = empty body.

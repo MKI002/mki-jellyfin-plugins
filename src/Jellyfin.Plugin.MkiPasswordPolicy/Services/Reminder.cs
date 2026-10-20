@@ -7,7 +7,8 @@ using Microsoft.Extensions.Logging;
 namespace Jellyfin.Plugin.MkiPasswordPolicy.Services;
 
 // Once a minute and whenever the settings are saved: blocks accounts without a password that have rules or a request,
-// and reminds apps of users in a notice period. Does nothing while the plugin is switched off.
+// signs out users whose deadline has passed, and reminds apps of users in a notice period. Does nothing while the
+// plugin is switched off.
 public class Reminder : IHostedService, IDisposable
 {
 	private readonly Enforcer _enforcer;
@@ -48,6 +49,7 @@ public class Reminder : IHostedService, IDisposable
 		{
 			// Profiles may just have been given to accounts without a password: those are blocked right away.
 			_enforcer.SweepNoPassword();
+			_enforcer.SignOutBlocked().GetAwaiter().GetResult();
 			_enforcer.Remind();
 		}
 		catch (Exception ex)

@@ -38,12 +38,7 @@ public class Vorwaermer : IHostedService, IDisposable
 			PluginConfiguration pluginConfiguration = ((BasePlugin<PluginConfiguration>)(object)Plugin.Instance)?.Configuration ?? new PluginConfiguration();
 			if (pluginConfiguration.Enabled)
 			{
-				TimeSpan timeSpan = TimeSpan.FromMinutes(Math.Max(1, pluginConfiguration.CacheMinutes));
-				TimeSpan timeSpan2 = TimeSpan.FromSeconds(Math.Max(30.0, timeSpan.TotalSeconds * 0.15));
-				if (!(DateTime.UtcNow - _builder.BuiltUtc < timeSpan - timeSpan2))
-				{
-					_builder.ImHintergrundErneuern(Guid.Empty);
-				}
+				_builder.Vorwaermen();
 			}
 		}
 		catch (Exception ex)

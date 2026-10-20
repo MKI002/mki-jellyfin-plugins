@@ -2,11 +2,12 @@ using System;
 using System.Threading.Tasks;
 using Jellyfin.Data.Events.Users;
 using MediaBrowser.Controller.Events;
+using MediaBrowser.Controller.Events.Authentication;
 using MediaBrowser.Controller.Library;
 
 namespace Jellyfin.Plugin.MkiPasswordPolicy.Services;
 
-public class UserEvents : IEventConsumer<UserPasswordChangedEventArgs>, IEventConsumer<UserCreatedEventArgs>, IEventConsumer<UserDeletedEventArgs>
+public class UserEvents : IEventConsumer<UserPasswordChangedEventArgs>, IEventConsumer<UserCreatedEventArgs>, IEventConsumer<UserDeletedEventArgs>, IEventConsumer<AuthenticationResultEventArgs>
 {
 	private readonly PolicyStore _store;
 
@@ -65,5 +66,15 @@ public class UserEvents : IEventConsumer<UserPasswordChangedEventArgs>, IEventCo
 	{
 		_store.Remove(eventArgs.Argument.Id);
 		return Task.CompletedTask;
+	}
+
+	// Every successful sign-in, on any path. Jellyfin raises it before the client receives its token.
+	public async Task OnEvent(AuthenticationResultEventArgs eventArgs)
+	{
+		var id = eventArgs.User?.Id ?? Guid.Empty;
+		if (id != Guid.Empty && (_store.AnyMustChange() || Policy.Configured(Plugin.Config)))
+		{
+			await _enforcer.UndoSignIn(id, eventArgs.SessionInfo?.DeviceId).ConfigureAwait(false);
+		}
 	}
 }

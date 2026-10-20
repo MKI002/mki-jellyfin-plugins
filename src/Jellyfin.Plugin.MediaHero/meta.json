@@ -6,6 +6,6 @@
   "owner": "MKI",
   "category": "General",
   "targetAbi": "12.0.0.0",
-  "version": "1.4.1.0",
-  "changelog": "The API key on the settings page is hidden by default; the eye button shows it."
+  "version": "1.4.2.0",
+  "changelog": "Security update. Every user now gets their own banner that follows their library access, parental controls and blocked tags, instead of one list for everyone, and banners are never shared between accounts in the browser cache. Calls to Seerr no longer follow redirects or keep cookies, and library names on the settings page are escaped."
 }

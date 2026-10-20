@@ -6,8 +6,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Data;
+using Jellyfin.Data.Queries;
 using Jellyfin.Database.Implementations.Entities;
 using Jellyfin.Database.Implementations.Enums;
+using MediaBrowser.Controller.Devices;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Session;
 using MediaBrowser.Model.Session;
@@ -33,14 +35,17 @@ public class Enforcer
 
 	private readonly WebPatcher _patcher;
 
+	private readonly IDeviceManager _devices;
+
 	private readonly ILogger<Enforcer> _logger;
 
-	public Enforcer(PolicyStore store, IUserManager users, ISessionManager sessions, WebPatcher patcher, ILogger<Enforcer> logger)
+	public Enforcer(PolicyStore store, IUserManager users, ISessionManager sessions, WebPatcher patcher, IDeviceManager devices, ILogger<Enforcer> logger)
 	{
 		_store = store;
 		_users = users;
 		_sessions = sessions;
 		_patcher = patcher;
+		_devices = devices;
 		_logger = logger;
 	}
 
@@ -128,6 +133,10 @@ public class Enforcer
 			passwort = TemporaryPasswords.Create(regeln?.MinLength ?? 0);
 		}
 		while (regeln != null && PasswordRules.Check(passwort, user.Username, regeln).Count > 0 && ++versuch < 50);
+		if (regeln != null && PasswordRules.Check(passwort, user.Username, regeln).Count > 0)
+		{
+			throw new InvalidOperationException("Could not create a temporary password that meets the user's rules");
+		}
 		await _users.ChangePassword(user.Id, passwort).ConfigureAwait(false);
 		RequireOwnPassword(user, "temporary");
 		return passwort;
@@ -186,6 +195,54 @@ public class Enforcer
 				.Replace("{date}", datum, StringComparison.OrdinalIgnoreCase);
 			_erinnert[sitzung.Id] = (sitzung.UserId, string.IsNullOrEmpty(sitzung.DeviceName) ? sitzung.Client : sitzung.DeviceName, DateTime.UtcNow, false);
 			_ = Benachrichtigen(sitzung.Id, text);
+		}
+	}
+
+	// Tokens of blocked users are refused on every request anyway; this also deletes them, so no other way in
+	// (another plugin, a header the gate does not know) can still use one. Catches notice periods that just ended
+	// and grace times cut short by a restart.
+	public async Task SignOutBlocked()
+	{
+		foreach (var id in _store.OpenUsers())
+		{
+			if (_store.SessionsBlocked(id) && _devices.GetDevices(new DeviceQuery { UserId = id }).TotalRecordCount > 0)
+			{
+				_logger.LogInformation("Signing out {User}: their deadline for a new password has passed", _users.GetUserById(id)?.Username ?? id.ToString());
+				await SignOutEverywhere(id).ConfigureAwait(false);
+			}
+		}
+	}
+
+	// A sign-in of a user who must change their password, on a path the gate does not see (another plugin's single
+	// sign-on, a client that signs in some other way): its token is deleted before the client gets to use it.
+	// Other devices keep a grace time that is still running.
+	public async Task UndoSignIn(Guid userId, string? deviceId)
+	{
+		var user = _users.GetUserById(userId);
+		if (user == null)
+		{
+			return;
+		}
+		EnforceNoPassword(user);
+		if (!_store.MustChange(userId) || _store.InNotice(userId))
+		{
+			return;
+		}
+		if (string.IsNullOrEmpty(deviceId) || _store.SessionsBlocked(userId))
+		{
+			await SignOutEverywhere(userId).ConfigureAwait(false);
+			return;
+		}
+		foreach (var geraet in _devices.GetDevices(new DeviceQuery { UserId = userId, DeviceId = deviceId }).Items.ToList())
+		{
+			try
+			{
+				await _sessions.Logout(geraet).ConfigureAwait(false);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogWarning(ex, "Signing out a device of {User} failed", user.Username);
+			}
 		}
 	}
 

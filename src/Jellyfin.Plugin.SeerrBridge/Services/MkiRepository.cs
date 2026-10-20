@@ -81,13 +81,14 @@ public class MkiRepository
 				string[] files = Directory.GetFiles(text, "*.dll");
 				if (files.Length != 0)
 				{
+					// Only an image inside the plugin's own folder is ever served, whatever meta.json points to.
 					string text3 = Text(rootElement, "imagePath");
-					if (!string.IsNullOrEmpty(text3) && !File.Exists(text3))
+					if (!string.IsNullOrEmpty(text3))
 					{
 						string text4 = Path.Combine(text, Path.GetFileName(text3));
 						text3 = (File.Exists(text4) ? text4 : null);
 					}
-					byte[] array = Packen(text, files, text2);
+					byte[] array = Packen(files, rootElement);
 					DateTime lastWriteTimeUtc = File.GetLastWriteTimeUtc(files[0]);
 					list.Add(new MkiPaket
 					{
@@ -116,7 +117,11 @@ public class MkiRepository
 		return list;
 	}
 
-	private static byte[] Packen(string ordner, string[] dlls, string meta)
+	// The package gets a fresh meta.json with the plugin's public details only. The installed one is written by
+	// Jellyfin and holds paths of this server.
+	private static readonly string[] Felder = new string[9] { "guid", "name", "overview", "description", "owner", "category", "targetAbi", "version", "changelog" };
+
+	private static byte[] Packen(string[] dlls, JsonElement meta)
 	{
 		using MemoryStream memoryStream = new MemoryStream();
 		using (ZipArchive destination = new ZipArchive(memoryStream, ZipArchiveMode.Create, leaveOpen: true))
@@ -125,7 +130,18 @@ public class MkiRepository
 			{
 				destination.CreateEntryFromFile(text, Path.GetFileName(text), CompressionLevel.Optimal);
 			}
-			destination.CreateEntryFromFile(meta, "meta.json", CompressionLevel.Optimal);
+			Dictionary<string, string> sauber = new Dictionary<string, string>();
+			foreach (string feld in Felder)
+			{
+				string wert = Text(meta, feld);
+				if (wert != null)
+				{
+					sauber[feld] = wert;
+				}
+			}
+			ZipArchiveEntry eintrag = destination.CreateEntry("meta.json", CompressionLevel.Optimal);
+			using Stream ziel = eintrag.Open();
+			JsonSerializer.Serialize(ziel, sauber, new JsonSerializerOptions { WriteIndented = true });
 		}
 		return memoryStream.ToArray();
 	}
