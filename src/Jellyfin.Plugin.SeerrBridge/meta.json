@@ -6,6 +6,6 @@
   "owner": "MKI",
   "category": "General",
   "targetAbi": "12.0.0.0",
-  "version": "1.4.2.0",
-  "changelog": "Security update. Requests from the search results are made in the user's own Seerr account, matched by Jellyfin user ID, and are refused for accounts not linked to Seerr yet instead of running as the administrator; each user can send up to 30 per hour. Single sign-on can no longer be triggered by other websites, and the Seerr session cookie is set HttpOnly (and Secure over https). The settings endpoint needs a signed-in user, the plugin repository answers only inside the local network, the legacy header bridge only passes a single well-formed token, and calls to Seerr no longer follow redirects or keep cookies."
+  "version": "1.5.0.0",
+  "changelog": "New settings page in the shared MKI design, with tabs for Connection, Menu & search and Sign-in. A diagram shows both roads to Seerr and whether each one answers, a connection test runs by itself after an address change, and the page warns about address problems such as mixed http and https. A sketch shows where the Requests button lands, and Try a search previews the suggestions. Settings save as soon as you change them, with undo; changes that affect requests or sign-in ask first. Works on phones and in light and dark themes."
 }

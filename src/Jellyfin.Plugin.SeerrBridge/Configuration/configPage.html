@@ -5,249 +5,987 @@
     <title>MKI Seerr Bridge</title>
 </head>
 <body>
-<div id="SeerrBridgeConfig" data-role="page" class="page type-interior pluginConfigurationPage">
-    <style>
-        #SeerrBridgeConfig .sb-tabs { display: flex; gap: .5em; flex-wrap: wrap; margin: 1em 0 1.5em; }
-        #SeerrBridgeConfig .sb-tabs button { margin: 0; }
-        #SeerrBridgeConfig .sb-tabs button.sb-aktiv { background: #00a4dc; color: #fff; }
-        #SeerrBridgeConfig .sb-panel { display: none; }
-        #SeerrBridgeConfig .sb-panel.sb-aktiv { display: block; }
-        #SeerrBridgeConfig .sb-zwei { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 2em; }
-        #SeerrBridgeConfig .sb-hinweis { border-left: 3px solid #00a4dc; padding: .6em 1em; background: rgba(0,164,220,.08); margin: 1em 0; }
-        #SeerrBridgeConfig .sb-pruefen { display: flex; gap: .8em; align-items: center; flex-wrap: wrap; margin: .5em 0 1em; }
-        #SeerrBridgeConfig .sb-pruefen button { margin: 0; }
-        #SeerrBridgeConfig .sb-marke { display: inline-block; padding: .15em .7em; border-radius: 1em; font-size: .85em; white-space: nowrap; }
-        #SeerrBridgeConfig .sb-ok { background: rgba(80,190,80,.2); color: #6c6; }
-        #SeerrBridgeConfig .sb-fehler { background: rgba(220,60,60,.2); color: #e55; }
-        #SeerrBridgeConfig .sb-neutral { background: rgba(128,128,128,.25); }
-        #SeerrBridgeConfig .sb-meldung { flex: 1 1 240px; opacity: .8; font-size: .9em; }
-        #SeerrBridgeConfig code { font-size: .92em; }
-        .mki-geheim{display:flex;align-items:flex-end;gap:.25em}.mki-geheim>:first-child{flex:1}
-    </style>
-    <div data-role="content">
-        <div class="content-primary">
-            <div class="verticalSection">
-                <h2 class="sectionTitle">MKI Seerr Bridge</h2>
-                <div class="sb-hinweis">
-                    Brings Seerr into Jellyfin: a Requests button in the menu, Seerr suggestions in the search
-                    and sign-in without a second login. Enter the Seerr address and API key, test the connection
-                    and you are ready to go.
-                </div>
-            </div>
+<div id="SeerrBridgeConfig" data-role="page" class="page type-interior pluginConfigurationPage mkiui mk-seerr">
+<style>
+/* MKI-KIT:CSS BEGIN (generated from ui/mki-kit.css by build/kit.py, do not edit here) */
+/* MKI-KIT:CSS END */
+</style>
+<style>
+/* ---------- Seerr Bridge: page-specific parts ---------- */
+#SeerrBridgeConfig .mk-tiles.is-off .mk-tile { opacity: .55; }
+#SeerrBridgeConfig .mk-tile.is-warn { border-color: rgba(var(--mk-warn-rgb), .5); }
+#SeerrBridgeConfig .mk-tile.is-bad { border-color: rgba(var(--mk-bad-rgb), .5); }
+#SeerrBridgeConfig .mk-tile .mk-chip { margin-top: 3px; }
+#SeerrBridgeConfig .mk-tile__sub { overflow-wrap: anywhere; }
+#SeerrBridgeConfig .mk-tile__value { overflow-wrap: anywhere; }
+#SeerrBridgeConfig .sbr-tilenote { display: flex; gap: 5px; align-items: flex-start; margin-top: 6px; font-size: .78rem; line-height: 1.35; color: var(--mk-warn); }
+#SeerrBridgeConfig .sbr-tilenote .mk-ic { font-size: 1.1em; margin-top: 1px; }
+#SeerrBridgeConfig .sbr-uses { flex: 1 1 100%; }
+#SeerrBridgeConfig .sbr-uses .mk-chip { white-space: normal; overflow-wrap: anywhere; }
+#SeerrBridgeConfig .mk-card[tabindex="-1"]:focus { outline: none; }
+#SeerrBridgeConfig .mk-checks .is-info > .mk-ic { color: var(--mk-info); }
+#SeerrBridgeConfig .mk-checks li > span { min-width: 0; overflow-wrap: anywhere; }
+#SeerrBridgeConfig .mk-checks li:not([class]) > .mk-ic { color: var(--mk-faint); }
 
-            <div class="sb-tabs">
-                <button is="emby-button" type="button" class="raised emby-button sb-aktiv" data-tab="verbindung"><span>Connection</span></button>
-                <button is="emby-button" type="button" class="raised emby-button" data-tab="suche"><span>Menu &amp; search</span></button>
-                <button is="emby-button" type="button" class="raised emby-button" data-tab="anmeldung"><span>Sign-in</span></button>
-            </div>
+/* two roads to Seerr */
+#SeerrBridgeConfig .sbr-map { display: grid; gap: 14px; }
+#SeerrBridgeConfig .sbr-road { display: grid; grid-template-columns: 150px minmax(0, 1fr) 240px; gap: 8px 16px; align-items: center; }
+#SeerrBridgeConfig .sbr-road + .sbr-road { padding-top: 14px; border-top: 1px dashed var(--mk-line-2); }
+#SeerrBridgeConfig .sbr-road__label { font-size: .7rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--mk-dim); }
+#SeerrBridgeConfig .sbr-road__chip { justify-self: start; white-space: normal; overflow-wrap: anywhere; }
+#SeerrBridgeConfig .sbr-flow .mk-flow__node { display: flex; flex-direction: column; }
+#SeerrBridgeConfig .sbr-flow .mk-flow__node.is-bad { border-color: rgba(var(--mk-bad-rgb), .55); background: rgba(var(--mk-bad-rgb), .07); }
+#SeerrBridgeConfig .sbr-flow .mk-flow__node.is-bad .mk-flow__kicker { color: var(--mk-bad); }
+#SeerrBridgeConfig .sbr-flow .mk-flow__node.is-warn { border-color: rgba(var(--mk-warn-rgb), .6); }
+#SeerrBridgeConfig .sbr-flow .mk-flow__title { overflow-wrap: anywhere; }
+#SeerrBridgeConfig .sbr-flow .mk-flow__edge { flex-basis: 30px; }
+#SeerrBridgeConfig .sbr-flow .mk-flow__edge.is-bad { background: rgba(var(--mk-bad-rgb), .7); }
+#SeerrBridgeConfig .sbr-flow .mk-flow__edge.is-bad::after { border-left-color: rgba(var(--mk-bad-rgb), .9); }
+#SeerrBridgeConfig .sbr-flow .mk-flow__edge.is-bad::before { display: none; }
+#SeerrBridgeConfig .sbr-flow.is-off { opacity: .45; }
+#SeerrBridgeConfig .sbr-checks { margin-top: 6px; }
+#SeerrBridgeConfig .sbr-checks:empty { display: none; }
 
-            <form id="sbForm">
-                <div class="sb-panel sb-aktiv" data-panel="verbindung">
-                    <div class="checkboxContainer checkboxContainer-withDescription">
-                        <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="Enabled" /><span>Integration enabled</span></label>
-                        <div class="fieldDescription checkboxFieldDescription">Turn off to hide everything Seerr-related without losing your settings.</div>
-                    </div>
+/* connection test */
+#SeerrBridgeConfig .sbr-test { padding: 12px 13px; border-radius: 12px; border: 1px solid var(--mk-line); background: var(--mk-surface-2); }
+#SeerrBridgeConfig .sbr-test__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+#SeerrBridgeConfig .sbr-test__text { margin-top: 9px; font-size: .92rem; font-weight: 600; overflow-wrap: anywhere; }
+#SeerrBridgeConfig .sbr-test__meta { margin-top: 3px; font-size: .8rem; line-height: 1.45; color: var(--mk-dim); overflow-wrap: anywhere; }
 
-                    <div class="verticalSection">
-                        <h3>Seerr address</h3>
-                        <div class="sb-zwei">
-                            <div class="inputContainer">
-                                <label class="inputLabel inputLabelUnfocused" for="PublicUrl">Address for the browser</label>
-                                <input is="emby-input" type="text" id="PublicUrl" placeholder="http://192.168.1.10:5055" />
-                                <div class="fieldDescription">Where your browser opens Seerr; it is shown in an embedded frame.</div>
-                            </div>
-                            <div class="inputContainer">
-                                <label class="inputLabel inputLabelUnfocused" for="ServerUrl">Address for the server (optional)</label>
-                                <input is="emby-input" type="text" id="ServerUrl" />
-                                <div class="fieldDescription">How the Jellyfin server reaches Seerr for search and requests. Leave empty if it is the same.</div>
-                            </div>
-                        </div>
-                        <p class="fieldDescription">
-                            Seerr's session cookie is not sent inside a frame from a different site. Different ports on the same
-                            host name are fine (<code>:8096</code> and <code>:5055</code>). If Jellyfin and Seerr run on different
-                            domains, the frame asks you to sign in every time.
-                        </p>
-                    </div>
+/* controls | preview */
+#SeerrBridgeConfig .sbr-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px 26px; align-items: start; }
+#SeerrBridgeConfig .sbr-dep.is-inert .mk-row__label { opacity: .55; }
+#SeerrBridgeConfig .sbr-dep > .mk-msg { margin: 0 0 6px 38px; }
 
-                    <div class="verticalSection">
-                        <h3>Access</h3>
-                        <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="ApiKey">API key</label>
-                            <div class="mki-geheim"><input is="emby-input" type="password" id="ApiKey" autocomplete="new-password" /><button is="paper-icon-button-light" type="button" class="paper-icon-button-light" data-mki-zeigen="ApiKey" title="Show" aria-label="Show or hide"><span class="material-icons" aria-hidden="true">visibility</span></button></div>
-                            <div class="fieldDescription">Find it in Seerr under Settings &rarr; General. It stays on the server; browsers never see it.</div>
-                        </div>
-                        <div class="sb-pruefen">
-                            <button is="emby-button" type="button" id="sbPruefen" class="raised emby-button"><span>Test connection</span></button>
-                            <span class="sb-marke sb-neutral" id="sbMarke">Not tested</span>
-                            <span class="sb-meldung" id="sbErgebnis">Saves your settings first, then checks them.</span>
-                        </div>
-                    </div>
-                </div>
+/* mini Jellyfin: where the button lands (an illustration, drawn from the saved label and switches) */
+#SeerrBridgeConfig .sbr-prev { border-radius: 12px; border: 1px solid var(--mk-line-2); background: #0b0b0b; color: #eee; overflow: hidden; font-size: .78rem; }
+#SeerrBridgeConfig[data-tone="light"] .sbr-prev { background: #fafafa; color: #222; }
+#SeerrBridgeConfig .sbr-mini-head { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 10px; background: rgba(255,255,255,.04); border-bottom: 1px solid rgba(255,255,255,.07); }
+#SeerrBridgeConfig[data-tone="light"] .sbr-mini-head { background: #fff; border-bottom-color: rgba(0,0,0,.08); }
+#SeerrBridgeConfig .sbr-mini-logo { width: 18px; height: 18px; flex: none; border-radius: 5px; background: linear-gradient(135deg, #AA5CC3, #00A4DC); }
+#SeerrBridgeConfig .sbr-mini-title { font-weight: 700; }
+#SeerrBridgeConfig .sbr-sp { flex: 1; }
+#SeerrBridgeConfig .sbr-mini-ic { opacity: .7; display: grid; }
+#SeerrBridgeConfig .sbr-mini-btn { display: inline-flex; align-items: center; gap: 5px; min-width: 0; padding: 4px 9px; border-radius: 99px; font-weight: 700; color: #fff; background: linear-gradient(90deg, rgba(var(--mk-a1-rgb), .85), rgba(var(--mk-a2-rgb), .85)); box-shadow: 0 0 14px rgba(var(--mk-a1-rgb), .45); max-width: 150px; white-space: nowrap; overflow: hidden; }
+#SeerrBridgeConfig .sbr-mini-btn > span:last-child, #SeerrBridgeConfig .sbr-mini-item > span:last-child { overflow: hidden; text-overflow: ellipsis; }
+#SeerrBridgeConfig .sbr-mini-av { width: 22px; height: 22px; border-radius: 50%; background: #00729a; flex: none; }
+#SeerrBridgeConfig .sbr-mini-body { display: grid; grid-template-columns: 128px 1fr; min-height: 150px; }
+#SeerrBridgeConfig .sbr-mini-drawer { display: flex; flex-direction: column; gap: 2px; padding: 8px 6px; min-width: 0; background: rgba(255,255,255,.035); border-right: 1px solid rgba(255,255,255,.06); }
+#SeerrBridgeConfig[data-tone="light"] .sbr-mini-drawer { background: #fff; border-right-color: rgba(0,0,0,.07); }
+#SeerrBridgeConfig .sbr-mini-item { display: flex; align-items: center; gap: 7px; padding: 6px 7px; border-radius: 7px; opacity: .75; white-space: nowrap; overflow: hidden; min-width: 0; }
+#SeerrBridgeConfig .sbr-mini-item--seerr { opacity: 1; font-weight: 700; background: rgba(var(--mk-a1-rgb), .16); box-shadow: inset 2px 0 0 var(--mk-a1-ink); }
+#SeerrBridgeConfig .sbr-mini-content { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; padding: 10px; align-content: start; }
+#SeerrBridgeConfig .sbr-mini-content i { display: block; aspect-ratio: 16 / 10; border-radius: 6px; background: rgba(255,255,255,.07); }
+#SeerrBridgeConfig[data-tone="light"] .sbr-mini-content i { background: rgba(0,0,0,.07); }
+#SeerrBridgeConfig .sbr-hide { display: none !important; }
+#SeerrBridgeConfig .sbr-prevcap { margin-top: 7px; font-size: .78rem; color: var(--mk-faint); }
 
-                <div class="sb-panel" data-panel="suche">
-                    <div class="verticalSection">
-                        <h3>Requests button</h3>
-                        <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="Label">Label</label>
-                            <input is="emby-input" type="text" id="Label" placeholder="Requests" />
-                            <div class="fieldDescription">Leave empty for the default &ldquo;Requests&rdquo; (recommended). Any text here replaces it for everyone.</div>
-                        </div>
-                        <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ShowInHeader" /><span>Show in the header</span></label></div>
-                        <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="ShowInDrawer" /><span>Show in the side menu (mobile)</span></label></div>
-                    </div>
+/* try a search (the real SeerrBridge/search, as an administrator, with the saved settings) */
+#SeerrBridgeConfig .sbr-try { padding: 12px; border-radius: 12px; border: 1px solid var(--mk-line-2); background: var(--mk-surface-2); min-width: 0; }
+#SeerrBridgeConfig .sbr-try__title { display: flex; align-items: center; gap: 7px; margin: 0 0 3px; font-size: .92rem; font-weight: 700; }
+#SeerrBridgeConfig .sbr-try__title .mk-ic { color: var(--mk-a1-ink); }
+#SeerrBridgeConfig .sbr-try__desc { font-size: .8rem; line-height: 1.45; color: var(--mk-dim); }
+#SeerrBridgeConfig .sbr-try__row { display: flex; gap: 8px; margin-top: 10px; }
+#SeerrBridgeConfig .sbr-try__row .mk-input { flex: 1 1 auto; min-width: 0; }
+#SeerrBridgeConfig .sbr-try__row .mk-btn { flex: none; }
+#SeerrBridgeConfig .sbr-try__meta { margin-top: 9px; font-size: .8rem; line-height: 1.45; color: var(--mk-dim); overflow-wrap: anywhere; }
+#SeerrBridgeConfig .sbr-try__meta:empty { display: none; }
+#SeerrBridgeConfig .sbr-results { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+#SeerrBridgeConfig .sbr-results:empty { display: none; }
+#SeerrBridgeConfig .sbr-results li { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border-radius: 9px; border: 1px solid var(--mk-line); background: var(--mk-surface); }
+#SeerrBridgeConfig .sbr-res__type { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 8px; color: var(--mk-a1-ink); background: rgba(var(--mk-a1-rgb), .12); }
+#SeerrBridgeConfig .sbr-res__main { flex: 1 1 140px; min-width: 0; }
+#SeerrBridgeConfig .sbr-res__title { display: block; font-size: .9rem; font-weight: 650; overflow-wrap: anywhere; }
+#SeerrBridgeConfig .sbr-res__meta { display: block; font-size: .78rem; color: var(--mk-dim); }
+#SeerrBridgeConfig .sbr-res__chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 5px; }
+#SeerrBridgeConfig .sbr-who { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--mk-line); font-size: .82rem; line-height: 1.5; color: var(--mk-dim); }
+#SeerrBridgeConfig .sbr-who b { color: var(--mk-text); font-weight: 650; }
 
-                    <div class="verticalSection">
-                        <h3>Search</h3>
-                        <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="EnableSearch" /><span>Show Seerr suggestions below the Jellyfin results</span></label></div>
-                        <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="HideAvailable" /><span>Hide titles already in the library</span></label></div>
-                        <div class="checkboxContainer"><label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="AllowRequests" /><span>Allow requests directly from the results</span></label></div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="MapUsers" /><span>Request as the matching Seerr account</span></label>
-                            <div class="fieldDescription checkboxFieldDescription">Otherwise every request runs as the API key's account (the admin), so you cannot see who asked for what and per-user approval rules do not apply.</div>
-                        </div>
-                        <div class="sb-zwei">
-                            <div class="inputContainer">
-                                <label class="inputLabel inputLabelUnfocused" for="SearchLimit">Maximum suggestions</label>
-                                <input is="emby-input" type="number" id="SearchLimit" min="1" max="40" />
-                            </div>
-                            <div class="inputContainer">
-                                <label class="inputLabel inputLabelUnfocused" for="Language">Result language</label>
-                                <input is="emby-input" type="text" id="Language" placeholder="en" />
-                                <div class="fieldDescription">Two-letter code, e.g. <code>en</code>.</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+/* sign-in */
+#SeerrBridgeConfig .sbr-h3 { margin: 16px 0 6px; font-size: .74rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--mk-dim); }
+#SeerrBridgeConfig .sbr-more { margin-top: 14px; }
+#SeerrBridgeConfig .sbr-more .mk-field { padding-bottom: 6px; }
+#SeerrBridgeConfig .sbr-legflow { margin-top: 10px; }
 
-                <div class="sb-panel" data-panel="anmeldung">
-                    <div class="verticalSection">
-                        <h3>Single sign-on</h3>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="EnableSso" /><span>Sign in to Seerr with the Jellyfin account</span></label>
-                            <div class="fieldDescription checkboxFieldDescription">Anyone signed in to Jellyfin is signed in to Seerr too, with no login form in the frame.</div>
-                        </div>
-                        <div class="sb-hinweis">
-                            <b>No password is bypassed.</b> The plugin issues a one-time pass (valid for one minute, usable once,
-                            bound to the account) and answers Seerr through Jellyfin's own Quick&nbsp;Connect. Users can only
-                            sign in as themselves.
-                            <br />Needs Quick&nbsp;Connect enabled and a shared parent domain, e.g. <code>jf.example.org</code> and
-                            <code>js.example.org</code>. Plain IP addresses fall back to the normal sign-in.
-                        </div>
-                        <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="CookieDomain">Session cookie domain (optional)</label>
-                            <input is="emby-input" type="text" id="CookieDomain" placeholder=".example.org" />
-                            <div class="fieldDescription">Leave empty to work it out from both addresses, e.g. <code>.example.org</code>.</div>
-                        </div>
-                    </div>
+@media (max-width: 1100px) {
+  #SeerrBridgeConfig .sbr-road { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 900px) {
+  #SeerrBridgeConfig .sbr-split { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 640px) {
+  #SeerrBridgeConfig .mk-tab > .mk-ic { display: none; }
+  #SeerrBridgeConfig .mk-tab { flex: 1 1 auto; justify-content: center; }
+  #SeerrBridgeConfig .sbr-mini-body { grid-template-columns: 112px 1fr; }
+  #SeerrBridgeConfig .sbr-mini-content { grid-template-columns: repeat(2, 1fr); }
+  #SeerrBridgeConfig .sbr-flow .mk-flow__edge { flex-basis: 22px; }
+  #SeerrBridgeConfig .sbr-dep > .mk-msg { margin-left: 0; }
+  #SeerrBridgeConfig .mk-row--sub { margin-left: 8px; padding-left: 12px; }
+}
+</style>
 
-                    <div class="verticalSection">
-                        <h3>Compatibility</h3>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label"><input is="emby-checkbox" type="checkbox" id="LegacyAuthHeader" /><span>Translate legacy auth headers</span></label>
-                            <div class="fieldDescription checkboxFieldDescription">
-                                Jellyfin&nbsp;12 only reads <code>Authorization</code>, but Seerr and other older apps send
-                                <code>X-Emby-Authorization</code> or <code>X-Emby-Token</code>. Without this, sign-in fails with
-                                &ldquo;Something went wrong&rdquo; (HTTP&nbsp;400) and user sync stops at 401. The header is only
-                                filled in when it is missing, never overwritten, and grants nothing extra.
-                            </div>
-                        </div>
-                    </div>
-                </div>
+<div data-role="content"><div class="content-primary mk-wrap">
 
-                <div>
-                    <button is="emby-button" type="submit" class="raised button-submit block emby-button"><span>Save</span></button>
-                </div>
-            </form>
-        </div>
+<header class="mk-deck" aria-labelledby="sbrTitle">
+  <div class="mk-deck__head">
+    <div class="mk-brand">
+      <p class="mk-kicker">MKI · Jellyfin plugin</p>
+      <h1 class="mk-title" id="sbrTitle">Seerr <b>Bridge</b></h1>
+      <span class="mk-rule"></span>
+      <p class="mk-lede">Seerr inside Jellyfin: a Requests button, Seerr suggestions in search, and sign-in without a second login.</p>
     </div>
+    <label class="mk-master" for="sbrEnabled">
+      <span class="mk-master__text"><span class="mk-master__label">Integration</span><span class="mk-master__state" id="sbrMasterState">Loading…</span></span>
+      <input type="checkbox" class="mk-switch" role="switch" id="sbrEnabled" data-key="Enabled" data-label="Integration">
+    </label>
+  </div>
 
-    <script type="text/javascript">
-        (function () {
-  // Eye buttons: flip a secret field between hidden and shown.
-  Array.prototype.forEach.call(document.querySelectorAll('button[data-mki-zeigen]'), function (b) {
-    b.addEventListener('click', function () {
-      var feld = document.getElementById(b.getAttribute('data-mki-zeigen'));
-      var zeigen = feld.type === 'password';
-      feld.type = zeigen ? 'text' : 'password';
-      b.title = zeigen ? 'Hide' : 'Show';
-      b.querySelector('.material-icons').textContent = zeigen ? 'visibility_off' : 'visibility';
+  <div class="mk-tiles" id="sbrTiles">
+    <button type="button" class="mk-tile" id="sbrTileConn" data-goto="sbrMapCard">
+      <span class="mk-tile__label"><span class="material-icons mk-ic" aria-hidden="true">hub</span>Connection</span>
+      <span class="mk-tile__value" id="sbrTileConnValue">…</span>
+      <span class="mk-chip mk-chip--plain" id="sbrTileConnChip"><span class="material-icons mk-ic" aria-hidden="true">hourglass_empty</span><span>Not tested</span></span>
+      <span class="mk-tile__sub" id="sbrTileConnSub"></span>
+      <span class="sbr-tilenote" id="sbrTileConnWarn" hidden></span>
+    </button>
+    <button type="button" class="mk-tile" data-goto="sbrBtnCard">
+      <span class="mk-tile__label"><span class="material-icons mk-ic" aria-hidden="true">menu</span>Menu button</span>
+      <span class="mk-tile__value" id="sbrTileLabel">…</span>
+      <span class="mk-tile__sub" id="sbrTileWhere"></span>
+    </button>
+    <button type="button" class="mk-tile" data-goto="sbrSearchCard">
+      <span class="mk-tile__label"><span class="material-icons mk-ic" aria-hidden="true">search</span>Search</span>
+      <span class="mk-tile__value" id="sbrTileSearch">…</span>
+      <span class="mk-tile__sub" id="sbrTileSearchSub"></span>
+    </button>
+    <button type="button" class="mk-tile" id="sbrTileSsoBox" data-goto="sbrSsoCard">
+      <span class="mk-tile__label"><span class="material-icons mk-ic" aria-hidden="true">key</span>Single sign-on</span>
+      <span class="mk-tile__value" id="sbrTileSso">…</span>
+      <span class="mk-tile__sub" id="sbrTileSsoSub"></span>
+    </button>
+  </div>
+
+  <div class="mk-deck__foot">
+    <p class="mk-next"><span class="material-icons mk-ic" aria-hidden="true">schedule</span><span id="sbrNext">Loading the settings…</span></p>
+    <div class="mk-actions">
+      <button type="button" class="mk-btn mk-btn--primary" id="sbrTestTop" data-needs-load><span class="material-icons mk-ic" aria-hidden="true">sync</span><span>Test connection</span></button>
+      <a class="mk-btn mk-btn--ghost" id="sbrOpen" target="_blank" rel="noopener noreferrer" hidden><span class="material-icons mk-ic" aria-hidden="true">open_in_new</span><span>Open Seerr</span></a>
+    </div>
+    <div class="mk-uses sbr-uses" id="sbrUses" aria-live="polite"></div>
+  </div>
+</header>
+
+<div class="mk-bar">
+  <div class="mk-tabs" role="tablist" aria-label="Settings sections">
+    <button type="button" class="mk-tab" role="tab" id="sbrTab-connection" data-tab="connection" aria-controls="sbrP-connection" aria-selected="true"><span class="material-icons mk-ic" aria-hidden="true">hub</span>Connection</button>
+    <button type="button" class="mk-tab" role="tab" id="sbrTab-menu" data-tab="menu" aria-controls="sbrP-menu" aria-selected="false" tabindex="-1"><span class="material-icons mk-ic" aria-hidden="true">search</span>Menu &amp; search</button>
+    <button type="button" class="mk-tab" role="tab" id="sbrTab-signin" data-tab="signin" aria-controls="sbrP-signin" aria-selected="false" tabindex="-1"><span class="material-icons mk-ic" aria-hidden="true">key</span>Sign-in</button>
+  </div>
+</div>
+
+<div class="mk-main">
+
+<!-- ============ CONNECTION ============ -->
+<section class="mk-panel" role="tabpanel" id="sbrP-connection" aria-labelledby="sbrTab-connection">
+
+  <section class="mk-card" id="sbrMapCard" aria-labelledby="sbrMapT" tabindex="-1">
+    <div class="mk-card__head">
+      <span class="mk-card__icon"><span class="material-icons mk-ic" aria-hidden="true">hub</span></span>
+      <div class="mk-card__titles"><h2 class="mk-card__title" id="sbrMapT">Two roads to Seerr</h2><p class="mk-card__desc">Browsers show Seerr in a frame; the Jellyfin server talks to Seerr for search and requests. Each road has its own address. Drawn from the saved settings.</p></div>
+    </div>
+    <div class="mk-card__body">
+      <div class="sbr-map">
+        <div class="sbr-road">
+          <span class="sbr-road__label">What the browser opens</span>
+          <div class="mk-flow sbr-flow" aria-hidden="true">
+            <div class="mk-flow__node"><span class="mk-flow__kicker"><span class="material-icons mk-ic" aria-hidden="true">computer</span>Browser</span><span class="mk-flow__title" id="sbrMapHost">…</span><span class="mk-flow__sub">where you have Jellyfin open now</span></div>
+            <span class="mk-flow__edge" id="sbrEdgeFrame"></span>
+            <div class="mk-flow__node" id="sbrNodePublic"><span class="mk-flow__kicker"><span class="material-icons mk-ic" aria-hidden="true">open_in_new</span>Seerr page, in a frame</span><span class="mk-flow__title mk-mono" id="sbrMapPublic">…</span><span class="mk-flow__sub">Address for the browser</span></div>
+          </div>
+          <span class="mk-chip sbr-road__chip" id="sbrFrameChip"><span class="material-icons mk-ic" aria-hidden="true">hourglass_empty</span><span>…</span></span>
+        </div>
+        <div class="sbr-road">
+          <span class="sbr-road__label">What the server uses</span>
+          <div class="mk-flow sbr-flow" aria-hidden="true">
+            <div class="mk-flow__node"><span class="mk-flow__kicker"><span class="material-icons mk-ic" aria-hidden="true">dns</span>Jellyfin server</span><span class="mk-flow__title" id="sbrMapKey">with the API key</span><span class="mk-flow__sub">only administrators can see the key</span></div>
+            <span class="mk-flow__edge" id="sbrEdgeApi"></span>
+            <div class="mk-flow__node" id="sbrNodeServer"><span class="mk-flow__kicker"><span class="material-icons mk-ic" aria-hidden="true">lan</span>Seerr API</span><span class="mk-flow__title mk-mono" id="sbrMapServer">…</span><span class="mk-flow__sub" id="sbrMapServerSub">Address for the server</span></div>
+          </div>
+          <span class="mk-chip sbr-road__chip" id="sbrApiChip"><span class="material-icons mk-ic" aria-hidden="true">hourglass_empty</span><span>…</span></span>
+        </div>
+      </div>
+      <p class="mk-sr" id="sbrMapText" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <div class="mk-grid2">
+    <section class="mk-card" id="sbrAddrCard" aria-labelledby="sbrAddrT">
+      <div class="mk-card__head">
+        <span class="mk-card__icon"><span class="material-icons mk-ic" aria-hidden="true">link</span></span>
+        <div class="mk-card__titles"><h2 class="mk-card__title" id="sbrAddrT">Seerr address</h2><p class="mk-card__desc">Saved when you leave a field. A connection test follows by itself.</p></div>
+      </div>
+      <div class="mk-card__body mk-stack">
+        <div class="mk-field" data-find="public url browser frame">
+          <label class="mk-field__label" for="sbrPublicUrl">Address for the browser</label>
+          <input class="mk-input" type="text" inputmode="url" id="sbrPublicUrl" data-key="PublicUrl" data-label="Address for the browser" data-validate="seerrUrl" placeholder="https://requests.example.org" spellcheck="false" autocomplete="off" autocapitalize="off">
+          <span class="mk-field__hint">Where browsers open Seerr. It is shown inside Jellyfin in a frame. Without it the Requests button stays hidden.</span>
+          <span class="mk-msg" data-auto></span>
+          <ul class="mk-checks sbr-checks" id="sbrPubChecks" aria-live="polite"></ul>
+        </div>
+        <div class="mk-field" data-find="server url internal local">
+          <label class="mk-field__label" for="sbrServerUrl">Address for the server <span class="mk-dim">(optional)</span></label>
+          <input class="mk-input" type="text" inputmode="url" id="sbrServerUrl" data-key="ServerUrl" data-label="Address for the server" data-validate="seerrUrl" placeholder="Empty: same as the browser address" spellcheck="false" autocomplete="off" autocapitalize="off">
+          <span class="mk-field__hint">How the Jellyfin server reaches Seerr, often a local address. Leave empty if it is the same.</span>
+          <span class="mk-msg" data-auto></span>
+          <ul class="mk-checks sbr-checks" id="sbrSrvChecks" aria-live="polite"></ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="mk-card" id="sbrKeyCard" aria-labelledby="sbrKeyT" tabindex="-1">
+      <div class="mk-card__head">
+        <span class="mk-card__icon"><span class="material-icons mk-ic" aria-hidden="true">vpn_key</span></span>
+        <div class="mk-card__titles"><h2 class="mk-card__title" id="sbrKeyT">Access</h2><p class="mk-card__desc">The API key is stored on the server. Only administrators can see it, here on this page; Jellyfin never sends it to other users' browsers.</p></div>
+      </div>
+      <div class="mk-card__body mk-stack">
+        <div class="mk-field" data-find="api key token seerr key">
+          <label class="mk-field__label" for="sbrApiKey">API key</label>
+          <div class="mk-affix"><input class="mk-input mk-mono" type="password" id="sbrApiKey" data-key="ApiKey" data-label="API key" data-secret="1" autocomplete="new-password" spellcheck="false" autocapitalize="off">
+            <button type="button" class="mk-iconbtn" data-reveal="sbrApiKey" aria-label="Show" aria-pressed="false"><span class="material-icons mk-ic" aria-hidden="true">visibility</span></button></div>
+          <span class="mk-field__hint">In Seerr: Settings › General › API key. The server sends it to Seerr for search, requests and the connection test.</span>
+        </div>
+        <div class="sbr-test" id="sbrTest">
+          <div class="sbr-test__head">
+            <span class="mk-chip mk-chip--lg mk-chip--plain" id="sbrTestChip"><span class="material-icons mk-ic" aria-hidden="true">hourglass_empty</span><span>Not tested</span></span>
+            <button type="button" class="mk-btn mk-btn--sm" id="sbrTestBtn"><span class="material-icons mk-ic" aria-hidden="true">sync</span><span>Test connection</span></button>
+          </div>
+          <p class="sbr-test__text" id="sbrTestText" aria-live="polite">The test asks the server to contact Seerr with the saved address and key.</p>
+          <p class="sbr-test__meta" id="sbrTestMeta"></p>
+        </div>
+      </div>
+    </section>
+  </div>
+</section>
+
+<!-- ============ MENU & SEARCH ============ -->
+<section class="mk-panel" role="tabpanel" id="sbrP-menu" aria-labelledby="sbrTab-menu" hidden>
+
+  <section class="mk-card" id="sbrBtnCard" aria-labelledby="sbrBtnT" tabindex="-1">
+    <div class="mk-card__head">
+      <span class="mk-card__icon"><span class="material-icons mk-ic" aria-hidden="true">menu</span></span>
+      <div class="mk-card__titles"><h2 class="mk-card__title" id="sbrBtnT">Requests button</h2><p class="mk-card__desc">Opens Seerr inside Jellyfin. The sketch shows where it lands, with the saved label.</p></div>
+    </div>
+    <div class="mk-card__body sbr-split">
+      <div>
+        <div class="mk-field" data-find="button label name text">
+          <label class="mk-field__label" for="sbrLabel">Label</label>
+          <input class="mk-input" type="text" id="sbrLabel" data-key="Label" data-label="Button label" placeholder="Requests" maxlength="40" autocomplete="off">
+          <span class="mk-field__hint">Leave empty for "Requests" (recommended). Any text here replaces it for everyone.</span>
+        </div>
+        <div class="mk-row" style="margin-top:6px">
+          <div class="mk-row__text"><label class="mk-row__label" for="sbrShowInHeader">Show in the header</label><span class="mk-row__desc">Top right, next to the library buttons.</span></div>
+          <div class="mk-row__control"><input type="checkbox" class="mk-switch" role="switch" id="sbrShowInHeader" data-key="ShowInHeader" data-label="Show in the header"></div>
+        </div>
+        <div class="mk-row">
+          <div class="mk-row__text"><label class="mk-row__label" for="sbrShowInDrawer">Show in the side menu</label><span class="mk-row__desc">Below the libraries in the menu that slides in, on phones and small windows.</span></div>
+          <div class="mk-row__control"><input type="checkbox" class="mk-switch" role="switch" id="sbrShowInDrawer" data-key="ShowInDrawer" data-label="Show in the side menu"></div>
+        </div>
+        <p class="mk-note mk-note--warn" id="sbrNoButton" hidden><span class="material-icons mk-ic" aria-hidden="true">warning</span><span></span></p>
+      </div>
+      <div>
+        <div class="sbr-prev" id="sbrPrev" role="img" aria-label="">
+          <div class="sbr-mini-head"><span class="sbr-mini-logo"></span><span class="sbr-mini-title">Home</span><span class="sbr-sp"></span><span class="sbr-mini-ic"><span class="material-icons mk-ic" aria-hidden="true">search</span></span><span class="sbr-mini-btn" id="sbrPrevBtn"><span class="material-icons mk-ic" aria-hidden="true">cloud_download</span><span id="sbrPrevBtnText">Requests</span></span><span class="sbr-mini-av"></span></div>
+          <div class="sbr-mini-body">
+            <div class="sbr-mini-drawer">
+              <span class="sbr-mini-item"><span class="material-icons mk-ic" aria-hidden="true">home</span><span>Home</span></span>
+              <span class="sbr-mini-item"><span class="material-icons mk-ic" aria-hidden="true">movie</span><span>Movies</span></span>
+              <span class="sbr-mini-item"><span class="material-icons mk-ic" aria-hidden="true">tv</span><span>Shows</span></span>
+              <span class="sbr-mini-item sbr-mini-item--seerr" id="sbrPrevDrawer"><span class="material-icons mk-ic" aria-hidden="true">cloud_download</span><span id="sbrPrevDrawerText">Requests</span></span>
+            </div>
+            <div class="sbr-mini-content"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          </div>
+        </div>
+        <p class="sbr-prevcap" id="sbrPrevCap">A sketch, not a screenshot.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="mk-card" id="sbrSearchCard" aria-labelledby="sbrSearchT" tabindex="-1">
+    <div class="mk-card__head">
+      <span class="mk-card__icon"><span class="material-icons mk-ic" aria-hidden="true">search</span></span>
+      <div class="mk-card__titles"><h2 class="mk-card__title" id="sbrSearchT">Search suggestions</h2><p class="mk-card__desc">Seerr results appear below Jellyfin's own results on the search page.</p></div>
+    </div>
+    <div class="mk-card__body sbr-split">
+      <div>
+        <div class="mk-row">
+          <div class="mk-row__text"><label class="mk-row__label" for="sbrEnableSearch">Show Seerr suggestions in search</label><span class="mk-row__desc">Below the Jellyfin results.</span></div>
+          <div class="mk-row__control"><input type="checkbox" class="mk-switch" role="switch" id="sbrEnableSearch" data-key="EnableSearch" data-label="Seerr suggestions in search"></div>
+        </div>
+        <div class="sbr-dep" id="sbrSearchDeps">
+          <div class="mk-row mk-row--sub">
+            <div class="mk-row__text"><label class="mk-row__label" for="sbrHideAvailable">Hide titles already in the library</label><span class="mk-row__desc">Titles Seerr marks as available are left out.</span></div>
+            <div class="mk-row__control"><input type="checkbox" class="mk-switch" role="switch" id="sbrHideAvailable" data-key="HideAvailable" data-label="Hide titles already in the library"></div>
+          </div>
+          <div class="mk-row mk-row--sub">
+            <div class="mk-row__text"><label class="mk-row__label" for="sbrAllowRequests">Request straight from the results</label><span class="mk-row__desc">A Request button on titles nobody asked for yet. Up to 30 requests per user and hour.</span></div>
+            <div class="mk-row__control"><input type="checkbox" class="mk-switch" role="switch" id="sbrAllowRequests" data-key="AllowRequests" data-label="Request from the results"></div>
+          </div>
+          <div class="mk-row mk-row--sub">
+            <div class="mk-row__text"><label class="mk-row__label" for="sbrMapUsers">Request as the matching Seerr account</label><span class="mk-row__desc" id="sbrMapUsersDesc"></span></div>
+            <div class="mk-row__control"><input type="checkbox" class="mk-switch" role="switch" id="sbrMapUsers" data-key="MapUsers" data-label="Request as the matching Seerr account"></div>
+          </div>
+          <div class="mk-row mk-row--sub">
+            <div class="mk-row__text"><label class="mk-row__label" for="sbrSearchLimit">Maximum suggestions</label><span class="mk-row__desc">1 to 40.</span></div>
+            <div class="mk-row__control"><div class="mk-stepper"><button type="button" data-step="-1" aria-label="Fewer"><span class="material-icons mk-ic" aria-hidden="true">remove</span></button><input type="number" id="sbrSearchLimit" data-key="SearchLimit" data-label="Maximum suggestions" data-validate="int" data-msg="sbrLimitMsg" min="1" max="40" step="1" inputmode="numeric"><button type="button" data-step="1" aria-label="More"><span class="material-icons mk-ic" aria-hidden="true">add</span></button></div></div>
+          </div>
+          <span class="mk-msg" id="sbrLimitMsg"></span>
+          <div class="mk-row mk-row--sub">
+            <div class="mk-row__text"><label class="mk-row__label" for="sbrLanguage">Result language</label><span class="mk-row__desc">A language code such as en, de or pt-BR. Empty means en.</span></div>
+            <div class="mk-row__control"><input class="mk-input mk-input--num" type="text" id="sbrLanguage" data-key="Language" data-label="Result language" data-validate="language" data-msg="sbrLangMsg" maxlength="8" autocomplete="off" spellcheck="false" autocapitalize="off" style="width:88px;text-align:center" placeholder="en"></div>
+          </div>
+          <span class="mk-msg" id="sbrLangMsg"></span>
+        </div>
+      </div>
+      <div>
+        <div class="sbr-try" id="sbrTry">
+          <p class="sbr-try__title"><span class="material-icons mk-ic" aria-hidden="true">manage_search</span>Try a search</p>
+          <p class="sbr-try__desc">Asks Seerr through the plugin, with the saved settings, and shows what a user would get. Nothing is requested.</p>
+          <div class="sbr-try__row">
+            <input class="mk-input" type="search" id="sbrTryQ" maxlength="100" placeholder="A title, for example dune" aria-label="Title to search for in Seerr" autocomplete="off" spellcheck="false">
+            <button type="button" class="mk-btn" id="sbrTryBtn"><span class="material-icons mk-ic" aria-hidden="true">search</span><span>Search</span></button>
+          </div>
+          <p class="sbr-try__meta" id="sbrTryMeta" aria-live="polite"></p>
+          <ul class="sbr-results" id="sbrTryList"></ul>
+          <p class="sbr-who" id="sbrWho"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+</section>
+
+<!-- ============ SIGN-IN ============ -->
+<section class="mk-panel" role="tabpanel" id="sbrP-signin" aria-labelledby="sbrTab-signin" hidden>
+
+  <section class="mk-card" id="sbrSsoCard" aria-labelledby="sbrSsoT" tabindex="-1">
+    <div class="mk-card__head">
+      <span class="mk-card__icon"><span class="material-icons mk-ic" aria-hidden="true">key</span></span>
+      <div class="mk-card__titles"><h2 class="mk-card__title" id="sbrSsoT">Single sign-on</h2><p class="mk-card__desc">Anyone signed in to Jellyfin is signed in to Seerr too, with no login form in the frame.</p></div>
+      <div class="mk-card__aside"><span class="mk-chip mk-chip--lg mk-chip--plain" id="sbrSsoChip"><span class="material-icons mk-ic" aria-hidden="true">hourglass_empty</span><span>…</span></span></div>
+    </div>
+    <div class="mk-card__body">
+      <div class="mk-row">
+        <div class="mk-row__text"><label class="mk-row__label" for="sbrEnableSso">Sign in to Seerr with the Jellyfin account</label><span class="mk-row__desc">Can be switched on before everything below is ready; until then users get the normal Seerr sign-in.</span></div>
+        <div class="mk-row__control"><input type="checkbox" class="mk-switch" role="switch" id="sbrEnableSso" data-key="EnableSso" data-label="Single sign-on"></div>
+      </div>
+      <h3 class="sbr-h3">What it needs</h3>
+      <ul class="mk-checks" id="sbrSsoChecks" aria-live="polite"></ul>
+
+      <h3 class="sbr-h3">What happens when a user opens Requests</h3>
+      <div class="mk-flow sbr-flow" id="sbrSsoFlow">
+        <div class="mk-flow__node"><span class="mk-flow__kicker">1 · Jellyfin</span><span class="mk-flow__title">Already signed in</span><span class="mk-flow__sub">Nothing new to type</span></div>
+        <span class="mk-flow__edge"></span>
+        <div class="mk-flow__node"><span class="mk-flow__kicker">2 · One-time pass</span><span class="mk-flow__title">Valid 1 minute, once</span><span class="mk-flow__sub">Bound to that account</span></div>
+        <span class="mk-flow__edge"></span>
+        <div class="mk-flow__node"><span class="mk-flow__kicker">3 · Quick Connect</span><span class="mk-flow__title">Seerr asks Jellyfin</span><span class="mk-flow__sub">Jellyfin's own sign-in check</span></div>
+        <span class="mk-flow__edge"></span>
+        <div class="mk-flow__node mk-flow__node--accent" id="sbrSsoEnd"><span class="mk-flow__kicker">4 · Seerr</span><span class="mk-flow__title" id="sbrSsoEndT">Signed in as the same user</span><span class="mk-flow__sub" id="sbrSsoCookie">…</span></div>
+      </div>
+      <p class="mk-note mk-note--ok"><span class="material-icons mk-ic" aria-hidden="true">shield</span><span><b>No password is bypassed.</b> Users can only sign in as themselves, and only from the Jellyfin web client. Plain IP addresses fall back to the normal Seerr sign-in.</span></p>
+
+      <details class="mk-more sbr-more" id="sbrCookieMore">
+        <summary><span class="material-icons mk-ic" aria-hidden="true">expand_more</span><span>Session cookie domain (advanced)</span></summary>
+        <div class="mk-field" data-find="cookie domain session">
+          <label class="mk-field__label" for="sbrCookieDomain">Session cookie domain <span class="mk-dim">(optional)</span></label>
+          <input class="mk-input mk-mono" type="text" id="sbrCookieDomain" data-key="CookieDomain" data-label="Session cookie domain" data-validate="cookieDomain" spellcheck="false" autocomplete="off" autocapitalize="off">
+          <span class="mk-field__hint">Leave empty: the plugin works it out from both addresses. Set it only if your setup needs a different one.</span>
+          <span class="mk-msg" data-auto></span>
+          <span class="mk-msg" id="sbrCookieMatch" aria-live="polite"></span>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="mk-card" id="sbrLegCard" aria-labelledby="sbrLegT" tabindex="-1">
+    <div class="mk-card__head">
+      <span class="mk-card__icon"><span class="material-icons mk-ic" aria-hidden="true">translate</span></span>
+      <div class="mk-card__titles"><h2 class="mk-card__title" id="sbrLegT">Compatibility</h2><p class="mk-card__desc">Seerr and other older apps still send their sign-in the old way. This works even when the integration is off.</p></div>
+    </div>
+    <div class="mk-card__body">
+      <div class="mk-row">
+        <div class="mk-row__text"><label class="mk-row__label" for="sbrLegacyAuthHeader">Translate legacy auth headers</label><span class="mk-row__desc">Fills in the <code>Authorization</code> header only when it is missing, with the same credentials and only for a single well-formed token. Never overwrites it, grants nothing extra.</span></div>
+        <div class="mk-row__control"><input type="checkbox" class="mk-switch" role="switch" id="sbrLegacyAuthHeader" data-key="LegacyAuthHeader" data-label="Translate legacy auth headers"></div>
+      </div>
+      <div class="mk-flow sbr-flow sbr-legflow" id="sbrLegFlow" aria-hidden="true">
+        <div class="mk-flow__node"><span class="mk-flow__kicker"><span class="material-icons mk-ic" aria-hidden="true">extension</span>Seerr sends</span><span class="mk-flow__title mk-mono">X-Emby-Authorization</span><span class="mk-flow__sub">or X-Emby-Token</span></div>
+        <span class="mk-flow__edge" id="sbrLegEdge"></span>
+        <div class="mk-flow__node" id="sbrLegMid"><span class="mk-flow__kicker"><span class="material-icons mk-ic" aria-hidden="true">sync</span>Bridge</span><span class="mk-flow__title" id="sbrLegMidT">…</span><span class="mk-flow__sub" id="sbrLegMidS"></span></div>
+        <span class="mk-flow__edge" id="sbrLegEdge2"></span>
+        <div class="mk-flow__node" id="sbrLegEnd"><span class="mk-flow__kicker" id="sbrLegEndK">Jellyfin 12</span><span class="mk-flow__title" id="sbrLegEndT">…</span><span class="mk-flow__sub" id="sbrLegEndS"></span></div>
+      </div>
+      <p class="mk-note" id="sbrLegNote"><span class="material-icons mk-ic" aria-hidden="true">info</span><span id="sbrLegNoteT"></span></p>
+    </div>
+  </section>
+</section>
+
+</div>
+</div></div>
+
+<script type="text/javascript">
+(function () {
+'use strict';
+/* MKI-KIT:JS BEGIN (generated from ui/mki-kit.js by build/kit.py, do not edit here) */
+/* MKI-KIT:JS END */
+
+var all = document.querySelectorAll('#SeerrBridgeConfig'), page = all[all.length - 1];
+if (!page || page.getAttribute('data-mki-bound')) return;
+page.setAttribute('data-mki-bound', '1');
+
+/* =====================================================================================================
+   Server rules, mirrored in the browser. One function per rule; each names the C# it copies.
+   ===================================================================================================== */
+
+/* SeerrClient.WebAdresse: the text is trimmed and must be an absolute http or https address without
+   user info ("user:pass@"). The server returns it without trailing "/"; anything else counts as "not set". */
+function webAddress(v) {
+    var t = String(v == null ? '' : v).trim(), u;
+    if (!/^https?:\/\//i.test(t)) return '';
+    try { u = new URL(t); } catch (e) { return ''; }
+    if ((u.protocol !== 'http:' && u.protocol !== 'https:') || !u.hostname || u.username || u.password) return '';
+    return t.replace(/\/+$/, '');
+}
+/* Validation for PublicUrl and ServerUrl: exactly what WebAdresse accepts. Empty is allowed (not set). */
+function seerrUrlRule(v) {
+    if (!v) return null;
+    if (!/^https?:\/\//i.test(v)) return 'Start with http:// or https://';
+    var u; try { u = new URL(v); } catch (e) { return 'That is not a complete web address'; }
+    if (u.username || u.password) return 'Leave out the user name and password; the server ignores addresses that contain them';
+    return webAddress(v) ? null : 'That is not a complete web address';
+}
+/* SeerrClient.Basis: the server address if one is set, otherwise the browser address. A server address that
+   is set but not valid does not fall back (the page never saves one). */
+function serverBase(c) {
+    var s = c && c.ServerUrl, p = c && c.PublicUrl;
+    return webAddress(String(s || '').trim() ? s : p);
+}
+/* SeerrClient.Eingerichtet: an address to reach Seerr and an API key. Without both, search, requests,
+   single sign-on and the connection test stop (the test answers "Address or API key missing"). */
+function configured(c) { return !!serverBase(c) && String((c && c.ApiKey) || '').trim() !== ''; }
+/* SeerrBridgeController.GetConfig: the button and frame exist for users only with Enabled and a valid browser
+   address; search and requests also need Eingerichtet; the limit is clamped to 1..40 (Math.Clamp). */
+function clampLimit(n) { n = parseInt(n, 10); return isNaN(n) ? 8 : Math.max(1, Math.min(40, n)); }
+/* IPAddress.TryParse, as KeksBereich uses it on both host names: dotted numbers and IPv6. */
+function isIpHost(h) { h = String(h || ''); return /^\d+(\.\d+){0,3}$/.test(h) || h.indexOf(':') >= 0 || /^\[.*\]$/.test(h); }
+/* SeerrBridgeController.KeksBereich: a CookieDomain that is set wins (trimmed). Otherwise the labels that the
+   Jellyfin host (as this browser asked for it) and the host of the browser address share from the right,
+   if there are at least two, and never for an IP address. No domain means single sign-on answers
+   "Jellyfin and Seerr do not share a common domain". */
+function cookieDomainFor(jfHost, c) {
+    var own = String((c && c.CookieDomain) || '').trim();
+    if (own) return { dom: own, own: true };
+    var pub = webAddress(c && c.PublicUrl), h2 = '';
+    if (!pub) return { dom: null, why: 'nourl' };
+    try { h2 = new URL(pub).hostname; } catch (e) { return { dom: null, why: 'nourl' }; }
+    if (!jfHost || !h2) return { dom: null, why: 'nourl' };
+    if (isIpHost(jfHost) || isIpHost(h2)) return { dom: null, why: 'ip', host: h2 };
+    var a = jfHost.split('.'), b = h2.split('.'), out = [];
+    for (var i = 1; i <= Math.min(a.length, b.length) && a[a.length - i].toLowerCase() === b[b.length - i].toLowerCase(); i++) out.unshift(a[a.length - i]);
+    return out.length < 2 ? { dom: null, why: 'none', host: h2 } : { dom: '.' + out.join('.'), host: h2 };
+}
+/* Validation for CookieDomain. SeerrBridgeController.Sso writes CookieDomain.Trim() unchecked into the
+   "Domain=" part of the Set-Cookie header, so the server takes any text. The page allows only what a browser
+   accepts there: a host name with at least two labels, with or without a leading dot. Never a scheme, port,
+   path, space or ";" (which would break the header). */
+function cookieDomainRule(v) {
+    if (!v) return null;
+    if (/^[a-z][a-z0-9+.-]*:\/\//i.test(v) || /[\/:]/.test(v)) return 'Only the domain, such as .example.org, without http://, a port or a path';
+    if (isIpHost(v.replace(/^\./, ''))) return 'A cookie cannot be shared across an IP address; use a domain such as .example.org';
+    if (!/^\.?([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/i.test(v)) return 'Use a domain such as .example.org';
+    return null;
+}
+/* Browsers keep a cookie for a Domain only if the host equals it or ends with "." + it (RFC 6265 domain-match). */
+function domainMatch(host, dom) {
+    var bare = String(dom || '').replace(/^\./, '').toLowerCase(); host = String(host || '').toLowerCase();
+    return !!bare && (host === bare || host.slice(-bare.length - 1) === '.' + bare);
+}
+/* Validation for Language. SeerrClient.SuchenAsync sends an empty value as "en" and anything else unchanged as
+   Seerr's "language=". Seerr expects a language code, optionally with a region. */
+function languageRule(v) {
+    if (!v) return null;
+    return /^[a-z]{2,3}(-[a-z0-9]{2,4})?$/i.test(v) ? null : 'Use a language code such as en, de or pt-BR';
+}
+/* SearchLimit uses the kit's "int" rule with min 1 and max 40, the same range as Math.Clamp in
+   SeerrBridgeController.GetConfig and Search. */
+
+/* Address checks that are not server rules but browser facts. */
+function hostOf(u) { try { return new URL(u).hostname.toLowerCase(); } catch (e) { return ''; } }
+function isLoopback(h) { return h === 'localhost' || /\.localhost$/.test(h) || /^127\./.test(h) || h === '[::1]' || h === '::1'; }
+function isPrivateHost(h) {
+    return isLoopback(h) || h.indexOf('.') < 0 || /^(10\.|192\.168\.|169\.254\.)/.test(h) || /^172\.(1[6-9]|2\d|3[01])\./.test(h) ||
+        /^\[?f[cd]/i.test(h) || /\.(local|lan|home|internal|localdomain|home\.arpa)$/i.test(h);
+}
+/* "Site" for the frame cookie (SameSite=Lax): same scheme and same registrable domain. The last two labels
+   stand in for the registrable domain; an IP address is its own site. */
+function siteOf(u) {
+    var h = hostOf(u); if (!h) return '';
+    var s = isIpHost(h) ? h : h.split('.').slice(-2).join('.');
+    return (/^https:/i.test(u) ? 'https://' : 'http://') + s;
+}
+function pageSecure() { return location.protocol === 'https:'; }
+function hereUrl() { return location.protocol + '//' + location.host; }
+
+/* A saved browser address that the server accepts but that cannot work as a frame. Drives kit.warn. */
+function frameProblem(c) {
+    var a = webAddress(c && c.PublicUrl); if (!a) return null;
+    var h = hostOf(a);
+    if (pageSecure() && /^http:/i.test(a)) return { chip: 'http Seerr on https Jellyfin', title: 'Blocked: Jellyfin runs on https here, this address is http', fix: 'Browsers refuse an http page inside an https page (mixed content), so the frame stays empty. Use the https address of Seerr.', tile: 'Frame blocked: http address on an https page' };
+    if (isLoopback(h)) return { chip: 'browser address is localhost', title: 'This address only works on the Seerr computer itself', fix: h + ' always means the device the browser runs on, so phones and other computers cannot open it. Use the name or LAN address of the Seerr machine.', tile: 'Browser address is ' + h };
+    if (/[?#]/.test(a)) return { chip: 'browser address has ? or #', title: 'The address has a ? or # part', fix: 'The plugin adds Seerr paths after the address, so a query or fragment breaks every page. Remove it.', tile: 'Browser address has a ? or # part' };
+    return null;
+}
+function serverProblem(c) {
+    var s = String((c && c.ServerUrl) || '').trim(); if (!s || !webAddress(s)) return null;
+    if (/[?#]/.test(s)) return { chip: 'server address has ? or #', title: 'The address has a ? or # part', fix: 'The server adds API paths such as /api/v1/search after it, so every call to Seerr fails. Remove it.' };
+    return null;
+}
+function cookieProblem(c) {
+    var own = String((c && c.CookieDomain) || '').trim(); if (!own || !c.EnableSso) return null;
+    var pubHost = hostOf(webAddress(c.PublicUrl)), here = location.hostname.toLowerCase();
+    if (pubHost && !domainMatch(pubHost, own)) return { chip: 'cookie domain does not cover Seerr', text: pubHost + ' does not end with ' + own.replace(/^\./, '') + ', so the browser never sends the sign-on cookie to Seerr.' };
+    if (here && !isIpHost(here) && !domainMatch(here, own)) return { chip: 'cookie domain does not cover this Jellyfin address', text: here + ' does not end with ' + own.replace(/^\./, '') + ', so browsers reject the cookie and users get the normal Seerr sign-in.' };
+    return null;
+}
+
+/* ===================================================================================================== */
+
+var PLUGIN_ID = 'b7d41e02-9c58-4f6a-8d13-5a2c7e9f4610';
+var conn = { state: 'idle' };          /* last connection test: idle | busy | done | error | refused */
+var testSeq = 0, visible = false;
+var facts = { qc: null, legacy: null }; /* QuickConnect/Enabled and the server's EnableLegacyAuthorization (null: unknown) */
+var STATUS = { neu: 'Not requested yet', vorhanden: 'In your library', teilweise: 'Partly in your library', 'in Arbeit': 'Being fetched', angefragt: 'Already requested' };
+
+var kit = MkiKit(page, {
+    pluginId: PLUGIN_ID,
+    rules: { seerrUrl: seerrUrlRule, cookieDomain: cookieDomainRule, language: languageRule },
+    confirm: { ApiKey: confirmKey, MapUsers: confirmMapUsers, LegacyAuthHeader: confirmLegacy },
+    show: function (k, v) {
+        if (k === 'ApiKey') return v ? '••••••' : 'no key';
+        if (v !== '') return null;
+        return { Label: 'Requests (default)', ServerUrl: 'same as the browser address', PublicUrl: 'not set', Language: 'en (default)', CookieDomain: 'worked out automatically' }[k] || null;
+    },
+    onLoad: function (c) {
+        var d = $('#sbrCookieMore'); if (d && String(c.CookieDomain || '').trim()) d.open = true;
+        renderAll(); test('when the page opened');
+    },
+    onSaved: function (batch) {
+        renderAll();
+        var addr = batch.filter(function (b) { return /^(PublicUrl|ServerUrl|ApiKey)$/.test(b.key); }).map(function (b) {
+            return b.key === 'ApiKey' ? 'the API key' : b.key === 'PublicUrl' ? 'the browser address' : 'the server address';
+        });
+        if (addr.length) test('after you changed ' + addr.join(' and '), null, true);
+    },
+    onShow: function () { visible = true; loadFacts(); }
+});
+var $ = kit.$, el = kit.el, ic = kit.ic, fill = kit.fill;
+function S(k) { return kit.saved(k); }
+function cfg() { return kit.config() || {}; }
+page.addEventListener('viewbeforehide', function () { visible = false; });
+
+/* ---------- helpers ---------- */
+function chipSet(node, kind, icon, text, spin) {
+    node.className = node.className.replace(/\bmk-chip--(ok|warn|bad|info|plain|accent)\b/g, '').replace(/\s+/g, ' ').trim() + ' mk-chip--' + kind;
+    fill(node, [ic(icon, spin ? 'mk-spin' : null), el('span', null, text)]);
+}
+function check(kind, title, sub) {
+    var li = el('li', kind === 'idle' ? null : 'is-' + kind);
+    li.appendChild(ic({ ok: 'check_circle', warn: 'warning', bad: 'error', info: 'info', idle: 'block' }[kind]));
+    var s = el('span', null, title); if (sub) s.appendChild(el('small', null, sub)); li.appendChild(s);
+    return li;
+}
+function b(t) { return el('b', null, t); }
+function bare(u) { return String(u || '').replace(/^https?:\/\//i, ''); }
+
+/* ---------- confirmations (from the C# consequences) ---------- */
+/* An empty key makes SeerrClient.Eingerichtet false: search returns nothing, requests are refused, single
+   sign-on cannot reach Seerr. GetConfig still shows the button and frame, which only need the browser address. */
+function confirmKey(to, from) {
+    if (String(to || '').trim() !== '' || String(from || '').trim() === '') return true;
+    return kit.confirm({
+        title: 'Remove the Seerr API key?',
+        body: ['Without a key, search and requests stop working for everyone: the server can no longer ask Seerr, so no suggestions appear and every request from the results is refused. Single sign-on to Seerr stops too.',
+            'The Requests button and the Seerr page inside Jellyfin keep working; they only need the browser address.',
+            'You can undo this from the change list during this visit. After that, copy the key from Seerr again (Settings › General).'],
+        ok: 'Remove the key', okIcon: 'key_off', icon: 'key_off', tone: 'bad', danger: true
     });
-  });
-            var PLUGIN = 'b7d41e02-9c58-4f6a-8d13-5a2c7e9f4610';
-            var seite = document.querySelector('#SeerrBridgeConfig');
+}
+/* SeerrClient.AnfragenAsync without MapUsers: no account lookup and no X-API-User header, so Seerr treats the
+   request as one by the owner of the API key and applies that account's permissions. */
+function confirmMapUsers(to, from) {
+    if (to !== false || from === false) return true;
+    var body = ['Requests from the Jellyfin search then go to Seerr with the API key alone. Seerr counts each one as a request by the key\'s owner, usually your Seerr administrator account.',
+        'Seerr then checks that account instead of the user who asked: per-user permissions, quotas and approval rules no longer apply, and Seerr cannot show who asked for what. Users without a linked Seerr account can request too.',
+        'Each Jellyfin user can still send at most 30 requests per hour from the search.'];
+    if (S('AllowRequests') === false) body.push('Requests from the results are off at the moment, so this takes effect once they are turned on.');
+    return kit.confirm({ title: 'Request everything as the API key\'s account?', body: body, ok: 'Turn off', okIcon: 'person_off', icon: 'group', tone: 'warn' });
+}
+/* LegacyAuthHeader.Uebersetzen: off, nothing is translated. With Jellyfin's own EnableLegacyAuthorization on,
+   the bridge never acts anyway, so there is nothing to ask. */
+function confirmLegacy(to, from) {
+    if (to !== false || from === false || facts.legacy === true) return true;
+    var body = [(facts.legacy === false ? 'Jellyfin 12 reads only the Authorization header, and its own legacy authorization setting is off on this server.' : 'Jellyfin 12 reads only the Authorization header (unless its own legacy authorization setting is on, which this page could not check).') +
+        ' Seerr and other older apps that send X-Emby-Authorization or X-Emby-Token are then refused:'];
+    var ul = el('ul'); ul.style.margin = '0'; ul.style.paddingLeft = '1.2em';
+    ul.appendChild(el('li', null, 'Signing in to Seerr with a Jellyfin account fails with HTTP 400 ("Something went wrong").'));
+    ul.appendChild(el('li', null, 'Seerr\'s Jellyfin user sync stops with HTTP 401.'));
+    body.push(ul);
+    body.push('Apps that already send the Authorization header are not affected.');
+    return kit.confirm({ title: 'Stop translating legacy auth headers?', body: body, ok: 'Turn off', okIcon: 'block', icon: 'translate', tone: 'bad', danger: true });
+}
 
-            var SCHALTER = ['Enabled', 'ShowInHeader', 'ShowInDrawer', 'EnableSearch',
-                            'HideAvailable', 'AllowRequests', 'MapUsers', 'LegacyAuthHeader', 'EnableSso'];
-            var TEXTE = ['PublicUrl', 'ServerUrl', 'ApiKey', 'Label', 'Language', 'CookieDomain'];
-            var ZAHLEN = ['SearchLimit'];
+/* ---------- connection test: GET SeerrBridge/check with the saved settings; shows only what it answers ---------- */
+function test(why, button, quiet) {
+    var my = ++testSeq;
+    conn = { state: 'busy', why: why, prev: conn.state === 'done' ? conn : conn.prev };
+    renderConnParts();
+    var p = kit.whenSaved().then(function (ok) {
+        if (my !== testSeq) return;
+        if (!ok) {
+            conn = { state: 'refused', why: why, prev: conn.prev };
+            renderConnParts();
+            if (visible) kit.toast('A change could not be saved, so the test did not run. Retry the save first.', { bad: true });
+            return;
+        }
+        var used = serverBase(cfg()), unsaved = ['PublicUrl', 'ServerUrl', 'ApiKey'].filter(function (k) {
+            var f = $('[data-key="' + k + '"]'); return f && f.getAttribute('aria-invalid') === 'true';
+        });
+        return kit.api('GET', 'SeerrBridge/check').then(function (r) {
+            if (my !== testSeq) return;
+            conn = { state: 'done', ok: !!(r && r.ok === true), text: String((r && r.text) || ''), at: new Date(), why: why, used: used, unsaved: unsaved.length > 0 };
+            renderAll();
+            if (visible && (!quiet || !conn.ok) && why !== 'when the page opened') kit.toast(conn.ok ? conn.text : 'Connection test: ' + conn.text, conn.ok ? { icon: 'hub' } : { bad: true });
+        }, function () {
+            if (my !== testSeq) return;
+            conn = { state: 'error', at: new Date(), why: why };
+            renderAll();
+            if (visible && why !== 'when the page opened') kit.toast('The test did not run: the Jellyfin server did not answer.', { bad: true });
+        });
+    });
+    if (button) kit.busy(button, p);
+    return p;
+}
+$('#sbrTestTop').addEventListener('click', function () { test('on request', this); });
+$('#sbrTestBtn').addEventListener('click', function () { test('on request', this); });
 
-            function $(id) { return seite.querySelector('#' + id); }
+/* ---------- server facts for the sign-in tab (read-only, loaded on every visit) ---------- */
+function loadFacts() {
+    kit.api('GET', 'QuickConnect/Enabled').then(function (v) { facts.qc = v === true || v === 'true'; renderSignin(); renderDeck(); }, function () { facts.qc = null; renderSignin(); renderDeck(); });
+    kit.api('GET', 'System/Configuration').then(function (c) { facts.legacy = !!(c && c.EnableLegacyAuthorization); renderSignin(); }, function () { facts.legacy = null; renderSignin(); });
+}
 
-            function insFormular(c) {
-                SCHALTER.forEach(function (k) { if ($(k)) { $(k).checked = !!c[k]; } });
-                TEXTE.forEach(function (k) { if ($(k)) { $(k).value = c[k] || ''; } });
-                ZAHLEN.forEach(function (k) { if ($(k)) { $(k).value = c[k] || 0; } });
-            }
+/* ---------- connection tab ---------- */
+/* the checks under each address follow what is in the field, so they help while typing */
+function renderAddressChecks() {
+    var pf = $('#sbrPublicUrl'), sf = $('#sbrServerUrl'), pub = pf.value.trim(), srv = sf.value.trim();
+    var ul = $('#sbrPubChecks'), list = [];
+    ul.textContent = '';
+    if (!pub) list.push(['info', 'No browser address yet', 'The Requests button and the Seerr page stay hidden until there is one.']);
+    else if (!seerrUrlRule(pub)) {
+        var p = frameProblem({ PublicUrl: pub }), h = hostOf(pub);
+        if (p) list.push(['bad', p.title, p.fix]);
+        if (!p || !isLoopback(h)) {
+            if (siteOf(pub) === siteOf(hereUrl())) list.push(['ok', 'Same site as this Jellyfin address', 'The frame keeps users signed in to Seerr.']);
+            else list.push(['warn', 'Different site than this Jellyfin address (' + location.host + ')', 'Seerr\'s sign-in cookie is not sent into a frame from another site, so users sign in to Seerr in the frame every time. The same host with another port, or subdomains of one domain, avoid this.']);
+        }
+        if (isIpHost(h)) list.push(['info', 'IP address', 'Fine for the frame. Single sign-on needs host names, so users get the normal Seerr sign-in.']);
+    }
+    list.forEach(function (c) { ul.appendChild(check(c[0], c[1], c[2])); });
 
-            function ausFormular(c) {
-                SCHALTER.forEach(function (k) { if ($(k)) { c[k] = $(k).checked; } });
-                TEXTE.forEach(function (k) { if ($(k)) { c[k] = ($(k).value || '').trim(); } });
-                ZAHLEN.forEach(function (k) { if ($(k)) { c[k] = Number($(k).value) || 0; } });
-                return c;
-            }
+    ul = $('#sbrSrvChecks'); ul.textContent = ''; list = [];
+    if (!srv) { if (pub && !seerrUrlRule(pub)) list.push(['info', 'Empty: the server uses the browser address', bare(webAddress(pub))]); }
+    else if (!seerrUrlRule(srv)) {
+        var sp = serverProblem({ ServerUrl: srv }), sh = hostOf(srv);
+        if (sp) list.push(['bad', sp.title, sp.fix]);
+        if (isLoopback(sh)) list.push(['info', sh + ' is the Jellyfin server itself', 'Right if Seerr runs on the same machine. If Jellyfin runs in a container, it means the container; use the host\'s LAN address instead.']);
+        else if (/^http:/i.test(srv) && !isPrivateHost(sh)) list.push(['info', 'The API key travels unencrypted over http', 'Fine inside your home network. If this address goes over the internet, use https.']);
+    }
+    list.forEach(function (c) { ul.appendChild(check(c[0], c[1], c[2])); });
+}
 
-            function status(klasse, marke, text) {
-                $('sbMarke').className = 'sb-marke ' + klasse;
-                $('sbMarke').textContent = marke;
-                $('sbErgebnis').textContent = text;
-            }
+function renderConnParts() { renderMap(); renderTest(); renderDeck(); }
 
-            Array.prototype.forEach.call(seite.querySelectorAll('.sb-tabs button'), function (b) {
-                b.addEventListener('click', function () {
-                    var tab = b.getAttribute('data-tab');
-                    Array.prototype.forEach.call(seite.querySelectorAll('.sb-tabs button, .sb-panel'), function (e) {
-                        e.classList.toggle('sb-aktiv', e.getAttribute('data-tab') === tab || e.getAttribute('data-panel') === tab);
-                    });
-                });
+function renderMap() {
+    if (!kit.loaded()) return;
+    var c = cfg(), pub = webAddress(c.PublicUrl), base = serverBase(c), fp = frameProblem(c), key = String(c.ApiKey || '').trim() !== '';
+    fill($('#sbrMapHost'), location.host);
+    fill($('#sbrMapPublic'), pub || 'not set');
+    var fc = $('#sbrFrameChip'), frameKind;
+    if (!S('Enabled')) { chipSet(fc, 'plain', 'block', 'Off · integration switched off'); frameKind = 'off'; }
+    else if (!pub) { chipSet(fc, 'bad', 'error', 'No address · button hidden'); frameKind = 'bad'; }
+    else if (fp && /^Blocked/.test(fp.title)) { chipSet(fc, 'bad', 'error', 'Frame blocked (http on https)'); frameKind = 'bad'; }
+    else if (fp) { chipSet(fc, 'warn', 'warning', fp.tile); frameKind = 'warn'; }
+    else if (siteOf(pub) !== siteOf(hereUrl())) { chipSet(fc, 'warn', 'warning', 'Other site · asks users to sign in'); frameKind = 'warn'; }
+    else { chipSet(fc, 'ok', 'check_circle', 'Same site · stays signed in'); frameKind = 'ok'; }
+    $('#sbrNodePublic').classList.toggle('is-bad', frameKind === 'bad');
+    $('#sbrNodePublic').classList.toggle('is-warn', frameKind === 'warn');
+    $('#sbrEdgeFrame').classList.toggle('is-bad', frameKind === 'bad');
+    $('#sbrEdgeFrame').classList.toggle('mk-flow__edge--off', frameKind === 'off');
+
+    fill($('#sbrMapServer'), base || 'not set');
+    fill($('#sbrMapServerSub'), String(c.ServerUrl || '').trim() ? 'Address for the server' : 'Same as the browser address');
+    fill($('#sbrMapKey'), key ? 'with the API key' : 'no API key saved');
+    var ac = $('#sbrApiChip'), apiKind = conn.state === 'done' ? (conn.ok ? 'ok' : 'bad') : conn.state === 'busy' ? 'busy' : 'unknown';
+    if (conn.state === 'busy') chipSet(ac, 'info', 'sync', 'Testing…', true);
+    else if (conn.state === 'done') chipSet(ac, conn.ok ? 'ok' : 'bad', conn.ok ? 'check_circle' : 'error', conn.text || (conn.ok ? 'Connected' : 'Not connected'));
+    else if (conn.state === 'error') chipSet(ac, 'warn', 'help', 'Test did not run');
+    else if (conn.state === 'refused') chipSet(ac, 'warn', 'cloud_off', 'Not tested · a save failed');
+    else chipSet(ac, 'plain', 'hourglass_empty', 'Not tested yet');
+    $('#sbrNodeServer').classList.toggle('is-bad', apiKind === 'bad');
+    $('#sbrEdgeApi').classList.toggle('is-bad', apiKind === 'bad');
+    fill($('#sbrMapText'), 'Browser road: ' + location.host + ' opens ' + (pub || 'no address') + ', ' + fc.lastChild.textContent + '. Server road: ' + (base || 'no address') + ', ' + ac.lastChild.textContent + '.');
+}
+
+function renderTest() {
+    if (!kit.loaded()) return;
+    var chipN = $('#sbrTestChip'), text = $('#sbrTestText'), meta = $('#sbrTestMeta');
+    if (conn.state === 'busy') {
+        chipSet(chipN, 'info', 'sync', 'Testing…', true);
+        fill(text, 'Waiting for the server to contact Seerr…');
+        fill(meta, conn.prev ? 'Last result: ' + conn.prev.text + ' (' + kit.hhmm(conn.prev.at) + ')' : '');
+        return;
+    }
+    if (conn.state === 'done') {
+        chipSet(chipN, conn.ok ? 'ok' : 'bad', conn.ok ? 'check_circle' : 'error', conn.ok ? 'Connected' : 'Not connected');
+        fill(text, conn.text || (conn.ok ? 'Connected' : 'No details from the server'));
+        fill(meta, 'Tested at ' + kit.hhmm(conn.at) + ' ' + conn.why + ' · used the saved settings' + (conn.used ? ' (' + bare(conn.used) + ')' : '') +
+            (conn.unsaved ? ' · a field with an error is not saved, so the last saved value was used' : ''));
+        return;
+    }
+    if (conn.state === 'error') {
+        chipSet(chipN, 'warn', 'help', 'Test did not run');
+        fill(text, 'The Jellyfin server did not answer the test request.');
+        fill(meta, 'Tried at ' + kit.hhmm(conn.at) + ' ' + conn.why + '.');
+        return;
+    }
+    if (conn.state === 'refused') {
+        chipSet(chipN, 'warn', 'cloud_off', 'Not tested');
+        fill(text, 'A change could not be saved, so the test did not run. Retry the save, then test again.');
+        fill(meta, conn.prev ? 'Last result: ' + conn.prev.text + ' (' + kit.hhmm(conn.prev.at) + ')' : '');
+        return;
+    }
+    chipSet(chipN, 'plain', 'hourglass_empty', 'Not tested');
+    fill(text, 'The test asks the server to contact Seerr with the saved address and key.');
+    fill(meta, '');
+}
+
+/* ---------- menu & search tab (saved values) ---------- */
+function labelText() { return String(S('Label') || '').trim() || 'Requests'; }
+function buttonLive() { return S('Enabled') === true && !!webAddress(S('PublicUrl')); }
+
+function renderMenu() {
+    if (!kit.loaded()) return;
+    var live = buttonLive(), head = S('ShowInHeader') === true, drw = S('ShowInDrawer') === true, lbl = labelText();
+    fill($('#sbrPrevBtnText'), lbl); fill($('#sbrPrevDrawerText'), lbl);
+    $('#sbrPrevBtn').classList.toggle('sbr-hide', !live || !head);
+    $('#sbrPrevDrawer').classList.toggle('sbr-hide', !live || !drw);
+    var where = !live ? 'nowhere' : head && drw ? 'in the header and the side menu' : head ? 'in the header' : drw ? 'in the side menu' : 'nowhere';
+    $('#sbrPrev').setAttribute('aria-label', 'Sketch of Jellyfin: the button "' + lbl + '" shows ' + where + '.');
+    var nb = $('#sbrNoButton'), msg = !S('Enabled') ? 'The integration is off, so there is no button. Turn it on at the top of the page.'
+        : !webAddress(S('PublicUrl')) ? 'No browser address is saved, so there is no button yet. Add it on the Connection tab.'
+        : (!head && !drw) ? 'No button anywhere. Users reach Seerr only through search suggestions.' : '';
+    nb.hidden = !msg; fill($('span', nb), msg);
+    fill($('#sbrPrevCap'), 'A sketch, not a screenshot. It follows the saved settings.');
+
+    var srch = S('EnableSearch') === true;
+    $('#sbrSearchDeps').classList.toggle('is-inert', !srch);
+    var map = S('MapUsers') === true;
+    fill($('#sbrMapUsersDesc'), map ? 'Matched by Jellyfin user ID. Users whose Seerr account is not linked yet are asked to sign in to Seerr once.' : 'Off: every request is made as the API key\'s account.');
+    var who = $('#sbrWho'), req = S('AllowRequests') === true;
+    if (!req) fill(who, [b('Requests: '), 'off in the results. Users open a title in Seerr and request it there.']);
+    else if (map) fill(who, [b('Requests: '), 'made in the user\'s own Seerr account, with that account\'s permissions, quotas and approval rules. Up to 30 per user and hour.']);
+    else fill(who, [b('Requests: '), 'made as the API key\'s account. Seerr cannot show who asked, and per-user approval rules do not apply. Up to 30 per user and hour.']);
+}
+
+/* Try a search: the real SeerrBridge/search, so filters, limit and request rules are the server's own. */
+function trySearch() {
+    var q = $('#sbrTryQ').value.trim(), meta = $('#sbrTryMeta'), list = $('#sbrTryList'), btn = $('#sbrTryBtn');
+    if (!q) { fill(meta, 'Type a title first.'); $('#sbrTryQ').focus(); return; }
+    fill(meta, 'Asking Seerr…'); list.textContent = '';
+    kit.busy(btn, kit.whenSaved().then(function (ok) {
+        if (!ok) { fill(meta, 'A change could not be saved, so the search did not run. Retry the save first.'); return; }
+        return kit.api('GET', 'SeerrBridge/search?q=' + encodeURIComponent(q)).then(function (r) {
+            var items = (r && r.items) || [], c = cfg();
+            list.textContent = '';
+            items.forEach(function (it) {
+                var li = el('li'), tv = it.mediaType === 'tv', t = el('span', 'sbr-res__type');
+                t.appendChild(ic(tv ? 'tv' : 'movie')); t.title = tv ? 'Series' : 'Movie'; li.appendChild(t);
+                var m = el('span', 'sbr-res__main');
+                m.appendChild(el('span', 'sbr-res__title', String(it.title || '')));
+                var bits = [tv ? 'Series' : 'Movie']; if (it.year) bits.push(String(it.year)); if (typeof it.rating === 'number' && it.rating > 0) bits.push('rated ' + it.rating);
+                m.appendChild(el('span', 'sbr-res__meta', bits.join(' · ')));
+                var chips = el('span', 'sbr-res__chips'), st = STATUS[it.status] || String(it.status || '');
+                var stc = el('span', 'mk-chip ' + (it.status === 'vorhanden' ? 'mk-chip--ok' : it.status === 'neu' ? 'mk-chip--plain' : 'mk-chip--info')); stc.appendChild(el('span', null, st)); chips.appendChild(stc);
+                if (it.requestable) { var rc = el('span', 'mk-chip mk-chip--accent'); rc.appendChild(ic('add_circle')); rc.appendChild(el('span', null, 'Request button')); chips.appendChild(rc); }
+                m.appendChild(chips); li.appendChild(m);
+                list.appendChild(li);
             });
+            var why = !c.Enabled ? 'The integration is off, so users get no suggestions.'
+                : !c.EnableSearch ? 'Seerr suggestions are off, so users get none.'
+                : !configured(c) ? 'The address or API key is missing, so users get no suggestions.'
+                : (conn.state === 'done' && !conn.ok) ? 'The last connection test failed (' + conn.text + '), which also gives an empty list.'
+                : 'Seerr returned no titles for this search' + (c.HideAvailable ? ', or only titles already in your library (hidden)' : '') + '.';
+            fill(meta, items.length
+                ? 'Showing ' + kit.plural(items.length, 'suggestion') + ' for "' + q + '", at most ' + clampLimit(c.SearchLimit) + (c.HideAvailable ? ', titles in your library left out' : '') + '. Searched at ' + kit.hhmm(new Date()) + ' with the saved settings.'
+                : 'No suggestions for "' + q + '". ' + why);
+        });
+    }).then(null, function () { list.textContent = ''; fill(meta, 'The search did not run: the Jellyfin server did not answer.'); }));
+}
+$('#sbrTryBtn').addEventListener('click', trySearch);
+$('#sbrTryQ').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); trySearch(); } });
 
-            $('sbPruefen').addEventListener('click', function () {
-                status('sb-neutral', 'Checking', 'Saving and contacting Seerr …');
-                // Save first, then check: otherwise the server still tests the old
-                // address and reports an error that was just fixed.
-                ApiClient.getPluginConfiguration(PLUGIN).then(function (c) {
-                    return ApiClient.updatePluginConfiguration(PLUGIN, ausFormular(c));
-                }).then(function () {
-                    return ApiClient.ajax({
-                        type: 'GET', url: ApiClient.getUrl('SeerrBridge/check'), dataType: 'json'
-                    });
-                }).then(function (r) {
-                    status(r.ok ? 'sb-ok' : 'sb-fehler', r.ok ? 'Connected' : 'Error', r.text);
-                }).catch(function (e) {
-                    status('sb-fehler', 'Error', 'Check failed: ' + (e && e.message ? e.message : e));
-                });
-            });
+/* ---------- sign-in tab ---------- */
+function ssoState() {
+    var c = cfg(), here = location.hostname, cd = cookieDomainFor(here, c), list = [], on = c.EnableSso === true;
+    list.push(on ? ['ok', 'Single sign-on is on'] : ['idle', 'Single sign-on is off', 'Users sign in to Seerr with its own form.']);
+    if (!c.Enabled) list.push(['bad', 'The integration is off', 'Single sign-on is part of it. Turn on Integration at the top of the page.']);
+    if (facts.qc === true) list.push(['ok', 'Quick Connect is enabled on this server']);
+    else if (facts.qc === false) list.push(['bad', 'Quick Connect is off', 'The sign-on is completed through Quick Connect. Turn it on in Dashboard › General.']);
+    else list.push(['warn', 'Could not check Quick Connect', 'It must be enabled in Dashboard › General.']);
+    var cp = cookieProblem(c);
+    if (cd.own) list.push(cp ? ['bad', 'Cookie domain set by you: ' + cd.dom, cp.text] : ['ok', 'Cookie domain set by you: ' + cd.dom]);
+    else if (cd.dom) list.push(['ok', 'Shared domain: ' + cd.dom, here + ' and ' + cd.host + ' both end with it.']);
+    else if (cd.why === 'nourl') list.push(['bad', 'No browser address', 'The shared domain is worked out from it. Add it on the Connection tab.']);
+    else if (cd.why === 'ip') list.push(['bad', 'No shared domain: an IP address is involved', 'A cookie cannot be shared across IP addresses. Use host names such as jellyfin.example.org and requests.example.org. Checked for ' + here + ' and ' + cd.host + '.']);
+    else list.push(['bad', 'No shared domain', here + ' and ' + cd.host + ' have no common parent domain of at least two parts.']);
+    if (!configured(c)) list.push(['bad', 'Address or API key missing', 'The server signs users in at Seerr with them. See the Connection tab.']);
+    else if (conn.state === 'done') list.push(conn.ok ? ['ok', 'Connection to Seerr works'] : ['bad', 'Connection to Seerr fails', conn.text]);
+    else if (conn.state === 'busy') list.push(['info', 'Checking the connection to Seerr…']);
+    else list.push(['warn', 'Connection not tested', 'Use Test connection on the Connection tab.']);
+    var bad = list.filter(function (x) { return x[0] === 'bad' || x[0] === 'warn'; });
+    return { list: list, dom: cd.dom, own: !!cd.own, on: on, ready: !bad.length, problems: bad, here: here };
+}
+function renderSignin() {
+    if (!kit.loaded()) return;
+    var s = ssoState(), ul = $('#sbrSsoChecks'), c = cfg();
+    ul.textContent = '';
+    s.list.forEach(function (x) { ul.appendChild(check(x[0], x[1], x[2])); });
+    var n = s.problems.length;
+    if (!s.on) chipSet($('#sbrSsoChip'), 'plain', 'block', 'Off');
+    else if (s.ready) chipSet($('#sbrSsoChip'), 'ok', 'check_circle', 'Ready');
+    else chipSet($('#sbrSsoChip'), 'bad', 'error', 'Not ready · ' + kit.plural(n, 'problem'));
+    $('#sbrSsoFlow').classList.toggle('is-off', !s.on);
+    fill($('#sbrSsoCookie'), s.dom ? 'Session cookie for ' + s.dom : 'No cookie domain for ' + s.here);
+    fill($('#sbrSsoEndT'), s.dom ? 'Signed in as the same user' : 'Normal Seerr sign-in instead');
+    $('#sbrSsoEnd').className = 'mk-flow__node ' + (s.dom ? 'mk-flow__node--accent' : 'is-bad');
+    /* cookie field: what "empty" would give, and whether a value of your own covers both addresses */
+    var cdf = $('#sbrCookieDomain'), auto = cookieDomainFor(s.here, { PublicUrl: c.PublicUrl });
+    cdf.placeholder = auto.dom ? auto.dom + ' (worked out from both addresses)' : 'No shared domain to work out';
+    var m = $('#sbrCookieMatch'), own = String(c.CookieDomain || '').trim(), cp = cookieProblem(c);
+    m.textContent = ''; m.className = 'mk-msg';
+    if (own && c.EnableSso) {
+        m.className = 'mk-msg ' + (cp ? 'mk-msg--warn' : 'mk-msg--ok');
+        m.appendChild(ic(cp ? 'warning' : 'check_circle'));
+        m.appendChild(el('span', null, cp ? 'Saved: ' + cp.text : 'Saved: ' + own + ' covers ' + (hostOf(webAddress(c.PublicUrl)) || 'Seerr') + (isIpHost(s.here) ? '.' : ' and ' + s.here + '.')));
+    }
+    /* legacy header bridge */
+    var leg = c.LegacyAuthHeader === true, idle = facts.legacy === true;
+    $('#sbrLegMid').classList.toggle('mk-flow__node--accent', leg && !idle);
+    fill($('#sbrLegMidT'), !leg ? 'Off' : idle ? 'Stays idle' : 'Adds Authorization');
+    fill($('#sbrLegMidS'), !leg ? 'the old header passes unchanged' : idle ? 'Jellyfin reads the old header itself' : 'only when it is missing');
+    var broken = !leg && !idle;
+    $('#sbrLegEnd').classList.toggle('is-bad', broken);
+    $('#sbrLegEdge2').classList.toggle('is-bad', broken);
+    $('#sbrLegEdge').classList.toggle('mk-flow__edge--off', !leg);
+    fill($('#sbrLegEndK'), [ic(broken ? 'error' : 'check_circle'), 'Jellyfin 12']);
+    fill($('#sbrLegEndT'), broken ? 'HTTP 400 · sign-in fails' : 'Accepted');
+    fill($('#sbrLegEndS'), broken ? 'User sync stops with 401' : 'Sign-in and user sync work');
+    var note = $('#sbrLegNote');
+    note.className = 'mk-note' + (broken ? ' mk-note--bad' : '');
+    fill($('#sbrLegNoteT'), facts.legacy === true ? 'Jellyfin\'s own legacy authorization setting is on, so Jellyfin reads the old headers itself and this bridge stays idle.'
+        : facts.legacy === false ? (leg ? 'Jellyfin\'s own legacy authorization setting is off, so this bridge is what lets Seerr sign in.' : 'Jellyfin\'s own legacy authorization setting is off too, so Seerr cannot sign in to Jellyfin.')
+        : 'Could not read whether Jellyfin\'s own legacy authorization setting is on. When it is, this bridge stays idle.');
+    return s;
+}
 
-            seite.addEventListener('pageshow', function () {
-                Dashboard.showLoadingMsg();
-                ApiClient.getPluginConfiguration(PLUGIN).then(function (c) {
-                    insFormular(c);
-                    Dashboard.hideLoadingMsg();
-                });
-            });
+/* ---------- deck: tiles, Next and actions, from the saved values only ---------- */
+function renderDeck() {
+    if (!kit.loaded()) return;
+    var c = cfg(), on = c.Enabled === true, pub = webAddress(c.PublicUrl), base = serverBase(c), ok = configured(c), fp = frameProblem(c);
+    fill($('#sbrMasterState'), !on ? 'Off · hidden, settings kept' : pub ? 'On for everyone' : 'On · no browser address yet');
+    $('#sbrTiles').classList.toggle('is-off', !on);
 
-            $('sbForm').addEventListener('submit', function (e) {
-                e.preventDefault();
-                Dashboard.showLoadingMsg();
-                ApiClient.getPluginConfiguration(PLUGIN).then(function (c) {
-                    ApiClient.updatePluginConfiguration(PLUGIN, ausFormular(c)).then(function (r) {
-                        Dashboard.processPluginConfigurationUpdateResult(r);
-                    });
-                });
-                return false;
-            });
-        })();
-    </script>
+    /* Connection */
+    var tile = $('#sbrTileConn'), v = $('#sbrTileConnValue'), ch = $('#sbrTileConnChip'), sub = $('#sbrTileConnSub'), w = $('#sbrTileConnWarn'), kind = 'plain';
+    if (conn.state === 'busy') { fill(v, 'Testing…'); chipSet(ch, 'info', 'sync', 'Testing', true); fill(sub, base ? bare(base) : ''); kind = 'busy'; }
+    else if (conn.state === 'done' && conn.ok) { fill(v, conn.text.replace(/^Connected,\s*/, '') || 'Connected'); chipSet(ch, 'ok', 'check_circle', 'Connected'); fill(sub, 'Tested ' + kit.hhmm(conn.at)); kind = 'ok'; }
+    else if (conn.state === 'done') { fill(v, ok ? 'Not connected' : 'Not set up'); chipSet(ch, 'bad', 'error', ok ? 'Error' : 'Missing'); fill(sub, conn.text); kind = 'bad'; }
+    else if (conn.state === 'error') { fill(v, 'Unknown'); chipSet(ch, 'warn', 'help', 'Test did not run'); fill(sub, 'The server did not answer'); kind = 'warn'; }
+    else if (conn.state === 'refused') { fill(v, 'Not tested'); chipSet(ch, 'warn', 'cloud_off', 'Save failed'); fill(sub, 'Retry the save first'); kind = 'warn'; }
+    else { fill(v, ok ? 'Not tested' : 'Not set up'); chipSet(ch, 'plain', 'hourglass_empty', 'Not tested'); fill(sub, ''); }
+    w.hidden = !fp; if (fp) fill(w, [ic('warning'), el('span', null, fp.tile)]);
+    tile.classList.toggle('is-bad', kind === 'bad');
+    tile.classList.toggle('is-warn', kind !== 'bad' && (kind === 'warn' || !!fp));
+
+    /* Menu button */
+    var head = c.ShowInHeader === true, drw = c.ShowInDrawer === true;
+    fill($('#sbrTileLabel'), labelText());
+    fill($('#sbrTileWhere'), !on ? 'Hidden while the integration is off' : !pub ? 'Hidden until the browser address is set' : head && drw ? 'In the header and the side menu' : head ? 'In the header only' : drw ? 'In the side menu only' : 'Not shown anywhere');
+
+    /* Search */
+    if (!on || !c.EnableSearch) { fill($('#sbrTileSearch'), 'Off'); fill($('#sbrTileSearchSub'), !on ? 'Hidden while the integration is off' : 'Only Jellyfin\'s own results'); }
+    else {
+        var lim = clampLimit(c.SearchLimit);
+        fill($('#sbrTileSearch'), [String(lim) + ' ', el('small', null, lim === 1 ? 'suggestion' : 'suggestions')]);
+        fill($('#sbrTileSearchSub'), !ok ? 'Paused: address or API key missing' : (conn.state === 'done' && !conn.ok) ? 'Paused: Seerr not reachable'
+            : (c.HideAvailable ? 'Hides owned titles' : 'Shows owned titles') + ' · ' + (c.AllowRequests ? (c.MapUsers ? 'requests as the user' : 'requests as the key\'s account') : 'no requests'));
+    }
+
+    /* Single sign-on */
+    var s = ssoState();
+    fill($('#sbrTileSso'), !s.on ? 'Off' : !on ? 'Paused' : s.ready ? 'Ready' : 'Not ready');
+    fill($('#sbrTileSsoSub'), !s.on ? 'Users sign in to Seerr themselves' : s.ready ? 'Cookie for ' + s.dom : (s.problems[0] ? s.problems[0][1] : ''));
+    $('#sbrTileSsoBox').classList.toggle('is-bad', s.on && on && !s.ready && s.problems.some(function (x) { return x[0] === 'bad'; }));
+
+    /* Next */
+    var nx;
+    if (!on) nx = [b('Next: '), 'users see no Requests button, no Seerr suggestions and no sign-on once Jellyfin next loads in their browser. Your settings stay as they are.' + (c.LegacyAuthHeader ? ' The legacy header bridge keeps working; it does not depend on this switch.' : '')];
+    else if (!pub) nx = [b('Needs an address: '), 'the Requests button and the Seerr page stay hidden until the address for the browser is saved.'];
+    else if (!ok) nx = [b('Needs the API key: '), 'the button already works, but search suggestions, requests and single sign-on stay off until the API key is saved.'];
+    else if (conn.state === 'done' && !conn.ok) nx = [b('Needs attention: '), 'Jellyfin cannot reach Seerr (' + conn.text + '). Search suggestions, requests and single sign-on fail until the test passes.'];
+    else if (fp) nx = [b('Needs attention: '), fp.title + '. ' + fp.fix];
+    else nx = [b('Next: '), 'users get these settings the next time Jellyfin loads in their browser (cached for up to 30 seconds). Filters and the suggestion limit already count for the next search.'];
+    fill($('#sbrNext'), nx);
+
+    /* actions and what the test uses */
+    var op = $('#sbrOpen');
+    if (pub) { op.href = pub; op.hidden = false; } else { op.removeAttribute('href'); op.hidden = true; }
+    var uses = el('span', 'mk-chip mk-chip--plain'); uses.appendChild(ic('lan')); uses.appendChild(el('span', null, base ? bare(base) : 'no address'));
+    var keyc = el('span', 'mk-chip mk-chip--plain'); keyc.appendChild(ic(String(c.ApiKey || '').trim() ? 'vpn_key' : 'key_off')); keyc.appendChild(el('span', null, String(c.ApiKey || '').trim() ? 'API key saved' : 'no API key'));
+    fill($('#sbrUses'), [b('Test uses:'), uses, keyc]);
+}
+
+/* ---------- warnings for the save chip: saved values the server accepts, but that cannot work ---------- */
+function renderWarnings() {
+    var c = cfg(), fp = frameProblem(c), sp = serverProblem(c), cp = cookieProblem(c);
+    kit.warn('PublicUrl', fp ? fp.chip : null);
+    kit.warn('ServerUrl', sp ? sp.chip : null);
+    kit.warn('CookieDomain', cp ? cp.chip : null);
+}
+
+function renderAll() {
+    if (!kit.loaded()) return;
+    renderWarnings(); renderAddressChecks(); renderMap(); renderTest(); renderMenu(); renderSignin(); renderDeck();
+}
+
+/* the address checks follow typing; everything else waits for the save */
+['#sbrPublicUrl', '#sbrServerUrl'].forEach(function (s) { $(s).addEventListener('input', renderAddressChecks); });
+page.addEventListener('mk-restored', function (e) { if (e.target && /^(PublicUrl|ServerUrl)$/.test(e.target.getAttribute('data-key') || '')) renderAddressChecks(); });
+/* a warning or error on the cookie domain must be reachable from the save chip, so its section opens first */
+page.addEventListener('click', function (e) {
+    if (!e.target.closest || !e.target.closest('.mk-save')) return;
+    var f = $('#sbrCookieDomain'), st = kit.state();
+    if (f.getAttribute('aria-invalid') === 'true' || (!st.invalid && cookieProblem(cfg()))) $('#sbrCookieMore').open = true;
+}, true);
+})();
+</script>
 </div>
 </body>
 </html>

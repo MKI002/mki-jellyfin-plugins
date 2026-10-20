@@ -20,7 +20,7 @@ Brings [Seerr](https://github.com/seerr-team/seerr) (formerly Jellyseerr) into t
    - the **public URL** browsers use to reach Seerr,
    - the **server URL** Jellyfin uses to reach Seerr (leave empty if it is the same),
    - the Seerr **API key** (Seerr → Settings → General). Only administrators can read it on the settings page; it is never sent to regular users' browsers.
-3. Click **Test connection**, then save and reload the web client.
+3. Click **Test connection**. Settings save as soon as you change them; reload the web client afterwards to see the menu button.
 
 ### Notes on sign-in
 

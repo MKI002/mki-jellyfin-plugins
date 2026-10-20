@@ -3,7 +3,7 @@
 manifest.json and add them to the manifest.
 
 Usage:
-  build/package.py --check                       validate meta.json files and manifest.json
+  build/package.py --check                       validate meta.json, manifest.json and the MKI kit copies
   build/package.py --tag v1.0.0 --repo OWNER/REPO build zips into dist/ and update manifest.json
 """
 import argparse
@@ -78,7 +78,7 @@ def main():
     found = list(plugins())
     if args.check:
         print(f"{len(found)} plugins, {len(manifest)} manifest entries: OK")
-        return
+        sys.exit(subprocess.run([sys.executable, str(ROOT / "build" / "kit.py"), "--check"]).returncode)
     if not (args.tag and args.repo):
         parser.error("--tag and --repo are required unless --check is given")
 
