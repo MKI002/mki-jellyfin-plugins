@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/MKI002/mki-jellyfin-plugins/main/src/Jellyfin.Plugin.MediaHero/logo.png",
     "versions": [
       {
+        "version": "1.5.0.0",
+        "changelog": "New settings page in the shared MKI design, with tabs for Sources, Filters, Look, Details & buttons and Behavior. A live preview draws your own list with the banner's own code at the size of your window and follows every slider while you drag; a small copy stays in the corner while you scroll. The header shows how many titles your list has, how old it is, and how many sources and library places are in use. Text placement is set by dragging the text block, layouts are picked from drawings, and Find a setting jumps to any option. The Seerr address and key can be taken over from MKI Seerr Bridge in one click. Settings save as soon as you change them, with undo, and the list is rebuilt once after each change; turning the banner off asks first. Works on phones and in light and dark themes.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/MKI002/mki-jellyfin-plugins/releases/download/v1.7.0/mediahero_1.5.0.0.zip",
+        "checksum": "3825b4a64fee30f3261943c4fd55018a",
+        "timestamp": "2026-10-20T03:02:56Z"
+      },
+      {
         "version": "1.4.2.0",
         "changelog": "Security update. Every user now gets their own banner that follows their library access, parental controls and blocked tags, instead of one list for everyone, and banners are never shared between accounts in the browser cache. Calls to Seerr no longer follow redirects or keep cookies, and library names on the settings page are escaped.",
         "targetAbi": "12.0.0.0",
@@ -76,6 +84,14 @@
     "imageUrl": "https://raw.githubusercontent.com/MKI002/mki-jellyfin-plugins/main/src/Jellyfin.Plugin.MkiMergeVersions/logo.png",
     "versions": [
       {
+        "version": "1.3.0.0",
+        "changelog": "New settings page in the shared MKI design. The header shows the merge task, the last result, the next run and the primary-version fix at a glance, with Run now and Stop. A timeline shows past and coming runs, and the latest MKI Merge log lines can be shown on demand. Settings save as soon as you change them, with undo; switching from dry run to live asks first. Works on phones and in light and dark themes.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/MKI002/mki-jellyfin-plugins/releases/download/v1.7.0/mkimergeversions_1.3.0.0.zip",
+        "checksum": "f0e484e148a7e7027ef77062b5b8c24b",
+        "timestamp": "2026-10-20T03:02:56Z"
+      },
+      {
         "version": "1.2.1.0",
         "changelog": "Security update. Versions are only linked when exactly the same users can see them and they share a production year, so merging can no longer reveal a file from a library someone has no access to. Existing links that break this are split again, stale links are released, groups of more than eight versions are skipped, and two runs can no longer overlap.",
         "targetAbi": "12.0.0.0",
@@ -118,6 +134,14 @@
     "category": "Authentication",
     "imageUrl": "https://raw.githubusercontent.com/MKI002/mki-jellyfin-plugins/main/src/Jellyfin.Plugin.MkiPasswordPolicy/logo.png",
     "versions": [
+      {
+        "version": "1.1.0.0",
+        "changelog": "New settings page in the shared MKI design, with tabs for Users, Require a new password, Profiles and More settings. The header shows who the rules apply to, the state of everyone's password, open requests and the time left to set a new one. The Users tab lists everyone with search and filters, and flags accounts without a password with a Temporary password button. Before any change that could lock someone out, the page names the accounts and asks; your own account can never be locked from here. A request for everyone shows who gets one and who was already asked, with the notice period chosen in the same dialog. A temporary password is shown once, in a dialog that stays open until you confirm you copied it. Profiles can be compared side by side and tried with a test password, checked in the browser only. Settings save as soon as you change them, with undo. Works on phones and in light and dark themes.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/MKI002/mki-jellyfin-plugins/releases/download/v1.7.0/mkipasswordpolicy_1.1.0.0.zip",
+        "checksum": "b51d5915919e10fde9db3cb9374e9575",
+        "timestamp": "2026-10-20T03:02:56Z"
+      },
       {
         "version": "1.0.6.0",
         "changelog": "Security update. A blocked user's token is now refused however it is sent (any authorization header, the older header names or the query string), and a request carrying tokens of several users is refused. When a deadline passes, the user's tokens are revoked within a minute, a sign-in that gets through on any path is undone at once, and setting a new password signs out every other device.",
@@ -185,6 +209,14 @@
     "category": "General",
     "imageUrl": "https://raw.githubusercontent.com/MKI002/mki-jellyfin-plugins/main/src/Jellyfin.Plugin.SeerrBridge/logo.png",
     "versions": [
+      {
+        "version": "1.5.0.0",
+        "changelog": "New settings page in the shared MKI design, with tabs for Connection, Menu & search and Sign-in. A diagram shows both roads to Seerr and whether each one answers, a connection test runs by itself after an address change, and the page warns about address problems such as mixed http and https. A sketch shows where the Requests button lands, and Try a search previews the suggestions. Settings save as soon as you change them, with undo; changes that affect requests or sign-in ask first. Works on phones and in light and dark themes.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/MKI002/mki-jellyfin-plugins/releases/download/v1.7.0/seerrbridge_1.5.0.0.zip",
+        "checksum": "ee0e6253af83a8c31bc9eb1afec552d6",
+        "timestamp": "2026-10-20T03:02:56Z"
+      },
       {
         "version": "1.4.2.0",
         "changelog": "Security update. Requests from the search results are made in the user's own Seerr account, matched by Jellyfin user ID, and are refused for accounts not linked to Seerr yet instead of running as the administrator; each user can send up to 30 per hour. Single sign-on can no longer be triggered by other websites, and the Seerr session cookie is set HttpOnly (and Secure over https). The settings endpoint needs a signed-in user, the plugin repository answers only inside the local network, the legacy header bridge only passes a single well-formed token, and calls to Seerr no longer follow redirects or keep cookies.",
