@@ -108,7 +108,7 @@ public class WebPatcher : IHostedService
 	// allows no new files, the file is written in place as before.
 	private static void DateiSchreiben(string datei, string inhalt)
 	{
-		string tmp = datei + ".mki.tmp";
+		string tmp = datei + ".mki-seerrbridge.tmp";
 		try
 		{
 			File.WriteAllText(tmp, inhalt);

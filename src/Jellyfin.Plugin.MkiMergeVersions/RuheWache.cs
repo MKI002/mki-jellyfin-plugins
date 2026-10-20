@@ -78,7 +78,7 @@ public class RuheWache : IHostedService, IDisposable
 			_schmutzig = false;
 			PluginConfiguration pluginConfiguration = ((BasePlugin<PluginConfiguration>)(object)Plugin.Instance)?.Configuration ?? new PluginConfiguration();
 			LoggerExtensions.LogInformation((ILogger)(object)_log, "MKI Merge: library is quiet, merging", Array.Empty<object>());
-			// Skipped while the scheduled task is running; the library is checked again on the next change.
+			// Skipped while the scheduled task is running; the watcher then tries again on its next tick.
 			if (await new MergeService(_library, _users, (ILogger)(object)_log).RunAsync(pluginConfiguration.DryRun, pluginConfiguration.FixPrimaryOrder, null, warten: false, CancellationToken.None).ConfigureAwait(continueOnCapturedContext: false) == null)
 			{
 				_schmutzig = true;

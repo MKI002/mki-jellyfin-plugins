@@ -237,7 +237,8 @@ public class SeerrClient
 			{
 				return (Ok: false, Text: "Your account is not linked to Seerr yet. Sign in to Seerr once, or ask your administrator to import your account.");
 			}
-			rumpf.Append(",\"userId\":").Append(konto.Value.ToString(CultureInfo.InvariantCulture));
+			// No "userId" in the body: Seerr refuses that from anyone who may not manage users, and X-API-User below
+			// already makes the request that user's own.
 		}
 		rumpf.Append('}');
 		try

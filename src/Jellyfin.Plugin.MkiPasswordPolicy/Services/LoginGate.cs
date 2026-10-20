@@ -38,7 +38,7 @@ public class LoginGate : IStartupFilter
 	private const int MaxRumpf = 64 * 1024;
 
 	// Real clients send one token, two at most. More is refused while anyone is blocked, so a pile of junk cannot hide one.
-	private const int MaxTokens = 8;
+	internal const int MaxTokens = 8;
 
 	// Every place a token can come from. Jellyfin reads some of them only with legacy sign-in switched on, and another
 	// plugin may copy one into another after this check has run (Seerr Bridge does), so all of them count.
@@ -442,7 +442,7 @@ public class LoginGate : IStartupFilter
 	{
 		try
 		{
-			var tokens = Tokens(request);
+			var tokens = Tokens(request, MaxTokens);
 			if (tokens.Count > MaxTokens)
 			{
 				return null;
@@ -465,17 +465,24 @@ public class LoginGate : IStartupFilter
 		}
 	}
 
-	internal static List<string> Tokens(HttpRequest request)
+	// Stops once more than "grenze" tokens are found: the caller refuses such a request anyway, and a header packed
+	// with thousands of tokens must not cost more than reading it once.
+	internal static List<string> Tokens(HttpRequest request, int grenze)
 	{
 		var tokens = new List<string>();
+		var gesehen = new HashSet<string>(StringComparer.Ordinal);
 		void Dazu(string? token)
 		{
-			if (!string.IsNullOrWhiteSpace(token) && !tokens.Contains(token, StringComparer.Ordinal))
+			if (tokens.Count > grenze)
+			{
+				return;
+			}
+			if (!string.IsNullOrWhiteSpace(token) && gesehen.Add(token))
 			{
 				tokens.Add(token);
 			}
 			string kurz = token?.Trim().Trim('"') ?? string.Empty;
-			if (kurz.Length > 0 && !tokens.Contains(kurz, StringComparer.Ordinal))
+			if (kurz.Length > 0 && gesehen.Add(kurz))
 			{
 				tokens.Add(kurz);
 			}

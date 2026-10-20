@@ -235,7 +235,8 @@ public class SeerrBridgeController : ControllerBase
 			});
 		}
 		// Rebuilt from Seerr's cookie, keeping only its value, lifetime and path. It is always HttpOnly, Secure whenever
-		// Seerr is reached over https, and SameSite=Lax unless Seerr asked for something stricter.
+		// both Seerr and this Jellyfin page use https (a browser drops a Secure cookie sent to an http page), and
+		// SameSite=Lax unless Seerr asked for something stricter.
 		string[] array = text2.Split(';');
 		List<string> list = new List<string> { array[0].Trim() };
 		string sameSite = "Lax";
@@ -255,7 +256,7 @@ public class SeerrBridgeController : ControllerBase
 		list.Add("Domain=" + bereich);
 		list.Add("HttpOnly");
 		list.Add("SameSite=" + sameSite);
-		if (SeerrClient.WebAdresse(pluginConfiguration.PublicUrl).StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+		if (SeerrClient.WebAdresse(pluginConfiguration.PublicUrl).StartsWith("https://", StringComparison.OrdinalIgnoreCase) && SeiteSicher())
 		{
 			list.Add("Secure");
 		}
@@ -326,6 +327,14 @@ public class SeerrBridgeController : ControllerBase
 		return (ActionResult)new JsonResult((object)new { ok, text });
 	}
 
+	// Whether the browser page that asked uses https. Behind a TLS proxy Jellyfin itself may only see http, the
+	// browser's Origin header still tells.
+	private bool SeiteSicher()
+	{
+		HttpRequest request = ((ControllerBase)this).Request;
+		return request.IsHttps || request.Headers.Origin.ToString().StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+	}
+
 	// The plugin repository answers only inside the home network: from the internet nobody can list or download
 	// what is installed here.
 	private bool ImHeimnetz()
@@ -333,12 +342,70 @@ public class SeerrBridgeController : ControllerBase
 		try
 		{
 			IPAddress ip = ((ControllerBase)this).HttpContext.GetNormalizedRemoteIP();
-			return IPAddress.IsLoopback(ip) || _network.IsInLocalNetwork(ip);
+			if (!Lokal(ip))
+			{
+				return false;
+			}
+			// Behind a reverse proxy Jellyfin does not know (no known proxies set), the proxy's own address looks
+			// local although the caller is not. Every address the proxy passed on must be local too.
+			foreach (string adresse in Weitergeleitet(((ControllerBase)this).Request))
+			{
+				if (!IPAddress.TryParse(adresse, out IPAddress? weiter) || !Lokal(weiter))
+				{
+					return false;
+				}
+			}
+			return true;
 		}
 		catch (Exception)
 		{
 			return false;
 		}
+	}
+
+	private bool Lokal(IPAddress ip)
+	{
+		return IPAddress.IsLoopback(ip) || _network.IsInLocalNetwork(ip);
+	}
+
+	private static IEnumerable<string> Weitergeleitet(HttpRequest request)
+	{
+		foreach (string kopf in new[] { "X-Forwarded-For", "X-Real-IP" })
+		{
+			foreach (string? wert in request.Headers[kopf])
+			{
+				foreach (string teil in (wert ?? string.Empty).Split(','))
+				{
+					if (teil.Trim().Length > 0)
+					{
+						yield return OhnePort(teil.Trim());
+					}
+				}
+			}
+		}
+		foreach (string? wert in request.Headers["Forwarded"])
+		{
+			foreach (string teil in (wert ?? string.Empty).Split(',', ';'))
+			{
+				string t = teil.Trim();
+				if (t.StartsWith("for=", StringComparison.OrdinalIgnoreCase))
+				{
+					yield return OhnePort(t.Substring(4).Trim('"'));
+				}
+			}
+		}
+	}
+
+	// "1.2.3.4:5678" and "[2001:db8::1]:443" become the bare address; a bare IPv6 address stays as it is.
+	private static string OhnePort(string adresse)
+	{
+		if (adresse.StartsWith('['))
+		{
+			int zu = adresse.IndexOf(']');
+			return zu > 0 ? adresse.Substring(1, zu - 1) : adresse;
+		}
+		int doppelpunkt = adresse.IndexOf(':');
+		return doppelpunkt > 0 && doppelpunkt == adresse.LastIndexOf(':') ? adresse.Substring(0, doppelpunkt) : adresse;
 	}
 
 	[HttpGet("repository.json")]

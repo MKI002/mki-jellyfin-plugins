@@ -467,6 +467,8 @@
         // Someone else signed in while the request was under way: this list is not theirs.
         if (!fuer || fuer !== nutzerKennung()) return null;
         if (j && j.Items && j.Items.length) { inSpeicher(j, fuer); vorladen(j); }
+        // Nothing left for this user: the stored titles must not flash up again on the next visit.
+        else if (j) { try { localStorage.removeItem(speicherSchluessel(fuer)); } catch (e) { /* ignore */ } }
         return j;
       })
       .catch(function () { netzLaeuft = null; return null; });

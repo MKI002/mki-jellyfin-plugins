@@ -98,7 +98,7 @@ public class PasswordPolicyController : ControllerBase
 		_patcher.Sync();
 		// Like Jellyfin's own password change: every other device is signed out, so whoever knew the old password
 		// loses access too. The app the change was made in stays signed in.
-		string? behalten = LoginGate.Tokens(Request).FirstOrDefault(t => _devices.GetDevices(new DeviceQuery { AccessToken = t, Limit = 1 }).Items.FirstOrDefault()?.UserId == benutzer.Id);
+		string? behalten = LoginGate.Tokens(Request, LoginGate.MaxTokens).FirstOrDefault(t => _devices.GetDevices(new DeviceQuery { AccessToken = t, Limit = 1 }).Items.FirstOrDefault()?.UserId == benutzer.Id);
 		try
 		{
 			await _sessions.RevokeUserTokens(benutzer.Id, behalten!).ConfigureAwait(false);

@@ -46,6 +46,9 @@ public class MergeService
 		val.IncludeItemTypes = (BaseItemKind[])(object)new BaseItemKind[1] { (BaseItemKind)13 };
 		val.IsVirtualItem = false;
 		val.Recursive = true;
+		// Without this Jellyfin leaves out every version that points to a primary entry in the same library, and a
+		// stale link there could never be found. Local versions stay out: they have an owner.
+		val.IncludeAlternateVersions = true;
 		return library.GetItemList(val).OfType<Video>().ToList();
 	}
 
@@ -62,6 +65,11 @@ public class MergeService
 			return "imdb:" + providerId2;
 		}
 		return null;
+	}
+
+	private static string Jahr(Video v)
+	{
+		return ((BaseItem)v).ProductionYear?.ToString(CultureInfo.InvariantCulture) ?? "?";
 	}
 
 	private static int Breite(BaseItem v)
@@ -134,7 +142,7 @@ public class MergeService
 					getrennt++;
 				}
 			}
-			catch (Exception ex)
+			catch (Exception ex) when (ex is not OperationCanceledException)
 			{
 				fehler++;
 				LoggerExtensions.LogError(_log, ex, "MKI Merge: checking the versions of {Title} failed", new object[1] { ((BaseItem)haupt).Name });
@@ -172,18 +180,23 @@ public class MergeService
 				});
 				continue;
 			}
-			// Same audience and the same year (where known); otherwise the entries stay separate.
-			foreach (IGrouping<string, Video> teil in gruppe.Value.GroupBy((Video v) => Sichtbarkeit(v, nutzer) + "|" + (((BaseItem)v).ProductionYear?.ToString(CultureInfo.InvariantCulture) ?? "?")))
+			// Same audience and the same production year; otherwise the entries stay separate. An entry without a year
+			// only joins others without one: a wrong id is likelier than a missing year on a matched movie.
+			Dictionary<Guid, string> publikum = gruppe.Value.ToDictionary((Video v) => ((BaseItem)v).Id, (Video v) => Sichtbarkeit(v, nutzer));
+			foreach (IGrouping<string, Video> teil in gruppe.Value.GroupBy((Video v) => publikum[((BaseItem)v).Id] + "|" + Jahr(v)))
 			{
 				if (teil.Count() > 1)
 				{
 					arbeit.Add(teil.ToList());
 				}
 			}
-			int teile = gruppe.Value.GroupBy((Video v) => Sichtbarkeit(v, nutzer)).Count();
-			if (teile > 1)
+			if (publikum.Values.Distinct().Count() > 1)
 			{
 				LoggerExtensions.LogInformation(_log, "MKI Merge: {Title} - not every user may see every version, those versions stay separate", new object[1] { ((BaseItem)gruppe.Value[0]).Name });
+			}
+			if (gruppe.Value.Select(Jahr).Distinct().Count() > 1)
+			{
+				LoggerExtensions.LogInformation(_log, "MKI Merge: {Title} - the versions have different production years (or none), those versions stay separate", new object[1] { ((BaseItem)gruppe.Value[0]).Name });
 			}
 		}
 		LoggerExtensions.LogInformation(_log, "MKI Merge: {Count} groups to merge", new object[1] { arbeit.Count });
@@ -199,7 +212,7 @@ public class MergeService
 					zusammen++;
 				}
 			}
-			catch (Exception ex)
+			catch (Exception ex) when (ex is not OperationCanceledException)
 			{
 				fehler++;
 				LoggerExtensions.LogError(_log, ex, "MKI Merge: {Title} failed", new object[1] { ((BaseItem)arbeit[i][0]).Name });
@@ -241,7 +254,7 @@ public class MergeService
 						umgebaut++;
 					}
 				}
-				catch (Exception ex2)
+				catch (Exception ex2) when (ex2 is not OperationCanceledException)
 				{
 					fehler++;
 					LoggerExtensions.LogError(_log, ex2, "MKI Merge: rebuilding {Title} failed", new object[1] { ((BaseItem)haupt).Name });
@@ -306,8 +319,9 @@ public class MergeService
 		return true;
 	}
 
-	// An entry that points to a primary entry which does not list it is hidden from the library for good.
-	// That happens when a run is interrupted halfway. Such entries are released again.
+	// An entry that points to a primary entry which does not list it (or no longer exists) is hidden from the
+	// library or never merged again. That happens when a run is interrupted halfway, or after Jellyfin replaced a
+	// primary file. Such entries are released again; the merge below links them anew where that is allowed.
 	private async Task<int> WaisenAsync(List<Video> filme, bool dryRun, CancellationToken ct)
 	{
 		int fehler = 0;
@@ -316,26 +330,27 @@ public class MergeService
 			ct.ThrowIfCancellationRequested();
 			try
 			{
-				BaseItem itemById = _library.GetItemById(v.PrimaryVersionId!.Value);
+				// The list was read before the links were checked; work with the current state only.
+				Video item = Frisch(v);
+				if (!item.PrimaryVersionId.HasValue)
+				{
+					continue;
+				}
+				BaseItem itemById = _library.GetItemById(item.PrimaryVersionId.Value);
 				Video? haupt = (Video?)(object)((itemById is Video) ? itemById : null);
-				if (haupt == null)
+				Guid id = ((BaseItem)item).Id;
+				if (haupt != null && (haupt.LinkedAlternateVersions.Any((LinkedChild l) => l.ItemId.HasValue && l.ItemId.Value.Equals(id)) || _library.GetLocalAlternateVersionIds(haupt).Contains(id)))
 				{
 					continue;
 				}
-				Guid id = ((BaseItem)v).Id;
-				if (haupt.LinkedAlternateVersions.Any((LinkedChild l) => l.ItemId.HasValue && l.ItemId.Value.Equals(id)) || _library.GetLocalAlternateVersionIds(haupt).Contains(id))
-				{
-					continue;
-				}
-				LoggerExtensions.LogInformation(_log, "MKI Merge: {Title} pointed to a primary entry that does not list it, showing it again", new object[1] { ((BaseItem)v).Name });
+				LoggerExtensions.LogInformation(_log, "MKI Merge: {Title} pointed to a primary entry that does not list it, showing it again", new object[1] { ((BaseItem)item).Name });
 				if (!dryRun)
 				{
-					Video item = Frisch(v);
 					item.SetPrimaryVersionId((Guid?)null);
 					await ((BaseItem)item).UpdateToRepositoryAsync((ItemUpdateType)16, ct).ConfigureAwait(continueOnCapturedContext: false);
 				}
 			}
-			catch (Exception ex)
+			catch (Exception ex) when (ex is not OperationCanceledException)
 			{
 				fehler++;
 				LoggerExtensions.LogError(_log, ex, "MKI Merge: checking {Title} failed", new object[1] { ((BaseItem)v).Name });
@@ -385,8 +400,8 @@ public class MergeService
 				}
 			}
 		}
-		// The primary entry is written first. If the run stops after it, the other entries are merely still shown
-		// on their own and the next run finishes the job; the other way round they would be hidden for good.
+		// The primary entry is written first: saving it already points every listed version to it in the database.
+		// The loop below brings the cached entries in line and clears lists the former primary entries kept.
 		if (haupt.PrimaryVersionId.HasValue)
 		{
 			haupt.SetPrimaryVersionId((Guid?)null);
