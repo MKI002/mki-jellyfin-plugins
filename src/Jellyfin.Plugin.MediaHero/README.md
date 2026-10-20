@@ -19,6 +19,6 @@ A cinematic hero carousel at the top of the Jellyfin home screen.
 
 1. Install from the plugin catalog and restart Jellyfin.
 2. Open **Dashboard → Plugins → MKI Media Hero** and pick your libraries and sources. Settings save as soon as you change them, and the list is rebuilt for everyone.
-3. For Seerr sources, enter your Seerr URL and API key (Seerr → Settings → General), or take them over from MKI Seerr Bridge with one click. The key stays on the server.
+3. For Seerr sources, enter your Seerr URL and API key (Seerr → Settings → General), or take them over from MKI Seerr Bridge with one click. Only administrators can read the key on the settings page; it is never sent to regular users' browsers.
 
 The carousel appears on the home screen after a page reload.
