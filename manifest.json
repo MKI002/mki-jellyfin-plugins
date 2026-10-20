@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/MKI002/mki-jellyfin-plugins/main/src/Jellyfin.Plugin.MediaHero/logo.png",
     "versions": [
       {
+        "version": "1.4.2.0",
+        "changelog": "Security update. Every user now gets their own banner that follows their library access, parental controls and blocked tags, instead of one list for everyone, and banners are never shared between accounts in the browser cache. Calls to Seerr no longer follow redirects or keep cookies, and library names on the settings page are escaped.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/MKI002/mki-jellyfin-plugins/releases/download/v1.6.4/mediahero_1.4.2.0.zip",
+        "checksum": "20bc4c0a275b0467025e7584a05a7145",
+        "timestamp": "2026-10-20T00:14:40Z"
+      },
+      {
         "version": "1.4.1.0",
         "changelog": "The API key on the settings page is hidden by default; the eye button shows it.",
         "targetAbi": "12.0.0.0",
@@ -68,6 +76,14 @@
     "imageUrl": "https://raw.githubusercontent.com/MKI002/mki-jellyfin-plugins/main/src/Jellyfin.Plugin.MkiMergeVersions/logo.png",
     "versions": [
       {
+        "version": "1.2.1.0",
+        "changelog": "Security update. Versions are only linked when exactly the same users can see them and they share a production year, so merging can no longer reveal a file from a library someone has no access to. Existing links that break this are split again, stale links are released, groups of more than eight versions are skipped, and two runs can no longer overlap.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/MKI002/mki-jellyfin-plugins/releases/download/v1.6.4/mkimergeversions_1.2.1.0.zip",
+        "checksum": "bce679a1775a2c49f69de2be6ed3b3c8",
+        "timestamp": "2026-10-20T00:14:40Z"
+      },
+      {
         "version": "1.2.0.0",
         "changelog": "Cleans up an older copy of this plugin left behind by an update or rename: the old copy is marked for removal and stays inactive, so it can no longer break requests. Restart Jellyfin once to finish the cleanup. Settings are kept.",
         "targetAbi": "12.0.0.0",
@@ -102,6 +118,14 @@
     "category": "Authentication",
     "imageUrl": "https://raw.githubusercontent.com/MKI002/mki-jellyfin-plugins/main/src/Jellyfin.Plugin.MkiPasswordPolicy/logo.png",
     "versions": [
+      {
+        "version": "1.0.6.0",
+        "changelog": "Security update. A blocked user's token is now refused however it is sent (any authorization header, the older header names or the query string), and a request carrying tokens of several users is refused. When a deadline passes, the user's tokens are revoked within a minute, a sign-in that gets through on any path is undone at once, and setting a new password signs out every other device.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/MKI002/mki-jellyfin-plugins/releases/download/v1.6.4/mkipasswordpolicy_1.0.6.0.zip",
+        "checksum": "1c479a99d27cce7052146eea00fe55a1",
+        "timestamp": "2026-10-20T00:14:40Z"
+      },
       {
         "version": "1.0.5.0",
         "changelog": "Accounts without a password that have a profile or a request are now locked right away on every sign-in path (apps, TVs, Quick Connect, existing sessions), with no notice period, and nobody can claim them by name: new Temporary password button shows a random password once and the user replaces it at the next sign-in. Passwords an administrator sets (Jellyfin's Password tab or new users) and reset PINs now count as temporary for users with a profile. A second request can only bring a deadline forward. Bulk requests never include the admin who sends them. Web-based apps show a popup that must be answered during a notice period; TVs get Jellyfin's message window instead of a fading toast. Settings page: every change applies immediately, no Save button, with a question before anything locks accounts.",
@@ -161,6 +185,14 @@
     "category": "General",
     "imageUrl": "https://raw.githubusercontent.com/MKI002/mki-jellyfin-plugins/main/src/Jellyfin.Plugin.SeerrBridge/logo.png",
     "versions": [
+      {
+        "version": "1.4.2.0",
+        "changelog": "Security update. Requests from the search results are made in the user's own Seerr account, matched by Jellyfin user ID, and are refused for accounts not linked to Seerr yet instead of running as the administrator; each user can send up to 30 per hour. Single sign-on can no longer be triggered by other websites, and the Seerr session cookie is set HttpOnly (and Secure over https). The settings endpoint needs a signed-in user, the plugin repository answers only inside the local network, the legacy header bridge only passes a single well-formed token, and calls to Seerr no longer follow redirects or keep cookies.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/MKI002/mki-jellyfin-plugins/releases/download/v1.6.4/seerrbridge_1.4.2.0.zip",
+        "checksum": "4a0f69ca1facf5323d007e4fd933e9e5",
+        "timestamp": "2026-10-20T00:14:40Z"
+      },
       {
         "version": "1.4.1.0",
         "changelog": "The API key on the settings page is hidden by default; the eye button shows it.",
