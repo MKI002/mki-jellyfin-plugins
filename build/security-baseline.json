@@ -1,0 +1,21 @@
+{
+  "_comment": "Every endpoint anyone can call without signing in, and every request middleware (IStartupFilter). build/checks.py fails when one is added or removed without updating this list. Add an entry only after the security review in RELEASING.md step 3. All entries below were reviewed in the October 2026 audit (PR #15).",
+  "anonymousEndpoints": [
+    "src/Jellyfin.Plugin.MediaHero/Api/MediaHeroController.cs::GetScript",
+    "src/Jellyfin.Plugin.MediaHero/Api/MediaHeroController.cs::GetStyle",
+    "src/Jellyfin.Plugin.MkiPasswordPolicy/Api/PasswordPolicyController.cs::Change",
+    "src/Jellyfin.Plugin.MkiPasswordPolicy/Api/PasswordPolicyController.cs::ChangeRules",
+    "src/Jellyfin.Plugin.MkiPasswordPolicy/Api/PasswordPolicyController.cs::GetChangePage",
+    "src/Jellyfin.Plugin.MkiPasswordPolicy/Api/PasswordPolicyController.cs::GetScript",
+    "src/Jellyfin.Plugin.SeerrBridge/Api/SeerrBridgeController.cs::GetScript",
+    "src/Jellyfin.Plugin.SeerrBridge/Api/SeerrBridgeController.cs::GetStyle",
+    "src/Jellyfin.Plugin.SeerrBridge/Api/SeerrBridgeController.cs::Repository",
+    "src/Jellyfin.Plugin.SeerrBridge/Api/SeerrBridgeController.cs::RepositoryBild",
+    "src/Jellyfin.Plugin.SeerrBridge/Api/SeerrBridgeController.cs::RepositoryPaket"
+  ],
+  "requestMiddleware": [
+    "src/Jellyfin.Plugin.MkiPasswordPolicy/Services/LoginGate.cs::LoginGate",
+    "src/Jellyfin.Plugin.SeerrBridge/Services/LegacyAuthHeader.cs::LegacyAuthHeader",
+    "src/Jellyfin.Plugin.SeerrBridge/Services/SsoBruecke.cs::SsoBruecke"
+  ]
+}

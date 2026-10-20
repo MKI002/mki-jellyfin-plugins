@@ -82,11 +82,13 @@ CI fails when a page's copy is out of date (`build/package.py --check` runs `bui
 
 ## Releasing a new version
 
+Every update and every new plugin goes through the checks and review steps in [RELEASING.md](RELEASING.md) first. CI enforces them on every pull request.
+
 1. Raise `version` and update `changelog` in the plugin's `src/<Plugin>/meta.json`.
 2. Merge to `main`.
 3. Start the release: either open **Actions → Release → Run workflow** and enter a tag such as `v1.1.0`, or push that tag yourself (`git tag v1.1.0 && git push origin v1.1.0`).
 
-The [Release workflow](.github/workflows/release.yml) builds every plugin whose version is not yet in `manifest.json`, attaches the zips to a GitHub release for that tag and commits the updated `manifest.json` to `main`. Plugins whose version did not change are left alone.
+The [Release workflow](.github/workflows/release.yml) builds every plugin whose version is not yet in `manifest.json`, attaches the zips to a GitHub release for that tag and commits the updated `manifest.json` to `main`. Plugins whose version did not change are left alone. It refuses to run unless the Build workflow is green on that commit of `main`.
 
 ## Repository layout
 
@@ -96,6 +98,9 @@ The [Release workflow](.github/workflows/release.yml) builds every plugin whose 
 ├── MkiJellyfinPlugins.sln
 ├── build/package.py                 builds, zips and updates manifest.json
 ├── build/kit.py                     copies the shared design kit into every settings page
+├── build/checks.py                  release gates: English only, personal data, security, versions
+├── build/security-baseline.json     reviewed anonymous endpoints and request middleware
+├── RELEASING.md                     the steps every update goes through before release
 ├── ui/                              shared design kit of the settings pages
 ├── .github/workflows/               CI build and tag-triggered release
 └── src/
