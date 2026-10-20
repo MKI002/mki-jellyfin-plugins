@@ -105,11 +105,12 @@
 #MkiPwConfigPage .pw-bulk__text > span { display: block; margin-top: 3px; font-size: .84rem; color: var(--mk-dim); line-height: 1.45; overflow-wrap: anywhere; }
 
 /* dialogs */
-#MkiPwConfigPage .pw-who-list { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0 2px; padding: 0; list-style: none; }
+#MkiPwConfigPage .pw-dlgbody > * { margin: 0; }
+#MkiPwConfigPage .pw-dlgbody > * + * { margin-top: 12px; }
+#MkiPwConfigPage .pw-who-list { display: flex; flex-wrap: wrap; gap: 5px; padding: 0; list-style: none; }
 #MkiPwConfigPage .pw-who-list li { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; padding: 3px 9px; border-radius: 99px; font-size: .8rem; font-weight: 650; color: var(--mk-text); border: 1px solid var(--mk-line-2); background: var(--mk-surface-2); overflow-wrap: anywhere; }
 #MkiPwConfigPage .pw-who-list li.is-lock { border-color: rgba(var(--mk-bad-rgb), .5); color: var(--mk-bad); }
 #MkiPwConfigPage .pw-who-list small { color: var(--mk-dim); font-weight: 500; }
-#MkiPwConfigPage .pw-group { margin-top: 12px; }
 #MkiPwConfigPage .pw-group__title { display: flex; align-items: center; gap: 7px; margin: 0 0 4px; font-size: .88rem; font-weight: 700; color: var(--mk-text); }
 #MkiPwConfigPage .pw-group__title .mk-ic { color: var(--mk-a1-ink); }
 #MkiPwConfigPage .pw-group ul { list-style: none; margin: 0; padding: 0; max-height: 220px; overflow: auto; }
@@ -118,12 +119,10 @@
 #MkiPwConfigPage .pw-group li.is-lock { color: var(--mk-bad); }
 #MkiPwConfigPage .pw-group li.is-lock b { color: var(--mk-bad); }
 #MkiPwConfigPage .pw-group__none { font-size: .85rem; color: var(--mk-faint); }
-#MkiPwConfigPage .pw-dlg-field { margin-top: 14px; }
 #MkiPwConfigPage .pw-dlg-field .mk-field__label { color: var(--mk-text); }
 #MkiPwConfigPage .pw-dlg-seg { display: flex; flex-wrap: wrap; overflow: visible; }
-#MkiPwConfigPage .pw-dlg-opt { display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: var(--mk-surface-2); border: 1px solid var(--mk-line); font-size: .9rem; color: var(--mk-text); cursor: pointer; }
+#MkiPwConfigPage .pw-dlg-opt { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--mk-surface-2); border: 1px solid var(--mk-line); font-size: .9rem; color: var(--mk-text); cursor: pointer; }
 #MkiPwConfigPage .pw-dlg-opt .mk-check { margin-top: 2px; flex: none; }
-#MkiPwConfigPage .pw-dlg-warn { margin-top: 12px; }
 
 /* what users see */
 #MkiPwConfigPage .pw-see { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
@@ -349,7 +348,7 @@
       <div class="mk-card__titles"><h2 class="mk-card__title" id="pwNoticeT">Time to set it</h2><p class="mk-card__desc">Preselected for every new request, from a user's row or from the buttons below; you can change it in each request. Requests already running keep their deadline.</p></div>
     </div>
     <div class="mk-card__body">
-      <div class="mk-row pw-noticerow" data-find="notice period deadline days reminder grace">
+      <div class="mk-row pw-noticerow" data-find="notice period deadline days reminder">
         <div class="mk-row__text"><label class="mk-row__label" for="NoticeDays">Time to set a new password</label><span class="mk-row__desc">Right away signs people out after the grace period. With days, they keep full access and get reminders until the deadline.</span></div>
         <div class="mk-row__control">
           <select class="mk-select" id="NoticeDays" data-key="NoticeDays" data-label="Time to set it" data-other="{v} days">
@@ -619,12 +618,7 @@ var Rules = (function () {
   }
   /* Policy.RulesFor: null when exempt, else the rules of the effective profile. */
   function rulesFor(u, c, presets) { return exempt(u, c) ? null : profile(effective(u.Id, c), c, presets); }
-  /* PasswordRules.Covers: a password checked against s also passes r. */
-  function covers(s, r) {
-    return s.MinLength >= r.MinLength && (s.RequireUpper || !r.RequireUpper) && (s.RequireLower || !r.RequireLower) && (s.RequireDigit || !r.RequireDigit)
-      && (s.RequireSymbol || !r.RequireSymbol) && (s.ForbidUsername || !r.ForbidUsername) && (s.BlockCommon || !r.BlockCommon)
-      && (!r.MaxRepeat || (s.MaxRepeat > 0 && s.MaxRepeat <= r.MaxRepeat));
-  }
+  /* Password status (PasswordPolicyController.Status) is never predicted: the page shows the server's PasswordStatus. */
   /* PolicyStore.InNotice: open request with a notice period whose deadline is still ahead.
      The Users answer sends Deadline only while Notice is set. */
   function inNotice(u, now) { var d = utc(u.Deadline); return !!u.MustChange && !!d && d > now; }
@@ -687,7 +681,7 @@ var Rules = (function () {
     (from || []).concat(to || []).forEach(function (e) { var n = norm(e && e.UserId); if (n) ids[n] = 1; });
     return Object.keys(ids).some(function (id) { var u = { Id: id, IsAdmin: false }; return !rulesFor(u, cOld, presets) && !!rulesFor(u, cNew, presets); });
   }
-  return { norm: norm, couldLock: couldLock, utc: utc, assigned: assigned, effective: effective, exempt: exempt, profile: profile, rulesFor: rulesFor, covers: covers,
+  return { norm: norm, couldLock: couldLock, utc: utc, assigned: assigned, effective: effective, exempt: exempt, profile: profile, rulesFor: rulesFor,
     inNotice: inNotice, blockedNow: blockedNow, lockedWith: lockedWith, newlyLocked: newlyLocked, bulkSet: bulkSet, noticeDays: noticeDays,
     grace: grace, afterRequire: afterRequire, staysLockedAfterRelease: staysLockedAfterRelease, expiry: expiry };
 })();
@@ -695,7 +689,7 @@ var Rules = (function () {
 
 var data = null, usersFailed = false, fetchSeq = 0;
 var filter = 'all', query = '', onlyId = null, markId = null, deepDone = null;
-var checking = 0, acting = false, undoMark = {}, clientState = 0, pickSeq = 0, timers = [];
+var checking = 0, acting = false, clientState = 0, pickSeq = 0, timers = [];
 
 var kit = MkiKit(page, {
   pluginId: PLUGIN_ID,
@@ -721,7 +715,6 @@ function later(fn, ms) { var t = setTimeout(function () { timers = timers.filter
 function extend(a, b) { Object.keys(b || {}).forEach(function (k) { a[k] = b[k]; }); return a; }
 function saved() { return kit.config() || {}; }
 function myId() { try { return Rules.norm(ApiClient.getCurrentUserId()); } catch (e) { return null; } }
-function keyEl(k) { return kit.$('[data-key="' + k + '"]'); }
 function pad(n) { return (n < 10 ? '0' : '') + n; }
 function hm(d) { return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
 function dShort(d) { return WD[d.getDay()] + ' ' + d.getDate() + ' ' + MO[d.getMonth()]; }
@@ -812,7 +805,7 @@ function lockHook(key) {
       return askLock(key, from, to, hit);
     }, function () {
       kit.toast('Could not reach the server to check this change, so nothing was changed.', { bad: true }); return false;
-    }).then(function (ok) { done(); if (!ok) delete undoMark[key]; render(); return ok; });
+    }).then(function (ok) { done(); render(); return ok; });
   };
 }
 function whoList(users, lock) {
@@ -827,7 +820,7 @@ function whoList(users, lock) {
   return ul;
 }
 function askLock(key, from, to, hit) {
-  var box = el('div');
+  var box = el('div', 'pw-dlgbody');
   box.appendChild(el('p', null, names(hit) + (hit.length === 1 ? ' has' : ' have') + ' no password. With a profile, an account without a password is locked right away on every app and TV, and stays locked until you give it a temporary password from the list.'));
   box.appendChild(whoList(hit, true));
   box.appendChild(el('p', 'pw-small', 'This change: ' + describe(key, from, to, false) + '. Cancel keeps everything as it is.'));
@@ -854,7 +847,7 @@ function expiryHook(to, from) {
       else if (a && a <= now && !(b && b !== 'unknown' && b <= now)) past.push(u);
     });
     if (!past.length) return true;
-    var box = el('div');
+    var box = el('div', 'pw-dlgbody');
     box.appendChild(el('p', null, 'These passwords are already older than ' + to + ' days. The users must set a new one at their next sign-in. Nobody is signed out now.'));
     var ul = el('ul', 'pw-who-list');
     past.forEach(function (u) { var li = el('li'); li.appendChild(el('span', null, u.Name)); li.appendChild(el('small', null, 'changed ' + dDay(Rules.utc(u.LastChangedUtc)))); ul.appendChild(li); });
@@ -863,7 +856,7 @@ function expiryHook(to, from) {
     return kit.confirm({ title: 'Expire ' + kit.plural(past.length, 'password') + ' at the next sign-in?', node: box, ok: 'Set ' + to + ' days', okIcon: 'timer', icon: 'timer', tone: 'warn' });
   }, function () {
     kit.toast('Could not reach the server to check this change, so nothing was changed.', { bad: true }); return false;
-  }).then(function (ok) { done(); if (!ok) delete undoMark.ExpiryDays; return ok; });
+  }).then(function (ok) { done(); return ok; });
 }
 
 /* ---------- what saved changes say ---------- */
@@ -888,18 +881,8 @@ function describe(k, from, to, undo) {
   }
   return kit.label(k) + (undo ? ' back to ' : ' → ') + kit.show(k, to);
 }
-function isUndoMark(b) { return Object.prototype.hasOwnProperty.call(undoMark, b.key) && undoMark[b.key] === JSON.stringify(b.to); }
-/* an undo the page starts itself (the kit's own undo is not available to custom toasts): the same path as a change, so it asks again */
-function undoVia(k, v) {
-  var e = keyEl(k); if (!e) return;
-  undoMark[k] = JSON.stringify(v);
-  if (e.getAttribute('data-type') === 'json') e.mkValue = JSON.parse(JSON.stringify(v)); else kit.write(k, v);
-  e.dispatchEvent(new Event('change', { bubbles: true }));
-}
 function toastFor(batch) {
-  var marked = batch.filter(isUndoMark).length > 0;
-  batch.forEach(function (b) { delete undoMark[b.key]; });
-  var undo = marked || batch.some(function (b) { return b.undo; });
+  var undo = batch.some(function (b) { return b.undo; });
   var stays = [];
   if (data && batch.some(function (b) { return LOCK_KEYS.indexOf(b.key) >= 0; })) {
     var cTo = extend({}, saved()), cFrom = extend({}, cTo);
@@ -908,22 +891,15 @@ function toastFor(batch) {
     stays = data.Users.filter(function (u) { return isLocked(u) && Rules.rulesFor(u, cFrom, data.Presets) && !Rules.rulesFor(u, cTo, data.Presets); });
   }
   var profiles = batch.some(function (b) { return b.key === 'UserProfiles'; });
-  if (!stays.length && !marked && !(profiles && batch.length === 1)) return null;
+  if (!stays.length && !(profiles && batch.length === 1)) return null;
   var text = batch.length === 1 ? (undo ? 'Undone: ' : 'Saved: ') + describe(batch[0].key, batch[0].from, batch[0].to, undo) + '.' : (undo ? 'Undone: ' : 'Saved: ') + batch.length + ' changes.';
   if (stays.length) text += ' ' + names(stays) + (stays.length === 1 ? ' stays locked until you give it a temporary password.' : ' stay locked until you give each of them a temporary password.');
   var opt = { text: text, icon: stays.length ? 'lock' : undo ? 'undo' : 'check_circle' };
   if (stays.length) opt.timeout = 12000;
-  if (!undo && batch.length === 1) { var b0 = batch[0]; opt.action = 'Undo'; opt.onAction = function () { undoVia(b0.key, b0.from); }; }
+  if (!undo && batch.length === 1) { var b0 = batch[0]; opt.action = 'Undo'; opt.onAction = function () { kit.undo(b0.key, b0.from); }; }   /* asks the hook again, logged as an undo */
   return opt;
 }
-function afterSave(batch) {
-  /* a refused question puts the old value on screen; make sure the screen shows what the server now has */
-  if (!checking && kit.state().pending === 0) {
-    batch.forEach(function (b) {
-      var e = keyEl(b.key);
-      if (e && e !== document.activeElement && JSON.stringify(kit.value(b.key)) !== JSON.stringify(kit.saved(b.key))) kit.write(b.key, kit.saved(b.key));
-    });
-  }
+function afterSave() {
   var before = data ? data.Users.filter(isLocked).map(function (u) { return Rules.norm(u.Id); }) : null;
   render();
   refresh().then(function (d) {
@@ -964,7 +940,7 @@ function resultText(f) {
   return 'Sent, but the server shows no open request for ' + f.Name + '.';
 }
 function requireOne(u) {
-  var me = Rules.norm(u.Id) === myId(), pick = noticePicker(noticeSaved()), box = el('div'), sentence = el('p', 'pw-small');
+  var me = Rules.norm(u.Id) === myId(), pick = noticePicker(noticeSaved()), box = el('div', 'pw-dlgbody'), sentence = el('p', 'pw-small');
   if (me) box.appendChild(el('p', null, 'This is your own account: you will be signed out too and set your new password at the next sign-in.'));
   box.appendChild(pick.node); box.appendChild(sentence);
   var upd = function () { sentence.textContent = fristSatz(pick.value()) + ' You can cancel it at any time.'; };
@@ -1030,7 +1006,7 @@ function copyIn(b, text, what) {
 /* shown once; Esc and the backdrop cannot close it, only "Done, I have copied it" */
 function revealPassword(u, pw, url) {
   var msg = 'Hi ' + u.Name + '! Your temporary Jellyfin password is: ' + pw + '\nSign in with it in any Jellyfin app or at ' + url + ' and choose your own password right away.';
-  var box = el('div');
+  var box = el('div', 'pw-dlgbody');
   box.appendChild(el('p', null, 'Shown only now: neither the plugin nor Jellyfin can show it again. ' + u.Name + ' signs in with it (on a TV, or on the phone or computer at the link) and is then asked for their own password; on a TV they set it at the link.'));
   var sec = el('div', 'mk-secret', pw); sec.setAttribute('aria-label', 'Temporary password'); box.appendChild(sec);
   var row = el('div', 'mk-dialog__copy'), b1 = kit.btn('Copy password', '', 'content_copy'), b2 = kit.btn('Copy message with password', '', 'chat');
@@ -1061,7 +1037,7 @@ function bulk(only) {
     if (!d) { kit.toast('Could not load the user list, so nothing was sent. Try again.', { bad: true }); return null; }
     var me = myId(), c = saved(), g = Rules.grace(c), now = new Date();
     var extraAdmins = Rules.bulkSet(d.Users, only, true, me).length > Rules.bulkSet(d.Users, only, false, me).length;
-    var box = el('div'), pick = noticePicker(noticeSaved()), sentence = el('p', 'pw-small'), cb = null, go = null;
+    var box = el('div', 'pw-dlgbody'), pick = noticePicker(noticeSaved()), sentence = el('p', 'pw-small'), cb = null, go = null;
     box.appendChild(el('p', null, only ? 'Everyone whose password is not known to meet their profile (Unknown, Older rules), and every account without a password, even one without a profile. Disabled accounts are included and must set one once they are enabled again.'
       : 'Every user must set a new password. Disabled accounts are included and must set one once they are enabled again.'));
     box.appendChild(pick.node); box.appendChild(sentence);
@@ -1212,8 +1188,9 @@ function renderAttention() {
   var box = byId('pwAttn'); box.textContent = '';
   if (!data) { box.hidden = true; return; }
   var me = myId(), items = [];
-  data.Users.forEach(function (u) { if (u.PasswordStatus === 'none' && (u.MustChange || hasRules(u))) items.push({ u: u, bad: true }); });
-  data.Users.forEach(function (u) { if (u.PasswordStatus === 'none' && !u.MustChange && !hasRules(u)) items.push({ u: u, bad: false }); });
+  var c = saved();
+  data.Users.forEach(function (u) { if (Rules.lockedWith(u, c, data.Presets)) items.push({ u: u, bad: true }); });
+  data.Users.forEach(function (u) { if (u.PasswordStatus === 'none' && !Rules.lockedWith(u, c, data.Presets)) items.push({ u: u, bad: false }); });
   items.slice(0, 4).forEach(function (x) {
     var u = x.u, id = Rules.norm(u.Id), mine = id === me, row = el('div', 'pw-attn__item' + (x.bad ? ' pw-attn__item--bad' : ''));
     row.appendChild(ic(x.bad ? 'lock' : 'lock_open'));
@@ -1280,7 +1257,7 @@ function buildRow(u, ctx) {
   sc.appendChild(chip(S[0], S[1], S[2], S[3] + (u.VerifiedRules ? ' Checked against: ' + ruleText(u.VerifiedRules) + '.' : '')));
   var changed = Rules.utc(u.LastChangedUtc);
   sc.appendChild(el('span', 'pw-sub', st === 'none' ? (u.MustChange || hasRules(u) ? 'Never set' : 'Anyone can sign in without a password. A profile locks it until you give it a temporary password.')
-    : changed ? 'Changed ' + dDay(changed) : 'Set before the plugin saw it'));
+    : changed ? 'Set or counted from ' + dDay(changed) : 'Set before the plugin saw it'));
   row.appendChild(sc);
   /* new password */
   var cc = el('div', 'pw-cell-change'); cc.appendChild(el('span', 'mk-cell-label', 'New password'));
@@ -1593,7 +1570,8 @@ $$('.pw-ph').forEach(function (b) {
   b.addEventListener('click', function () {
     var ta = byId('NotifyText'), s = ta.selectionStart == null ? ta.value.length : ta.selectionStart, e2 = ta.selectionEnd == null ? s : ta.selectionEnd, ph = b.getAttribute('data-ph');
     ta.value = ta.value.slice(0, s) + ph + ta.value.slice(e2); ta.focus(); ta.setSelectionRange(s + ph.length, s + ph.length);
-    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    /* a value set by script fires no change on blur, so the insert saves like a finished edit */
+    ta.dispatchEvent(new Event('input', { bubbles: true })); ta.dispatchEvent(new Event('change', { bubbles: true }));
   });
 });
 byId('pwTry').addEventListener('input', renderTry);

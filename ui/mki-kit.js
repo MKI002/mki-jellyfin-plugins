@@ -473,10 +473,12 @@ function MkiKit(page, o) {
     delete invalid[k];
     var hook = o.confirm && o.confirm[k];
     if (hook && !same(read(k), base(k))) {
-      var before = base(k), answer = hook(toServer(k, read(k)), toServer(k, before));
+      var to = read(k), answer = hook(toServer(k, to), toServer(k, base(k)));
       if (answer === true) { queue(k); return; }
+      /* a save can land while the question is open: yes saves what was asked about, no puts back the last
+         accepted value (a change still waiting to be sent, or what the server has) so the screen matches */
       Promise.resolve(answer).then(function (ok) {
-        if (ok) queue(k); else { write(k, before); restState(); }
+        if (ok) { write(k, to); queue(k); } else { write(k, pending[k] ? pending[k].to : base(k)); restState(); }
       });
       return;
     }
@@ -777,6 +779,8 @@ function MkiKit(page, o) {
   kit.config = function () { return cfg; };
   kit.loaded = function () { return loaded; };
   kit.reload = load;
+  /* undo a saved change from a custom toast (toastFor): asks the key's question like the kit's own Undo */
+  kit.undo = function (k, from) { undoTo(k, toDom(k, from)); };
   kit.whenSaved = whenSaved; kit.flush = flush; kit.busy = busy; kit.logAction = logAction; kit.api = api;
   kit.warn = function (k, text) { if (text) warns[k] = text; else delete warns[k]; restState(); };
   kit.selectTab = function (name) { selectTab(tabByName(name)); };
