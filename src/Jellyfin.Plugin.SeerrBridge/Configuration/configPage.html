@@ -1778,6 +1778,9 @@ function MkiKit(page, o) {
   var openDialogs = [];
   function dialog(d) {
     return new Promise(function (resolve) {
+      /* the page was left while the question was on its way (a check or request still running): never open a modal on a
+         hidden page, it would block the whole web client; the dialog counts as cancelled */
+      if (away) { resolve(d.cancelValue === undefined ? null : d.cancelValue); return; }
       var dlg = el('dialog', 'mk-dialog'), result = null, done = false;
       var head = el('div', 'mk-dialog__head'), icw = el('div', 'mk-dialog__icon mk-dialog__icon--' + (d.tone || 'accent'));
       icw.appendChild(ic(d.icon || 'help', 'mk-ic--lg')); head.appendChild(icw);

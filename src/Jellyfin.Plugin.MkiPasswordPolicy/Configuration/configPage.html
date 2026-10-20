@@ -1890,6 +1890,9 @@ function MkiKit(page, o) {
   var openDialogs = [];
   function dialog(d) {
     return new Promise(function (resolve) {
+      /* the page was left while the question was on its way (a check or request still running): never open a modal on a
+         hidden page, it would block the whole web client; the dialog counts as cancelled */
+      if (away) { resolve(d.cancelValue === undefined ? null : d.cancelValue); return; }
       var dlg = el('dialog', 'mk-dialog'), result = null, done = false;
       var head = el('div', 'mk-dialog__head'), icw = el('div', 'mk-dialog__icon mk-dialog__icon--' + (d.tone || 'accent'));
       icw.appendChild(ic(d.icon || 'help', 'mk-ic--lg')); head.appendChild(icw);
@@ -2501,7 +2504,11 @@ function tempFlow(u) {
     kit.logAction('Temporary password for ' + u.Name);
     var shown = refresh();
     if (!r || !r.Password) { kit.toast('The server did not return a password. Check the row of ' + u.Name + ' and create another one if needed.', { bad: true }); return shown; }
-    return revealPassword(u, r.Password, r.ChangeUrl || linkUrl()).then(function () { return shown; }).then(function () { flash(u.Id, 'temp'); });
+    return revealPassword(u, r.Password, r.ChangeUrl || linkUrl()).then(function (v) {
+      /* the page was left before or while the window showed it: the password is set, but maybe nobody has it */
+      if (v !== 'done') kit.toast('The temporary password for ' + u.Name + ' is set, but its window closed because the page was left. If you did not copy it, nobody knows it: create another one from the row of ' + u.Name + '.', { bad: true, sticky: true, icon: 'key_off' });
+      return shown;
+    }).then(function () { flash(u.Id, 'temp'); });
   }, function (e) {
     kit.toast(e && e.status === 400 ? 'The server refused: your own account cannot get a temporary password.' : 'The server did not confirm a temporary password for ' + u.Name + '. The list shows the current state.', { bad: true });
     return refresh();
