@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="assets/banner.png" alt="MKI Jellyfin Plugins: Media Hero, Merge Versions, Seerr Bridge, Password Policy, Continue Watching Cleanup" width="100%">
+<img src="assets/banner.png" alt="MKI Jellyfin Plugins" width="100%">
 
 # MKI Jellyfin Plugins
 
-Five plugins for [Jellyfin](https://jellyfin.org) 12, installable from one plugin repository.
+Plugins for [Jellyfin](https://jellyfin.org) 12, installable from one plugin repository.
 
 [![Build](https://github.com/MKI002/mki-jellyfin-plugins/actions/workflows/build.yml/badge.svg)](https://github.com/MKI002/mki-jellyfin-plugins/actions/workflows/build.yml)
 [![Release](https://img.shields.io/github/v/release/MKI002/mki-jellyfin-plugins?label=release)](https://github.com/MKI002/mki-jellyfin-plugins/releases)
@@ -17,30 +17,46 @@ Five plugins for [Jellyfin](https://jellyfin.org) 12, installable from one plugi
 
 <table>
   <tr>
-    <td width="33%" valign="top">
-      <a href="src/Jellyfin.Plugin.MediaHero"><img src="src/Jellyfin.Plugin.MediaHero/logo.png?v=1.1.0" alt="MKI Media Hero"></a>
+    <td width="320" valign="top">
+      <a href="src/Jellyfin.Plugin.MediaHero"><img src="src/Jellyfin.Plugin.MediaHero/logo.png?v=1.1.0" alt="MKI Media Hero" width="320"></a>
+    </td>
+    <td valign="top">
       <h3><a href="src/Jellyfin.Plugin.MediaHero">MKI Media Hero</a></h3>
       A cinematic hero carousel on the home screen, built on the server from recent, top rated and Seerr trending titles, with per-library whitelists and blacklists.
     </td>
-    <td width="33%" valign="top">
-      <a href="src/Jellyfin.Plugin.MkiMergeVersions"><img src="src/Jellyfin.Plugin.MkiMergeVersions/logo.png?v=1.1.0" alt="MKI Merge Versions"></a>
+  </tr>
+  <tr>
+    <td width="320" valign="top">
+      <a href="src/Jellyfin.Plugin.MkiMergeVersions"><img src="src/Jellyfin.Plugin.MkiMergeVersions/logo.png?v=1.1.0" alt="MKI Merge Versions" width="320"></a>
+    </td>
+    <td valign="top">
       <h3><a href="src/Jellyfin.Plugin.MkiMergeVersions">MKI Merge Versions</a></h3>
       Merges movies that exist in several resolutions into one entry, matched by TMDb or IMDb ID. The highest resolution becomes the primary version.
     </td>
-    <td width="33%" valign="top">
-      <a href="src/Jellyfin.Plugin.SeerrBridge"><img src="src/Jellyfin.Plugin.SeerrBridge/logo.png?v=1.1.0" alt="MKI Seerr Bridge"></a>
+  </tr>
+  <tr>
+    <td width="320" valign="top">
+      <a href="src/Jellyfin.Plugin.SeerrBridge"><img src="src/Jellyfin.Plugin.SeerrBridge/logo.png?v=1.1.0" alt="MKI Seerr Bridge" width="320"></a>
+    </td>
+    <td valign="top">
       <h3><a href="src/Jellyfin.Plugin.SeerrBridge">MKI Seerr Bridge</a></h3>
       Seerr inside the Jellyfin web client: a menu button, an embedded view, request suggestions in search, and optional single sign-on.
     </td>
   </tr>
   <tr>
-    <td width="33%" valign="top">
-      <a href="src/Jellyfin.Plugin.MkiPasswordPolicy"><img src="src/Jellyfin.Plugin.MkiPasswordPolicy/logo.png?v=1.0.0" alt="MKI Password Policy"></a>
+    <td width="320" valign="top">
+      <a href="src/Jellyfin.Plugin.MkiPasswordPolicy"><img src="src/Jellyfin.Plugin.MkiPasswordPolicy/logo.png?v=1.0.0" alt="MKI Password Policy" width="320"></a>
+    </td>
+    <td valign="top">
       <h3><a href="src/Jellyfin.Plugin.MkiPasswordPolicy">MKI Password Policy</a></h3>
       Password rules per user and forced password changes that hold on every device. Changes nothing about sign-ins until you assign a profile or ask for a new password.
     </td>
-    <td width="33%" valign="top">
-      <a href="src/Jellyfin.Plugin.MkiContinueWatching"><img src="src/Jellyfin.Plugin.MkiContinueWatching/logo.png?v=1.0.0" alt="MKI Continue Watching Cleanup"></a>
+  </tr>
+  <tr>
+    <td width="320" valign="top">
+      <a href="src/Jellyfin.Plugin.MkiContinueWatching"><img src="src/Jellyfin.Plugin.MkiContinueWatching/logo.png?v=1.0.0" alt="MKI Continue Watching Cleanup" width="320"></a>
+    </td>
+    <td valign="top">
       <h3><a href="src/Jellyfin.Plugin.MkiContinueWatching">MKI Continue Watching Cleanup</a></h3>
       A Remove button on Continue Watching cards, with Undo, and an optional daily cleanup of what nobody has played for a set number of days. Only the resume position is cleared; nothing is deleted.
     </td>

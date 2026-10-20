@@ -3,7 +3,7 @@
 
 Checks:
   plugins    every plugin under src/ has a valid meta.json, an "MKI " name, a 1200x675 logo.png, a README.md,
-             a settings page built on the MKI kit, is in the solution, and is named in the README and banner text
+             a settings page built on the MKI kit, is in the solution, and is named in the README
   english    no German text anywhere in src/, ui/ or the README (all plugins are English only)
   private    no personal data: LAN addresses, home folders, e-mail addresses, server names, API keys
   security   no unescaped HTML from data, no eval, outbound HTTP clients without redirects/cookies/size cap,
@@ -93,10 +93,10 @@ def check_plugins():
         short = name.removeprefix("MKI ")
         if short not in readme:
             fail("README.md", f'does not mention "{name}"')
-        if not banner or short not in banner.group(1):
-            fail("README.md", f'banner alt text does not name "{short}": regenerate assets/banner.png with every plugin')
     if not (ROOT / "assets" / "banner.png").exists():
         fail("assets/banner.png", "missing")
+    if not banner or not banner.group(1).strip():
+        fail("README.md", "the banner image needs alt text")
 
 
 # ---------------------------------------------------------------- english
