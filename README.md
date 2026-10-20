@@ -10,6 +10,9 @@ Plugins for [Jellyfin](https://jellyfin.org) 12, installable from one plugin rep
 [![Release](https://img.shields.io/github/v/release/MKI002/mki-jellyfin-plugins?label=release)](https://github.com/MKI002/mki-jellyfin-plugins/releases)
 ![Jellyfin](https://img.shields.io/badge/Jellyfin-12.x-00a4dc)
 [![License](https://img.shields.io/github/license/MKI002/mki-jellyfin-plugins)](LICENSE)
+[![Demo](https://img.shields.io/badge/demo-settings%20pages-b6ff3b)](https://mki002.github.io/mki-jellyfin-plugins/)
+
+**[Try the settings pages in your browser](https://mki002.github.io/mki-jellyfin-plugins/)**: clickable demos with made-up example data, no server needed.
 
 </div>
 
@@ -103,6 +106,15 @@ python3 build/kit.py --write
 
 CI fails when a page's copy is out of date (`build/package.py --check` runs `build/kit.py --check`).
 
+### Demo site
+
+The [settings page demos](https://mki002.github.io/mki-jellyfin-plugins/) are built from the real `configPage.html` files by `build/demo.py` and published to GitHub Pages by the [Demo site workflow](.github/workflows/pages.yml) on every change to `main`. `demo/shell.js` stands in for Jellyfin's `ApiClient`, and `demo/mocks/<Plugin>.js` holds each plugin's made-up example data. A new plugin needs its own mock file; CI fails without one (`build/demo.py --check`). To look at the site locally:
+
+```bash
+python3 build/demo.py --out _site --fetch-fonts
+python3 -m http.server -d _site 8080
+```
+
 ## Releasing a new version
 
 Every update and every new plugin goes through the checks and review steps in [RELEASING.md](RELEASING.md) first. CI enforces them on every pull request.
@@ -121,11 +133,13 @@ The [Release workflow](.github/workflows/release.yml) builds every plugin whose 
 ├── MkiJellyfinPlugins.sln
 ├── build/package.py                 builds, zips and updates manifest.json
 ├── build/kit.py                     copies the shared design kit into every settings page
+├── build/demo.py                    builds the settings page demos for GitHub Pages
 ├── build/checks.py                  release gates: English only, personal data, security, versions
 ├── build/security-baseline.json     reviewed anonymous endpoints and request middleware
 ├── RELEASING.md                     the steps every update goes through before release
 ├── ui/                              shared design kit of the settings pages
-├── .github/workflows/               CI build and tag-triggered release
+├── demo/                            demo site: page shell, stand-in ApiClient, example data per plugin
+├── .github/workflows/               CI build, release and demo site
 └── src/
     ├── Jellyfin.Plugin.MediaHero/
     ├── Jellyfin.Plugin.MkiContinueWatching/

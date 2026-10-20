@@ -66,6 +66,10 @@ Settings pages use the shared Control Deck kit in `ui/`. Edit `ui/mki-kit.css` o
 `python3 build/kit.py --write`; never edit the generated copy between the `MKI-KIT` markers. The page must work
 without any other plugin installed and with several plugin pages in the DOM at once.
 
+Every settings page also runs as a demo on GitHub Pages (`build/demo.py`), with made-up example data from
+`demo/mocks/<Plugin>.js`. When a page starts calling a new server endpoint, add an answer for it to the mock; a new
+plugin needs its own mock file, and CI fails without one. Mock data is made up and never holds personal data.
+
 When a settings page or the web client changes, take screenshots at 1280 and 390 px wide, in the dark and light
 themes, and rate them from 1 to 10 for clarity, consistency with the other pages, phone layout and contrast. Fix
 anything below 8 before release, and add the screenshots to the pull request.
