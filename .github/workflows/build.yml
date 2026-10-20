@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+    types: [opened, edited, synchronize, reopened]
 
 permissions:
   contents: read
@@ -13,10 +14,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
       - name: Validate metadata
         run: python3 build/package.py --check
+      - name: Release gates (plugins, English only, personal data, security)
+        run: python3 build/checks.py
+      - name: Version bump and release checklist
+        if: github.event_name == 'pull_request'
+        env:
+          BODY: ${{ github.event.pull_request.body }}
+          BASE: origin/${{ github.base_ref }}
+        run: |
+          if git diff --name-only "$BASE...HEAD" | grep -Eq '^(src|ui)/'; then
+            printf '%s' "$BODY" > "$RUNNER_TEMP/body.md"
+            python3 build/checks.py --base "$BASE" --pr-body "$RUNNER_TEMP/body.md"
+          else
+            python3 build/checks.py --base "$BASE"
+          fi
       - name: Build all plugins
         run: dotnet build MkiJellyfinPlugins.sln -c Release
