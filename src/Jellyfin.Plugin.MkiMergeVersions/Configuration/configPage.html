@@ -726,6 +726,7 @@
 #MkiMergeConfigPage .mv-modeopt input:checked + .mv-modeopt__card .mv-modeopt__icon { color: var(--mk-a1-ink); background: rgba(var(--mk-a1-rgb), .14); }
 #MkiMergeConfigPage .mv-modeopt input:focus-visible + .mv-modeopt__card { outline: 2px solid var(--mk-a1-ink); outline-offset: 2px; }
 #MkiMergeConfigPage .mk-field + .mk-row { margin-top: 10px; border-top: 1px solid var(--mk-line); }
+#MkiMergeConfigPage .mv-field + .mk-row { border-top: 0; margin-top: 4px; }
 #MkiMergeConfigPage .mv-field + .mk-row .mk-row__label { font-size: .9rem; }
 #MkiMergeConfigPage .mk-field + .mv-field { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--mk-line); }
 
@@ -883,7 +884,7 @@
         <label class="mv-modeopt"><input type="radio" name="mvPrimary" value="Highest" data-key="PrimaryResolution" data-label="Primary version">
           <span class="mv-modeopt__card"><span class="mv-modeopt__icon"><span class="material-icons mk-ic" aria-hidden="true">4k</span></span><span class="mv-modeopt__text"><b data-name="Highest resolution">Highest</b><small>The widest picture, usually 4K. The default.</small></span><span class="material-icons mk-ic mv-modeopt__check" aria-hidden="true">check_circle</span></span></label>
       </div>
-      <span class="mk-field__hint" id="mvPrimH">Plays first. The version picker on the movie page still offers every version.</span>
+      <span class="mk-field__hint" id="mvPrimH">The chosen version plays first; the version picker on the movie page still offers every version.</span>
     </div>
     <div class="mk-row">
       <div class="mk-row__text"><label class="mk-row__label" for="mvFixPrimaryOrder">Apply to existing merges</label><span class="mk-row__desc">Rebuilds earlier merges whose primary version does not match your choice above.</span></div>
@@ -1782,7 +1783,7 @@ function confirmMode(to, from) {
     return kit.confirm({
         title: 'Switch to live merging?',
         body: ['From the next run on, movies that share a TMDb or IMDb ID become one library entry with several versions' +
-            (fix() ? ', and ' + fixWhat(hd()) + '.' : '.'),
+            (kit.value('FixPrimaryOrder') !== false ? ', and ' + fixWhat(hd(kit.value('PrimaryResolution'))) + '.' : '.'),
             'The next run is ' + (n ? 'at about ' + kit.hhmm(n.at) + ' (' + n.why + ')' : 'when Jellyfin next starts or the library goes quiet') +
             ', or right away with Run now. A merged movie can be split again from its menu in Jellyfin (Split versions).'],
         ok: 'Go live', okIcon: 'bolt', icon: 'bolt', tone: 'warn'
@@ -1981,11 +1982,11 @@ function render() {
     $('#mvRuleFix').classList.toggle('is-off', !f);
     fill($('#mvRuleFixT'), f ? (d ? 'In a live run, existing ' : 'Existing ') + fixWhat(h) + (d ? '. The dry run only logs them.' : '.') : 'Existing merges are left as they are (Apply to existing merges is off).');
     fill($('#mvFixNoteT'), f
-        ? (d ? 'Dry run: the log shows which merges a live run would rebuild. ' : '') + (h ? 'Example: a movie merged earlier with its 4K file as the primary version. The next run makes the 1080p file the primary version.'
-             : 'Example: a movie merged before its 4K file arrived still opens in 1080p. The next run makes the 4K file the primary version.')
+        ? (d ? 'Dry run: the log shows which merges a live run would rebuild. ' : '') + (h ? 'Example: a movie merged earlier with its 4K file as the primary version. The next ' + (d ? 'live ' : '') + 'run makes the 1080p file the primary version.'
+             : 'Example: a movie merged before its 4K file arrived still opens in 1080p. The next ' + (d ? 'live ' : '') + 'run makes the 4K file the primary version.')
         : 'Off: merges made earlier keep their current primary version, even when it does not match your choice.');
     var uses = $('#mvUses');
-    fill(uses, [el('b', null, 'Runs with:'), chip(d ? 'info' : 'ok', d ? 'science' : 'bolt', d ? 'Dry run' : 'Live'), chip('plain', h ? 'hd' : '4k', (h ? '1080p' : 'Highest') + ' plays first'), chip('plain', f ? 'star' : 'star_border', f ? 'Rebuilds existing' : 'Existing kept')]);
+    fill(uses, [el('b', null, 'Runs with:'), chip(d ? 'info' : 'ok', d ? 'science' : 'bolt', d ? 'Dry run' : 'Live'), chip('plain', h ? 'hd' : '4k', (h ? '1080p' : 'Highest') + ' plays first'), chip('plain', f ? 'star' : 'star_border', f ? (d ? 'Would rebuild existing' : 'Rebuilds existing') : 'Existing kept')]);
     renderNext(); renderTimeline();
 }
 
