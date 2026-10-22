@@ -34,7 +34,7 @@ Plugins for [Jellyfin](https://jellyfin.org) 12, installable from one plugin rep
     </td>
     <td valign="top">
       <h3><a href="src/Jellyfin.Plugin.MkiMergeVersions">MKI Merge Versions</a></h3>
-      Merges movies that exist in several resolutions into one entry, matched by TMDb or IMDb ID. The highest resolution becomes the primary version.
+      Merges movies that exist in several resolutions into one entry, matched by TMDb or IMDb ID. You choose which version leads: 1080p or the highest resolution.
     </td>
   </tr>
   <tr>

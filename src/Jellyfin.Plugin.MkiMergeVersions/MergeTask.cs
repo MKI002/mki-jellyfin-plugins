@@ -15,20 +15,23 @@ public class MergeTask : IScheduledTask
 
 	private readonly IUserManager _users;
 
+	private readonly IUserDataManager _userData;
+
 	private readonly ILogger<MergeTask> _log;
 
 	public string Name => "Merge movie versions (MKI)";
 
 	public string Key => "MkiMergeVersionsMovies";
 
-	public string Description => "Links movies that exist in several resolutions into a single entry. The highest resolution becomes the primary entry.";
+	public string Description => "Links movies that exist in several resolutions into a single entry. The highest resolution, or the version closest to 1080p if set so, becomes the primary entry.";
 
 	public string Category => "Library";
 
-	public MergeTask(ILibraryManager library, IUserManager users, ILogger<MergeTask> log)
+	public MergeTask(ILibraryManager library, IUserManager users, IUserDataManager userData, ILogger<MergeTask> log)
 	{
 		_library = library;
 		_users = users;
+		_userData = userData;
 		_log = log;
 	}
 
@@ -63,6 +66,6 @@ public class MergeTask : IScheduledTask
 		}
 
 		PluginConfiguration pluginConfiguration = ((BasePlugin<PluginConfiguration>)(object)Plugin.Instance)?.Configuration ?? new PluginConfiguration();
-		await new MergeService(_library, _users, (ILogger)(object)_log).RunAsync(pluginConfiguration.DryRun, pluginConfiguration.FixPrimaryOrder, progress, warten: true, cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
+		await new MergeService(_library, _users, _userData, (ILogger)(object)_log).RunAsync(pluginConfiguration.DryRun, pluginConfiguration.FixPrimaryOrder, pluginConfiguration.PrimaryResolution, progress, warten: true, cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
 	}
 }

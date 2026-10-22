@@ -1,8 +1,8 @@
-/* Example data for the MKI Merge Versions demo: the plugin's two settings and its scheduled task. */
+/* Example data for the MKI Merge Versions demo: the plugin's three settings and its scheduled task. */
 (function () {
   'use strict';
   var ID = 'b8e2f3a1-6c47-4d59-9f0e-7a1c2d3e4b5f', HOUR = 36e5, RUN_MS = 7000;
-  MkiDemo.plugin(ID, { DryRun: false, FixPrimaryOrder: true });
+  MkiDemo.plugin(ID, { DryRun: false, FixPrimaryOrder: true, PrimaryResolution: 'Highest' });
 
   var started = Date.now() - 22 * 60000;
   var task = {
@@ -19,11 +19,13 @@
     return '[' + d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds()) + '.000 +00:00] [INF] [42] Jellyfin.Plugin.MkiMergeVersions.MergeService: ';
   }
   var MOVIES = [['The Last Lighthouse', 3840, 1920], ['Paper Moon Harbor', 3840, 1280], ['A Quiet Orbit', 1920, 1280], ['Northbound Express', 3840, 1920]];
-  function logRun(at, dry) {
+  /* the primary version follows the saved choice: the widest file, or the one closest to 1920 px */
+  function lead(m, hd) { return !hd ? m[1] : Math.abs(m[2] - 1920) < Math.abs(m[1] - 1920) ? m[2] : m[1]; }
+  function logRun(at, dry, hd) {
     var t = new Date(at);
-    lines.push(stamp(t) + 'MKI Merge: starting' + (dry ? ' (dry run)' : '') + ', 1 284 movies checked');
+    lines.push(stamp(t) + 'MKI Merge: read 1284 movie entries, primary version: ' + (hd ? 'closest to 1080p' : 'highest resolution') + (dry ? ' (dry run)' : ''));
     MOVIES.forEach(function (m) {
-      lines.push(stamp(t) + 'MKI Merge: ' + (dry ? 'would merge ' : 'merged ') + '"' + m[0] + '" [' + m[1] + 'px + ' + m[2] + 'px] -> primary entry ' + m[1] + 'px');
+      lines.push(stamp(t) + 'MKI Merge: ' + (dry ? 'would merge ' : 'merged ') + '"' + m[0] + '" [' + m[1] + 'px + ' + m[2] + 'px] -> primary entry ' + lead(m, hd) + 'px');
     });
     lines.push(stamp(t) + 'MKI Merge: done, ' + MOVIES.length + (dry ? ' groups would be merged' : ' groups merged') + ', 0 errors');
   }
@@ -34,7 +36,7 @@
     var done = Math.min(1, (Date.now() - run.at) / RUN_MS);
     if (task.State === 'Cancelling' || done >= 1) {
       var stopped = task.State === 'Cancelling';
-      if (!stopped) logRun(Date.now(), MkiDemo.config(ID).DryRun === true);
+      if (!stopped) logRun(Date.now(), MkiDemo.config(ID).DryRun === true, MkiDemo.config(ID).PrimaryResolution === 'FullHd');
       task.LastExecutionResult = { StartTimeUtc: new Date(run.at).toISOString(), EndTimeUtc: new Date().toISOString(), Status: stopped ? 'Cancelled' : 'Completed', Name: task.Name, Key: task.Key, Id: task.Id };
       task.State = 'Idle'; task.CurrentProgressPercentage = null; run = null;
     } else task.CurrentProgressPercentage = Math.round(done * 1000) / 10;

@@ -28,12 +28,15 @@ public class MergeService
 
 	private readonly IUserManager _users;
 
+	private readonly IUserDataManager _userData;
+
 	private readonly ILogger _log;
 
-	public MergeService(ILibraryManager library, IUserManager users, ILogger log)
+	public MergeService(ILibraryManager library, IUserManager users, IUserDataManager userData, ILogger log)
 	{
 		_library = library;
 		_users = users;
+		_userData = userData;
 		_log = log;
 	}
 
@@ -77,6 +80,28 @@ public class MergeService
 		return v.Width;
 	}
 
+	private const int FullHdBreite = 1920;
+
+	// The versions in the order they should lead, the chosen one first. A file Jellyfin has not measured yet (width 0)
+	// never leads while a measured one exists. The sort is stable: on a tie the current primary entry (passed first)
+	// stays, so two runs never swap equal versions back and forth.
+	private static List<Video> NachWahl(IEnumerable<Video> versionen, PrimaryChoice wahl)
+	{
+		IOrderedEnumerable<Video> sortiert = versionen.OrderBy((Video v) => Breite((BaseItem)(object)v) > 0 ? 0 : 1);
+		if (wahl == PrimaryChoice.FullHd)
+		{
+			// Closest to 1920 px across, measured as a ratio: 720p (1.5x smaller) beats 4K (2x larger), but 4K beats a
+			// DVD (2.7x smaller). At the same distance the higher resolution wins.
+			sortiert = sortiert.ThenBy((Video v) => Breite((BaseItem)(object)v) > 0 ? Math.Abs(Math.Log((double)Breite((BaseItem)(object)v) / FullHdBreite)) : double.MaxValue);
+		}
+		return sortiert.ThenByDescending((Video v) => Breite((BaseItem)(object)v)).ToList();
+	}
+
+	private static string WahlText(PrimaryChoice wahl)
+	{
+		return wahl == PrimaryChoice.FullHd ? "closest to 1080p" : "highest resolution";
+	}
+
 	// Who may open this entry: one mark per user, from Jellyfin's own check (libraries, parental rating, tags).
 	// Versions are only ever linked when this is the same for all of them. A linked version shows up in the
 	// other's played state and media sources, so a user could otherwise reach a file they are not allowed to see,
@@ -101,7 +126,7 @@ public class MergeService
 		return sb.ToString();
 	}
 
-	public async Task<Ergebnis?> RunAsync(bool dryRun, bool fixPrimaryOrder, IProgress<double>? progress, bool warten, CancellationToken ct)
+	public async Task<Ergebnis?> RunAsync(bool dryRun, bool fixPrimaryOrder, PrimaryChoice wahl, IProgress<double>? progress, bool warten, CancellationToken ct)
 	{
 		if (warten)
 		{
@@ -113,7 +138,7 @@ public class MergeService
 		}
 		try
 		{
-			return await LaufenAsync(dryRun, fixPrimaryOrder, progress, ct).ConfigureAwait(continueOnCapturedContext: false);
+			return await LaufenAsync(dryRun, fixPrimaryOrder, wahl, progress, ct).ConfigureAwait(continueOnCapturedContext: false);
 		}
 		finally
 		{
@@ -121,11 +146,11 @@ public class MergeService
 		}
 	}
 
-	private async Task<Ergebnis> LaufenAsync(bool dryRun, bool fixPrimaryOrder, IProgress<double>? progress, CancellationToken ct)
+	private async Task<Ergebnis> LaufenAsync(bool dryRun, bool fixPrimaryOrder, PrimaryChoice wahl, IProgress<double>? progress, CancellationToken ct)
 	{
 		List<Video> filme = AlleFilme();
 		List<User> nutzer = _users.GetUsers().OrderBy((User u) => u.Id).ToList();
-		LoggerExtensions.LogInformation(_log, "MKI Merge: read {Count} movie entries", new object[1] { filme.Count });
+		LoggerExtensions.LogInformation(_log, "MKI Merge: read {Count} movie entries, primary version: {Choice}", new object[2] { filme.Count, WahlText(wahl) });
 		int zusammen = 0;
 		int umgebaut = 0;
 		int fehler = 0;
@@ -207,7 +232,7 @@ public class MergeService
 			try
 			{
 				List<Video> list2 = arbeit[i];
-				if (await UmbauenAsync(list2, list2.OrderByDescending(Breite).First(), dryRun, ct).ConfigureAwait(continueOnCapturedContext: false))
+				if (await UmbauenAsync(list2, NachWahl(list2, wahl)[0], dryRun, ct).ConfigureAwait(continueOnCapturedContext: false))
 				{
 					zusammen++;
 				}
@@ -236,15 +261,23 @@ public class MergeService
 				}
 				List<Video> list4 = new List<Video> { haupt };
 				list4.AddRange(list3);
-				Video val = list4.OrderByDescending(Breite).First();
+				Video val = NachWahl(list4, wahl)[0];
 				if (((BaseItem)val).Id.Equals(((BaseItem)haupt).Id))
 				{
 					continue;
 				}
-				LoggerExtensions.LogInformation(_log, "MKI Merge: {Title} - primary entry is {Old}px, highest resolution is {New}px. Rebuilding.", new object[3]
+				// A rebuild hands every version to the new primary entry, so the group must still pass the same checks as a
+				// new merge: same audience (an unknown answer counts as different) and the same production year.
+				if (list4.Select((Video v) => Sichtbarkeit((BaseItem)(object)v, nutzer)).Distinct().Count() > 1 || list4.Select(Jahr).Distinct().Count() > 1)
+				{
+					LoggerExtensions.LogInformation(_log, "MKI Merge: {Title} - not every user may see every version, or the years differ; primary entry left as it is", new object[1] { ((BaseItem)haupt).Name });
+					continue;
+				}
+				LoggerExtensions.LogInformation(_log, "MKI Merge: {Title} - primary entry is {Old}px, the {Choice} is {New}px. Rebuilding.", new object[4]
 				{
 					((BaseItem)haupt).Name,
 					Breite((BaseItem)(object)haupt),
+					WahlText(wahl),
 					Breite((BaseItem)(object)val)
 				});
 				try
@@ -365,6 +398,58 @@ public class MergeService
 		return (Video)(((object)((itemById is Video) ? itemById : null)) ?? ((object)v));
 	}
 
+	// Jellyfin keeps favourite, rating and like per entry and shows the primary entry's (played state and the resume
+	// point are already read across all versions). So a new primary entry takes these over from the entries it
+	// replaces; otherwise a switch from 4K to 1080p would seem to drop every favourite. Only ever adds: a favourite
+	// stays a favourite, and a rating or like the new primary entry already has is kept. Nothing is removed from the
+	// former entries, so switching back finds them as they were.
+	private void MitnehmenNutzerdaten(Video haupt, List<Video> andere)
+	{
+		foreach (User user in _users.GetUsers())
+		{
+			try
+			{
+				UserItemData? ziel = _userData.GetUserData(user, (BaseItem)(object)haupt);
+				if (ziel == null)
+				{
+					continue;
+				}
+				bool geaendert = false;
+				foreach (Video v in andere)
+				{
+					UserItemData? quelle = _userData.GetUserData(user, (BaseItem)(object)v);
+					if (quelle == null)
+					{
+						continue;
+					}
+					if (quelle.IsFavorite && !ziel.IsFavorite)
+					{
+						ziel.IsFavorite = true;
+						geaendert = true;
+					}
+					if (quelle.Rating.HasValue && !ziel.Rating.HasValue)
+					{
+						ziel.Rating = quelle.Rating;
+						geaendert = true;
+					}
+					if (quelle.Likes.HasValue && !ziel.Likes.HasValue)
+					{
+						ziel.Likes = quelle.Likes;
+						geaendert = true;
+					}
+				}
+				if (geaendert)
+				{
+					_userData.SaveUserData(user, (BaseItem)(object)haupt, ziel, UserDataSaveReason.UpdateUserRating, CancellationToken.None);
+				}
+			}
+			catch (Exception ex)
+			{
+				LoggerExtensions.LogWarning(_log, ex, "MKI Merge: {Title} - could not carry over favourites and ratings for one user", new object[1] { ((BaseItem)haupt).Name });
+			}
+		}
+	}
+
 	private async Task<bool> UmbauenAsync(List<Video> alle, Video haupt, bool dryRun, CancellationToken ct)
 	{
 		List<Video> andere = alle.Where((Video x) => !((BaseItem)x).Id.Equals(((BaseItem)haupt).Id)).ToList();
@@ -421,6 +506,7 @@ public class MergeService
 			item.LinkedAlternateVersions = Array.Empty<LinkedChild>();
 			await ((BaseItem)item).UpdateToRepositoryAsync((ItemUpdateType)16, CancellationToken.None).ConfigureAwait(continueOnCapturedContext: false);
 		}
+		MitnehmenNutzerdaten(haupt, frische);
 		return true;
 		void Dazu(Guid id)
 		{

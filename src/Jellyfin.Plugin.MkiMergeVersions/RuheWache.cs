@@ -19,6 +19,8 @@ public class RuheWache : IHostedService, IDisposable
 
 	private readonly IUserManager _users;
 
+	private readonly IUserDataManager _userData;
+
 	private readonly ILogger<RuheWache> _log;
 
 	private readonly SemaphoreSlim _schloss = new SemaphoreSlim(1, 1);
@@ -29,10 +31,11 @@ public class RuheWache : IHostedService, IDisposable
 
 	private Timer? _timer;
 
-	public RuheWache(ILibraryManager library, IUserManager users, ILogger<RuheWache> log)
+	public RuheWache(ILibraryManager library, IUserManager users, IUserDataManager userData, ILogger<RuheWache> log)
 	{
 		_library = library;
 		_users = users;
+		_userData = userData;
 		_log = log;
 	}
 
@@ -79,7 +82,7 @@ public class RuheWache : IHostedService, IDisposable
 			PluginConfiguration pluginConfiguration = ((BasePlugin<PluginConfiguration>)(object)Plugin.Instance)?.Configuration ?? new PluginConfiguration();
 			LoggerExtensions.LogInformation((ILogger)(object)_log, "MKI Merge: library is quiet, merging", Array.Empty<object>());
 			// Skipped while the scheduled task is running; the watcher then tries again on its next tick.
-			if (await new MergeService(_library, _users, (ILogger)(object)_log).RunAsync(pluginConfiguration.DryRun, pluginConfiguration.FixPrimaryOrder, null, warten: false, CancellationToken.None).ConfigureAwait(continueOnCapturedContext: false) == null)
+			if (await new MergeService(_library, _users, _userData, (ILogger)(object)_log).RunAsync(pluginConfiguration.DryRun, pluginConfiguration.FixPrimaryOrder, pluginConfiguration.PrimaryResolution, null, warten: false, CancellationToken.None).ConfigureAwait(continueOnCapturedContext: false) == null)
 			{
 				_schmutzig = true;
 			}
