@@ -690,7 +690,7 @@
 #MkiMergeConfigPage .mv-linkbtn:hover { color: var(--mk-text); }
 #MkiMergeConfigPage .mv-barinfo { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 8px; margin: 0; padding: 0 10px; font-size: .86rem; color: var(--mk-dim); }
 #MkiMergeConfigPage .mv-barinfo .mk-ic { color: var(--mk-a1-ink); }
-#MkiMergeConfigPage .mv-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+#MkiMergeConfigPage .mv-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 14px; align-items: start; }
 #MkiMergeConfigPage .mv-grid > .mk-card { margin: 0; }
 #MkiMergeConfigPage .mv-wide { grid-column: 1 / -1; }
 #MkiMergeConfigPage .mk-card[tabindex="-1"]:focus { outline: none; }
@@ -701,6 +701,8 @@
 #MkiMergeConfigPage .mv-files { display: flex; flex-direction: column; gap: 4px; margin-top: 7px; }
 #MkiMergeConfigPage .mv-file { display: block; font-size: .74rem; color: var(--mk-dim); line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 3px 7px; border-radius: 6px; background: var(--mk-surface-3); }
 #MkiMergeConfigPage .mv-file b { color: var(--mk-text); font-weight: 700; margin-right: 4px; }
+#MkiMergeConfigPage .mv-file.is-lead { box-shadow: 0 0 0 1px var(--mk-a1-ink) inset; }
+#MkiMergeConfigPage .mv-file.is-lead b { color: var(--mk-a1-ink); }
 #MkiMergeConfigPage .mv-rules { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 6px; }
 #MkiMergeConfigPage .mv-rules li { display: flex; gap: 8px; align-items: flex-start; font-size: .85rem; line-height: 1.45; color: var(--mk-dim); }
 #MkiMergeConfigPage .mv-rules .mk-ic { color: var(--mk-a1-ink); margin-top: 2px; }
@@ -724,6 +726,9 @@
 #MkiMergeConfigPage .mv-modeopt input:checked + .mv-modeopt__card .mv-modeopt__icon { color: var(--mk-a1-ink); background: rgba(var(--mk-a1-rgb), .14); }
 #MkiMergeConfigPage .mv-modeopt input:focus-visible + .mv-modeopt__card { outline: 2px solid var(--mk-a1-ink); outline-offset: 2px; }
 #MkiMergeConfigPage .mk-field + .mk-row { margin-top: 10px; border-top: 1px solid var(--mk-line); }
+#MkiMergeConfigPage .mv-field + .mk-row { border-top: 0; margin-top: 4px; }
+#MkiMergeConfigPage .mv-field + .mk-row .mk-row__label { font-size: .9rem; }
+#MkiMergeConfigPage .mk-field + .mv-field { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--mk-line); }
 
 /* when it runs */
 #MkiMergeConfigPage .mv-tl { position: relative; height: 84px; margin: 6px 6px 0; }
@@ -771,7 +776,7 @@
       <p class="mk-kicker">MKI · Jellyfin plugin</p>
       <h1 class="mk-title" id="mvTitle">Merge <b>Versions</b></h1>
       <span class="mk-rule"></span>
-      <p class="mk-lede">Movies that exist in several resolutions become one library entry, and the highest resolution plays first. TV series are never touched.</p>
+      <p class="mk-lede">Movies that exist in several resolutions become one library entry, and the version you pick (1080p or the highest resolution) plays first. TV series are never touched.</p>
     </div>
     <div class="mv-mode" aria-live="polite">
       <span class="mv-mode__label">Mode</span>
@@ -798,7 +803,7 @@
       <span class="mk-tile__sub" id="mvNextSub"></span>
     </div>
     <button type="button" class="mk-tile" data-goto="mvOptions">
-      <span class="mk-tile__label"><span class="material-icons mk-ic" aria-hidden="true">star</span>Primary version fix</span>
+      <span class="mk-tile__label"><span class="material-icons mk-ic" aria-hidden="true">star</span>Primary version</span>
       <span class="mk-tile__value" id="mvFixValue">…</span>
       <span class="mk-tile__sub" id="mvFixSub"></span>
     </button>
@@ -816,7 +821,7 @@
 </header>
 
 <div class="mk-bar">
-  <p class="mv-barinfo"><span class="material-icons mk-ic" aria-hidden="true">tune</span><span>2 settings · each change saves itself and counts from the next run</span></p>
+  <p class="mv-barinfo"><span class="material-icons mk-ic" aria-hidden="true">tune</span><span>3 settings · each change saves itself and counts from the next run</span></p>
 </div>
 
 <div class="mk-main mv-grid">
@@ -832,7 +837,7 @@
       <div class="mk-flow__node">
         <span class="mk-flow__kicker"><span class="material-icons mk-ic" aria-hidden="true">movie</span>Two files</span>
         <span class="mk-flow__title">Dune: Part Two (2024)</span>
-        <span class="mv-files"><span class="mv-file"><b>3840 px</b>/movies-4k/Dune Part Two (2024)</span><span class="mv-file"><b>1920 px</b>/movies/Dune Part Two (2024)</span></span>
+        <span class="mv-files"><span class="mv-file" id="mvF4k"><b>3840 px</b>/movies-4k/Dune Part Two (2024)</span><span class="mv-file" id="mvFhd"><b>1920 px</b>/movies/Dune Part Two (2024)</span></span>
       </div>
       <span class="mk-flow__edge"></span>
       <div class="mk-flow__node">
@@ -849,7 +854,7 @@
     </div>
     <ul class="mv-rules">
       <li><span class="material-icons mk-ic mk-ic--sm" aria-hidden="true">movie</span><span>Movies only. TV series are never touched.</span></li>
-      <li><span class="material-icons mk-ic mk-ic--sm" aria-hidden="true">star</span><span>The widest picture (most pixels across) becomes the primary version.</span></li>
+      <li><span class="material-icons mk-ic mk-ic--sm" aria-hidden="true">star</span><span id="mvRulePrimT">The widest picture (most pixels across) becomes the primary version.</span></li>
       <li><span class="material-icons mk-ic mk-ic--sm" aria-hidden="true">group</span><span>Versions that not every user can see, or with different production years, stay separate.</span></li>
       <li id="mvRuleFix"><span class="material-icons mk-ic mk-ic--sm" aria-hidden="true">refresh</span><span id="mvRuleFixT">Existing merges with a lower-resolution primary are rebuilt.</span></li>
     </ul>
@@ -871,9 +876,19 @@
           <span class="mv-modeopt__card"><span class="mv-modeopt__icon"><span class="material-icons mk-ic" aria-hidden="true">science</span></span><span class="mv-modeopt__text"><b data-name="Dry run">Dry run</b><small>Only writes to the log what it would merge. Nothing changes.</small></span><span class="material-icons mk-ic mv-modeopt__check" aria-hidden="true">check_circle</span></span></label>
       </div>
     </div>
+    <div class="mk-field mv-field" data-find="primary version resolution 1080p full hd 4k 2160p uhd highest default plays first">
+      <span class="mk-field__label" id="mvPrimL">Primary version</span>
+      <div class="mv-modes" role="radiogroup" aria-labelledby="mvPrimL" aria-describedby="mvPrimH">
+        <label class="mv-modeopt"><input type="radio" name="mvPrimary" value="FullHd" data-key="PrimaryResolution" data-label="Primary version">
+          <span class="mv-modeopt__card"><span class="mv-modeopt__icon"><span class="material-icons mk-ic" aria-hidden="true">hd</span></span><span class="mv-modeopt__text"><b data-name="1080p">1080p</b><small>Closest to 1920 px across, or the nearest when there is none.</small></span><span class="material-icons mk-ic mv-modeopt__check" aria-hidden="true">check_circle</span></span></label>
+        <label class="mv-modeopt"><input type="radio" name="mvPrimary" value="Highest" data-key="PrimaryResolution" data-label="Primary version">
+          <span class="mv-modeopt__card"><span class="mv-modeopt__icon"><span class="material-icons mk-ic" aria-hidden="true">4k</span></span><span class="mv-modeopt__text"><b data-name="Highest resolution">Highest</b><small>The widest picture, usually 4K. The default.</small></span><span class="material-icons mk-ic mv-modeopt__check" aria-hidden="true">check_circle</span></span></label>
+      </div>
+      <span class="mk-field__hint" id="mvPrimH">The chosen version plays first; the version picker on the movie page still offers every version.</span>
+    </div>
     <div class="mk-row">
-      <div class="mk-row__text"><label class="mk-row__label" for="mvFixPrimaryOrder">Fix the primary version</label><span class="mk-row__desc">Rebuilds existing merges where a lower resolution is currently the primary version.</span></div>
-      <div class="mk-row__control"><input type="checkbox" class="mk-switch" role="switch" id="mvFixPrimaryOrder" data-key="FixPrimaryOrder" data-label="Fix the primary version"></div>
+      <div class="mk-row__text"><label class="mk-row__label" for="mvFixPrimaryOrder">Apply to existing merges</label><span class="mk-row__desc">Rebuilds earlier merges whose primary version does not match your choice above.</span></div>
+      <div class="mk-row__control"><input type="checkbox" class="mk-switch" role="switch" id="mvFixPrimaryOrder" data-key="FixPrimaryOrder" data-label="Apply to existing merges"></div>
     </div>
     <p class="mk-note" id="mvFixNote"><span class="material-icons mk-ic" aria-hidden="true">info</span><span id="mvFixNoteT"></span></p>
   </div>
@@ -1742,8 +1757,8 @@ var task = null, taskError = false, poll = null, visible = false;
 
 var kit = MkiKit(page, {
     pluginId: 'b8e2f3a1-6c47-4d59-9f0e-7a1c2d3e4b5f',
-    confirm: { DryRun: confirmMode },
-    show: function (k, v) { return k === 'DryRun' ? (v ? 'Dry run' : 'Live') : null; },
+    confirm: { DryRun: confirmMode, PrimaryResolution: confirmPrimary, FixPrimaryOrder: confirmFix },
+    show: function (k, v) { return k === 'DryRun' ? (v ? 'Dry run' : 'Live') : k === 'PrimaryResolution' ? primName(v) : null; },
     onLoad: function () { render(); },
     onSaved: function () { render(); },
     onShow: function () { visible = true; loadTask(); }
@@ -1752,6 +1767,10 @@ var $ = kit.$, el = kit.el, ic = kit.ic, fill = kit.fill;
 
 function dry() { return kit.saved('DryRun') === true; }
 function fix() { return kit.saved('FixPrimaryOrder') !== false; }
+function hd(v) { return (arguments.length ? v : kit.saved('PrimaryResolution')) === 'FullHd'; }
+function primName(v) { return hd(v) ? '1080p' : 'Highest resolution'; }
+/* what "Apply to existing merges" does with the saved (or the given) choice */
+function fixWhat(h) { return h ? 'merges whose primary version is not the one closest to 1080p are rebuilt' : 'merges with a lower-resolution primary are rebuilt'; }
 function utc(s) { return s ? new Date(s) : null; }
 function lastRun() { return task && task.LastExecutionResult ? task.LastExecutionResult : null; }
 function running() { return task && task.State && task.State !== 'Idle'; }
@@ -1764,11 +1783,39 @@ function confirmMode(to, from) {
     return kit.confirm({
         title: 'Switch to live merging?',
         body: ['From the next run on, movies that share a TMDb or IMDb ID become one library entry with several versions' +
-            (fix() ? ', and merges with a lower-resolution primary are rebuilt.' : '.'),
+            (kit.value('FixPrimaryOrder') !== false ? ', and ' + fixWhat(hd(kit.value('PrimaryResolution'))) + '.' : '.'),
             'The next run is ' + (n ? 'at about ' + kit.hhmm(n.at) + ' (' + n.why + ')' : 'when Jellyfin next starts or the library goes quiet') +
             ', or right away with Run now. A merged movie can be split again from its menu in Jellyfin (Split versions).'],
         ok: 'Go live', okIcon: 'bolt', icon: 'bolt', tone: 'warn'
     });
+}
+
+/* A new choice with "Apply to existing merges" on rewrites existing merges on the next live run, so it asks first
+   (also when undone or put back). In a dry run or with the fix off nothing existing changes: no question. The other
+   two settings are read from the screen, so a change of theirs that is still being saved counts too. */
+function rebuildBox(h, title, ok) {
+    var n = nextRun();
+    return kit.confirm({
+        title: title,
+        body: ['On the next run, merged movies whose primary version is not ' + (h ? 'the one closest to 1080p' : 'the one with the highest resolution') +
+            ' are rebuilt so that it opens and plays first.' + (h ? ' A movie without a 1080p file gets the version closest to it (720p before 4K, 4K before a DVD copy).' : '') +
+            ' Played state, resume points, favourites and ratings carry over, and the other versions stay in the version picker.',
+            'The next run is ' + (n ? 'at about ' + kit.hhmm(n.at) + ' (' + n.why + ')' : 'when Jellyfin next starts or the library goes quiet') +
+            ', or right away with Run now. You can switch back at any time; the run after that rebuilds them again.'],
+        ok: ok, okIcon: h ? 'hd' : '4k', icon: 'star', tone: 'warn'
+    });
+}
+function confirmPrimary(to, from) {
+    if (to === from || kit.value('DryRun') === true || kit.value('FixPrimaryOrder') === false) return true;
+    var h = hd(to);
+    return rebuildBox(h, h ? 'Make 1080p the primary version?' : 'Make the highest resolution the primary version?', h ? 'Use 1080p' : 'Use highest resolution');
+}
+/* Turning the fix on with 1080p chosen also rebuilds existing merges (with the highest resolution it only repairs
+   merges made before a better file arrived, as it always did). */
+function confirmFix(to) {
+    var h = hd(kit.value('PrimaryResolution'));
+    if (to !== true || !h || kit.value('DryRun') === true) return true;
+    return rebuildBox(h, 'Switch existing merges to 1080p?', 'Switch them');
 }
 
 /* ---------- next run, estimated from the task's triggers ---------- */
@@ -1865,7 +1912,7 @@ function renderNext() {
         var when = n ? 'At about ' + kit.hhmm(n.at) : 'At the next start';
         what = [el('b', null, 'Next: '), when + (dry()
             ? ' a dry run only writes to the log what it would merge. Nothing in the library changes.'
-            : ' movies that share a TMDb or IMDb ID become one entry' + (fix() ? ', and entries with a lower-resolution primary are rebuilt.' : '. Existing merges stay as they are.'))];
+            : ' movies that share a TMDb or IMDb ID become one entry' + (fix() ? ', and ' + fixWhat(hd()) + '.' : '. Existing merges stay as they are.'))];
     }
     fill($('#mvNext'), what);
 }
@@ -1915,12 +1962,12 @@ function renderTimeline() {
 
 /* ---------- settings-driven parts (always from the saved values) ---------- */
 function render() {
-    var d = dry(), f = fix();
+    var d = dry(), f = fix(), h = hd(), lead = h ? '1920 px' : '3840 px';
     var mc = $('#mvModeChip');
     mc.className = 'mk-chip mk-chip--lg mk-chip--' + (d ? 'info' : 'ok');
     fill(mc, [ic(d ? 'science' : 'bolt'), el('span', null, d ? 'Dry run · nothing changes' : 'Live · merges are written')]);
-    fill($('#mvFixValue'), f ? 'On' : 'Off');
-    fill($('#mvFixSub'), f ? 'Lower-resolution primaries get rebuilt' : 'Existing merges stay as they are');
+    fill($('#mvFixValue'), h ? '1080p' : 'Highest');
+    fill($('#mvFixSub'), (h ? 'Closest to 1920 px plays first' : 'Widest picture plays first') + ' · ' + (f ? 'existing merges follow' : 'new merges only'));
     /* the example follows the settings */
     var res = $('#mvResult');
     res.className = 'mk-flow__node ' + (d ? 'mk-flow__node--dashed' : 'mk-flow__node--accent');
@@ -1928,12 +1975,18 @@ function render() {
     $('#mvResultIc').textContent = d ? 'description' : 'check_circle';
     fill($('#mvResultK'), d ? 'Dry run' : 'Result');
     fill($('#mvResultT'), d ? 'Only a log line' : 'One entry · 2 versions');
-    fill($('#mvResultS'), d ? '"Dune: Part Two [3840px + 1920px] -> primary entry 3840px". The library stays as it is.' : '3840 px is the primary version. The version picker on the movie page offers both.');
+    fill($('#mvResultS'), d ? '"Dune: Part Two [3840px + 1920px] -> primary entry ' + lead.replace(' ', '') + '". The library stays as it is.' : lead + ' is the primary version. The version picker on the movie page offers both.');
+    $('#mvF4k').classList.toggle('is-lead', !h); $('#mvFhd').classList.toggle('is-lead', h);
+    $('#mvF4k').title = h ? '' : 'Plays first'; $('#mvFhd').title = h ? 'Plays first' : '';
+    fill($('#mvRulePrimT'), h ? 'The version closest to 1080p (1920 px across) becomes the primary version; without one, the next closest.' : 'The widest picture (most pixels across) becomes the primary version.');
     $('#mvRuleFix').classList.toggle('is-off', !f);
-    fill($('#mvRuleFixT'), f ? 'Existing merges with a lower-resolution primary are rebuilt.' : 'Existing merges are left as they are (Fix the primary version is off).');
-    fill($('#mvFixNoteT'), f ? 'Example: a movie merged before its 4K file arrived still opens in 1080p. The next run makes the 4K file the primary version.' : 'Off: merges made earlier keep their current primary version, even when a higher resolution was added later.');
+    fill($('#mvRuleFixT'), f ? (d ? 'In a live run, existing ' : 'Existing ') + fixWhat(h) + (d ? '. The dry run only logs them.' : '.') : 'Existing merges are left as they are (Apply to existing merges is off).');
+    fill($('#mvFixNoteT'), f
+        ? (d ? 'Dry run: the log shows which merges a live run would rebuild. ' : '') + (h ? 'Example: a movie merged earlier with its 4K file as the primary version. The next ' + (d ? 'live ' : '') + 'run makes the 1080p file the primary version.'
+             : 'Example: a movie merged before its 4K file arrived still opens in 1080p. The next ' + (d ? 'live ' : '') + 'run makes the 4K file the primary version.')
+        : 'Off: merges made earlier keep their current primary version, even when it does not match your choice.');
     var uses = $('#mvUses');
-    fill(uses, [el('b', null, 'Runs with:'), chip(d ? 'info' : 'ok', d ? 'science' : 'bolt', d ? 'Dry run' : 'Live'), chip('plain', f ? 'star' : 'star_border', 'Primary fix ' + (f ? 'on' : 'off'))]);
+    fill(uses, [el('b', null, 'Runs with:'), chip(d ? 'info' : 'ok', d ? 'science' : 'bolt', d ? 'Dry run' : 'Live'), chip('plain', h ? 'hd' : '4k', (h ? '1080p' : 'Highest') + ' plays first'), chip('plain', f ? 'star' : 'star_border', f ? (d ? 'Would rebuild existing' : 'Rebuilds existing') : 'Existing kept')]);
     renderNext(); renderTimeline();
 }
 
