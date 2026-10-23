@@ -616,7 +616,8 @@ public class GuestService
 			pass.DevicesPerGuest,
 			HomeOnly = !pass.RemoteAccess,
 			CanJoinHere = pass.RemoteAccess || local,
-			NeedsUpdate = PasswordPolicyOutdated()
+			NeedsUpdate = PasswordPolicyOutdated(),
+			QuickConnect = _config.Configuration.QuickConnectAvailable
 		};
 	}
 

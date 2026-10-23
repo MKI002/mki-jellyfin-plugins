@@ -1043,7 +1043,7 @@
       </div>
       <div class="mk-card__body">
         <div class="mk-row" data-find="badge banner end time guest">
-          <div class="mk-row__text"><label class="mk-row__label" for="ShowGuestBadge">Show guests a badge with their end time</label><span class="mk-row__desc">Only guest accounts see it. It also has “Sign in a TV” and the server address for TV apps.</span></div>
+          <div class="mk-row__text"><label class="mk-row__label" for="ShowGuestBadge">Show guests a badge with their end time</label><span class="mk-row__desc">Only guest accounts see it. It also has “Sign in a TV or another device” and the server address for TV apps.</span></div>
           <div class="mk-row__control"><input type="checkbox" class="mk-switch" role="switch" id="ShowGuestBadge" data-key="ShowGuestBadge" data-label="Guest badge"></div>
         </div>
         <div class="mk-row" data-find="code link sign-in login page">
@@ -2381,7 +2381,8 @@ function share(r, isNew) {
     var ends = kit.day(end) + ', ' + kit.hhmm(end);
     box.appendChild(el('p', null, (isNew ? 'Send the link, show the QR code' : (r.Code ? 'The old link and code no longer work' : 'The old link no longer works') + '. Send the new link, show the QR code') + (r.Code ? ' or read out the code.' : '.') + ' Shown only now: the plugin keeps a fingerprint of ' + (r.Code ? 'them' : 'it') + ', not the link itself.'));
     if (ov && ov.PasswordPolicyOutdated) box.appendChild(updateNote(el('p', 'mk-note mk-note--bad')));
-    if (homeAddress(link)) {
+    /* a home-network address matters only for a pass that works from anywhere: the other one says "home" already */
+    if (homeAddress(link) && r.RemoteAccess) {
         var n = el('p', 'mk-note mk-note--warn'); n.appendChild(ic('wifi_off'));
         n.appendChild(el('span', null, 'This link uses a home-network address, so it opens only at home. To share it with someone elsewhere, set the address guests reach Jellyfin at under Settings, then make a new link.'));
         box.appendChild(n);
@@ -2403,8 +2404,10 @@ function share(r, isNew) {
     grid.appendChild(right);
     box.appendChild(grid);
     var from = r.From || String(kit.saved('InviterName') || '').trim(), server = (ov && ov.ServerName) || 'Jellyfin';
-    var invite = (from ? from + ' invited you' : 'You’re invited') + ' to ' + quote(r.Name) + ' on ' + server + ', until ' + ends + '. Open this link on your phone or computer and type your first name; Jellyfin then opens, signed in: ' + link +
-        (r.Code ? '\nOr open ' + joinUrl() + ' and enter the code ' + r.Code + '.' : '') + (r.RemoteAccess ? '' : '\nIt works on my home Wi-Fi only.') + '\nNo password needed. Access ends by itself.';
+    var invite = (from ? from + ' invited you' : 'You’re invited') + ' to ' + quote(r.Name) + ' on ' + server + ', until ' + ends + '.' +
+        '\nOpen this link on your phone or computer: ' + link +
+        '\nType your first name and Jellyfin opens, signed in. No password needed.' +
+        (r.Code ? '\nOr open ' + joinUrl() + ' and enter the code ' + r.Code + '.' : '') + (r.RemoteAccess ? '' : '\nIt works on my home Wi-Fi only.') + '\nAccess ends by itself.';
     var row = el('div', 'mk-dialog__copy'), b1 = kit.btn('Copy link', '', 'link'), b3 = kit.btn('Copy invitation', '', 'chat');
     b1.addEventListener('click', function () { copyIn(b1, link, 'Link'); });
     b3.addEventListener('click', function () { copyIn(b3, invite, 'Invitation'); });
@@ -2518,7 +2521,7 @@ function endPassNow(p0) {
 }
 /* where the guests of a pass may join and watch: widened for guests who are away, narrowed back to home */
 function whereFact(p) {
-    return fact(p.RemoteAccess ? 'public' : 'home', 'Where', p.RemoteAccess ? 'Home and away' : 'Home network only', p.Open ? null : 'Also after Open again',
+    return fact(p.RemoteAccess ? 'public' : 'home', 'Where', p.RemoteAccess ? 'Anywhere' : 'Home network only', p.Open ? null : 'Also after Open again',
         { text: 'Change', focus: 'pw:' + p.Id, run: function () { setWhere(p); } });
 }
 function setWhere(p0) {
@@ -2852,7 +2855,8 @@ function render() {
     fill($('#gpSafeTv'), [el('b', null, 'TVs. '), ov.QuickConnect
         ? 'Guests sign in TVs with Jellyfin’s Quick Connect, only from a device they already joined on, and only up to their device limit.'
         : 'Quick Connect is off in Jellyfin, so guests cannot sign in TVs. Turn it on under Dashboard → General if they should.']);
-    if (!ov.Passes.length) bits.push('create a pass under New pass, then send its link or show its QR code.');
+    if (ov.PasswordPolicyOutdated) bits.push('update MKI Password Policy to 1.1.1.0 or later. Until then guests cannot join (see the note on the Passes tab).');
+    else if (!ov.Passes.length) bits.push('create a pass under New pass, then send its link or show its QR code.');
     else if (!open.length) bits.push('nothing is open. ' + (locked.length ? kit.plural(locked.length, 'locked guest account') + ' ' + (locked.length === 1 ? 'is' : 'are') + ' deleted on schedule; ' : '') + 'create a pass or open an ended one again.');
     else {
         bits.push(quote(soonest.Name) + ' ends ' + when(soonest.EndUtc) + '. ');

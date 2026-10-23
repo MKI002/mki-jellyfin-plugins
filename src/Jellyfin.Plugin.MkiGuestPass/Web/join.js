@@ -226,7 +226,7 @@
         var a = el('li'); a.appendChild(document.createTextNode('In the Jellyfin app on the TV, enter the server address ')); a.appendChild(el('code', null, serverAddress)); a.appendChild(document.createTextNode('.'));
         ol.appendChild(a);
         ol.appendChild(el('li', null, 'Choose Quick Connect. The TV shows a code.'));
-        ol.appendChild(el('li', null, 'On this device, tap the Guest badge at the bottom of the Jellyfin page, choose Sign in a TV and type that code.'));
+        ol.appendChild(el('li', null, 'On this device, tap the Guest badge at the bottom of the Jellyfin page, choose Sign in a TV or another device and type that code.'));
         box.appendChild(ol);
         return box;
     }
@@ -241,7 +241,6 @@
     function nextStep(reason, status) {
         if (reason === 'ended') return 'Ask ' + host() + ' to open it again: this link then works again.';
         if (reason === 'removed') return 'If you still need access, ask ' + host() + ' for a new invitation.';
-        if (reason === 'full') return 'Ask ' + host() + ' for a new pass with a free place.';
         if (reason === 'paused') return 'Jellyfin is starting up, or guest access was paused on the server. Try again in a minute.';
         if (reason === 'update') return 'Let ' + host() + ' know: the Guest Pass settings in the Jellyfin dashboard say what to update. Afterwards tap Try again; the link stays the same.';
         if (status === 404) return token ? 'Check that you opened the whole link from your message. If it still does not work, ask ' + host() + ' for a new one.' : 'Ask ' + host() + ' for a new link or code.';
@@ -278,13 +277,26 @@
         box.appendChild(retryButton());
         return box;
     }
+    /* a full pass: the guest may have joined on another device already, which signs this one in */
+    function fullHelp() {
+        var box = el('div', 'next'), ul = el('ul'), qc = !!(peek && peek.QuickConnect);
+        if (qc) {
+            var a = el('li');
+            a.appendChild(el('b', null, 'Joined already on another device? ')); a.appendChild(document.createTextNode('Open Jellyfin here and choose Use Quick Connect. Then, on the other device, tap the Guest badge, choose Sign in a TV or another device and type the code.'));
+            ul.appendChild(a);
+        }
+        var b = el('li'); b.appendChild(el('b', null, qc ? 'New here? ' : '')); b.appendChild(document.createTextNode('Ask ' + host() + ' for a new invitation with a free place.'));
+        ul.appendChild(b); box.appendChild(ul);
+        if (qc) { var go = el('a', 'btn', 'Open Jellyfin'); go.href = base + '/web/index.html'; box.appendChild(go); }
+        return box;
+    }
     function problem(text, after, reason, status) {
         var kind = PROBLEMS[reason] || (status === 404 && token ? ['alert', 'This link does not work'] : status === 404 && code ? ['alert', 'This code does not work'] : ['alert', 'This did not work']);
         /* a full pass stays full: its link is no use in this tab any more, code entry is. An ended one can be opened
            again, so its link stays for Try again and a reload */
         if (reason === 'full') tab(null);
         /* codes are refused just the same while a plugin needs an update */
-        if (reason === 'update') after = 'nocode';
+        if (reason === 'update' || reason === 'full') after = 'nocode';
         foot(false);
         var screen = (reason || 'error') + ':' + (status || 0), same = retried === screen;
         retried = null;
@@ -297,6 +309,7 @@
         if (same) view.appendChild(checkedNote());
         var next = nextStep(reason, status);
         if (reason === 'home') view.appendChild(homeHelp(false));
+        else if (reason === 'full') view.appendChild(fullHelp());
         else {
             if (next) view.appendChild(el('p', 'lede', next));
             if (retryable(reason, status)) view.appendChild(retryButton());
@@ -365,7 +378,7 @@
         view.appendChild(heading(p.From ? p.From + ' invited you' : 'You’re invited'));
         var blocked = p.HomeOnly && !p.CanJoinHere;
         view.appendChild(el('p', 'lede', '“' + p.Name + '”' + (p.ServerName ? ' on ' + p.ServerName : '') + '.' +
-            (blocked || p.Ended || p.PlacesLeft <= 0 ? '' : ' Type your first name below and Jellyfin opens right here, already signed in. No password, nothing to install.')));
+            (blocked || p.Ended || p.PlacesLeft <= 0 ? '' : ' Type your first name and Jellyfin opens right here, signed in. No password, no app needed.')));
         if (p.Ended) { problem('“' + p.Name + '” ended ' + when(p.EndUtc) + '.', null, 'ended'); return; }
         if (p.PlacesLeft <= 0) { problem(p.MaxGuests === 1 ? 'This guest pass has already been used.' : 'All ' + p.MaxGuests + ' places on this guest pass are taken.', null, 'full'); return; }
         if (p.NeedsUpdate) { problem('A plugin on this server needs an update before guests can join.', null, 'update'); return; }
