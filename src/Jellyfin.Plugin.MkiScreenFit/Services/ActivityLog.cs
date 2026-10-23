@@ -11,6 +11,9 @@ public class ActivityLog
 {
 	public const int MaxEntries = 100;
 
+	// Device, client and user names come from the player's own request headers: kept short.
+	private const int MaxName = 100;
+
 	private static readonly TimeSpan Repeat = TimeSpan.FromMinutes(5);
 
 	private readonly object _lock = new();
@@ -33,11 +36,16 @@ public class ActivityLog
 		lock (_lock)
 		{
 			var now = DateTime.UtcNow;
-			if (_entries.Any(e => e.Kind == d.Kind && e.DeviceId == d.DeviceId && e.ItemId == d.ItemId && now - e.At < Repeat))
+			if (_entries.Any(e => e.Kind == d.Kind && e.UserId == d.UserId && e.DeviceId == d.DeviceId && e.ItemId == d.ItemId && now - e.At < Repeat))
 			{
 				return false;
 			}
 			d.At = now;
+			d.DeviceId = Cut(d.DeviceId);
+			d.DeviceName = Cut(d.DeviceName);
+			d.Client = Cut(d.Client);
+			d.UserName = Cut(d.UserName);
+			d.ItemName = Cut(d.ItemName);
 			_entries.AddFirst(d);
 			while (_entries.Count > MaxEntries)
 			{
@@ -47,11 +55,13 @@ public class ActivityLog
 			{
 				case "version": _versions++; break;
 				case "limit": _limits++; break;
-				default: _kept++; break;
+				case "kept": _kept++; break;
 			}
 			return true;
 		}
 	}
+
+	private static string Cut(string text) => text.Length > MaxName ? text[..(MaxName - 1)] + "…" : text;
 
 	public (List<Decision> Entries, int Versions, int Limits, int Kept) Snapshot()
 	{
@@ -66,7 +76,8 @@ public class Decision
 {
 	public DateTime At { get; set; }
 
-	// "version" (played the Full HD version), "limit" (transcode limited to the screen) or "kept" (default version stays).
+	// "version" (played the Full HD version), "restore" (the default version again after a swap elsewhere), "limit"
+	// (transcode limited to the screen) or "kept" (default version stays).
 	public string Kind { get; set; } = string.Empty;
 
 	public string DeviceId { get; set; } = string.Empty;
@@ -74,6 +85,9 @@ public class Decision
 	public string DeviceName { get; set; } = string.Empty;
 
 	public string Client { get; set; } = string.Empty;
+
+	[System.Text.Json.Serialization.JsonIgnore]
+	public Guid UserId { get; set; }
 
 	public string UserName { get; set; } = string.Empty;
 

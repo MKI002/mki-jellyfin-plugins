@@ -695,12 +695,14 @@
 /* the two screens: what a viewer gets */
 #MkiScreenFitConfigPage .fit-demo { display: flex; gap: 14px; margin: 6px 0 4px; flex-wrap: wrap; }
 #MkiScreenFitConfigPage .fit-shot { flex: 1 1 170px; min-width: 0; }
-#MkiScreenFitConfigPage .fit-shot__k { display: flex; align-items: center; gap: 6px; margin: 0 0 6px; font-size: .72rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--mk-faint); }
+#MkiScreenFitConfigPage .fit-shot--tv { flex-grow: 1.4; }
+#MkiScreenFitConfigPage .fit-flow .mk-flow__skip { display: block; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--mk-line-2); font-size: .78rem; color: var(--mk-dim); line-height: 1.4; }
+#MkiScreenFitConfigPage .fit-shot__k { display: flex; align-items: center; gap: 6px; margin: 0 0 6px; font-size: .72rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--mk-dim); }
 #MkiScreenFitConfigPage .fit-screen { position: relative; aspect-ratio: 16 / 9; border-radius: 8px; border: 2px solid var(--mk-line-2); background: linear-gradient(135deg, rgba(var(--mk-a1-rgb), .22), rgba(var(--mk-a2-rgb), .22)), var(--mk-surface-3); overflow: hidden; }
 #MkiScreenFitConfigPage .fit-screen::after { content: ""; position: absolute; left: 38%; right: 38%; bottom: -8px; height: 6px; border-radius: 3px; background: var(--mk-line-2); }
 #MkiScreenFitConfigPage .fit-screen__tag { position: absolute; left: 8px; top: 8px; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: .72rem; font-weight: 800; letter-spacing: .04em; color: #fff; background: rgba(0,0,0,.55); }
 #MkiScreenFitConfigPage .fit-screen__tag.is-new { box-shadow: 0 0 0 2px rgba(var(--mk-a1-rgb), .9); }
-#MkiScreenFitConfigPage .fit-screen__size { position: absolute; right: 8px; bottom: 8px; font-size: .72rem; font-weight: 700; color: rgba(255,255,255,.85); text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+#MkiScreenFitConfigPage .fit-screen__size { position: absolute; right: 8px; bottom: 8px; padding: 1px 7px; border-radius: 999px; font-size: .72rem; font-weight: 700; color: #fff; background: rgba(0,0,0,.55); }
 #MkiScreenFitConfigPage .fit-shot__cap { margin: 10px 0 0; font-size: .78rem; color: var(--mk-dim); line-height: 1.4; }
 #MkiScreenFitConfigPage .fit-off-demo .fit-screen__tag.is-new { box-shadow: none; }
 
@@ -713,17 +715,19 @@
 #MkiScreenFitConfigPage .fit-tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 0 0 8px; }
 #MkiScreenFitConfigPage .fit-tools .mk-find__box { flex: 1 1 220px; min-width: 0; }
 #MkiScreenFitConfigPage .fit-filter { position: relative; flex: 1 1 220px; min-width: 0; max-width: 360px; }
-#MkiScreenFitConfigPage .fit-count { font-size: .82rem; color: var(--mk-faint); }
+#MkiScreenFitConfigPage .fit-count { font-size: .82rem; color: var(--mk-dim); }
 #MkiScreenFitConfigPage .fit-devices .mk-list__row { font-size: .88rem; }
 #MkiScreenFitConfigPage .fit-dev { min-width: 0; }
 #MkiScreenFitConfigPage .fit-dev b { display: block; font-weight: 700; overflow-wrap: anywhere; }
 #MkiScreenFitConfigPage .fit-dev small { display: block; font-size: .78rem; color: var(--mk-dim); overflow-wrap: anywhere; }
 #MkiScreenFitConfigPage .fit-scr { min-width: 0; }
 #MkiScreenFitConfigPage .fit-scr .mk-chip { max-width: 100%; }
-#MkiScreenFitConfigPage .fit-scr small { display: block; margin-top: 4px; font-size: .76rem; color: var(--mk-faint); }
+#MkiScreenFitConfigPage .fit-scr small { display: block; margin-top: 4px; font-size: .76rem; color: var(--mk-dim); }
 #MkiScreenFitConfigPage .fit-does { font-size: .82rem; color: var(--mk-dim); line-height: 1.4; min-width: 0; }
 #MkiScreenFitConfigPage .fit-does b { color: var(--mk-text); font-weight: 700; }
 #MkiScreenFitConfigPage .fit-mode { width: 100%; min-width: 0; }
+#MkiScreenFitConfigPage .fit-devices .mk-list__row.is-dim > .fit-set { opacity: 1; }
+#MkiScreenFitConfigPage .fit-dev .mk-chip { margin-top: 4px; }
 #MkiScreenFitConfigPage .fit-devices .mk-list__row.is-set { box-shadow: inset 3px 0 0 var(--mk-a1-ink); }
 #MkiScreenFitConfigPage .fit-empty { display: flex; gap: 10px; align-items: flex-start; margin: 0; padding: 12px 14px; border-radius: 11px; border: 1px dashed var(--mk-line-2); color: var(--mk-dim); font-size: .88rem; line-height: 1.45; }
 #MkiScreenFitConfigPage .fit-empty .mk-ic { color: var(--mk-faint); }
@@ -732,7 +736,8 @@
 /* recent decisions */
 #MkiScreenFitConfigPage .fit-log .mk-list__row { font-size: .86rem; }
 #MkiScreenFitConfigPage .fit-log .mk-chip { justify-self: start; }
-#MkiScreenFitConfigPage .fit-what { min-width: 0; color: var(--mk-dim); line-height: 1.4; }
+#MkiScreenFitConfigPage .fit-what { min-width: 0; color: var(--mk-dim); line-height: 1.4; overflow-wrap: anywhere; }
+#MkiScreenFitConfigPage .mk-next { overflow-wrap: anywhere; }
 #MkiScreenFitConfigPage .fit-what b { color: var(--mk-text); font-weight: 700; overflow-wrap: anywhere; }
 
 @media (max-width: 900px) {
@@ -744,7 +749,9 @@
   #MkiScreenFitConfigPage .fit-devices .mk-list__row > .fit-dev, #MkiScreenFitConfigPage .fit-devices .mk-list__row > .fit-does { grid-column: 1 / -1; }
   #MkiScreenFitConfigPage .fit-devices .mk-list__row > .fit-does { order: 5; }
   #MkiScreenFitConfigPage .fit-log .mk-list__row > .fit-what { grid-column: 1 / -1; }
-  #MkiScreenFitConfigPage .fit-shot { flex: 1 1 100%; max-width: 300px; }
+  #MkiScreenFitConfigPage .fit-shot { flex: 1 1 140px; max-width: none; }
+  #MkiScreenFitConfigPage .fit-screen__tag { font-size: .66rem; padding: 2px 6px; }
+  #MkiScreenFitConfigPage .fit-screen__size { font-size: .66rem; }
   #MkiScreenFitConfigPage .fit-filter { max-width: none; }
 }
 </style>
@@ -815,10 +822,10 @@
     <div class="fit-demo" id="fitDemo">
       <div class="fit-shot">
         <p class="fit-shot__k"><span class="material-icons mk-ic mk-ic--sm" aria-hidden="true">laptop</span>Full HD laptop</p>
-        <div class="fit-screen" aria-hidden="true"><span class="fit-screen__tag is-new" id="fitDemoLaptop">1080p version</span><span class="fit-screen__size">1920×1080</span></div>
+        <div class="fit-screen" aria-hidden="true"><span class="fit-screen__tag is-new" id="fitDemoLaptop">Full HD version</span><span class="fit-screen__size">1920×1080</span></div>
         <p class="fit-shot__cap" id="fitDemoLaptopCap">Starts the Full HD file. A transcode, if one is needed, works on a quarter of the pixels.</p>
       </div>
-      <div class="fit-shot">
+      <div class="fit-shot fit-shot--tv">
         <p class="fit-shot__k"><span class="material-icons mk-ic mk-ic--sm" aria-hidden="true">tv</span>4K TV</p>
         <div class="fit-screen" aria-hidden="true"><span class="fit-screen__tag">4K version</span><span class="fit-screen__size">3840×2160</span></div>
         <p class="fit-shot__cap">Nothing changes: 4K screens get 4K, as before.</p>
@@ -835,28 +842,30 @@
   </div>
   <div class="mk-card__body">
     <div class="mk-flow fit-flow">
-      <div class="mk-flow__node">
+      <div class="mk-flow__node" id="fitNodeScreen">
         <span class="mk-flow__kicker"><span class="material-icons mk-ic" aria-hidden="true">monitor</span>1 · Screen</span>
         <span class="mk-flow__title">Measured or set</span>
-        <span class="mk-flow__sub">Browsers and apps built on the web client measure their screen. For other apps you set it per device.</span>
+        <span class="mk-flow__sub">Browsers and apps built on the web client measure their screen. For TV apps you set it per device.</span>
+        <span class="mk-flow__skip">Stops here when the screen is unknown or doubtful (TV browsers, privacy settings).</span>
       </div>
       <span class="mk-flow__edge" id="fitEdge1"></span>
       <div class="mk-flow__node" id="fitNodeVersion">
         <span class="mk-flow__kicker"><span class="material-icons mk-ic" aria-hidden="true">swap_horiz</span>2 · Version</span>
         <span class="mk-flow__title">Full HD file on a Full HD screen</span>
         <span class="mk-flow__sub">Screens up to 1200 pixels tall: 1080p monitors, most laptops, phones.</span>
+        <span class="mk-flow__skip">4K stays for another cut, a missing audio or subtitle language, or a version picked by hand.</span>
       </div>
       <span class="mk-flow__edge" id="fitEdge2"></span>
       <div class="mk-flow__node" id="fitNodeLimit">
         <span class="mk-flow__kicker"><span class="material-icons mk-ic" aria-hidden="true">photo_size_select_large</span>3 · Transcode</span>
         <span class="mk-flow__title">No larger than the screen</span>
-        <span class="mk-flow__sub">Only for a re-encode. Copying the video stays a copy.</span>
+        <span class="mk-flow__sub">At most the screen's size, never below 1280×720.</span>
+        <span class="mk-flow__skip">Only when the video is re-encoded anyway. Direct play, remuxing and copying the video stay as they are.</span>
       </div>
     </div>
     <ul class="fit-rules">
-      <li><span class="material-icons mk-ic mk-ic--sm" aria-hidden="true">help_outline</span><span>Screen unknown: nothing changes. A doubtful measurement (TV browsers, privacy settings) counts as unknown.</span></li>
-      <li><span class="material-icons mk-ic mk-ic--sm" aria-hidden="true">touch_app</span><span>A version picked by hand that is not the default always plays as picked.</span></li>
-      <li><span class="material-icons mk-ic mk-ic--sm" aria-hidden="true">speed</span><span>Never changes bitrate limits, transcode throttling, codecs or audio. The resume position carries over.</span></li>
+      <li><span class="material-icons mk-ic mk-ic--sm" aria-hidden="true">speed</span><span>Never changes bitrate limits, transcode throttling, codecs or audio. The resume position carries over between versions.</span></li>
+      <li><span class="material-icons mk-ic mk-ic--sm" aria-hidden="true">group</span><span>A device setting only changes what plays on that device, for whoever uses it. It does not grant or block anything.</span></li>
     </ul>
   </div>
 </section>
@@ -867,7 +876,6 @@
     <div class="mk-card__titles"><h2 class="mk-card__title" id="fitDevicesT">Devices</h2><p class="mk-card__desc" id="fitDevicesDesc">The screen each device reported, and what happens there. Change it for apps that cannot report their screen.</p></div>
   </div>
   <div class="mk-card__body">
-    <div id="fitRules" data-key="DeviceRules" data-type="json" data-label="Device settings" hidden></div>
     <div class="fit-tools">
       <div class="fit-filter"><div class="mk-find__box"><span class="material-icons mk-ic" aria-hidden="true">filter_list</span><input type="search" class="mk-find__input" id="fitFilter" placeholder="Filter by device, app or user" aria-label="Filter devices" autocomplete="off"></div></div>
       <span class="fit-count" id="fitCount" aria-live="polite"></span>
@@ -880,7 +888,7 @@
 <section class="mk-card fit-wide" id="fitLogCard" aria-labelledby="fitLogT" tabindex="-1">
   <div class="mk-card__head">
     <span class="mk-card__icon"><span class="material-icons mk-ic" aria-hidden="true">fact_check</span></span>
-    <div class="mk-card__titles"><h2 class="mk-card__title" id="fitLogT">Recent decisions</h2><p class="mk-card__desc" id="fitLogDesc">The last 100 since Jellyfin started. Each start of the same video on the same device is listed once.</p></div>
+    <div class="mk-card__titles"><h2 class="mk-card__title" id="fitLogT">Recent decisions</h2><p class="mk-card__desc" id="fitLogDesc">The last 100 since Jellyfin started, each start of a video on a device once. Starts on unknown or 4K screens and versions picked by hand change nothing and are not listed.</p></div>
   </div>
   <div class="mk-card__body">
     <div class="mk-list fit-log" id="fitLog" style="--cols: 104px minmax(0,1fr) minmax(0,1.6fr)"></div>
@@ -1722,14 +1730,24 @@ page.setAttribute('data-mki-bound', '1');
 
 var RECENT_DAYS = 90, MODES = { Auto: 'Automatic', FullHd: 'Full HD screen', Off: 'Leave alone' };
 var data = null, failedLoad = false, showAll = false, seq = 0;
+var REASONS = {
+    VideoCodecNotSupported: 'video codec', VideoProfileNotSupported: 'video profile', VideoRangeTypeNotSupported: 'HDR',
+    VideoCodecTagNotSupported: 'video codec', VideoLevelNotSupported: 'video level', VideoResolutionNotSupported: 'resolution',
+    VideoBitDepthNotSupported: 'bit depth', VideoFramerateNotSupported: 'frame rate', RefFramesNotSupported: 'reference frames',
+    AnamorphicVideoNotSupported: 'anamorphic video', InterlacedVideoNotSupported: 'interlaced video', VideoRotationNotSupported: 'rotation',
+    VideoBitrateNotSupported: 'bitrate limit', ContainerBitrateExceedsLimit: 'bitrate limit', SubtitleCodecNotSupported: 'burned-in subtitles',
+    AudioCodecNotSupported: 'audio codec', AudioChannelsNotSupported: 'audio channels', AudioProfileNotSupported: 'audio profile',
+    AudioSampleRateNotSupported: 'audio sample rate', AudioBitDepthNotSupported: 'audio bit depth', AudioBitrateNotSupported: 'audio bitrate',
+    AudioIsExternal: 'external audio', SecondaryAudioNotSupported: 'secondary audio', ContainerNotSupported: 'container',
+    DirectPlayError: 'direct play error', UnknownVideoStreamInfo: 'unknown video', UnknownAudioStreamInfo: 'unknown audio', StreamCountExceedsLimit: 'too many streams'
+};
 
 var kit = MkiKit(page, {
     pluginId: '10b53a4f-258a-459a-962b-2e29418e0775',
-    show: function (k, v) { return k === 'DeviceRules' ? rulesText(v) : null; },
-    toastFor: ruleToast,
-    onLoad: function () { render(); refresh(); },
+    onLoad: function () { if (!busyRules()) rulesNow = clean(kit.saved('DeviceRules')); render(); refresh(); },
     onSaved: function () { render(); },
-    onShow: function () { if (kit.loaded()) refresh(); }
+    /* the kit reloads (and so refreshes) on a return visit unless a change is still on its way */
+    onShow: function () { var st = kit.state(); if (st.loaded && (st.pending || st.invalid || st.failed)) refresh(); }
 });
 var $ = kit.$, el = kit.el, ic = kit.ic, fill = kit.fill;
 
@@ -1738,42 +1756,43 @@ function limitOn() { return kit.saved('EnableTranscodeLimit') === true; }
 function chip(kind, icon, text) { var c = el('span', 'mk-chip mk-chip--' + kind); if (icon) c.appendChild(ic(icon)); c.appendChild(el('span', null, text)); return c; }
 function size(w, h) { return w + '×' + h; }
 
-/* ---------- device rules: a structured key the kit saves like any other (data-type="json") ---------- */
-function rules() { return (kit.read('DeviceRules') || []).filter(function (r) { return r && r.DeviceId; }); }
-function savedRules() { return (kit.saved('DeviceRules') || []).filter(function (r) { return r && r.DeviceId; }); }
-function modeOf(list, id) { var r = list.filter(function (x) { return x.DeviceId === id; }).pop(); return r && MODES[r.Mode] ? r.Mode : 'Auto'; }
-function setRule(id, mode) {
-    var box = $('#fitRules'), list = rules().filter(function (r) { return r.DeviceId !== id; });
-    if (mode !== 'Auto') list.push({ DeviceId: id, Mode: mode });
-    box.mkValue = list;
-    box.dispatchEvent(new Event('change', { bubbles: true }));
-}
-function rulesText(v) {
-    var n = (v || []).filter(function (r) { return r && r.Mode && r.Mode !== 'Auto'; }).length;
-    return n ? kit.plural(n, 'device') + ' set by hand' : 'all automatic';
-}
-function nameOf(id) { var d = data && data.Devices.filter(function (x) { return x.Id === id; })[0]; return d ? d.Name : 'a device'; }
-/* one device changed: say which, with an undo that restores exactly the previous list */
-function ruleToast(batch) {
-    if (batch.length !== 1 || batch[0].key !== 'DeviceRules') return null;
-    var b = batch[0], from = b.from || [], to = b.to || [], ids = {};
-    from.concat(to).forEach(function (r) { if (r && r.DeviceId) ids[r.DeviceId] = 1; });
-    var changed = Object.keys(ids).filter(function (id) { return modeOf(from, id) !== modeOf(to, id); });
-    if (changed.length !== 1) return null;
-    var id = changed[0];
-    return {
-        text: (b.undo ? 'Undone: ' : 'Saved: ') + nameOf(id) + ' → ' + MODES[modeOf(to, id)],
-        action: b.undo ? null : 'Undo',
-        onAction: function () { kit.undo('DeviceRules', from, to); }
-    };
+/* ---------- device settings: one device at a time, so two admins (or two tabs) never overwrite each other ---------- */
+var rulesNow = [], waiting = {}, ruleSeq = 0;
+function clean(list) { return (list || []).filter(function (r) { return r && r.DeviceId && MODES[r.Mode]; }); }
+function busyRules() { return Object.keys(waiting).length > 0; }
+function modeOf(list, id) { var r = list.filter(function (x) { return x.DeviceId === id; }).pop(); return r ? r.Mode : 'Auto'; }
+/* what the server has, or will have once the change on its way lands */
+function modeNow(id) { return Object.prototype.hasOwnProperty.call(waiting, id) ? waiting[id] : modeOf(rulesNow, id); }
+function nameOf(id) { var d = data && data.Devices.filter(function (x) { return x.Id === id; })[0]; return d ? d.Name || 'Unnamed device' : 'A device'; }
+function setRule(id, mode, undo) {
+    var from = modeNow(id), name = nameOf(id), my = ++ruleSeq;
+    if (from === mode) return;
+    waiting[id] = mode; renderDevices(); render();
+    kit.api('POST', 'MkiScreenFit/DeviceRule', { DeviceId: id, Mode: mode }).then(function (res) {
+        if (waiting[id] === mode) delete waiting[id];
+        if (my === ruleSeq) rulesNow = clean(res && res.DeviceRules);
+        renderDevices(); render();
+        kit.logAction((undo ? 'Undone: ' : '') + name + ' set to ' + MODES[mode]);
+        kit.toast((undo ? 'Undone: ' : 'Saved: ') + name + ' → ' + MODES[mode], undo ? {} : { action: 'Undo', onAction: function () {
+            if (modeNow(id) !== mode) { kit.toast('Not undone: ' + name + ' has changed again since.', { bad: true, icon: 'history' }); return; }
+            setRule(id, from, true);
+        } });
+    }, function () {
+        if (waiting[id] === mode) delete waiting[id];
+        renderDevices(); render();
+        kit.toast('Could not save the setting for ' + name + '. It stays ' + MODES[modeNow(id)] + '.', { bad: true, action: 'Retry', onAction: function () { setRule(id, mode, undo); } });
+    });
 }
 
 /* ---------- what the plugin knows: devices, screens, recent decisions ---------- */
 function refresh() {
-    var my = ++seq, b = $('#fitRefresh');
+    var my = ++seq, b = $('#fitRefresh'), rs = ruleSeq;
     var p = kit.api('GET', 'MkiScreenFit/Overview').then(function (o) {
         if (my !== seq) return;
-        data = o; failedLoad = false; render();
+        data = o; failedLoad = false;
+        /* device settings as the server has them now, unless one was changed while this was loading */
+        if (rs === ruleSeq && !busyRules()) rulesNow = clean(o.DeviceRules);
+        render();
     }, function () {
         if (my !== seq) return;
         failedLoad = true; render();
@@ -1827,23 +1846,28 @@ function doesCell(d, mode) {
     c.appendChild(el('span', 'mk-cell-label', 'What happens'));
     if (mode === 'Off') { fill(c, [c.firstChild, 'Nothing: left alone on purpose.']); return c; }
     if (!v && !l) { fill(c, [c.firstChild, 'Nothing: both switches are off.']); return c; }
-    if (!s) { fill(c, [c.firstChild, 'Nothing while the screen is unknown.']); return c; }
+    if (!s) {
+        fill(c, [c.firstChild, kindOf(d.App) === 'native' && !d.Screen
+            ? 'Nothing: this app cannot report its screen. On a Full HD TV, choose Full HD screen.'
+            : 'Nothing while the screen is unknown.']);
+        return c;
+    }
     var parts = [c.firstChild];
     if (v && fullHd(s)) parts.push(el('b', null, 'Full HD version'), ' of 4K movies');
     else if (v) parts.push('4K stays 4K');
-    if (l) parts.push(parts.length > 1 ? '; ' : '', 're-encodes at most ', el('b', null, limitSize(s)));
+    if (l) parts.push(parts.length > 1 ? '; re-encodes at most ' : 'Re-encodes at most ', el('b', null, limitSize(s)));
     parts.push('.');
     fill(c, parts);
     return c;
 }
 function modeCell(d, mode) {
-    var c = el('div'), sel = el('select', 'mk-select fit-mode');
+    var c = el('div', 'fit-set'), sel = el('select', 'mk-select fit-mode');
     c.appendChild(el('span', 'mk-cell-label', 'Setting'));
-    sel.setAttribute('aria-label', 'Setting for ' + d.Name);
+    sel.setAttribute('aria-label', 'Setting for ' + (d.Name || 'Unnamed device') + ', ' + [d.App, (d.Users || []).join(', ')].filter(Boolean).join(', '));
     sel.setAttribute('data-id', d.Id);
     Object.keys(MODES).forEach(function (m) { var o = el('option', null, MODES[m]); o.value = m; sel.appendChild(o); });
     sel.value = mode;
-    sel.addEventListener('change', function () { setRule(d.Id, sel.value); renderDevices(); render(); });
+    sel.addEventListener('change', function () { setRule(d.Id, sel.value); });
     c.appendChild(sel);
     return c;
 }
@@ -1857,11 +1881,13 @@ function renderDevices() {
         p.appendChild(el('span', null, failedLoad ? 'Could not load the devices. Check that the server is reachable, then use Refresh.' : 'Loading the devices…'));
         box.appendChild(p); more.hidden = true; fill(count, ''); return;
     }
-    var list = rules(), q = ($('#fitFilter').value || '').trim().toLowerCase();
+    var q = ($('#fitFilter').value || '').trim().toLowerCase();
     var all = data.Devices.filter(function (d) { return !q || [d.Name, d.App, (d.Users || []).join(' ')].join(' ').toLowerCase().indexOf(q) >= 0; });
-    var shown = all.filter(function (d) { return showAll || q || recent(d) || modeOf(list, d.Id) !== 'Auto'; });
+    var shown = all.filter(function (d) { return showAll || q || recent(d) || modeNow(d.Id) !== 'Auto'; });
     var hidden = all.length - shown.length;
-    fill(count, q ? kit.plural(all.length, 'match', 'matches') : kit.plural(shown.length, 'device') + (showAll ? '' : ' active in the last ' + RECENT_DAYS + ' days'));
+    /* a live region: only a new text is announced */
+    var countText = q ? kit.plural(all.length, 'match', 'matches') : kit.plural(shown.length, 'device') + (showAll ? '' : ' active in the last ' + RECENT_DAYS + ' days');
+    if (count.textContent !== countText) fill(count, countText);
     more.hidden = !!q || (!hidden && !showAll);
     fill(more, [ic(showAll ? 'unfold_less' : 'unfold_more'), el('span', null, showAll ? 'Show only recent devices' : 'Show ' + kit.plural(hidden, 'older device'))]);
     if (!shown.length) {
@@ -1872,25 +1898,38 @@ function renderDevices() {
     var head = el('div', 'mk-list__head'); head.setAttribute('aria-hidden', 'true');
     ['Device', 'Screen', 'What happens', 'Setting'].forEach(function (t) { head.appendChild(el('span', null, t)); });
     box.appendChild(head);
+    var mine = window.ApiClient && ApiClient.deviceId ? ApiClient.deviceId() : null;
     shown.forEach(function (d) {
-        var mode = modeOf(list, d.Id), row = el('div', 'mk-list__row' + (mode !== 'Auto' ? ' is-set' : '') + (mode === 'Off' ? ' is-dim' : ''));
+        var mode = modeNow(d.Id), row = el('div', 'mk-list__row' + (mode !== 'Auto' ? ' is-set' : '') + (mode === 'Off' ? ' is-dim' : ''));
         var who = el('div', 'fit-dev');
         who.appendChild(el('b', null, d.Name || 'Unnamed device'));
         who.appendChild(el('small', null, [d.App, d.AppVersion].filter(Boolean).join(' ') + ((d.Users || []).length ? ' · ' + d.Users.join(', ') : '')));
         who.appendChild(el('small', null, d.LastActive ? 'Active ' + kit.dayTime(new Date(d.LastActive)) : 'Never active'));
+        if (mine && d.Id === mine) who.appendChild(chip('plain', 'person_pin_circle', 'This browser'));
         row.appendChild(who);
         row.appendChild(screenCell(d));
         row.appendChild(doesCell(d, mode));
         row.appendChild(modeCell(d, mode));
         box.appendChild(row);
     });
-    if (focusId) { var again = box.querySelector('select[data-id="' + focusId.replace(/["\\]/g, '') + '"]'); if (again) again.focus(); }
+    if (focusId) { kit.$$('select.fit-mode', box).forEach(function (x) { if (x.getAttribute('data-id') === focusId) x.focus(); }); }
 }
 
+/* names come from the players' own headers: shortened, the whole name on hover */
+function short(t, n) { t = String(t || ''); return t.length > n ? t.slice(0, n - 1) + '…' : t; }
+function reasons(r) {
+    var seen = [];
+    String(r || '').split(/,\s*/).forEach(function (x) { var w = REASONS[x] || x.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase(); if (w && seen.indexOf(w) < 0) seen.push(w); });
+    return seen.join(', ');
+}
 function renderLog() {
     var box = $('#fitLog');
     box.textContent = '';
-    if (!data) return;
+    if (!data) {
+        var f = el('p', 'fit-empty'); f.appendChild(ic(failedLoad ? 'cloud_off' : 'hourglass_empty'));
+        f.appendChild(el('span', null, failedLoad ? 'Could not load the recent decisions. Check that the server is reachable, then use Refresh.' : 'Loading…'));
+        box.appendChild(f); return;
+    }
     var rows = data.Activity || [];
     if (!rows.length) {
         var p = el('p', 'fit-empty'); p.appendChild(ic('hourglass_empty'));
@@ -1903,19 +1942,23 @@ function renderLog() {
     ['What', 'When and where', 'Video'].forEach(function (t) { head.appendChild(el('span', null, t)); });
     box.appendChild(head);
     rows.forEach(function (a) {
-        var row = el('div', 'mk-list__row' + (a.Kind === 'kept' ? ' is-dim' : ''));
+        var row = el('div', 'mk-list__row');
         row.appendChild(a.Kind === 'version' ? chip('accent', 'swap_horiz', 'Full HD')
+            : a.Kind === 'restore' ? chip('info', 'restore', '4K again')
             : a.Kind === 'limit' ? chip('info', 'photo_size_select_large', 'Limited') : chip('plain', 'block', '4K kept'));
         var where = el('div', 'fit-what');
         where.appendChild(el('span', 'mk-cell-label', 'When and where'));
         where.appendChild(el('b', null, kit.dayTime(new Date(a.At))));
-        where.appendChild(document.createTextNode(' · ' + [a.UserName, a.DeviceName].filter(Boolean).join(' on ') + (a.Screen ? ' (' + a.Screen.replace('x', '×') + ')' : '')));
+        var place = [a.UserName, a.DeviceName].filter(Boolean).join(' on ');
+        where.appendChild(document.createTextNode(' · ' + short(place, 80) + (a.Screen ? ' (' + short(a.Screen, 24).replace('x', '×') + ')' : '')));
+        if (place.length > 80) where.title = place;
         row.appendChild(where);
         var what = el('div', 'fit-what');
         what.appendChild(el('span', 'mk-cell-label', 'Video'));
-        what.appendChild(el('b', null, a.ItemName || 'A video'));
+        what.appendChild(el('b', null, short(a.ItemName, 120) || 'A video'));
         var line = a.Kind === 'version' ? ': played the ' + a.To.replace('x', '×') + ' version instead of ' + a.From.replace('x', '×') + '.'
-            : a.Kind === 'limit' ? ': transcode of ' + a.From.replace('x', '×') + ' limited to ' + a.To.replace('x', '×') + (a.Reason ? ' (' + a.Reason + ')' : '') + '.'
+            : a.Kind === 'restore' ? ': resumed in the ' + a.To.replace('x', '×') + ' version again. The ' + a.From.replace('x', '×') + ' version was only first because it was watched last on a Full HD screen.'
+            : a.Kind === 'limit' ? ': re-encoded from ' + a.From.replace('x', '×') + ' to ' + a.To.replace('x', '×') + (a.Reason ? ' (because of: ' + reasons(a.Reason) + ')' : '') + '.'
             : ': ' + a.From.replace('x', '×') + ' kept, ' + a.Reason + '.';
         what.appendChild(document.createTextNode(line));
         row.appendChild(what);
@@ -1926,19 +1969,28 @@ function renderLog() {
 /* ---------- settings-driven parts (always from the saved values) ---------- */
 function render() {
     if (!kit.loaded()) return;
-    var v = versionOn(), l = limitOn(), list = savedRules();
+    var v = versionOn(), l = limitOn();
     fill($('#fitTileVersion'), v ? chip('ok', 'check_circle', 'On') : chip('plain', 'block', 'Off'));
     fill($('#fitTileVersionSub'), v ? 'On screens up to 1200 px tall' : '4K plays as Jellyfin decides');
     fill($('#fitTileLimit'), l ? chip('ok', 'check_circle', 'On') : chip('plain', 'block', 'Off'));
     fill($('#fitTileLimitSub'), l ? 'Re-encodes no larger than the screen' : 'Transcodes keep their size');
     $('#fitDemo').classList.toggle('fit-off-demo', !v);
-    fill($('#fitDemoLaptop'), v ? '1080p version' : '4K version');
-    fill($('#fitDemoLaptopCap'), v ? 'Starts the Full HD file. A transcode, if one is needed, works on a quarter of the pixels.' : 'Off: the 4K file starts, and a transcode for this screen stays 4K.');
+    fill($('#fitDemoLaptop'), v ? 'Full HD version' : '4K version');
+    fill($('#fitDemoLaptopCap'), v ? 'Starts the Full HD file instead of the 4K one. A transcode, if one is needed, works on a quarter of the pixels.'
+        : l ? 'The 4K file starts. A transcode for this screen is made at 1920×1080, a quarter of the pixels.'
+        : 'Off: the 4K file starts, and a transcode for this screen stays 4K.');
+    $('#fitNodeScreen').classList.toggle('mk-flow__node--off', !v && !l);
     ['#fitNodeVersion', '#fitEdge1'].forEach(function (s) { $(s).classList.toggle(s.indexOf('Edge') > 0 ? 'mk-flow__edge--off' : 'mk-flow__node--off', !v); });
     ['#fitNodeLimit', '#fitEdge2'].forEach(function (s) { $(s).classList.toggle(s.indexOf('Edge') > 0 ? 'mk-flow__edge--off' : 'mk-flow__node--off', !l); });
     $('#fitNodeVersion').classList.toggle('mk-flow__node--accent', v);
     $('#fitNodeLimit').classList.toggle('mk-flow__node--accent', l);
-    fill($('#fitOnNoteT'), v || l
+    /* the server could not add the measuring script to the web client: say so instead of promising measurements */
+    var problem = (v || l) && data && data.WebClientProblem;
+    $('#fitOnNote').classList.toggle('mk-note--warn', !!problem);
+    fill($('#fitOnNote').firstChild, problem ? 'warning' : 'info');
+    fill($('#fitOnNoteT'), problem
+        ? 'Browsers cannot report their screen: ' + problem + ' Set devices by hand under Devices, or let Jellyfin write to its web folder and turn a switch off and on again.'
+        : v || l
         ? 'On. Browsers and the Jellyfin apps built on the web client measure their screen the next time they open; a page reload is enough. TV apps need a setting under Devices.'
         : 'Off. The web client is left exactly as Jellyfin ships it and nothing is measured.');
 
@@ -1949,8 +2001,9 @@ function render() {
         fill(tileD, failedLoad ? '–' : '…'); fill(tileDSub, '');
         bits.push(failedLoad ? 'unknown. The device list could not be loaded; use Refresh.' : 'loading the devices…');
     } else {
-        var act = data.Devices.filter(function (d) { return recent(d) || modeOf(list, d.Id) !== 'Auto'; });
-        var known = act.map(function (d) { var m = modeOf(list, d.Id); return m === 'Off' ? null : screenOf(d, m) ? { d: d, s: screenOf(d, m) } : null; }).filter(Boolean);
+        var act = data.Devices.filter(function (d) { return recent(d) || modeNow(d.Id) !== 'Auto'; });
+        var known = act.map(function (d) { var m = modeNow(d.Id); return m === 'Off' ? null : screenOf(d, m) ? { d: d, s: screenOf(d, m) } : null; }).filter(Boolean);
+        var tv = act.filter(function (d) { return kindOf(d.App) === 'native' && !d.Screen && modeNow(d.Id) === 'Auto'; });
         var hd = known.filter(function (x) { return fullHd(x.s); });
         fill(tileS, String(known.length));
         fill(tileSub, known.length ? hd.length + ' Full HD · ' + (known.length - hd.length) + ' larger · ' + (act.length - known.length) + ' unknown' : 'of ' + kit.plural(act.length, 'recent device'));
@@ -1959,7 +2012,7 @@ function render() {
         if (!v && !l) bits.push('nothing. Both switches are off, so every video plays exactly as Jellyfin decides.');
         else if (!known.length) bits.push('screens are measured the next time someone opens the web client or a Jellyfin app built on it. Set TV apps by hand under Devices.');
         else {
-            // Several browsers share a name ("Chrome"): list each name once.
+            /* several browsers share a name ("Chrome"): each name once */
             var names = [];
             hd.forEach(function (x) { if (names.indexOf(x.d.Name) < 0) names.push(x.d.Name); });
             var where = hd.length === names.length && names.length <= 3
@@ -1967,8 +2020,9 @@ function render() {
                 : kit.plural(hd.length, 'device') + ' (' + names.slice(0, 3).join(', ') + (names.length > 3 ? ', …' : '') + ')';
             if (v && hd.length) bits.push('on ' + where + ', 4K movies with a Full HD version start that version. ');
             else if (v) bits.push('no known screen is Full HD, so 4K stays 4K everywhere. ');
-            if (l) bits.push('Re-encodes on ' + kit.plural(known.length, 'known screen') + ' are no larger than the screen.');
+            if (l) bits.push('Re-encodes on ' + kit.plural(known.length, 'known screen') + ' are no larger than the screen. ');
         }
+        if ((v || l) && tv.length) bits.push(kit.plural(tv.length, 'app') + ' (TV apps and the like) cannot report ' + (tv.length === 1 ? 'its' : 'their') + ' screen: choose Full HD screen under Devices for those on a Full HD screen.');
     }
     fill($('#fitNext'), bits);
     renderDevices();

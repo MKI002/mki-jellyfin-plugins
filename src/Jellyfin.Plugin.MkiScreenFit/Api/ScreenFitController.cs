@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Jellyfin.Data.Queries;
+using Jellyfin.Plugin.MkiScreenFit.Configuration;
 using Jellyfin.Plugin.MkiScreenFit.Services;
 using MediaBrowser.Controller.Devices;
 using Microsoft.AspNetCore.Authorization;
@@ -18,6 +20,9 @@ public class ScreenFitController : ControllerBase
 {
 	// Devices shown on the settings page: a server rarely knows more, and the page lists them all at once.
 	private const int MaxDevices = 500;
+
+	// Device and app names come from the players' own request headers: kept short.
+	private const int MaxName = 100;
 
 	private readonly ScreenStore _screens;
 
@@ -45,6 +50,7 @@ public class ScreenFitController : ControllerBase
 			return NotFound();
 		}
 		Response.Headers.CacheControl = "no-cache";
+		Response.Headers.XContentTypeOptions = "nosniff";
 		return File(stream, "application/javascript; charset=utf-8");
 	}
 
@@ -68,6 +74,15 @@ public class ScreenFitController : ControllerBase
 			// Nothing uses it while both parts are off, so nothing is kept.
 			return NoContent();
 		}
+		// Jellyfin takes the device id from the request, so a signed-in user could name any device. Only the device
+		// this sign-in belongs to may report its screen.
+		string? token = User.FindFirst("Jellyfin-Token")?.Value;
+		bool apiKey = bool.TryParse(User.FindFirst("Jellyfin-IsApiKey")?.Value, out bool isKey) && isKey;
+		var own = apiKey || string.IsNullOrEmpty(token) ? null : _devices.GetDevices(new DeviceQuery { AccessToken = token, Limit = 1 }).Items.FirstOrDefault();
+		if (own == null || own.UserId != userId || !string.Equals(own.DeviceId, deviceId, StringComparison.Ordinal))
+		{
+			return Error(StatusCodes.Status400BadRequest, "This sign-in does not belong to this device.");
+		}
 		_screens.Report(userId, deviceId, Math.Max(request.Width, request.Height), Math.Min(request.Width, request.Height), request.Reliable);
 		return NoContent();
 	}
@@ -87,17 +102,18 @@ public class ScreenFitController : ControllerBase
 			.Select(g =>
 			{
 				var latest = g.OrderByDescending(d => d.DateLastActivity ?? DateTime.MinValue).First();
-				// The screen as the device's latest user reported it: what their playback uses.
+				// The screen as the users of this device reported it, the latest one first: what their playback uses.
+				var users = g.Select(d => d.LastUserId).Where(u => u.HasValue).Select(u => u!.Value).ToHashSet();
 				reports.TryGetValue(g.Key, out var list);
-				var screen = list?.Where(r => r.UserId == latest.LastUserId).OrderByDescending(r => r.At).FirstOrDefault()
-					?? list?.OrderByDescending(r => r.At).FirstOrDefault();
+				var screen = list?.Where(r => users.Contains(r.UserId))
+					.OrderByDescending(r => r.UserId == latest.LastUserId).ThenByDescending(r => r.At).FirstOrDefault();
 				return new
 				{
 					Id = g.Key,
-					Name = string.IsNullOrWhiteSpace(latest.CustomName) ? latest.Name ?? string.Empty : latest.CustomName,
-					App = latest.AppName ?? string.Empty,
-					AppVersion = latest.AppVersion ?? string.Empty,
-					Users = g.Select(d => d.LastUserName).Where(n => !string.IsNullOrEmpty(n)).Distinct(StringComparer.Ordinal).ToList(),
+					Name = Cut(string.IsNullOrWhiteSpace(latest.CustomName) ? latest.Name ?? string.Empty : latest.CustomName),
+					App = Cut(latest.AppName ?? string.Empty),
+					AppVersion = Cut(latest.AppVersion ?? string.Empty),
+					Users = g.Select(d => d.LastUserName).Where(n => !string.IsNullOrEmpty(n)).Distinct(StringComparer.Ordinal).Select(n => Cut(n!)).ToList(),
 					LastActive = latest.DateLastActivity,
 					Mode = Plugin.ModeOf(g.Key).ToString(),
 					Screen = screen == null ? null : new
@@ -118,6 +134,8 @@ public class ScreenFitController : ControllerBase
 		return new JsonResult(new
 		{
 			Devices = devices,
+			DeviceRules = Plugin.Rules(),
+			WebClientProblem = WebPatcher.Problem,
 			Activity = log.Entries,
 			log.Versions,
 			log.Limits,
@@ -128,6 +146,26 @@ public class ScreenFitController : ControllerBase
 		});
 	}
 
+	// One device's setting, changed on its own so that two administrators never overwrite each other's changes.
+	[HttpPost("DeviceRule")]
+	[Authorize(Policy = "RequiresElevation")]
+	public ActionResult SetDeviceRule([FromBody] DeviceRuleRequest request)
+	{
+		Private();
+		if (request == null || string.IsNullOrEmpty(request.DeviceId) || request.DeviceId.Length > 256 || !Enum.IsDefined(request.Mode))
+		{
+			return Error(StatusCodes.Status400BadRequest, "Not a device setting.");
+		}
+		var rules = Plugin.SetRule(request.DeviceId, request.Mode);
+		if (rules == null)
+		{
+			return Error(StatusCodes.Status409Conflict, "Too many device settings.");
+		}
+		return new JsonResult(new { DeviceRules = rules });
+	}
+
+	private static string Cut(string text) => text.Length > MaxName ? text[..(MaxName - 1)] + "…" : text;
+
 	private void Private()
 	{
 		Response.Headers.CacheControl = "private, no-store";
@@ -135,6 +173,13 @@ public class ScreenFitController : ControllerBase
 	}
 
 	private ObjectResult Error(int status, string text) => StatusCode(status, new { Message = text });
+}
+
+public class DeviceRuleRequest
+{
+	public string DeviceId { get; set; } = string.Empty;
+
+	public DeviceMode Mode { get; set; }
 }
 
 public class ScreenRequest

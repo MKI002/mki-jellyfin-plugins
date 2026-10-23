@@ -17,13 +17,14 @@ A 4K movie started on a Full HD laptop makes Jellyfin do the most work for nothi
 | Left exactly as Jellyfin decides | |
 |---|---|
 | Bitrate limits (per user and for remote playback) and transcode throttling | The plugin never touches bitrate or throttling settings. |
-| Direct play and remuxing | The size limit applies only when the video is re-encoded anyway. A transcode that copies the video stays a copy. |
+| Direct play and remuxing | The size limit applies only when Jellyfin re-encodes the video anyway (another codec, HDR to SDR, burned-in subtitles, a lower bitrate). A transcode that copies the video stays a copy. |
+| Work for the player | The Full HD version is used only when the player can take it with no more work than the 4K one. If only the Full HD file had image subtitles that would have to be burned in, or a codec the player cannot play, 4K stays. |
 | A version picked by hand | When someone picks a version that is not the default, it plays as picked. |
-| Different cuts | Versions whose lengths differ by more than a minute (theatrical, extended) are never swapped. |
+| Different cuts | Versions whose lengths differ by more than 15 seconds (theatrical, extended) are never swapped. |
 | Audio and subtitles | The Full HD version is used only when it has the chosen audio and subtitle language; otherwise 4K stays. |
 | Unknown screens | Without a trustworthy screen size nothing changes. TV browsers, which draw at 1080p even on a 4K panel, and browsers that hide the screen size for privacy count as unknown. |
 
-The resume position carries over: a movie started in 4K on the TV continues in Full HD on the laptop at the same spot.
+The resume position carries over between versions. Jellyfin offers the version that was watched last first; when that is the Full HD version only because the plugin played it on a laptop, every screen that is not a known Full HD screen gets the 4K version again, at the same spot.
 
 ## Setup
 
@@ -34,6 +35,7 @@ The resume position carries over: a movie started in 4K on the TV continues in F
 
 ## Notes
 
-- The web client script is written to Jellyfin's `index.html` only while a part of the plugin is on, and taken out again when both are off or the plugin is uninstalled. It sends two numbers, the screen's width and height, for the signed-in user's own device, and changes nothing on screen.
-- Screen sizes are kept per user and device in the plugin's configuration folder and expire after 60 days. The recent decisions are kept in memory only.
+- The web client script is written to Jellyfin's `index.html` only while a part of the plugin is on, and taken out again when both are off or the plugin is uninstalled. It sends the screen's width and height, and whether the browser hid them, for the device the user is signed in on, and changes nothing on screen. In full screen it sends nothing.
+- Screen sizes are kept per user and device in the plugin's configuration folder and are deleted after 60 days; the Full HD versions the plugin played are kept there for 180 days so the TV can resume in 4K. Both go when the plugin is uninstalled. The recent decisions are kept in memory only.
+- A device setting changes only what plays on that device, for whoever uses it. It does not grant or block anything.
 - The plugin works on Jellyfin's playback information request, which every app sends before it plays a video. It has been tested with the web client; TV apps use the same answer from the server.

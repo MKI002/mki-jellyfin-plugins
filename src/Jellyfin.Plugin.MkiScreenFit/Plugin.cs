@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Jellyfin.Plugin.MkiScreenFit.Configuration;
 using MediaBrowser.Common.Configuration;
@@ -15,7 +16,12 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 	// Most device rules a configuration may hold; more are ignored (Jellyfin rarely knows more than a few hundred devices).
 	public const int MaxRules = 2000;
 
+	private static readonly object RulesLock = new();
+
 	public static Plugin? Instance { get; private set; }
+
+	// Set while the plugin is being uninstalled, so nothing writes its files again.
+	public static bool Uninstalled { get; private set; }
 
 	public override string Name => "MKI Screen Fit";
 
@@ -51,14 +57,57 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 
 	public static event Action? ConfigSaved;
 
+	// The settings page saves the two switches here. Device settings are changed one device at a time through
+	// SetRule, so a page that was opened before another administrator's change cannot write an old list back.
 	public override void UpdateConfiguration(BasePluginConfiguration configuration)
 	{
-		base.UpdateConfiguration(configuration);
+		lock (RulesLock)
+		{
+			if (configuration is PluginConfiguration incoming)
+			{
+				incoming.DeviceRules = Copy(Configuration.DeviceRules);
+			}
+			base.UpdateConfiguration(configuration);
+		}
 		ConfigSaved?.Invoke();
 	}
 
+	// Sets one device's mode (Auto removes its rule) and returns all rules as they are now, or null when there are
+	// already too many.
+	public static List<DeviceRule>? SetRule(string deviceId, DeviceMode mode)
+	{
+		var plugin = Instance;
+		if (plugin == null)
+		{
+			return null;
+		}
+		lock (RulesLock)
+		{
+			var list = Copy(plugin.Configuration.DeviceRules).Where(r => !string.Equals(r.DeviceId, deviceId, StringComparison.Ordinal)).ToList();
+			if (mode != DeviceMode.Auto)
+			{
+				if (list.Count >= MaxRules)
+				{
+					return null;
+				}
+				list.Add(new DeviceRule { DeviceId = deviceId, Mode = mode });
+			}
+			// A new list, never a changed one: playback reads the rules without a lock.
+			plugin.Configuration.DeviceRules = list;
+			plugin.SaveConfiguration();
+			return Copy(list);
+		}
+	}
+
+	public static List<DeviceRule> Rules() => Copy(Config.DeviceRules);
+
+	private static List<DeviceRule> Copy(List<DeviceRule>? rules) =>
+		(rules ?? new List<DeviceRule>()).Where(r => r != null && !string.IsNullOrEmpty(r.DeviceId) && Enum.IsDefined(r.Mode))
+			.Take(MaxRules).Select(r => new DeviceRule { DeviceId = r.DeviceId, Mode = r.Mode }).ToList();
+
 	public override void OnUninstalling()
 	{
+		Uninstalled = true;
 		try
 		{
 			Services.WebPatcher.RemoveScript(ApplicationPaths);
@@ -66,6 +115,18 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 		catch (Exception)
 		{
 			// Uninstalling must not fail because index.html is read-only.
+		}
+		try
+		{
+			// The screen sizes and swap hints go with the plugin.
+			string folder = Path.Combine(ApplicationPaths.PluginConfigurationsPath, "MkiScreenFit");
+			if (Directory.Exists(folder))
+			{
+				Directory.Delete(folder, true);
+			}
+		}
+		catch (Exception)
+		{
 		}
 		base.OnUninstalling();
 	}

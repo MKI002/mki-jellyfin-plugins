@@ -43,7 +43,10 @@ pull request.
 - **Middleware order.** Plugin middleware runs in alphabetical plugin order. A gate must not rely on another plugin's
   middleware having run first. Wrap request middleware in try/catch so a failure falls through to Jellyfin.
 - **Anonymous endpoints.** Only static files and the password change flow are anonymous. A new one needs a reason, and
-  an entry in `build/security-baseline.json` after review. The same goes for a new `IStartupFilter`.
+  an entry in `build/security-baseline.json` after review. The same goes for a new `IStartupFilter` and for an MVC
+  filter (`IActionFilter`, `IResultFilter` and the like) that wraps Jellyfin's own API actions.
+- **Device ids.** Jellyfin takes the device id from the request header, not from the sign-in. Anything stored per
+  device is bound to the sign-in's own device (`IDeviceManager.GetDevices(new DeviceQuery { AccessToken = … })`).
 - **Per-user data** is cached per user, filtered with `BaseItem.IsVisibleStandalone(user)`, and sent with
   `Cache-Control: private` and `Vary: Authorization`.
 - **Seerr.** Users are matched only by Seerr's `jellyfinUserId`, never by name. Unlinked users are refused, never

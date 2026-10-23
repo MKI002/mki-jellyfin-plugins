@@ -23,6 +23,9 @@ public class WebPatcher : IHostedService
 
 	private readonly ILogger<WebPatcher> _logger;
 
+	// Why the script could not be added while a part is on, for the settings page; null when all is well.
+	public static string? Problem { get; private set; }
+
 	public WebPatcher(IApplicationPaths paths, ILogger<WebPatcher> logger)
 	{
 		_paths = paths;
@@ -48,16 +51,19 @@ public class WebPatcher : IHostedService
 		{
 			lock (_lock)
 			{
-				Write(Plugin.AnyOn);
+				bool on = Plugin.AnyOn;
+				string? problem = Write(on);
+				Problem = on ? problem : null;
 			}
 		}
 		catch (Exception ex)
 		{
+			Problem = Plugin.AnyOn ? "Jellyfin's web folder could not be changed (" + ex.GetType().Name + ")." : null;
 			_logger.LogError(ex, "MKI Screen Fit could not update the web client");
 		}
 	}
 
-	private void Write(bool on)
+	private string? Write(bool on)
 	{
 		string? root = WebRoot(_paths);
 		if (root == null)
@@ -66,7 +72,7 @@ public class WebPatcher : IHostedService
 			{
 				_logger.LogWarning("Web client folder not found - browsers will not report their screen size");
 			}
-			return;
+			return "Jellyfin's web folder was not found.";
 		}
 		string file = Path.Combine(root, "index.html");
 		string old = File.ReadAllText(file);
@@ -77,7 +83,7 @@ public class WebPatcher : IHostedService
 			if (end < 0)
 			{
 				_logger.LogWarning("No </body> found in index.html");
-				return;
+				return "the web client's index.html has an unexpected layout.";
 			}
 			updated = updated.Insert(end, ScriptTag);
 		}
@@ -86,6 +92,7 @@ public class WebPatcher : IHostedService
 			WriteFile(file, updated);
 			_logger.LogInformation("MKI Screen Fit: screen size script {State} the web client ({Path})", on ? "added to" : "removed from", file);
 		}
+		return null;
 	}
 
 	// Called when the plugin is uninstalled, so the web client does not keep loading a script that is gone.

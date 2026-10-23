@@ -1,7 +1,7 @@
 /* MKI Screen Fit: tells the server how large this device's screen is, so it can play the Full HD version of a movie
-   on a Full HD screen and keep transcodes no larger than the screen. Sends two numbers for the signed-in user's own
-   device and nothing else; it shows nothing and changes nothing in the web client. Only loaded while an
-   administrator has a part of the plugin turned on. */
+   on a Full HD screen and keep transcodes no larger than the screen. Sends the screen's width and height, and whether
+   they can be trusted, for the signed-in user's own device and nothing else; it shows nothing and changes nothing in
+   the web client. Only loaded while an administrator has a part of the plugin turned on. */
 (function () {
     'use strict';
     if (window.MkiScreenFit) {
@@ -32,9 +32,16 @@
         return { Width: Math.max(w, h), Height: Math.min(w, h), Reliable: !hidden && !onTv() };
     }
 
+    /* in a full-screen browser the window is the screen, which looks exactly like the protection above: the report
+       made outside full screen stands */
+    function fullScreen() {
+        return !window.NativeShell && !!(document.fullscreenElement || document.webkitFullscreenElement ||
+            (window.matchMedia && window.matchMedia('(display-mode: fullscreen)').matches));
+    }
+
     function send(force) {
         var a = api();
-        if (state.busy || !a || !a.accessToken || !a.accessToken() || !a.getCurrentUserId || !a.getCurrentUserId()) return;
+        if (state.busy || fullScreen() || !a || !a.accessToken || !a.accessToken() || !a.getCurrentUserId || !a.getCurrentUserId()) return;
         var m = measure();
         if (!m) return;
         var key = [a.serverId && a.serverId(), a.getCurrentUserId(), a.deviceId && a.deviceId(), m.Width, m.Height, m.Reliable].join('|');

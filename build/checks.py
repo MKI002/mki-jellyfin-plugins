@@ -164,7 +164,7 @@ def check_private():
 
 def check_security():
     baseline = json.loads(BASELINE.read_text(encoding="utf-8"))
-    anonymous, filters = [], []
+    anonymous, filters, mvc = [], [], []
     for path in tracked_files():
         if not path.is_relative_to(SRC):
             continue
@@ -194,7 +194,10 @@ def check_security():
                 anonymous.append(f"{where}::{m.group(1)}")
             for m in re.finditer(r"class\s+(\w+)\s*:[^{]*\bIStartupFilter\b", text):
                 filters.append(f"{where}::{m.group(1)}")
-    for kind, found in (("anonymousEndpoints", anonymous), ("requestMiddleware", filters)):
+            # MVC filters run around Jellyfin's own API actions and can change their arguments and results.
+            for m in re.finditer(r"class\s+(\w+)\s*:[^{]*\bI(?:Async)?(?:Action|Result|Resource|Authorization|Exception)Filter\b", text):
+                mvc.append(f"{where}::{m.group(1)}")
+    for kind, found in (("anonymousEndpoints", anonymous), ("requestMiddleware", filters), ("mvcFilters", mvc)):
         known = set(baseline.get(kind, []))
         for item in sorted(set(found) - known):
             fail("build/security-baseline.json", f"new {kind} entry {item} needs a security review "

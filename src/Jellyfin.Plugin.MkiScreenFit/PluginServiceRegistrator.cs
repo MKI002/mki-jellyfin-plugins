@@ -17,6 +17,7 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
 		}
 
 		serviceCollection.AddSingleton<ScreenStore>();
+		serviceCollection.AddSingleton<SwapMemory>();
 		serviceCollection.AddSingleton<ActivityLog>();
 		serviceCollection.AddSingleton<PlaybackInfoFilter>();
 		// An MVC filter, not request middleware: it only sees the PlaybackInfo action, after Jellyfin has

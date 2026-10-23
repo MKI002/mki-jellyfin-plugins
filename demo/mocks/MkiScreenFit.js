@@ -3,7 +3,8 @@
   'use strict';
   var ID = '10b53a4f-258a-459a-962b-2e29418e0775', H = 36e5, DAY = 864e5;
   function ago(ms) { return new Date(Date.now() - ms).toISOString(); }
-  MkiDemo.plugin(ID, { EnableFullHdVersion: true, EnableTranscodeLimit: true, DeviceRules: [{ DeviceId: 'demo-firetv', Mode: 'FullHd' }] });
+  var rules = [{ DeviceId: 'demo-firetv', Mode: 'FullHd' }];
+  MkiDemo.plugin(ID, { EnableFullHdVersion: true, EnableTranscodeLimit: true, DeviceRules: rules });
 
   function scr(w, h, at, reliable) { return { Width: w, Height: h, Reliable: reliable !== false, Current: true, At: ago(at), FullHd: Math.min(w, h) <= 1200 }; }
   var devices = [
@@ -19,7 +20,8 @@
   ];
   var activity = [
     { At: ago(0.4 * H), Kind: 'version', DeviceName: 'Firefox', UserName: 'Alex', ItemName: 'Blade Runner 2049', From: '3840x2160', To: '1920x1080', Reason: '', Screen: '1920x1080' },
-    { At: ago(0.4 * H), Kind: 'limit', DeviceName: 'Firefox', UserName: 'Alex', ItemName: 'Blade Runner 2049', From: '1920x1080', To: 'at most 1920x1080', Reason: 'VideoRangeTypeNotSupported', Screen: '1920x1080' },
+    { At: ago(2 * H), Kind: 'restore', DeviceName: 'Living room TV', UserName: 'Alex', ItemName: 'Arrival', From: '1920x1080', To: '3840x2160', Reason: '', Screen: 'unknown screen' },
+    { At: ago(2.5 * H), Kind: 'limit', DeviceName: 'Firefox', UserName: 'Alex', ItemName: 'Arrival', From: '3840x2160', To: 'at most 1920x1080', Reason: 'VideoRangeTypeNotSupported, SubtitleCodecNotSupported', Screen: '1920x1080' },
     { At: ago(3 * H), Kind: 'version', DeviceName: 'Bedroom Fire TV', UserName: 'Sam', ItemName: 'Dune: Part Two', From: '3840x1600', To: '1920x800', Reason: '', Screen: 'set to Full HD' },
     { At: ago(9 * H), Kind: 'kept', DeviceName: 'Pixel 9', UserName: 'Kim', ItemName: 'Oppenheimer', From: '3840x2160', To: '', Reason: 'no Full HD version', Screen: '2424x1080' },
     { At: ago(9 * H), Kind: 'limit', DeviceName: 'Pixel 9', UserName: 'Kim', ItemName: 'Oppenheimer', From: '3840x2160', To: 'at most 2424x1080', Reason: 'VideoCodecNotSupported', Screen: '2424x1080' },
@@ -28,8 +30,14 @@
 
   MkiDemo.route('GET', /^MkiScreenFit\/Overview$/, function () {
     return {
-      Devices: devices, Activity: activity, Versions: 2, Limits: 2, Kept: 2, Since: ago(2 * DAY),
+      Devices: devices, DeviceRules: rules, WebClientProblem: null, Activity: activity, Versions: 2, Limits: 2, Kept: 2, Since: ago(2 * DAY),
       FullHdMaxShortSide: 1200, MinLimit: { Width: 1280, Height: 720 }
     };
+  });
+  MkiDemo.route('POST', /^MkiScreenFit\/DeviceRule$/, function (r) {
+    var b = r.body || {};
+    rules = rules.filter(function (x) { return x.DeviceId !== b.DeviceId; });
+    if (b.Mode !== 'Auto') rules.push({ DeviceId: b.DeviceId, Mode: b.Mode });
+    return { DeviceRules: rules };
   });
 })();

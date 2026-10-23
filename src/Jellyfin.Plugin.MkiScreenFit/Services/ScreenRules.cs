@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using Jellyfin.Data.Enums;
+using MediaBrowser.Model.Dlna;
 using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.MediaInfo;
@@ -28,27 +31,33 @@ public static class ScreenRules
 	public const int FullHdHeight = 1080;
 
 	// Versions whose lengths differ by more than this are treated as different cuts (theatrical, extended, ...)
-	// and are never swapped for each other.
-	public static readonly long MaxLengthDifferenceTicks = TimeSpan.FromSeconds(60).Ticks;
+	// and are never swapped for each other. Small enough that a resume position stays in the same scene.
+	public static readonly long MaxLengthDifferenceTicks = TimeSpan.FromSeconds(15).Ticks;
 
-	// Reasons for which Jellyfin re-encodes the video. Only then is a smaller size free: limiting the size of a
-	// transcode that would otherwise copy the video (only the container or the audio change) would force a
-	// re-encode, which costs far more than it saves.
+	// How much work a version means for a player, from least to most.
+	public const int PlayedAsIs = 0;
+
+	public const int Remuxed = 1;
+
+	public const int Reencoded = 2;
+
+	public const int NotPlayable = 3;
+
+	// Jellyfin's own reasons that are about the video picture (StreamBuilder.VideoReasons). A codec tag or a
+	// container bitrate only needs a remux.
 	private const TranscodeReason VideoReasons =
 		TranscodeReason.VideoCodecNotSupported
-		| TranscodeReason.VideoProfileNotSupported
-		| TranscodeReason.VideoRangeTypeNotSupported
-		| TranscodeReason.VideoCodecTagNotSupported
-		| TranscodeReason.VideoLevelNotSupported
 		| TranscodeReason.VideoResolutionNotSupported
-		| TranscodeReason.VideoBitDepthNotSupported
-		| TranscodeReason.VideoFramerateNotSupported
-		| TranscodeReason.VideoRotationNotSupported
-		| TranscodeReason.RefFramesNotSupported
 		| TranscodeReason.AnamorphicVideoNotSupported
 		| TranscodeReason.InterlacedVideoNotSupported
+		| TranscodeReason.VideoBitDepthNotSupported
 		| TranscodeReason.VideoBitrateNotSupported
-		| TranscodeReason.ContainerBitrateExceedsLimit;
+		| TranscodeReason.VideoFramerateNotSupported
+		| TranscodeReason.VideoLevelNotSupported
+		| TranscodeReason.RefFramesNotSupported
+		| TranscodeReason.VideoRangeTypeNotSupported
+		| TranscodeReason.VideoProfileNotSupported
+		| TranscodeReason.VideoRotationNotSupported;
 
 	// ISO 639-2 bibliographic codes and common two-letter codes, mapped to one spelling so "ger" matches "deu".
 	private static readonly Dictionary<string, string> LanguageAliases = new(StringComparer.OrdinalIgnoreCase)
@@ -81,9 +90,10 @@ public static class ScreenRules
 		: "unknown size";
 
 	// Picks the Full HD version to play instead of the default one, or says why it keeps the default.
-	// sources[0] is the version Jellyfin plays by default (the item itself); audio and subtitle are the stream
-	// indexes the client asked for in that version.
-	public static VersionChoice Choose(IReadOnlyList<MediaSourceInfo> sources, int? audio, int? subtitle)
+	// sources[0] is the version Jellyfin plays by default; audio and subtitle are the stream indexes the client
+	// asked for in that version. work tells how much work a version means for this player (null when unknown):
+	// a version that would need more work than the default one is never chosen.
+	public static VersionChoice Choose(IReadOnlyList<MediaSourceInfo> sources, int? audio, int? subtitle, Func<MediaSourceInfo, int?, int?, int>? work)
 	{
 		var from = sources[0];
 		if (!IsAboveFullHd(from.VideoStream))
@@ -91,9 +101,10 @@ public static class ScreenRules
 			return VersionChoice.Nothing;
 		}
 		var candidates = sources.Skip(1)
-			.Where(s => s.Protocol == MediaProtocol.File && !s.IsInfiniteStream && IsFullHd(s.VideoStream))
+			.Where(s => PlainFile(s) && IsFullHd(s.VideoStream))
 			.OrderByDescending(s => (long)(s.VideoStream.Width ?? 0) * (s.VideoStream.Height ?? 0))
 			.ToList();
+		int? fromWork = null;
 		if (candidates.Count == 0)
 		{
 			return VersionChoice.Keep("no Full HD version");
@@ -116,10 +127,59 @@ public static class ScreenRules
 				reason = "the Full HD version lacks the chosen subtitles";
 				continue;
 			}
+			if (work != null)
+			{
+				fromWork ??= work(from, audio, subtitle);
+				if (work(to, newAudio, newSubtitle) > fromWork.Value)
+				{
+					reason = "this player would need a transcode for the Full HD version (for example image subtitles or another codec)";
+					continue;
+				}
+			}
 			return new VersionChoice { From = from, To = to, Audio = newAudio, Subtitle = newSubtitle };
 		}
 		return VersionChoice.Keep(reason);
 	}
+
+	// After a swap, Jellyfin puts the Full HD version first because it was watched last. On a screen that is not
+	// Full HD that order only exists because of the plugin, so the item's own version (4K) is played again, with
+	// the same audio and subtitles. swapped tells whether the plugin played that Full HD version for this user.
+	public static VersionChoice Restore(IReadOnlyList<MediaSourceInfo> sources, string ownId, int? audio, int? subtitle, Func<string, bool> swapped)
+	{
+		var from = sources[0];
+		if (string.Equals(from.Id, ownId, StringComparison.OrdinalIgnoreCase) || !IsFullHd(from.VideoStream) || string.IsNullOrEmpty(from.Id) || !swapped(from.Id))
+		{
+			return VersionChoice.Nothing;
+		}
+		var to = sources.FirstOrDefault(s => string.Equals(s.Id, ownId, StringComparison.OrdinalIgnoreCase));
+		if (to == null || !PlainFile(to) || !IsAboveFullHd(to.VideoStream) || !SameLength(from, to)
+			|| !MapAudio(from, to, audio, out int? newAudio) || !MapSubtitle(from, to, subtitle, out int? newSubtitle))
+		{
+			return VersionChoice.Nothing;
+		}
+		return new VersionChoice { From = from, To = to, Audio = newAudio, Subtitle = newSubtitle };
+	}
+
+	// How much work Jellyfin's plan for a version means: played as it is, remuxed (container or audio), or the
+	// picture re-encoded (including burned-in subtitles).
+	public static int Work(StreamInfo? plan)
+	{
+		if (plan == null)
+		{
+			return NotPlayable;
+		}
+		if (plan.PlayMethod == PlayMethod.DirectPlay)
+		{
+			return PlayedAsIs;
+		}
+		bool burnIn = plan.SubtitleDeliveryMethod == SubtitleDeliveryMethod.Encode && plan.SubtitleStreamIndex >= 0;
+		return burnIn || (plan.PlayMethod == PlayMethod.Transcode && (plan.TranscodeReasons & VideoReasons) != 0) ? Reencoded : Remuxed;
+	}
+
+	// A single video file that is there now: a missing file or a disc folder would fail where the default plays.
+	private static bool PlainFile(MediaSourceInfo s) =>
+		s.Protocol == MediaProtocol.File && !s.IsInfiniteStream && (s.VideoType ?? VideoType.VideoFile) == VideoType.VideoFile
+		&& !string.IsNullOrEmpty(s.Path) && File.Exists(s.Path);
 
 	public static bool SameLength(MediaSourceInfo a, MediaSourceInfo b)
 	{
@@ -207,17 +267,94 @@ public static class ScreenRules
 		return LanguageAliases.TryGetValue(c, out var alias) ? alias : c;
 	}
 
-	// True when Jellyfin will re-encode the video of this source if the client transcodes it.
+	// True only when Jellyfin re-encodes the video of this transcode anyway, judged as Jellyfin decides whether it
+	// may copy the video (EncodingHelper.CanStreamCopyVideo), from the transcode URL and the source. Where the URL
+	// leaves it open the answer is no: a size limit on a transcode that would copy the video forces a re-encode,
+	// which costs far more than it saves.
 	public static bool ReencodesVideo(MediaSourceInfo source)
 	{
-		if ((source.TranscodeReasons & VideoReasons) != 0)
+		var video = source.VideoStream;
+		var query = Query(source.TranscodingUrl);
+		if (video == null || query == null)
+		{
+			return false;
+		}
+		string codec = video.Codec ?? string.Empty;
+		string? Arg(string name) => query.FirstOrDefault(p => string.Equals(p.Key, name, StringComparison.OrdinalIgnoreCase)).Value;
+		// Codec options are read as Jellyfin reads them: "hevc-level", else "level".
+		string? Option(string name) => query.FirstOrDefault(p => p.Key == codec + "-" + name).Value ?? query.FirstOrDefault(p => p.Key == name).Value;
+		if (codec.Length == 0)
 		{
 			return true;
 		}
-		// Burned-in subtitles are drawn into the picture, so the video is re-encoded.
-		return source.TranscodingUrl != null
-			&& source.TranscodingUrl.Contains("SubtitleMethod=Encode", StringComparison.OrdinalIgnoreCase);
+		if (bool.TryParse(Arg("AllowVideoStreamCopy"), out bool copy) && !copy)
+		{
+			return true;
+		}
+		var codecs = List(Arg("VideoCodec"));
+		if (codecs.Length > 0 && !codecs.Contains(codec, StringComparer.OrdinalIgnoreCase))
+		{
+			return true;
+		}
+		// Subtitles drawn into the picture; "Encode" without a subtitle stream (subtitles off) is not a burn-in.
+		if (string.Equals(Arg("SubtitleMethod"), "Encode", StringComparison.OrdinalIgnoreCase) && Number(Arg("SubtitleStreamIndex")) >= 0)
+		{
+			return true;
+		}
+		if (Number(Arg("VideoBitrate")) is long bitrate && (video.BitRate is not int own || own > bitrate))
+		{
+			return true;
+		}
+		if ((Number(Arg("MaxWidth")) is long w && (video.Width is not int vw || vw > w)) || (Number(Arg("MaxHeight")) is long h && (video.Height is not int vh || vh > h)))
+		{
+			return true;
+		}
+		if (double.TryParse(Arg("MaxFramerate") ?? Arg("Framerate"), NumberStyles.Float, CultureInfo.InvariantCulture, out double fps)
+			&& (video.ReferenceFrameRate is not float rate || rate > fps + 0.05))
+		{
+			return true;
+		}
+		if ((Number(Option("videobitdepth")) is long depth && video.BitDepth > depth) || (Number(Option("maxrefframes")) is long refs && video.RefFrames > refs))
+		{
+			return true;
+		}
+		if (double.TryParse(Option("level"), NumberStyles.Float, CultureInfo.InvariantCulture, out double level) && video.Level > level)
+		{
+			return true;
+		}
+		var ranges = List(Arg("VideoRangeType") ?? Option("rangetype"));
+		if (ranges.Length > 0)
+		{
+			var range = video.VideoRangeType;
+			bool Has(VideoRangeType t) => ranges.Contains(t.ToString(), StringComparer.OrdinalIgnoreCase);
+			if (range == VideoRangeType.Unknown
+				|| (ranges.Length == 1 && Has(VideoRangeType.SDR) && range != VideoRangeType.SDR)
+				|| (range == VideoRangeType.DOVI && !Has(VideoRangeType.DOVI))
+				|| (range is VideoRangeType.HDR10Plus or VideoRangeType.HDR10 or VideoRangeType.HLG && !Has(range)
+					&& !(range == VideoRangeType.HDR10Plus && Has(VideoRangeType.HDR10))))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
+
+	private static List<KeyValuePair<string, string>>? Query(string? url)
+	{
+		int q = url == null ? -1 : url.IndexOf('?', StringComparison.Ordinal);
+		if (q < 0)
+		{
+			return null;
+		}
+		return url!.Substring(q + 1).Split('&', StringSplitOptions.RemoveEmptyEntries)
+			.Select(p => p.Split('=', 2))
+			.Select(p => new KeyValuePair<string, string>(Uri.UnescapeDataString(p[0]), p.Length > 1 ? Uri.UnescapeDataString(p[1].Replace('+', ' ')) : string.Empty))
+			.ToList();
+	}
+
+	private static string[] List(string? value) => (value ?? string.Empty).Split(new[] { ',', '|' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+	private static long? Number(string? value) => long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out long n) ? n : null;
 
 	// The transcode URL with MaxWidth and MaxHeight no larger than the screen. Only lowers values, never raises
 	// them, and leaves every other part of the URL (bitrate, codecs, throttling) exactly as Jellyfin wrote it.
