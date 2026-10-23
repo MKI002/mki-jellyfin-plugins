@@ -30,7 +30,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 
 	public override Guid Id => Guid.Parse("10b53a4f-258a-459a-962b-2e29418e0775");
 
-	public override string Description => "Plays the Full HD version of a movie on screens that cannot show 4K, and keeps transcodes no larger than the screen.";
+	public override string Description => "Plays the Full HD version of a movie on screens that cannot show 4K, and makes transcodes only as large as the screen.";
 
 	public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger<Plugin> logger)
 		: base(applicationPaths, xmlSerializer)
