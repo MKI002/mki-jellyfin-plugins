@@ -2,7 +2,7 @@
    - On the sign-in page: "Have a guest code?", leading to the join page (only while a pass with a code is open), and
      for a guest who was just signed out in this window, that their pass ended, or a way back in and a way to make
      this browser forget them.
-   - For a signed-in guest: a small badge with the end of the guest access. It opens a panel with "Sign in a TV"
+   - For a signed-in guest: a small badge with the end of the guest access. It opens a panel with "Sign in a TV or another device"
      (Jellyfin's Quick Connect) and the server address for TV apps.
    - A guest who joined as on a shared computer: Jellyfin's "remember me" is turned off once they are signed in, so
      Jellyfin asks for a sign-in after this window closes.
@@ -111,7 +111,7 @@
         var was = seen();
         /* Jellyfin keeps earlier sign-in pages hidden in the page: a note there would be stale */
         Array.prototype.forEach.call(document.querySelectorAll('.mkigp-ended'), function (x) { if (!page.contains(x)) x.parentNode.removeChild(x); });
-        var old = page.querySelector('.mkigp-ended'), sig = was ? JSON.stringify([was.end, was.cut || 0, keys().map(function (g) { return g.key; })]) : '';
+        var old = page.querySelector('.mkigp-ended'), sig = was ? JSON.stringify([was.end, was.cut || 0, was.away || 0, keys().map(function (g) { return g.key; })]) : '';
         if (old && old.getAttribute('data-sig') !== sig) { old.parentNode.removeChild(old); old = null; }
         if (was && !old) {
             addCss();
@@ -126,7 +126,9 @@
                 var back = keys();
                 var shared = false;
                 try { shared = !!sessionStorage.getItem(SHARED); } catch (e) { }
-                n.appendChild(el('p', null, was.cut ? 'You were signed out of your guest access on this browser.'
+                var from = back.length === 1 && back[0].from ? back[0].from : '';
+                n.appendChild(el('p', null, was.cut ? 'Your guest access on this browser has ended. Open your guest link again: it brings you back if it can, or says why not.'
+                    : was.away ? 'Your guest pass works on the home network only, and Jellyfin does not see this device there right now. At ' + (from ? from + '’s' : 'your host’s') + ' home? Connect to the Wi-Fi there, not mobile data, then continue. Somewhere else? Ask ' + (from || 'the person who invited you') + ' to allow the pass from anywhere.'
                     : shared ? 'This is a shared computer, so Jellyfin asks again after a reload.' : 'You are signed out of your guest access.'));
                 if (back.length) {
                     var row = el('p', 'mkigp-again'), go = el('a', null, back.length === 1 ? 'Continue as ' + back[0].name : 'Continue as a guest');
@@ -138,7 +140,7 @@
                         var done = el('p', null, 'Done: this browser does not know your guest access any more.');
                         done.tabIndex = -1; done.setAttribute('role', 'status');
                         n.appendChild(done);
-                        n.setAttribute('data-sig', JSON.stringify([was.end, was.cut || 0, []]));
+                        n.setAttribute('data-sig', JSON.stringify([was.end, was.cut || 0, was.away || 0, []]));
                         try { done.focus(); } catch (e) { }
                     });
                     row.appendChild(go); row.appendChild(no); n.appendChild(row);
@@ -271,6 +273,8 @@
             asking = false; me = null; meFor = who; render();
             /* a guest whose access ended or was ended: Jellyfin itself would only show a spinner */
             if (e && e.status === 401 && seen()) { var was = seen(); was.cut = Date.now(); seen(was); endKeys(was.pass); signOut(); }
+            /* refused, not ended: a pass for the home network only, used from elsewhere. The way back stays */
+            else if (e && e.status === 403 && seen()) { var w = seen(); w.away = Date.now(); seen(w); signOut(); }
         });
     }
 
@@ -327,7 +331,7 @@
         inner.appendChild(count);
 
         var tv = el('div', 'mkigp-sec'), address = BASE || location.origin;
-        tv.appendChild(el('h3', null, 'Sign in a TV'));
+        tv.appendChild(el('h3', null, 'Sign in a TV or another device'));
         if (over(g)) {
             tv.appendChild(el('p', null, 'Not any more: your guest access has ended.'));
         } else if (!g.QuickConnect) {
@@ -337,13 +341,13 @@
         } else {
             /* in the order a TV app asks: the address first, then Quick Connect */
             var steps = el('ol', 'mkigp-steps');
-            var s1 = el('li'); s1.appendChild(document.createTextNode('In the Jellyfin app on the TV, enter the server address:'));
+            var s1 = el('li'); s1.appendChild(document.createTextNode('On the TV or other device, open the Jellyfin app (or a browser) with the server address:'));
             var addr = el('div', 'mkigp-addr'); addr.appendChild(el('code', null, address)); addr.appendChild(copyButton(address)); s1.appendChild(addr);
             steps.appendChild(s1);
-            steps.appendChild(el('li', null, 'Choose Quick Connect. The TV shows a code.'));
+            steps.appendChild(el('li', null, 'Choose Use Quick Connect. It shows a code.'));
             var s3 = el('li'); s3.appendChild(document.createTextNode('Type that code here:'));
             var row = el('div', 'mkigp-row'), inp = el('input'), go = el('button', 'mkigp-btn', 'Sign in');
-            inp.type = 'text'; inp.maxLength = 10; inp.autocomplete = 'off'; inp.setAttribute('aria-label', 'Code shown on the TV'); inp.setAttribute('autocapitalize', 'characters'); inp.setAttribute('spellcheck', 'false');
+            inp.type = 'text'; inp.maxLength = 10; inp.autocomplete = 'off'; inp.setAttribute('aria-label', 'Code shown on the other device'); inp.setAttribute('autocapitalize', 'characters'); inp.setAttribute('spellcheck', 'false');
             go.type = 'button';
             row.appendChild(inp); row.appendChild(go); s3.appendChild(row);
             steps.appendChild(s3);
@@ -352,22 +356,22 @@
             var send = function () {
                 if (go.disabled) return;
                 var c = inp.value.replace(/\s+/g, '');
-                if (!/^[A-Za-z0-9]{4,10}$/.test(c)) { say.className = 'mkigp-say is-bad'; say.textContent = 'Type the code exactly as the TV shows it.'; inp.focus(); return; }
-                go.disabled = true; say.className = 'mkigp-say'; say.textContent = 'Signing in the TV…';
+                if (!/^[A-Za-z0-9]{4,10}$/.test(c)) { say.className = 'mkigp-say is-bad'; say.textContent = 'Type the code exactly as the other device shows it.'; inp.focus(); return; }
+                go.disabled = true; say.className = 'mkigp-say'; say.textContent = 'Signing in…';
                 call('POST', 'QuickConnect/Authorize?code=' + encodeURIComponent(c)).then(function () {
                     var n = Math.min(g.DevicesPerGuest, g.Devices + 1), last = n >= g.DevicesPerGuest;
                     g.Devices = n; inp.value = '';
                     /* the last free device: no code field that can only fail */
                     go.disabled = last; inp.disabled = last;
                     say.className = 'mkigp-say is-ok';
-                    say.textContent = 'Done. The TV signs in within a few seconds.' + (last ? ' That was the last device your pass allows: to sign in another one, sign out on a device first.' : '');
+                    say.textContent = 'Done. The other device signs in within a few seconds.' + (last ? ' That was the last device your pass allows: to sign in another one, sign out on a device first.' : '');
                     count.textContent = '“' + g.Pass + '” · ' + devices(n, g.DevicesPerGuest) + '.';
                     meFor = ''; ask();
                 }, function (e) {
                     go.disabled = false;
                     say.className = 'mkigp-say is-bad';
                     say.textContent = e.status === 403 && e.text && e.text.length < 300 && e.text.charAt(0) !== '{' ? e.text
-                        : e.status === 404 || e.status === 400 ? 'That code is not valid any more. Check the TV and try again.'
+                        : e.status === 404 || e.status === 400 ? 'That code is not valid any more. Check the other device and try again.'
                         : e.status === 401 ? 'Your guest access has ended.'
                         : 'This did not work. Please try again.';
                 });

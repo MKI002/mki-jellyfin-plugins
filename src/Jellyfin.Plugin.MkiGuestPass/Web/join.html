@@ -42,7 +42,7 @@ body {
 }
 main { width: 100%; max-width: 440px; }
 .top { display: flex; align-items: center; gap: 10px; margin: 0 4px 14px; font-size: .82rem; color: var(--dim); letter-spacing: .02em; }
-.top svg { flex: none; }
+.top img { flex: none; display: block; }
 .top b { color: var(--text); font-weight: 650; overflow-wrap: anywhere; }
 .card {
   position: relative; border-radius: 20px; background: var(--card); border: 1px solid var(--line);
@@ -84,6 +84,7 @@ input.code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; l
   color: var(--on-grad); background: linear-gradient(90deg, var(--a1), var(--a2)); box-shadow: 0 10px 30px -12px rgba(var(--a1-rgb), .7);
   -webkit-tap-highlight-color: transparent;
 }
+a.btn { text-decoration: none; }
 .btn:hover { filter: brightness(1.06); }
 .btn:focus-visible { outline: 3px solid var(--a2-ink); outline-offset: 3px; }
 .btn[disabled] { opacity: .6; cursor: progress; }
@@ -103,6 +104,14 @@ input.code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; l
 .tv code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: .85rem; color: var(--text); overflow-wrap: anywhere; }
 .tv .h { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-weight: 700; color: var(--text); }
 .tv .h svg { color: var(--a1-ink); }
+.next { margin: 18px 0 0; padding: 14px; border-radius: 14px; border: 1px solid rgba(var(--a2-rgb), .4); background: rgba(var(--a2-rgb), .07); font-size: .92rem; color: var(--dim); }
+.next .h { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-weight: 700; color: var(--text); }
+.next .h svg { flex: none; color: var(--a2-ink); }
+.next p { margin: 0; }
+.next > :first-child { margin-top: 0; }
+.next ul { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.next li b { color: var(--text); }
+.next .btn { margin-top: 14px; }
 .who { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 8px; }
 .foot { margin: 16px 6px 0; font-size: .8rem; color: var(--dim); text-align: center; }
 .big { display: grid; place-items: center; width: 56px; height: 56px; margin: 0 0 14px; border-radius: 16px; background: linear-gradient(135deg, rgba(var(--a1-rgb), .22), rgba(var(--a2-rgb), .22)); color: var(--a1-ink); }
@@ -117,7 +126,7 @@ input.code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; l
 <body>
 <main>
   <p class="top">
-    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF3D71"/><stop offset="1" stop-color="#3DC8FF"/></linearGradient></defs><path fill="url(#g)" d="M12 2 2 21h20L12 2Zm0 6.2 5.3 10.3H6.7L12 8.2Z"/></svg>
+    <img id="jfLogo" src="../web/favicons/touchicon144.png" width="22" height="22" alt="">
     <span>Jellyfin<span id="server"></span></span>
   </p>
   <div class="card" aria-live="polite">

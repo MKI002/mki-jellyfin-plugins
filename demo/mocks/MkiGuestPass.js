@@ -46,7 +46,7 @@
   function find(id) { return passes.filter(function (p) { return p.Id === id; })[0]; }
   function guest(id) { var hit = null; passes.forEach(function (p) { p.Guests.forEach(function (g) { if (g.UserId === id) hit = { p: p, g: g }; }); }); return hit; }
   function lock(g) { g.State = g.State === 'Active' ? 'Locked' : g.State; g.LockedUtc = new Date().toISOString(); g.DeleteUtc = at(((MkiDemo.config(ID) || {}).DeleteAfterDays || 0) * DAY); g.Devices = 0; g.DeviceList = []; g.Watching = null; }
-  function shared(p) { return { Id: p.Id, Name: p.Name, EndUtc: p.EndUtc, MaxGuests: p.MaxGuests, Used: p.Used, From: p.CreatedByName, Token: secret(), Code: p.HasCode ? code() : null }; }
+  function shared(p) { return { Id: p.Id, Name: p.Name, EndUtc: p.EndUtc, MaxGuests: p.MaxGuests, Used: p.Used, RemoteAccess: p.RemoteAccess, From: p.CreatedByName, Token: secret(), Code: p.HasCode ? code() : null }; }
 
   MkiDemo.route('GET', /^MkiGuestPass\/Overview$/, function () {
     var now = Date.now();
@@ -56,7 +56,7 @@
       Limits: { MaxOpenPasses: 20, MaxGuestAccounts: 50, MaxGuestsPerPass: 10, MaxDevicesPerGuest: 5, MaxStreamsPerGuest: 5, MinMinutes: 10, MaxDays: 30 },
       OpenPasses: passes.filter(function (p) { return p.Open; }).length,
       GuestAccounts: passes.reduce(function (n, p) { return n + p.Guests.length; }, 0),
-      CodesPausedUntil: null, QuickConnect: true, PasswordPolicyOutdated: false, WebClientProblem: null, UnknownProxy: false, DlnaInstalled: false
+      CodesPausedUntil: null, QuickConnect: true, PasswordPolicyOutdated: false, WebClientProblem: null, UnknownProxy: false, YouAreHome: true, DlnaInstalled: false
     };
   });
   MkiDemo.route('POST', /^MkiGuestPass\/Passes$/, function (r) {
@@ -81,6 +81,13 @@
     if (!p.Open && !r.body.Reopen) throw MkiDemo.fail(409, 'This pass has ended in the meantime. Nothing was changed; look again before opening it again.');
     p.EndUtc = r.body.EndUtc; p.Open = true; p.EndedEarly = false;
     p.Guests.forEach(function (g) { if (g.State === 'Locked') { g.State = 'Active'; g.LockedUtc = null; g.DeleteUtc = null; } });
+    return { Done: true };
+  });
+  MkiDemo.route('POST', /^MkiGuestPass\/Passes\/([\w-]+)\/Where$/, function (r) {
+    var p = find(r.match[1]), b = r.body || {};
+    if (!p) throw MkiDemo.fail(404, 'That pass does not exist any more.');
+    if (p.RemoteAccess !== !!b.From) throw MkiDemo.fail(409, 'Where this pass works was changed in the meantime. Nothing was changed; look again.');
+    p.RemoteAccess = !!b.RemoteAccess;
     return { Done: true };
   });
   MkiDemo.route('POST', /^MkiGuestPass\/Passes\/([\w-]+)\/End$/, function (r) {

@@ -41,7 +41,7 @@ public sealed class GuestError : Exception
 
 	public int Status { get; }
 
-	// For the join page, which picks its screen by it: "ended", "full", "home".
+	// For the join page, which picks its screen by it: "ended", "removed", "full", "paused", "home", "update".
 	public string? Reason { get; }
 }
 
@@ -69,9 +69,13 @@ public class NewPass
 }
 
 // Where a join request came from. ViaUnknownProxy: a home address passed on a request for someone else, through a
-// reverse proxy Jellyfin does not know (Networking -> Known proxies), so the real visitor is unknown. ThrottleAddress
-// is then the address that proxy named, so one visitor cannot use up the limits of everyone behind it.
-public sealed record JoinOrigin(IPAddress? Address, bool ViaUnknownProxy, IPAddress? ThrottleAddress);
+// reverse proxy Jellyfin does not know (Networking -> Known proxies) or cannot trust, so the real visitor is unknown.
+// Named: the addresses that proxy named; the join limits hold for each of them, counted apart from ordinary requests,
+// so one visitor cannot use up the limits of everyone behind it, nor of an address they name.
+public sealed record JoinOrigin(IPAddress? Address, bool ViaUnknownProxy, IReadOnlyList<IPAddress>? Named)
+{
+	public string ThrottleKey => ViaUnknownProxy ? Throttle.Apart(Named, Address) : Throttle.Key(Address);
+}
 
 public class JoinRequest
 {
@@ -124,6 +128,12 @@ public class GuestService
 	private readonly SemaphoreSlim _gate = new(1, 1);
 
 	private DateTime _unknownProxyUtc = DateTime.MinValue;
+
+	// Guests whose remote access was just turned on by Where, until when the sweep repeats it (see MatchWhere). Used
+	// under the lock only.
+	private readonly Dictionary<Guid, DateTime> _widen = new();
+
+	private static readonly TimeSpan WidenFor = TimeSpan.FromMinutes(10);
 
 	private readonly PassStore _store;
 
@@ -196,9 +206,12 @@ public class GuestService
 
 	// ---------- for the settings page ----------
 
-	public object Overview()
+	// origin: the administrator's own request, to tell them whether a link for the home network only opens where
+	// they are right now.
+	public object Overview(JoinOrigin origin)
 	{
 		var now = DateTime.UtcNow;
+		bool youAreHome = IsLocal(origin);
 		var data = _store.Snapshot();
 		var libraries = Libraries();
 		var names = libraries.ToDictionary(l => l.Id, l => l.Name);
@@ -265,6 +278,7 @@ public class GuestService
 			PasswordPolicyOutdated = PasswordPolicyOutdated(),
 			WebClientProblem = WebPatcher.Problem,
 			UnknownProxy = now - _unknownProxyUtc < TimeSpan.FromDays(7),
+			YouAreHome = youAreHome,
 			DlnaInstalled = DlnaInstalled()
 		};
 	}
@@ -440,6 +454,65 @@ public class GuestService
 		}
 	}
 
+	// Where the guests of a pass may join and watch, also of an ended one (before it is opened again). Limited to the
+	// home network, playback stops on the guests' devices that are away right now, and from then on the gate refuses
+	// every request of theirs from outside the home network: their web client signs out with a note and a way back,
+	// and the same sign-in works again at home.
+	public async Task SetWhere(Guid passId, bool remote, bool from, User admin)
+	{
+		await _gate.WaitAsync().ConfigureAwait(false);
+		try
+		{
+			var (name, guests) = _store.Change(d =>
+			{
+				var p = d.Pass(passId) ?? throw new GuestError(404, "That pass does not exist any more.");
+				if (p.RemoteAccess != from)
+				{
+					throw new GuestError(409, "Where this pass works was changed in the meantime. Look again.");
+				}
+				p.RemoteAccess = remote;
+				return (p.Name, p.Guests.Select(g => g.UserId).ToList());
+			});
+			var failed = new List<Guid>();
+			foreach (var id in guests)
+			{
+				if (remote)
+				{
+					_widen[id] = DateTime.UtcNow + WidenFor;
+				}
+				else
+				{
+					_widen.Remove(id);
+				}
+				try
+				{
+					await SetRemote(id, remote).ConfigureAwait(false);
+				}
+				catch (Exception ex)
+				{
+					_logger.LogError(ex, "Could not change where guest account {User} works; the next check tries again", id);
+					failed.Add(id);
+				}
+			}
+			if (!remote)
+			{
+				// A guest whose account still allows remote access keeps no sign-in meanwhile.
+				foreach (var id in failed)
+				{
+					await RevokeQuietly(id).ConfigureAwait(false);
+				}
+				await StopAway(guests).ConfigureAwait(false);
+			}
+			string where = remote ? "home and away" : "the home network only";
+			_logger.LogInformation("Guest pass {Pass} now works for {Where} (changed by {Admin})", name, where, admin.Username);
+			await Log("Guest pass \"" + name + "\" now works for " + where, "MkiGuestPassChanged", admin.Id, null).ConfigureAwait(false);
+		}
+		finally
+		{
+			_gate.Release();
+		}
+	}
+
 	public async Task EndPass(Guid passId, User admin)
 	{
 		await _gate.WaitAsync().ConfigureAwait(false);
@@ -536,7 +609,7 @@ public class GuestService
 	// What the join page shows before the guest types a name. Only for a valid link or code.
 	public object Peek(JoinRequest r, JoinOrigin origin)
 	{
-		string key = Throttle.Key(origin.ThrottleAddress ?? origin.Address);
+		string key = origin.ThrottleKey;
 		if (!_throttle.Request(key))
 		{
 			throw TooMany();
@@ -560,14 +633,16 @@ public class GuestService
 			Rating = pass.RatingName,
 			pass.DevicesPerGuest,
 			HomeOnly = !pass.RemoteAccess,
-			CanJoinHere = pass.RemoteAccess || local
+			CanJoinHere = pass.RemoteAccess || local,
+			NeedsUpdate = PasswordPolicyOutdated(),
+			QuickConnect = _config.Configuration.QuickConnectAvailable
 		};
 	}
 
 	public async Task<object> Redeem(JoinRequest r, JoinOrigin origin)
 	{
 		var ip = origin.Address;
-		string key = Throttle.Key(origin.ThrottleAddress ?? ip);
+		string key = origin.ThrottleKey;
 		if (!_throttle.Request(key))
 		{
 			throw TooMany();
@@ -666,7 +741,7 @@ public class GuestService
 	public async Task<object> Rejoin(JoinRequest r, JoinOrigin origin)
 	{
 		var ip = origin.Address;
-		string key = Throttle.Key(origin.ThrottleAddress ?? ip);
+		string key = origin.ThrottleKey;
 		if (!_throttle.Request(key))
 		{
 			throw TooMany();
@@ -707,9 +782,13 @@ public class GuestService
 			{
 				throw new GuestError(410, "This guest pass has ended. Thanks for watching!", "ended");
 			}
+			if (PasswordPolicyOutdated())
+			{
+				throw NeedsUpdate();
+			}
 			if (!pass.RemoteAccess && !local)
 			{
-				throw new GuestError(403, "This guest pass works only on the home network.");
+				throw new GuestError(403, "This guest pass works only on the home network.", "home");
 			}
 			var user = _users.GetUserById(guest.UserId);
 			if (user == null || !UsesGuestSignIn(user) || user.HasPermission(PermissionKind.IsDisabled))
@@ -762,6 +841,8 @@ public class GuestService
 	// ---------- checks used by the gate and the event handlers (never wait for the lock) ----------
 
 	public bool AnyGuests() => _store.Read(d => d.Passes.Any(p => p.Guests.Count > 0)) || CreatingNow() != null;
+
+	public bool AnyHomeOnlyGuests() => _store.Read(d => d.Passes.Any(p => !p.RemoteAccess && p.Guests.Count > 0)) || CreatingNow() != null;
 
 	public (PassRecord Pass, GuestRecord Guest)? Find(Guid userId) => _store.Read(d => d.Guest(userId));
 
@@ -845,6 +926,14 @@ public class GuestService
 			}
 			await Warn().ConfigureAwait(false);
 			await LockEnded(thorough).ConfigureAwait(false);
+			try
+			{
+				await MatchWhere().ConfigureAwait(false);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Could not check where guest accounts work; trying again shortly");
+			}
 			await DeleteDue().ConfigureAwait(false);
 			if (thorough)
 			{
@@ -1380,6 +1469,7 @@ public class GuestService
 		PassId = pass.Id.ToString("N", CultureInfo.InvariantCulture),
 		Pass = pass.Name,
 		Name = name,
+		From = pass.CreatedByName,
 		pass.EndUtc,
 		RejoinKey = rejoin
 	};
@@ -1394,6 +1484,7 @@ public class GuestService
 		p.EndUtc,
 		p.MaxGuests,
 		p.Used,
+		p.RemoteAccess,
 		From = p.CreatedByName,
 		Token = token,
 		Code = code == null ? null : Secrets.ShowCode(code)
@@ -1454,11 +1545,19 @@ public class GuestService
 		{
 			throw new GuestError(409, pass.MaxGuests == 1 ? "This guest pass has already been used." : "All " + pass.MaxGuests + " places on this guest pass are taken.", "full");
 		}
+		if (PasswordPolicyOutdated())
+		{
+			throw NeedsUpdate();
+		}
 		if (!pass.RemoteAccess && !local)
 		{
 			throw new GuestError(403, "This guest pass works only on the home network.", "home");
 		}
 	}
+
+	// MKI Password Policy before 1.1.1.0 does not know guest accounts and signs them out right after they join, so
+	// nobody joins (and uses a place) until it is updated.
+	private static GuestError NeedsUpdate() => new(409, "A plugin on this server needs an update before guests can join.", "update");
 
 	private static void CheckEnd(DateTime end, DateTime now)
 	{
@@ -1573,7 +1672,8 @@ public class GuestService
 	// (Networking -> Known proxies): Jellyfin then sees the proxy, not the guest, so the guest is treated as away.
 	private bool IsLocal(JoinOrigin origin)
 	{
-		if (origin.Address == null || !_network.IsInLocalNetwork(origin.Address))
+		// The Jellyfin machine itself (loopback) is a relay or tunnel there, as in GuestGate.Away.
+		if (origin.Address == null || IPAddress.IsLoopback(origin.Address) || !_network.IsInLocalNetwork(origin.Address))
 		{
 			return false;
 		}
@@ -1621,6 +1721,130 @@ public class GuestService
 		var policy = _users.GetUserDto(user).Policy;
 		policy.IsDisabled = disabled;
 		await _users.UpdatePolicyAsync(userId, policy).ConfigureAwait(false);
+	}
+
+	// Only the remote access switch changes, like SetDisabled.
+	private async Task SetRemote(Guid userId, bool remote)
+	{
+		var user = _users.GetUserById(userId);
+		if (user == null || !UsesGuestSignIn(user) || user.HasPermission(PermissionKind.EnableRemoteAccess) == remote)
+		{
+			return;
+		}
+		var policy = _users.GetUserDto(user).Policy;
+		policy.EnableRemoteAccess = remote;
+		await _users.UpdatePolicyAsync(userId, policy).ConfigureAwait(false);
+	}
+
+	// Devices of these guests with a session from outside the home network (or an address that cannot be read):
+	// playback stops. They stay signed in, refused away from home by the gate. Behind a reverse proxy Jellyfin does
+	// not know, every session seems at home, so playback stops on all of them.
+	private async Task StopAway(List<Guid> userIds)
+	{
+		bool proxied = DateTime.UtcNow - _unknownProxyUtc < TimeSpan.FromDays(7);
+		var away = _sessions.Sessions.Where(s => userIds.Contains(s.UserId) && (proxied || !AtHome(s.RemoteEndPoint))).ToList();
+		foreach (var s in away)
+		{
+			var user = _users.GetUserById(s.UserId);
+			if (user == null || !UsesGuestSignIn(user))
+			{
+				continue;
+			}
+			try
+			{
+				if (s.NowPlayingItem != null)
+				{
+					await _sessions.SendPlaystateCommand(null!, s.Id, new PlaystateRequest { Command = PlaystateCommand.Stop }, CancellationToken.None).ConfigureAwait(false);
+				}
+			}
+			catch (Exception ex)
+			{
+				_logger.LogDebug(ex, "Could not stop playback on an away device of a guest");
+			}
+		}
+	}
+
+	private async Task RevokeQuietly(Guid userId)
+	{
+		try
+		{
+			var user = _users.GetUserById(userId);
+			if (user != null && UsesGuestSignIn(user))
+			{
+				await _sessions.RevokeUserTokens(userId, null!).ConfigureAwait(false);
+			}
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Could not sign out guest account {User}", userId);
+		}
+	}
+
+	// No guest of a pass for the home network only has remote access: repairs a change that failed or that Jellyfin's
+	// own write-back of an older copy of the account undid. Turning it on is repeated only for a while after Where
+	// allowed a pass from anywhere (and while it fails), so a stricter setting an administrator then makes for one
+	// guest in Jellyfin's user editor stays.
+	private async Task MatchWhere()
+	{
+		var now = DateTime.UtcNow;
+		foreach (var done in _widen.Where(w => w.Value <= now).Select(w => w.Key).ToList())
+		{
+			_widen.Remove(done);
+		}
+		var want = _store.Read(d => d.AllGuests().Select(x => (x.Guest.UserId, x.Pass.RemoteAccess)).ToList());
+		var narrowed = new List<Guid>();
+		foreach (var (id, remote) in want)
+		{
+			var user = _users.GetUserById(id);
+			if (user == null || !UsesGuestSignIn(user) || user.HasPermission(PermissionKind.EnableRemoteAccess) == remote
+				|| (remote && !_widen.ContainsKey(id)))
+			{
+				continue;
+			}
+			try
+			{
+				await SetRemote(id, remote).ConfigureAwait(false);
+				_logger.LogInformation("{User}: remote access set back to match its pass", user.Username);
+				if (!remote)
+				{
+					narrowed.Add(id);
+				}
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Could not set where guest {User} works; trying again shortly", user.Username);
+				if (!remote)
+				{
+					await RevokeQuietly(id).ConfigureAwait(false);
+				}
+				else
+				{
+					_widen[id] = DateTime.UtcNow + WidenFor;
+				}
+			}
+		}
+		if (narrowed.Count > 0)
+		{
+			await StopAway(narrowed).ConfigureAwait(false);
+		}
+	}
+
+	private bool AtHome(string? endPoint)
+	{
+		if (string.IsNullOrEmpty(endPoint))
+		{
+			return false;
+		}
+		if (!IPAddress.TryParse(endPoint, out var ip))
+		{
+			if (!IPEndPoint.TryParse(endPoint, out var ep))
+			{
+				return false;
+			}
+			ip = ep.Address;
+		}
+		ip = ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4() : ip;
+		return !IPAddress.IsLoopback(ip) && _network.IsInLocalNetwork(ip);
 	}
 
 	private async Task DeleteAccount(Guid userId, string why)
@@ -1741,7 +1965,7 @@ public class GuestService
 		return levels;
 	}
 
-	private static GuestError Invalid() => new(404, "This guest link is not valid. Ask for a new one.");
+	private static GuestError Invalid() => new(404, "This guest link is not valid.");
 
 	private static GuestError TooMany() => new(429, "Too many tries from this network. Please wait 15 minutes and try again.");
 

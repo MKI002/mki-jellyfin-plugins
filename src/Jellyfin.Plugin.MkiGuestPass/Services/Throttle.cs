@@ -14,6 +14,10 @@ namespace Jellyfin.Plugin.MkiGuestPass.Services;
 //   At that pace even a large botnet needs thousands of years to guess one 8-character code.
 // - Links and rejoin keys are 256-bit random values that cannot be guessed; their limit only keeps junk traffic cheap.
 // - Every address gets at most 60 join requests in 15 minutes, right or wrong.
+// Behind a proxy that cannot be trusted, a key names every address the proxy's headers give (separated by spaces,
+// marked "~"): every limit holds for each of them, so changing one escapes nothing. They are counted apart from ordinary
+// requests, so naming someone else's address never uses up that address's own limits, and nothing is counted once a
+// part is over.
 public class Throttle
 {
 	public const int CodeFailuresPerAddress = 5;
@@ -54,6 +58,18 @@ public class Throttle
 		}
 	}
 
+	public const int MaxNamed = 6;
+
+	public static string Apart(IEnumerable<IPAddress>? named, IPAddress? fallback)
+	{
+		var parts = (named ?? Enumerable.Empty<IPAddress>()).Select(ip => Key(ip)).Distinct().Take(MaxNamed).ToList();
+		if (parts.Count == 0)
+		{
+			parts.Add(Key(fallback));
+		}
+		return string.Join(' ', parts.Select(k => "~" + k));
+	}
+
 	public static string Key(IPAddress? ip)
 	{
 		if (ip == null)
@@ -77,15 +93,34 @@ public class Throttle
 	}
 
 	// Counts the request; false when the address has used up its requests for now.
-	public bool Request(string key) => Add(_requests, key, RequestsPerAddress);
+	public bool Request(string key)
+	{
+		var parts = Parts(key);
+		if (parts.Length == 1)
+		{
+			return Add(_requests, parts[0], RequestsPerAddress);
+		}
+		if (parts.Any(k => Count(_requests, k) >= RequestsPerAddress))
+		{
+			return false;
+		}
+		foreach (var one in parts)
+		{
+			Add(_requests, one, int.MaxValue);
+		}
+		return true;
+	}
 
-	public bool CodeBlocked(string key) => CodesPausedUntil != null || Count(_codeFailures, key) >= CodeFailuresPerAddress;
+	public bool CodeBlocked(string key) => CodesPausedUntil != null || Parts(key).Any(k => Count(_codeFailures, k) >= CodeFailuresPerAddress);
 
-	public bool SecretBlocked(string key) => Count(_secretFailures, key) >= SecretFailuresPerAddress;
+	public bool SecretBlocked(string key) => Parts(key).Any(k => Count(_secretFailures, k) >= SecretFailuresPerAddress);
 
 	public void CodeFailed(string key)
 	{
-		Add(_codeFailures, key, int.MaxValue);
+		foreach (var one in Parts(key))
+		{
+			Add(_codeFailures, one, int.MaxValue);
+		}
 		bool paused = false;
 		lock (_allCodeFailures)
 		{
@@ -104,7 +139,15 @@ public class Throttle
 		}
 	}
 
-	public void SecretFailed(string key) => Add(_secretFailures, key, int.MaxValue);
+	public void SecretFailed(string key)
+	{
+		foreach (var one in Parts(key))
+		{
+			Add(_secretFailures, one, int.MaxValue);
+		}
+	}
+
+	private static string[] Parts(string key) => key.Split(' ');
 
 	private static int Count(ConcurrentDictionary<string, Queue<DateTime>> map, string key)
 	{

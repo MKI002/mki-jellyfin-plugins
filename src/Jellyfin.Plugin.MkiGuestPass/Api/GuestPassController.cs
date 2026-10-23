@@ -55,7 +55,7 @@ public class GuestPassController : ControllerBase
 		}
 		// The secret lives in the part after #, which browsers never send: not to this server, not as a referrer.
 		// The page still allows no foreign code, no framing and no referrer, and nothing of it is stored.
-		Response.Headers["Content-Security-Policy"] = "default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
+		Response.Headers["Content-Security-Policy"] = "default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
 		Response.Headers["X-Frame-Options"] = "DENY";
 		Response.Headers["Referrer-Policy"] = "no-referrer";
 		Response.Headers["X-Content-Type-Options"] = "nosniff";
@@ -120,7 +120,7 @@ public class GuestPassController : ControllerBase
 	public ActionResult Overview()
 	{
 		NoStore();
-		return new JsonResult(_guests.Overview());
+		return new JsonResult(_guests.Overview(Origin()));
 	}
 
 	[HttpPost("Passes")]
@@ -140,6 +140,16 @@ public class GuestPassController : ControllerBase
 	public Task<ActionResult> Extend([FromRoute] Guid id, [FromBody] EndRequest request) => Admin(async admin =>
 	{
 		await _guests.Extend(id, request.EndUtc, request.Reopen, admin).ConfigureAwait(false);
+		return new { Done = true };
+	});
+
+	[HttpPost("Passes/{id}/Where")]
+	[Authorize(Policy = "RequiresElevation")]
+	[Consumes("application/json")]
+	[RequestSizeLimit(MaxBody)]
+	public Task<ActionResult> Where([FromRoute] Guid id, [FromBody] WhereRequest request) => Admin(async admin =>
+	{
+		await _guests.SetWhere(id, request.RemoteAccess, request.From, admin).ConfigureAwait(false);
 		return new { Done = true };
 	});
 
@@ -175,6 +185,14 @@ public class GuestPassController : ControllerBase
 		return new { Done = true };
 	});
 
+	// From: where the pass worked when the page last looked, so a change made meanwhile is not overwritten.
+	public class WhereRequest
+	{
+		public bool RemoteAccess { get; set; }
+
+		public bool From { get; set; }
+	}
+
 	public class EndRequest
 	{
 		public DateTime EndUtc { get; set; }
@@ -198,9 +216,9 @@ public class GuestPassController : ControllerBase
 		var ip = Address();
 		if (HttpContext.Items[GuestGate.OriginKey] is GuestGate.Seen seen)
 		{
-			return new JoinOrigin(ip, seen.ViaUnknownProxy, seen.ViaUnknownProxy ? seen.Visitor : null);
+			return new JoinOrigin(ip, seen.ViaUnknownProxy, seen.Named);
 		}
-		return new JoinOrigin(ip, GuestGate.HasForwarding(Request), null);
+		return new JoinOrigin(ip, GuestGate.HasForwarding(Request), Array.Empty<IPAddress>());
 	}
 
 	private User? Caller()
