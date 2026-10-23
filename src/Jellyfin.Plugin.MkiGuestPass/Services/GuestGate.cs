@@ -479,13 +479,14 @@ public class GuestGate : IStartupFilter
 		return ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4() : ip;
 	}
 
-	// Every address a proxy that cannot be trusted names for the visitor: the one Jellyfin takes, each X-Real-IP value
-	// and the last X-Forwarded-For entry (the one a proxy adds). One of them is the visitor's own if any is; the join
-	// limits hold for each (Throttle.Apart). Never used to decide who is at home.
+	// Every address a proxy that cannot be trusted names for the visitor: the one Jellyfin takes, the last
+	// X-Forwarded-For entry (the one a proxy adds), then the X-Real-IP values from the last (a proxy's own line comes
+	// after the visitor's). One of the first ones is the visitor's own if any is, so they come first and extras beyond
+	// the cap cannot push them out; the join limits hold for each (Throttle.Apart). Never used to decide who is at home.
 	private static IReadOnlyList<IPAddress> Named(HttpRequest request, IPAddress? applied)
 	{
-		var said = request.Headers["X-Real-IP"].SelectMany(v => (v ?? string.Empty).Split(','))
-			.Append(request.Headers["X-Forwarded-For"].ToString().Split(',').Select(x => x.Trim()).LastOrDefault(x => x.Length > 0));
+		var said = new[] { request.Headers["X-Forwarded-For"].ToString().Split(',').Select(x => x.Trim()).LastOrDefault(x => x.Length > 0) }
+			.Concat(request.Headers["X-Real-IP"].SelectMany(v => (v ?? string.Empty).Split(',')).Reverse());
 		var named = new List<IPAddress>();
 		if (applied != null)
 		{
