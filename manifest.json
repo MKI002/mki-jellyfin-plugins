@@ -28,6 +28,14 @@
     "imageUrl": "https://raw.githubusercontent.com/MKI002/mki-jellyfin-plugins/main/src/Jellyfin.Plugin.MkiGuestPass/logo.png",
     "versions": [
       {
+        "version": "1.0.1.0",
+        "changelog": "The join page shows Jellyfin's own logo from your server, and says up front that Jellyfin opens right there, already signed in. A guest who cannot join is never left on the page: each case says why and what to do next, with Try again where it helps. A pass for the home network only, opened from elsewhere, tells the guest to join your Wi-Fi or to ask you, and the new Where action on the pass allows it from anywhere (or limits it to home again) without a new link. The settings page warns when the browser you use counts as away, since a home-network link would not open there, and the share window and invitation say when a pass works at home only. Joining no longer throws the guest back to the sign-in page when an older MKI Password Policy is installed: until it is updated to 1.1.1.0, Guest Pass lets nobody join, and both the join page and the settings page say what to do. A guest whose home-only pass no longer opens where they are is signed out with a note and a way back, instead of a Jellyfin that only shows errors. Home only is stricter. Streams and subtitles are refused away from home too. Narrowing a pass also stops playback on away devices, and a failed change is repaired on its own. Where also works on an ended pass. A known reverse proxy that names no visitor, or names one its X-Real-IP disagrees with, is no longer trusted, and home-only passes are refused where no visitor address can be seen: on a Unix socket, or from the Jellyfin machine itself. The form for a new home-only pass explains what a reverse proxy has to send.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/MKI002/mki-jellyfin-plugins/releases/download/v1.14.0/mkiguestpass_1.0.1.0.zip",
+        "checksum": "a124b94d5534eb97ffc2d26c4e3541be",
+        "timestamp": "2026-10-23T20:04:34Z"
+      },
+      {
         "version": "1.0.0.0",
         "changelog": "First release. Passes with a link, a QR code and an optional 8-character code, for up to 10 people each, with their own libraries, end time, devices and streams per guest, highest rating and home-only option. Guests join on a small page of their own, come back on the same browser without using another place, and sign in TVs with Quick Connect. A badge in the web client shows guests when their access ends. Passes can get a new link, a new end, be ended early or deleted, guests can be ended or deleted one by one. Works together with MKI Password Policy 1.1.1.0 or later, which leaves guest accounts alone.",
         "targetAbi": "12.0.0.0",
