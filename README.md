@@ -70,7 +70,7 @@ Plugins for [Jellyfin](https://jellyfin.org) 12, installable from one plugin rep
     </td>
     <td valign="top">
       <h3><a href="src/Jellyfin.Plugin.MkiScreenFit">MKI Screen Fit</a></h3>
-      Full HD screens play the Full HD version of a 4K movie, and transcodes that re-encode the video stay no larger than the screen. Bitrate limits, throttling and direct play stay as Jellyfin decides.
+      Full HD screens play the Full HD version of a 4K movie, and videos Jellyfin transcodes anyway are transcoded only as large as the screen. Bitrate limits and throttling stay as Jellyfin decides.
     </td>
   </tr>
   <tr>

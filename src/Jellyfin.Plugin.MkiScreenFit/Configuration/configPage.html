@@ -780,7 +780,7 @@
       <p class="mk-kicker">MKI · Jellyfin plugin</p>
       <h1 class="mk-title" id="fitTitle">Screen <b>Fit</b></h1>
       <span class="mk-rule"></span>
-      <p class="mk-lede">Plays the Full HD version of a movie on screens that cannot show 4K, and keeps transcodes no larger than the screen. Bitrate limits and transcode throttling stay exactly as you set them in Jellyfin.</p>
+      <p class="mk-lede">Plays the Full HD version of a movie on screens that cannot show 4K, and makes transcodes only as large as the screen. Bitrate limits and transcode throttling stay exactly as you set them in Jellyfin.</p>
     </div>
   </div>
 
@@ -791,7 +791,7 @@
       <span class="mk-tile__sub" id="fitTileVersionSub"></span>
     </button>
     <button type="button" class="mk-tile" data-goto="fitLimitRow">
-      <span class="mk-tile__label"><span class="material-icons mk-ic" aria-hidden="true">photo_size_select_large</span>Transcode limit</span>
+      <span class="mk-tile__label"><span class="material-icons mk-ic" aria-hidden="true">photo_size_select_large</span>Transcode size</span>
       <span class="mk-tile__value" id="fitTileLimit">…</span>
       <span class="mk-tile__sub" id="fitTileLimitSub"></span>
     </button>
@@ -828,12 +828,12 @@
   </div>
   <div class="mk-card__body">
     <div class="mk-row" id="fitVersionRow" tabindex="-1">
-      <div class="mk-row__text"><label class="mk-row__label" for="fitVersion">Play the Full HD version on Full HD screens</label><span class="mk-row__desc">For movies with a 4K and a Full HD version, for example merged by MKI Merge Versions. Only when both are the same cut and the Full HD one has the chosen audio and subtitle language; otherwise 4K stays.</span></div>
+      <div class="mk-row__text"><label class="mk-row__label" for="fitVersion">Play the Full HD version on Full HD screens</label><span class="mk-row__desc">For movies with a 4K and a Full HD version, for example merged by MKI Merge Versions. Only when both are the same cut and the Full HD one has the chosen audio and subtitle language; otherwise 4K stays. Works for direct play too: the player simply gets the Full HD file.</span></div>
       <div class="mk-row__control"><input type="checkbox" class="mk-switch" role="switch" id="fitVersion" data-key="EnableFullHdVersion" data-label="Full HD version"></div>
     </div>
     <div class="mk-row" id="fitLimitRow" tabindex="-1">
-      <div class="mk-row__text"><label class="mk-row__label" for="fitLimit">Keep transcodes no larger than the screen</label><span class="mk-row__desc">Only when Jellyfin re-encodes the video anyway: an unsupported codec or HDR, burned-in subtitles, a bitrate limit. Direct play and remuxing are never touched. Never smaller than 1280×720.</span></div>
-      <div class="mk-row__control"><input type="checkbox" class="mk-switch" role="switch" id="fitLimit" data-key="EnableTranscodeLimit" data-label="Transcode limit"></div>
+      <div class="mk-row__text"><label class="mk-row__label" for="fitLimit">Transcode only as large as the screen</label><span class="mk-row__desc">For videos Jellyfin transcodes anyway, for example for a codec or HDR the device cannot play, burned-in subtitles or a bitrate limit. Example: a movie that only exists in 4K, started on a Full HD laptop, is transcoded to 1920×1080 instead of 4K. It looks the same there, and the server encodes a quarter of the pixels. Never smaller than 1280×720. This switch never touches direct playing, remuxing or direct streaming.</span></div>
+      <div class="mk-row__control"><input type="checkbox" class="mk-switch" role="switch" id="fitLimit" data-key="EnableTranscodeLimit" data-label="Transcode size"></div>
     </div>
     <div class="fit-demo" id="fitDemo">
       <div class="fit-shot">
@@ -876,9 +876,9 @@
       <span class="mk-flow__edge" id="fitEdge2"></span>
       <div class="mk-flow__node" id="fitNodeLimit">
         <span class="mk-flow__kicker"><span class="material-icons mk-ic" aria-hidden="true">photo_size_select_large</span>3 · Transcode</span>
-        <span class="mk-flow__title">No larger than the screen</span>
+        <span class="mk-flow__title">Only as large as the screen</span>
         <span class="mk-flow__sub">At most the screen's size, never below 1280×720.</span>
-        <span class="mk-flow__skip">Only when the video is re-encoded anyway. Direct play, remuxing and copying the video stay as they are.</span>
+        <span class="mk-flow__skip">Only when Jellyfin transcodes the video anyway. Direct playing, remuxing and direct streaming stay as they are.</span>
       </div>
     </div>
     <ul class="fit-rules">
@@ -1933,7 +1933,7 @@ function doesCell(d, mode) {
     var parts = [c.firstChild];
     if (v && fullHd(s)) parts.push(el('b', null, 'Full HD version'), ' of 4K movies');
     else if (v) parts.push('4K stays 4K');
-    if (l) parts.push(parts.length > 1 ? '; re-encodes at most ' : 'Re-encodes at most ', el('b', null, limitSize(s)));
+    if (l) parts.push(parts.length > 1 ? '; transcodes at most ' : 'Transcodes at most ', el('b', null, limitSize(s)));
     parts.push('.');
     fill(c, parts);
     return c;
@@ -2038,7 +2038,7 @@ function renderLog() {
         what.appendChild(el('b', null, short(a.ItemName, 120) || 'A video'));
         var line = a.Kind === 'version' ? ': played the ' + a.To.replace('x', '×') + ' version instead of ' + a.From.replace('x', '×') + '.'
             : a.Kind === 'restore' ? ': resumed in the ' + a.To.replace('x', '×') + ' version again. The ' + a.From.replace('x', '×') + ' version was only first because it was watched last on a Full HD screen.'
-            : a.Kind === 'limit' ? ': re-encoded from ' + a.From.replace('x', '×') + ' to ' + a.To.replace('x', '×') + (a.Reason ? ' (' + reasons(a.Reason) + ')' : '') + '.'
+            : a.Kind === 'limit' ? ': transcoded to ' + a.To.replace('x', '×') + ' instead of ' + a.From.replace('x', '×') + (a.Reason ? ' (' + reasons(a.Reason) + ')' : '') + '.'
             : ': ' + a.From.replace('x', '×') + ' kept, ' + a.Reason + '.';
         what.appendChild(document.createTextNode(line));
         row.appendChild(what);
@@ -2056,7 +2056,7 @@ function render() {
     fill($('#fitTileVersion'), v ? chip('ok', 'check_circle', 'On') : chip('plain', 'block', 'Off'));
     fill($('#fitTileVersionSub'), unsaved('EnableFullHdVersion') || (v ? 'Screens up to 1200 px on the shorter side' : '4K plays as Jellyfin decides'));
     fill($('#fitTileLimit'), l ? chip('ok', 'check_circle', 'On') : chip('plain', 'block', 'Off'));
-    fill($('#fitTileLimitSub'), unsaved('EnableTranscodeLimit') || (l ? 'Re-encodes no larger than the screen' : 'Transcodes keep their size'));
+    fill($('#fitTileLimitSub'), unsaved('EnableTranscodeLimit') || (l ? 'Only as large as the screen' : 'Size as Jellyfin decides'));
     $('#fitDemo').classList.toggle('fit-off-demo', !v);
     fill($('#fitDemoLaptop'), v ? 'Full HD version' : '4K version');
     fill($('#fitDemoLaptopCap'), v ? 'Starts the Full HD file instead of the 4K one. A transcode, if one is needed, works on a quarter of the pixels.'
@@ -2107,7 +2107,7 @@ function render() {
                 var where = names(hd.map(function (x) { return x.d; }));
                 if (v && hd.length) bits.push((bits.length > 1 ? 'On ' : 'on ') + where + ', 4K movies with a Full HD version start that version. ');
                 else if (v) bits.push((bits.length > 1 ? 'No' : 'no') + ' known screen is Full HD, so 4K stays 4K everywhere. ');
-                if (l) bits.push((bits.length > 1 ? 'Re-encodes' : 're-encodes') + ' on ' + kit.plural(known.length, 'known screen') + ' are no larger than the screen. ');
+                if (l) bits.push((bits.length > 1 ? 'Transcodes' : 'transcodes') + ' on ' + kit.plural(known.length, 'known screen') + ' are made only as large as the screen. ');
             }
             if (ask.length) bits.push(names(ask) + ' cannot report ' + (ask.length === 1 ? 'its' : 'their') + ' screen: if ' + (ask.length === 1 ? 'it is' : 'one is') + ' on a Full HD screen, choose Full HD screen for it under Devices.');
         }
