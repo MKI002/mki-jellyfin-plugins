@@ -164,7 +164,7 @@ def check_private():
 
 def check_security():
     baseline = json.loads(BASELINE.read_text(encoding="utf-8"))
-    anonymous, filters = [], []
+    anonymous, filters, mvc, mvcSetup = [], [], [], []
     for path in tracked_files():
         if not path.is_relative_to(SRC):
             continue
@@ -194,7 +194,17 @@ def check_security():
                 anonymous.append(f"{where}::{m.group(1)}")
             for m in re.finditer(r"class\s+(\w+)\s*:[^{]*\bIStartupFilter\b", text):
                 filters.append(f"{where}::{m.group(1)}")
-    for kind, found in (("anonymousEndpoints", anonymous), ("requestMiddleware", filters)):
+            # MVC filters and conventions run around Jellyfin's own API actions and can change their arguments and
+            # results: the classes, and every place that adds one to MVC.
+            for m in re.finditer(r"class\s+(\w+)(?:\s*<[^>{]*>)?\s*:[^{]*\b(?:I(?:Async)?(?:AlwaysRun)?(?:Action|Result|Resource"
+                                 r"|Authorization|Exception|Page)Filter|IFilterFactory|(?:Action|Result|Exception)FilterAttribute"
+                                 r"|I\w*ModelConvention)\b", text):
+                mvc.append(f"{where}::{m.group(1)}")
+            for m in re.finditer(r"\b(?:Post)?Configure\s*<\s*MvcOptions\s*>|\bAddMvcOptions\b|\b(?:Filters|Conventions)\.Add\w*(?:\s*<[^>]*>)?", text):
+                call = re.sub(r"\s+", "", m.group(0))
+                mvcSetup.append(f"{where}::{call}")
+    for kind, found in (("anonymousEndpoints", anonymous), ("requestMiddleware", filters), ("mvcFilters", mvc),
+                        ("mvcSetup", mvcSetup)):
         known = set(baseline.get(kind, []))
         for item in sorted(set(found) - known):
             fail("build/security-baseline.json", f"new {kind} entry {item} needs a security review "
