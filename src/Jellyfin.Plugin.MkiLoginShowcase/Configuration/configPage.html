@@ -2092,6 +2092,13 @@ if (window.innerWidth < 640) $('#lsScreenPhone').checked = true;
 ['Style', 'Accent', 'Motion', 'NeonCard', 'ShowTitles', 'ShowCounts'].forEach(function (k) {
     $$('[data-key="' + k + '"]').forEach(function (x) { ['change', 'mk-restored'].forEach(function (ev) { x.addEventListener(ev, function () { preview(); renderLook(); }); }); });
 });
+/* a style put back after a question: focus follows the checked style, so arrow keys go on from there */
+$$('input[name="lsStyle"]').forEach(function (x) {
+    x.addEventListener('mk-restored', function () {
+        var a = document.activeElement, on = $('input[name="lsStyle"]:checked');
+        if (on && a && a.name === 'lsStyle' && a !== on) on.focus();
+    });
+});
 page.addEventListener('viewbeforehide', function () { visible = false; clearTimeout(previewTimer); clearTimeout(laterTimer); stopPreview(); });
 page.addEventListener('pageshow', function () { visible = true; });
 
