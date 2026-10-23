@@ -135,13 +135,15 @@
         '@media (max-height:760px){',
         'html.mkils-card #loginPage>div{padding-top:1.1em!important;padding-bottom:1em!important}',
         'html.mkils-card #loginPage .inputContainer,html.mkils-card #loginPage .checkboxContainer{margin-bottom:1em}',
-        'html.mkils-card #loginPage .sectionTitle,html.mkils-card #loginPage h1{margin-top:0;margin-bottom:.6em}',
-        /* TV layout draws everything a size larger: slimmer buttons and gaps there */
+        'html.mkils-card #loginPage .sectionTitle,html.mkils-card #loginPage h1{margin-top:0;margin-bottom:.6em}}',
+        /* TV layout draws everything a size larger: slimmer buttons and gaps there, up to 900 px height */
+        '@media (max-height:900px){',
         'html.mkils-card.layout-tv #loginPage .emby-button{padding-top:.6em;padding-bottom:.6em}',
         'html.mkils-card.layout-tv #loginPage .inputContainer,html.mkils-card.layout-tv #loginPage .checkboxContainer{margin-bottom:.7em}}',
         '@media (min-width:60em) and (min-aspect-ratio:5/4) and (max-height:819px){',
-        'html.mkils-card.mkils-horizon #loginPage>div{margin-top:max(.5em,calc(26vh - 100px))}',
-        /* TV layout draws the form larger: the short-screen horizon there (horizon() matches) */
+        'html.mkils-card.mkils-horizon #loginPage>div{margin-top:max(.5em,calc(26vh - 100px))}}',
+        /* TV layout draws the form larger: the short-screen horizon there below 920 px (horizon() matches) */
+        '@media (min-width:60em) and (min-aspect-ratio:5/4) and (max-height:919px){',
         'html.mkils-card.layout-tv.mkils-horizon #loginPage>div{margin-top:.5em}}',
         '@media (min-width:60em) and (min-aspect-ratio:5/4) and (max-height:699px){',
         'html.mkils-card.mkils-horizon #loginPage>div{margin-top:.5em}}',
@@ -172,7 +174,7 @@
         'html.mkils-plain #loginPage .button-submit:focus{box-shadow:0 0 0 2px #05060B,0 0 0 4px #fff}',
         /* a focused user tile shows it (Jellyfin marks it only in TV layout) */
         'html.mkils-card #loginPage .card:focus .cardScalable{box-shadow:0 0 0 2px var(--mkils-a1),0 0 14px var(--mkils-glow)}',
-        'html.mkils-plain #loginPage .card:focus .cardScalable{box-shadow:0 0 0 2px #00A4DC}',
+        'html.mkils-plain #loginPage .card:focus .cardScalable{box-shadow:0 0 0 2px #05060B,0 0 0 4px #fff}',
         /* TV browsers: no blur over moving pictures, a solid card instead */
         'html.mkils-card.layout-tv #loginPage>div{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(8,9,16,.92)}',
         /* without the card: Jellyfin's own form, on a dark panel so it stays readable over bright artwork */
@@ -202,8 +204,8 @@
     /* a very long name is cut, so it cannot run under the card or off the screen */
     function shortTitle(t) {
         t = t == null ? '' : String(t);
-        if (t.length <= 80) return t;
-        var n = 78, c = t.charCodeAt(n - 1);
+        if (t.length <= 60) return t;
+        var n = 58, c = t.charCodeAt(n - 1);
         if (c >= 0xD800 && c <= 0xDBFF) n--;
         return t.slice(0, n) + '\u2026';
     }
@@ -231,7 +233,7 @@
         stage.setAttribute('aria-hidden', 'true');
         if (still) stage.className += ' is-still';
         host.appendChild(stage);
-        var timers = [], stopped = false, keyframes = null, preload = [];
+        var timers = [], stopped = false, keyframes = null, preload = [], mockCardEl = null;
         var W = 0, H = 0, resizeTimer = 0, flipTimer = 0, spotTimer = 0;
 
         function placeholder(i) {
@@ -292,12 +294,13 @@
                 ? 'linear-gradient(rgba(5,6,11,.3),rgba(5,6,11,.55) 50%,rgba(5,6,11,.9))'
                 : 'linear-gradient(90deg,rgba(5,6,11,.15),rgba(5,6,11,.35) 45%,rgba(5,6,11,.9) 80%),linear-gradient(transparent 55%,rgba(5,6,11,.85))');
             var cap = null, capT = null, unit = Math.min(W, H * 1.78) / 100;
-            /* the title sits bottom left, clear of the card on the right. Without the card Jellyfin's form fills the
-               middle, so there are no names then (the server sends none either), nor on screens too short for both. */
+            /* the title sits bottom left, clear of the card on the right, and is hidden while it would run under a card
+               that sits elsewhere (a phone, a short window). Without the card Jellyfin's form fills the middle, so there
+               are no names then (the server sends none either). */
             var capMax = portrait ? W - unit * 10 : W * 0.6, cardAt = opts.mockCard ? (data.Card !== false && !portrait ? W - unit * 6 - Math.max(150, unit * 27) : 0)
                 : opts.cardLeft ? opts.cardLeft(W) : 0;
-            if (cardAt > 0) capMax = Math.min(capMax, cardAt - unit * 8);
-            if (data.Card !== false && H >= 500 && capMax >= 120 && (data.Caption || items.some(function (it) { return it && it.T; }))) {
+            if (cardAt > 0) capMax = Math.min(capMax, cardAt - unit * 13);
+            if (data.Card !== false && capMax >= 120 && (data.Caption || items.some(function (it) { return it && it.T; }))) {
                 cap = el('div', 'mkls-cap');
                 cap.style.left = px(unit * 5); cap.style.bottom = px(unit * 5); cap.style.maxWidth = px(capMax);
                 var k = el('span', 'mkls-cap__k', data.Caption || '');
@@ -305,6 +308,15 @@
                 capT = el('span', 'mkls-cap__t');
                 capT.style.fontSize = px(Math.max(18, unit * 3.2));
                 cap.appendChild(k); cap.appendChild(capT); stage.appendChild(cap);
+            }
+            function fitCap() {
+                if (!cap) return;
+                cap.style.visibility = '';
+                var r = null;
+                try { r = opts.mockCard ? (mockCardEl ? mockCardEl.getBoundingClientRect() : null) : opts.cardRect ? opts.cardRect() : null; } catch (e) { r = null; }
+                if (!r || !r.width) return;
+                var b = cap.getBoundingClientRect();
+                if (b.left < r.right && b.right > r.left && b.top < r.bottom && b.bottom > r.top) cap.style.visibility = 'hidden';
             }
             var every = 8000 * slow;
             function showAt(n) {
@@ -322,7 +334,7 @@
                     other.classList.remove('is-on');
                     if (capT) {
                         capT.classList.add('is-out');
-                        later(function () { capT.textContent = shortTitle(items[i] && items[i].T); capT.classList.remove('is-out'); }, still ? 0 : 450);
+                        later(function () { capT.textContent = shortTitle(items[i] && items[i].T); fitCap(); capT.classList.remove('is-out'); }, still ? 0 : 450);
                     }
                     shown++;
                     ready();
@@ -344,7 +356,7 @@
             /* on the real page the form sits below the horizon: short screens (a laptop at 1366x768) get a higher
                horizon and smaller posters, so the whole form fits without scrolling (the sign-in page CSS matches) */
             var tv = document.documentElement.classList.contains('layout-tv');
-            var room = opts.mockCard || portrait ? 2 : H < 700 || (tv && H < 820) ? 0 : H < 820 ? 1 : 2;
+            var room = opts.mockCard || portrait ? 2 : H < 700 || (tv && H < 920) ? 0 : H < 820 ? 1 : 2;
             var hz = portrait ? (W < 600 ? 0.9 : 0.75) : room === 0 ? Math.min(0.3, 118 / H) : room === 1 ? 0.26 : 0.34;
             stage.style.background = 'linear-gradient(#070814 0%,#14072a ' + (hz * 100) + '%,#05060B ' + (hz * 100 + 0.2) + '%)';
             var pw = portrait ? W * 0.19 : unit * [5.5, 7, 9][room];
@@ -485,7 +497,7 @@
             if (users) {
                 /* the server shows its users on the sign-in page: tiles and buttons, as Jellyfin draws them */
                 /* two large tiles a row on a phone, as Jellyfin draws them there */
-                var row = el('div', 'mkls-card__users'), size = portrait ? (w - unit * 8) / 2 : Math.min(unit * 7, (w - unit * 4.4) / 3.6);
+                var row = el('div', 'mkls-card__users'), size = portrait ? (w - unit * 8) / 2 : Math.min(unit * 7, (w - unit * 4.4) / 3.7);
                 row.style.marginTop = px(gapv * 1.4);
                 for (var u = 0; u < users; u++) {
                     var t = el('i', 'mkls-card__user'); t.style.width = t.style.height = px(size); t.style.borderRadius = px(unit * 0.4);
@@ -506,6 +518,7 @@
             else if (where === 'left') { c.style.left = px(unit * 5); c.style.top = '50%'; c.style.transform = 'translateY(-50%)'; }
             else { c.style.left = px((W - w) / 2); c.style.top = px(H * 0.34 + unit * 1.2); }
             stage.appendChild(c);
+            mockCardEl = c;
         }
 
         var isReady = false;
@@ -629,6 +642,12 @@
                 image: function (i, kind) { return BASE + 'MkiLoginShowcase/Image/' + set + '/' + i + '/' + kind; },
                 /* the server made a new pick (or the showcase was turned off): ask again, at most once a minute */
                 missing: function () { if (Date.now() - state.missAt > 60000) { state.missAt = Date.now(); recheck(); } },
+                /* where Jellyfin's form is, so a title never runs under it */
+                cardRect: function () {
+                    var p = loginPage(), d = p && p.firstElementChild;
+                    while (d && d.tagName !== 'DIV') d = d.nextElementSibling;
+                    return d ? d.getBoundingClientRect() : null;
+                },
                 /* where the card's left edge is when it sits on the right (the CSS below: 27em wide, 6vw from the edge) */
                 cardLeft: function (W) {
                     if (data.Card === false || !window.matchMedia || !window.matchMedia('(min-width:60em) and (min-aspect-ratio:5/4)').matches) return 0;

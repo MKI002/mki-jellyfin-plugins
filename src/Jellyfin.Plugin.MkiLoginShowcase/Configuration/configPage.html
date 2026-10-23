@@ -1982,7 +1982,7 @@ function confirmPublic(key) {
         buttons.push({ value: true, text: names ? 'Show names' : 'Show counts', kind: 'primary', icon: 'check' });
         return kit.dialog({ title: names ? 'Show title names on the sign-in page?' : 'Show how many titles there are?', icon: names ? 'title' : 'numbers', tone: 'warn',
             buttons: buttons, cancelValue: false,
-            body: [(names ? 'Backdrop Spotlight would name each title it shows.' : 'Flip Mosaic would show how many movies and shows the sign-in page may show.') +
+            body: [(names ? (key === 'NeonCard' ? 'With the neon sign-in card, ' : '') + 'Backdrop Spotlight would name each title it shows.' : 'Flip Mosaic would show how many movies and shows the sign-in page may show.') +
                 ' Anyone who opens your Jellyfin address can read ' + (names ? 'them' : 'the numbers') + ', before signing in.'] })
             .then(function (v) {
                 if (v === 'without') {
