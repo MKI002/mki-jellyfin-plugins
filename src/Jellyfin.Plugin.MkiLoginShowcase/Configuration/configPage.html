@@ -1,0 +1,2214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>MKI Login Showcase</title>
+</head>
+<body>
+<div id="MkiLoginShowcaseConfigPage" data-role="page" class="page type-interior pluginConfigurationPage mkiui mk-show">
+<style>
+/* MKI-KIT:CSS BEGIN (generated from ui/mki-kit.css by build/kit.py, do not edit here) */
+/* ---------- 1. Tokens ---------- */
+#MkiLoginShowcaseConfigPage {
+  --mk-a1: #00a4dc; --mk-a2: #00a4dc;
+  --mk-a1-rgb: 0,164,220; --mk-a2-rgb: 0,164,220;
+  --mk-a1-l: #00729a; --mk-a2-l: #00729a;
+  --mk-a1-ink: var(--mk-a1); --mk-a2-ink: var(--mk-a2);
+  --mk-grad: linear-gradient(90deg, var(--mk-a1), var(--mk-a2));
+  --mk-grad-ink: linear-gradient(90deg, var(--mk-a1-ink), var(--mk-a2-ink));
+  --mk-on: var(--mk-a1);            /* switch / selection fill   */
+  --mk-on-fg: #0b0b0b;              /* thumb / text on that fill */
+
+  --mk-text: rgba(255,255,255,.92);
+  --mk-dim: rgba(255,255,255,.66);
+  --mk-faint: rgba(255,255,255,.44);
+  --mk-surface: rgba(255,255,255,.035);
+  --mk-surface-2: rgba(255,255,255,.06);
+  --mk-surface-3: rgba(255,255,255,.1);
+  --mk-field: rgba(255,255,255,.07);
+  --mk-line: rgba(255,255,255,.085);
+  --mk-line-2: rgba(255,255,255,.16);
+  --mk-solid: var(--jf-palette-background-paper, #1c1c1c); /* opaque colour (buttons, popovers, dialogs) */
+  --mk-glass: rgba(20,20,20,.88);
+  --mk-shadow: 0 1px 0 rgba(255,255,255,.035) inset, 0 18px 40px -28px rgba(0,0,0,.9);
+
+  --mk-ok: #3ddc84;   --mk-ok-rgb: 61,220,132;
+  --mk-warn: #ffb547; --mk-warn-rgb: 255,181,71;
+  --mk-bad: #ff6b6b;  --mk-bad-rgb: 255,107,107;
+  --mk-info: #39b9ec; --mk-info-rgb: 57,185,236;
+  --mk-idle: rgba(255,255,255,.6); --mk-idle-rgb: 160,160,160;
+
+  --mk-r: 14px; --mk-r-sm: 10px; --mk-r-xs: 7px;
+  --mk-sticky-top: 0px;             /* set by kit.js to the bottom of Jellyfin's fixed header */
+  --mk-ease: cubic-bezier(.2,.7,.2,1);
+  color: var(--mk-text);
+  font-variant-numeric: tabular-nums;
+}
+#MkiLoginShowcaseConfigPage[data-tone="light"] {
+  --mk-a1-ink: var(--mk-a1-l); --mk-a2-ink: var(--mk-a2-l);
+  --mk-on: var(--mk-a1-l); --mk-on-fg: #fff;
+  --mk-text: rgba(0,0,0,.87);
+  --mk-dim: rgba(0,0,0,.64);
+  --mk-faint: rgba(0,0,0,.45);
+  --mk-surface: #ffffff;
+  --mk-surface-2: rgba(0,0,0,.03);
+  --mk-surface-3: rgba(0,0,0,.07);
+  --mk-field: rgba(0,0,0,.045);
+  --mk-line: rgba(0,0,0,.1);
+  --mk-line-2: rgba(0,0,0,.2);
+  --mk-solid: #ffffff;
+  --mk-glass: rgba(246,246,246,.9);
+  --mk-shadow: 0 1px 2px rgba(0,0,0,.05), 0 14px 34px -26px rgba(0,0,0,.45);
+  --mk-ok: #12804a;   --mk-ok-rgb: 18,128,74;
+  --mk-warn: #9a5800; --mk-warn-rgb: 190,110,0;
+  --mk-bad: #c62828;  --mk-bad-rgb: 198,40,40;
+  --mk-info: #00729a; --mk-info-rgb: 0,114,154;
+  --mk-idle: rgba(0,0,0,.55); --mk-idle-rgb: 110,110,110;
+}
+/* Plugin accent pairs (dark-theme neon + light-theme ink variants). */
+#MkiLoginShowcaseConfigPage.mk-hero  { --mk-a1:#00E5FF; --mk-a2:#FF2BD6; --mk-a1-rgb:0,229,255;   --mk-a2-rgb:255,43,214;  --mk-a1-l:#007c91; --mk-a2-l:#b0168f; }
+#MkiLoginShowcaseConfigPage.mk-merge { --mk-a1:#B6FF3B; --mk-a2:#22D3EE; --mk-a1-rgb:182,255,59;  --mk-a2-rgb:34,211,238;  --mk-a1-l:#467800; --mk-a2-l:#0e7490; }
+#MkiLoginShowcaseConfigPage.mk-seerr { --mk-a1:#A855F7; --mk-a2:#FF4FA3; --mk-a1-rgb:168,85,247;  --mk-a2-rgb:255,79,163;  --mk-a1-l:#7e22ce; --mk-a2-l:#be185d; --mk-on-fg:#fff; }
+#MkiLoginShowcaseConfigPage.mk-pw    { --mk-a1:#FFC53D; --mk-a2:#FF5A36; --mk-a1-rgb:255,197,61;  --mk-a2-rgb:255,90,54;   --mk-a1-l:#965f00; --mk-a2-l:#c2410c; }
+
+/* ---------- 2. Base ---------- */
+#MkiLoginShowcaseConfigPage *, #MkiLoginShowcaseConfigPage *::before, #MkiLoginShowcaseConfigPage *::after { box-sizing: border-box; }
+#MkiLoginShowcaseConfigPage .mk-wrap { max-width: 1120px; }
+#MkiLoginShowcaseConfigPage > [data-role="content"] { overflow: visible; }   /* Jellyfin clips it, which would stop the sticky bar */
+#MkiLoginShowcaseConfigPage :focus { outline: none; }
+#MkiLoginShowcaseConfigPage :focus-visible { outline: 2px solid var(--mk-a1-ink); outline-offset: 2px; border-radius: 6px; }
+#MkiLoginShowcaseConfigPage .mk-ic {
+  font-family: "Material Icons"; font-weight: normal; font-style: normal; font-size: 1.25em; line-height: 1;
+  display: inline-block; width: 1em; height: 1em; flex: none; overflow: hidden; vertical-align: -.22em;
+  letter-spacing: normal; text-transform: none; white-space: nowrap; word-wrap: normal; direction: ltr;
+  -webkit-font-feature-settings: "liga"; font-feature-settings: "liga"; -webkit-font-smoothing: antialiased; user-select: none;
+}
+#MkiLoginShowcaseConfigPage .mk-ic--sm { font-size: 1.05em; }
+#MkiLoginShowcaseConfigPage .mk-ic--lg { font-size: 1.5em; }
+#MkiLoginShowcaseConfigPage .mk-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+#MkiLoginShowcaseConfigPage .mk-dim { color: var(--mk-dim); }
+#MkiLoginShowcaseConfigPage .mk-mono { font-family: ui-monospace, "DejaVu Sans Mono", Consolas, monospace; font-size: .92em; }
+#MkiLoginShowcaseConfigPage .mk-grow { flex: 1 1 auto; min-width: 0; }
+#MkiLoginShowcaseConfigPage .mk-hidden, #MkiLoginShowcaseConfigPage [hidden] { display: none !important; }
+#MkiLoginShowcaseConfigPage p { margin: 0; }
+#MkiLoginShowcaseConfigPage code { font-family: ui-monospace, "DejaVu Sans Mono", Consolas, monospace; font-size: .88em; padding: .08em .35em; border-radius: 5px; background: var(--mk-surface-3); }
+
+/* ---------- 3. Deck: the status header every page opens with ---------- */
+#MkiLoginShowcaseConfigPage .mk-deck {
+  position: relative; overflow: hidden; isolation: isolate;
+  border: 1px solid var(--mk-line); border-radius: var(--mk-r);
+  background: linear-gradient(180deg, var(--mk-surface-2), var(--mk-surface));
+  box-shadow: var(--mk-shadow);
+  padding: 20px 22px 16px; margin: 4px 0 0;
+}
+/* gradient hairline + faint neon grid in the corner (brand cue, used once per page) */
+#MkiLoginShowcaseConfigPage .mk-deck::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px;
+  background: var(--mk-grad); opacity: .85; z-index: 1;
+}
+#MkiLoginShowcaseConfigPage .mk-deck::after {
+  content: ""; position: absolute; right: -10px; top: -10px; width: 360px; height: 220px; z-index: -1;
+  background-image:
+    linear-gradient(rgba(var(--mk-a1-rgb),.13) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--mk-a2-rgb),.11) 1px, transparent 1px);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(ellipse at 100% 0%, #000 0%, transparent 70%);
+          mask-image: radial-gradient(ellipse at 100% 0%, #000 0%, transparent 70%);
+}
+#MkiLoginShowcaseConfigPage .mk-deck__head { display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+#MkiLoginShowcaseConfigPage .mk-brand { flex: 1 1 260px; min-width: 0; }
+#MkiLoginShowcaseConfigPage .mk-kicker {
+  font-size: .7rem; font-weight: 700; letter-spacing: .26em; text-transform: uppercase;
+  color: var(--mk-a1-ink); margin: 0 0 6px;
+}
+#MkiLoginShowcaseConfigPage .mk-title {
+  margin: 0; font-size: 1.9rem; line-height: 1.1; font-weight: 750; letter-spacing: -.005em;
+}
+#MkiLoginShowcaseConfigPage .mk-title b {
+  font-weight: 750; background: var(--mk-grad-ink);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+#MkiLoginShowcaseConfigPage .mk-rule { display: block; width: 46px; height: 3px; border-radius: 2px; background: var(--mk-grad); margin: 10px 0 8px; }
+#MkiLoginShowcaseConfigPage .mk-lede { color: var(--mk-dim); font-size: .9rem; line-height: 1.45; max-width: 46em; }
+
+/* master on/off for the whole plugin */
+#MkiLoginShowcaseConfigPage .mk-master {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 14px;
+  border-radius: 12px; border: 1px solid var(--mk-line-2); background: var(--mk-surface-2);
+  cursor: pointer;
+}
+#MkiLoginShowcaseConfigPage .mk-master__text { display: flex; flex-direction: column; line-height: 1.2; }
+#MkiLoginShowcaseConfigPage .mk-master__label { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--mk-dim); font-weight: 700; }
+#MkiLoginShowcaseConfigPage .mk-master__state { font-weight: 650; font-size: .95rem; }
+
+#MkiLoginShowcaseConfigPage .mk-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 16px 0 0; }
+#MkiLoginShowcaseConfigPage .mk-tile {
+  position: relative; min-width: 0; padding: 11px 13px 12px; border-radius: var(--mk-r-sm);
+  border: 1px solid var(--mk-line); background: var(--mk-surface-2);
+}
+#MkiLoginShowcaseConfigPage button.mk-tile { font: inherit; color: inherit; text-align: left; cursor: pointer; width: 100%; margin: 0; display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; }
+#MkiLoginShowcaseConfigPage .mk-tile > span { display: block; }
+#MkiLoginShowcaseConfigPage .mk-tile > .mk-meter { display: flex; }
+#MkiLoginShowcaseConfigPage .mk-tile > .mk-tile__label, #MkiLoginShowcaseConfigPage .mk-tile > .mk-tile__value { display: flex; }
+#MkiLoginShowcaseConfigPage .mk-tile > .mk-chip { display: inline-flex; align-self: flex-start; white-space: normal; }
+#MkiLoginShowcaseConfigPage button.mk-tile:hover { border-color: var(--mk-line-2); }
+#MkiLoginShowcaseConfigPage .mk-tile__label { display: flex; align-items: center; gap: 6px; font-size: .7rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--mk-dim); }
+#MkiLoginShowcaseConfigPage .mk-tile__value { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; font-size: 1.4rem; font-weight: 750; line-height: 1.15; margin: 6px 0 2px; }
+#MkiLoginShowcaseConfigPage .mk-tile__value small { font-size: .82rem; font-weight: 600; color: var(--mk-dim); }
+#MkiLoginShowcaseConfigPage .mk-tile__sub { font-size: .8rem; color: var(--mk-dim); line-height: 1.35; }
+#MkiLoginShowcaseConfigPage .mk-tile .mk-meter { margin-top: 8px; }
+
+#MkiLoginShowcaseConfigPage .mk-deck__foot { display: flex; align-items: center; gap: 12px 16px; flex-wrap: wrap; margin: 14px 0 0; padding-top: 12px; border-top: 1px dashed var(--mk-line-2); }
+#MkiLoginShowcaseConfigPage .mk-next { flex: 1 1 320px; display: flex; gap: 10px; align-items: flex-start; font-size: .88rem; line-height: 1.45; color: var(--mk-dim); }
+#MkiLoginShowcaseConfigPage .mk-next b { color: var(--mk-text); font-weight: 650; }
+#MkiLoginShowcaseConfigPage .mk-next .mk-ic { color: var(--mk-a1-ink); margin-top: 1px; }
+#MkiLoginShowcaseConfigPage .mk-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ---------- 4. Sticky bar: section tabs + save state ---------- */
+#MkiLoginShowcaseConfigPage .mk-bar {
+  position: sticky; top: var(--mk-sticky-top); z-index: 30;
+  display: flex; align-items: center; gap: 10px;
+  margin: 14px 0 16px; padding: 5px; border-radius: 13px;
+  background: var(--mk-glass); border: 1px solid var(--mk-line);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+}
+#MkiLoginShowcaseConfigPage .mk-tabs { display: flex; gap: 2px; flex: 1 1 auto; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+#MkiLoginShowcaseConfigPage .mk-tabs::-webkit-scrollbar { display: none; }
+#MkiLoginShowcaseConfigPage .mk-tab {
+  position: relative; appearance: none; -webkit-appearance: none; border: 0; margin: 0;
+  background: transparent; color: var(--mk-dim); font: inherit; font-size: .9rem; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+  padding: 9px 13px; border-radius: 9px; cursor: pointer;
+}
+#MkiLoginShowcaseConfigPage .mk-tab:hover { color: var(--mk-text); background: var(--mk-surface-2); }
+#MkiLoginShowcaseConfigPage .mk-tab[aria-selected="true"] { color: var(--mk-text); background: var(--mk-surface-3); }
+#MkiLoginShowcaseConfigPage .mk-tab[aria-selected="true"]::after {
+  content: ""; position: absolute; left: 13px; right: 13px; bottom: 3px; height: 2px; border-radius: 2px; background: var(--mk-grad);
+}
+#MkiLoginShowcaseConfigPage .mk-tab__count { font-size: .72rem; font-weight: 700; padding: 1px 6px; border-radius: 99px; background: var(--mk-surface-3); color: var(--mk-dim); }
+#MkiLoginShowcaseConfigPage .mk-tab__count--warn { background: rgba(var(--mk-warn-rgb),.16); color: var(--mk-warn); }
+#MkiLoginShowcaseConfigPage .mk-panel[hidden] { display: none; }
+
+/* save state: one place, always visible, never colour-only */
+#MkiLoginShowcaseConfigPage .mk-save {
+  flex: none; display: inline-flex; align-items: center; gap: 7px; margin: 0;
+  font: inherit; font-size: .82rem; font-weight: 600; white-space: nowrap; color: var(--mk-dim);
+  padding: 7px 11px; border-radius: 9px; border: 1px solid transparent; background: transparent; cursor: pointer;
+}
+#MkiLoginShowcaseConfigPage .mk-save:hover { background: var(--mk-surface-2); }
+#MkiLoginShowcaseConfigPage .mk-save .mk-ic { font-size: 1.15em; }
+#MkiLoginShowcaseConfigPage .mk-save[data-state="saved"] .mk-ic { color: var(--mk-ok); }
+#MkiLoginShowcaseConfigPage .mk-save[data-state="saving"] .mk-ic { color: var(--mk-info); animation: mk-spin 1s linear infinite; }
+#MkiLoginShowcaseConfigPage .mk-save[data-state="editing"] .mk-ic { color: var(--mk-info); }
+#MkiLoginShowcaseConfigPage .mk-save[data-state="invalid"] { color: var(--mk-warn); border-color: rgba(var(--mk-warn-rgb),.4); background: rgba(var(--mk-warn-rgb),.1); }
+#MkiLoginShowcaseConfigPage .mk-save[data-state="warn"] .mk-ic { color: var(--mk-warn); }
+#MkiLoginShowcaseConfigPage .mk-save[data-state="error"] { color: var(--mk-bad); border-color: rgba(var(--mk-bad-rgb),.45); background: rgba(var(--mk-bad-rgb),.1); }
+@keyframes mk-spin { to { transform: rotate(360deg); } }
+#MkiLoginShowcaseConfigPage .mk-ic.mk-spin, #MkiLoginShowcaseConfigPage .mk-spin > .mk-ic { animation: mk-spin 1s linear infinite; }
+
+/* ---------- 5. Cards, rows, layout helpers ---------- */
+#MkiLoginShowcaseConfigPage .mk-card {
+  border: 1px solid var(--mk-line); border-radius: var(--mk-r); background: var(--mk-surface);
+  box-shadow: var(--mk-shadow); margin: 0 0 14px; min-width: 0;
+}
+#MkiLoginShowcaseConfigPage .mk-card__head { display: flex; align-items: flex-start; gap: 12px; padding: 15px 18px 4px; flex-wrap: wrap; }
+#MkiLoginShowcaseConfigPage .mk-card__icon {
+  flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
+  color: var(--mk-a1-ink);
+  background: linear-gradient(135deg, rgba(var(--mk-a1-rgb),.16), rgba(var(--mk-a2-rgb),.12));
+  border: 1px solid rgba(var(--mk-a1-rgb),.22);
+}
+#MkiLoginShowcaseConfigPage .mk-card__titles { flex: 1 1 220px; min-width: 0; }
+#MkiLoginShowcaseConfigPage .mk-card__title { margin: 0; font-size: 1.02rem; font-weight: 700; line-height: 1.3; }
+#MkiLoginShowcaseConfigPage .mk-card__desc { margin: 3px 0 0; font-size: .85rem; line-height: 1.45; color: var(--mk-dim); }
+#MkiLoginShowcaseConfigPage .mk-card__aside { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+#MkiLoginShowcaseConfigPage .mk-card__body { padding: 8px 18px 16px; }
+#MkiLoginShowcaseConfigPage .mk-card__foot { padding: 11px 18px; border-top: 1px solid var(--mk-line); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: .85rem; color: var(--mk-dim); }
+
+#MkiLoginShowcaseConfigPage .mk-grid2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+#MkiLoginShowcaseConfigPage .mk-grid2 > .mk-card { margin: 0; }
+#MkiLoginShowcaseConfigPage .mk-grid2 > .mk-field + .mk-field { margin-top: 0; }  /* grid gap spaces them */
+#MkiLoginShowcaseConfigPage .mk-stack > * + * { margin-top: 12px; }
+#MkiLoginShowcaseConfigPage .mk-split { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+#MkiLoginShowcaseConfigPage .mk-row { display: flex; align-items: center; gap: 10px 18px; padding: 12px 0; border-top: 1px solid var(--mk-line); }
+#MkiLoginShowcaseConfigPage .mk-row:first-child { border-top: 0; }
+#MkiLoginShowcaseConfigPage .mk-row__text { flex: 1 1 240px; min-width: 0; }
+#MkiLoginShowcaseConfigPage .mk-row__label { display: block; font-size: .95rem; font-weight: 600; line-height: 1.35; cursor: default; }
+#MkiLoginShowcaseConfigPage label.mk-row__label { cursor: pointer; }
+#MkiLoginShowcaseConfigPage .mk-row__desc { display: block; margin-top: 2px; font-size: .83rem; line-height: 1.45; color: var(--mk-dim); }
+#MkiLoginShowcaseConfigPage .mk-row__control { flex: none; display: flex; align-items: center; gap: 8px; max-width: 100%; }
+#MkiLoginShowcaseConfigPage .mk-row--wide { flex-wrap: wrap; }
+#MkiLoginShowcaseConfigPage .mk-row--wide .mk-row__text { flex: 1 1 170px; }
+#MkiLoginShowcaseConfigPage .mk-row--wide .mk-row__control { flex: 3 1 300px; }
+#MkiLoginShowcaseConfigPage .mk-row--stack { flex-direction: column; align-items: stretch; }
+#MkiLoginShowcaseConfigPage .mk-row--sub { margin-left: 22px; padding-left: 16px; border-top: 0; border-left: 2px solid var(--mk-line-2); padding-top: 6px; }
+#MkiLoginShowcaseConfigPage .mk-row.is-inert .mk-row__label, #MkiLoginShowcaseConfigPage .mk-row.is-inert .mk-row__control { opacity: .5; }
+#MkiLoginShowcaseConfigPage .mk-why { display: inline-flex; align-items: center; gap: 5px; margin-top: 4px; font-size: .78rem; color: var(--mk-faint); }
+
+/* ---------- 6. Controls ---------- */
+/* Switch: a real checkbox with role="switch". Position + fill + label text carry the state. */
+#MkiLoginShowcaseConfigPage .mk-switch {
+  -webkit-appearance: none; appearance: none; margin: 0; flex: none; cursor: pointer; position: relative;
+  width: 46px; height: 26px; border-radius: 13px;
+  background: var(--mk-surface-3); border: 1px solid var(--mk-line-2);
+  transition: background-color .18s var(--mk-ease), border-color .18s;
+}
+#MkiLoginShowcaseConfigPage .mk-switch::before {
+  content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--mk-dim); transition: transform .2s var(--mk-ease), background-color .2s;
+}
+#MkiLoginShowcaseConfigPage .mk-switch:checked { background: var(--mk-on); border-color: transparent; box-shadow: 0 0 14px -4px rgba(var(--mk-a1-rgb),.65); }
+#MkiLoginShowcaseConfigPage .mk-switch:checked::before { transform: translateX(20px); background: var(--mk-on-fg); }
+#MkiLoginShowcaseConfigPage .mk-switch:disabled { opacity: .45; cursor: not-allowed; }
+#MkiLoginShowcaseConfigPage[data-tone="light"] .mk-switch:checked { box-shadow: none; }
+#MkiLoginShowcaseConfigPage .mk-switch:focus-visible { outline-offset: 3px; border-radius: 13px; }
+
+/* Plain checkbox (bulk select etc.) */
+#MkiLoginShowcaseConfigPage .mk-check { width: 18px; height: 18px; margin: 0; accent-color: var(--mk-on); cursor: pointer; }
+
+/* Text, number, select, textarea */
+#MkiLoginShowcaseConfigPage .mk-input, #MkiLoginShowcaseConfigPage .mk-select, #MkiLoginShowcaseConfigPage .mk-textarea {
+  width: 100%; margin: 0; font: inherit; font-size: .95rem; color: var(--mk-text);
+  background: var(--mk-field); border: 1px solid var(--mk-line); border-radius: 8px; padding: 9px 11px;
+  transition: border-color .15s, box-shadow .15s;
+}
+#MkiLoginShowcaseConfigPage .mk-input:hover, #MkiLoginShowcaseConfigPage .mk-select:hover, #MkiLoginShowcaseConfigPage .mk-textarea:hover { border-color: var(--mk-line-2); }
+#MkiLoginShowcaseConfigPage .mk-input:focus, #MkiLoginShowcaseConfigPage .mk-select:focus, #MkiLoginShowcaseConfigPage .mk-textarea:focus { border-color: var(--mk-a1-ink); box-shadow: 0 0 0 3px rgba(var(--mk-a1-rgb),.18); outline: none; }
+#MkiLoginShowcaseConfigPage .mk-input[aria-invalid="true"], #MkiLoginShowcaseConfigPage .mk-textarea[aria-invalid="true"] { border-color: var(--mk-bad); box-shadow: 0 0 0 3px rgba(var(--mk-bad-rgb),.14); }
+#MkiLoginShowcaseConfigPage .mk-input:disabled, #MkiLoginShowcaseConfigPage .mk-select:disabled { opacity: .5; cursor: not-allowed; }
+#MkiLoginShowcaseConfigPage .mk-select { -webkit-appearance: none; appearance: none; padding-right: 32px; cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 17px) 52%, calc(100% - 12px) 52%; background-size: 5px 5px; background-repeat: no-repeat; }
+#MkiLoginShowcaseConfigPage .mk-select option { background: var(--mk-solid); color: var(--mk-text); }
+#MkiLoginShowcaseConfigPage .mk-select { text-overflow: ellipsis; }
+#MkiLoginShowcaseConfigPage .mk-textarea { min-height: 84px; resize: vertical; line-height: 1.5; }
+#MkiLoginShowcaseConfigPage .mk-textarea.mk-code { font-family: ui-monospace, "DejaVu Sans Mono", Consolas, monospace; font-size: .86rem; min-height: 150px; tab-size: 2; }
+#MkiLoginShowcaseConfigPage .mk-input--num { width: 5.4em; text-align: right; padding-right: 8px; }
+#MkiLoginShowcaseConfigPage .mk-input--sm { padding: 6px 9px; font-size: .9rem; }
+#MkiLoginShowcaseConfigPage .mk-field { display: block; min-width: 0; }
+#MkiLoginShowcaseConfigPage .mk-field + .mk-field { margin-top: 12px; }
+#MkiLoginShowcaseConfigPage .mk-field__label { display: flex; align-items: center; gap: 8px; font-size: .84rem; font-weight: 600; color: var(--mk-dim); margin: 0 0 6px; }
+#MkiLoginShowcaseConfigPage .mk-field__hint { display: block; font-size: .8rem; color: var(--mk-faint); margin-top: 5px; line-height: 1.45; }
+#MkiLoginShowcaseConfigPage .mk-affix { display: flex; align-items: stretch; }
+#MkiLoginShowcaseConfigPage .mk-affix > .mk-input { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+#MkiLoginShowcaseConfigPage .mk-affix > .mk-iconbtn { border-radius: 0 8px 8px 0; border: 1px solid var(--mk-line); border-left: 0; background: var(--mk-field); width: 42px; height: auto; }
+#MkiLoginShowcaseConfigPage .mk-unit { font-size: .82rem; color: var(--mk-dim); white-space: nowrap; }
+
+/* Inline validation message (icon + text, never colour alone) */
+#MkiLoginShowcaseConfigPage .mk-msg { display: flex; gap: 7px; align-items: flex-start; font-size: .82rem; line-height: 1.4; margin-top: 6px; }
+#MkiLoginShowcaseConfigPage .mk-msg:empty { display: none; }
+#MkiLoginShowcaseConfigPage .mk-msg .mk-ic { font-size: 1.1em; margin-top: 1px; }
+#MkiLoginShowcaseConfigPage .mk-msg--ok { color: var(--mk-ok); }
+#MkiLoginShowcaseConfigPage .mk-msg--warn { color: var(--mk-warn); }
+#MkiLoginShowcaseConfigPage .mk-msg--bad { color: var(--mk-bad); }
+#MkiLoginShowcaseConfigPage .mk-msg--info { color: var(--mk-dim); }
+
+/* Stepper: [-] value [+] */
+#MkiLoginShowcaseConfigPage .mk-stepper { display: inline-flex; align-items: center; border: 1px solid var(--mk-line); border-radius: 9px; background: var(--mk-field); overflow: hidden; }
+#MkiLoginShowcaseConfigPage .mk-stepper button { width: 32px; height: 34px; border: 0; margin: 0; background: transparent; color: var(--mk-dim); cursor: pointer; display: grid; place-items: center; font: inherit; }
+#MkiLoginShowcaseConfigPage .mk-stepper button:hover { background: var(--mk-surface-3); color: var(--mk-text); }
+#MkiLoginShowcaseConfigPage .mk-stepper input { width: 3.2em; border: 0; background: transparent; color: inherit; font: inherit; font-weight: 650; text-align: center; padding: 0; -moz-appearance: textfield; }
+#MkiLoginShowcaseConfigPage .mk-stepper input::-webkit-inner-spin-button, #MkiLoginShowcaseConfigPage .mk-stepper input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+#MkiLoginShowcaseConfigPage .mk-stepper:focus-within { border-color: var(--mk-a1-ink); }
+#MkiLoginShowcaseConfigPage .mk-stepper.is-disabled { opacity: .45; pointer-events: none; }
+
+/* Slider with number box, default tick and reset */
+#MkiLoginShowcaseConfigPage .mk-range { display: flex; align-items: center; gap: 12px; width: 100%; }
+#MkiLoginShowcaseConfigPage .mk-range__track { position: relative; flex: 1 1 auto; min-width: 120px; display: flex; align-items: center; height: 28px; }
+#MkiLoginShowcaseConfigPage .mk-range input[type="range"] {
+  -webkit-appearance: none; appearance: none; width: 100%; height: 6px; margin: 0; border-radius: 3px; cursor: pointer;
+  background: linear-gradient(90deg, rgba(var(--mk-a1-rgb),.95), rgba(var(--mk-a2-rgb),.95)) 0 0 / var(--p, 50%) 100% no-repeat, var(--mk-surface-3);
+}
+#MkiLoginShowcaseConfigPage[data-tone="light"] .mk-range input[type="range"] { background: linear-gradient(90deg, var(--mk-a1-l), var(--mk-a2-l)) 0 0 / var(--p, 50%) 100% no-repeat, var(--mk-surface-3); }
+#MkiLoginShowcaseConfigPage .mk-range input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 3px solid var(--mk-a1-ink); box-shadow: 0 2px 8px rgba(0,0,0,.45); }
+#MkiLoginShowcaseConfigPage .mk-range input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 3px solid var(--mk-a1-ink); }
+#MkiLoginShowcaseConfigPage .mk-range input[type="range"]:focus-visible { outline: 2px solid var(--mk-a1-ink); outline-offset: 6px; }
+#MkiLoginShowcaseConfigPage .mk-tick { position: absolute; top: 21px; width: 2px; height: 7px; margin-left: -1px; border-radius: 1px; background: var(--mk-faint); pointer-events: none; }
+#MkiLoginShowcaseConfigPage .mk-range__out { display: flex; align-items: center; gap: 6px; flex: none; }
+#MkiLoginShowcaseConfigPage .mk-reset { visibility: hidden; }
+#MkiLoginShowcaseConfigPage .mk-range.is-changed .mk-reset { visibility: visible; }
+
+/* Segmented control: native radios, label is the button */
+#MkiLoginShowcaseConfigPage .mk-seg { display: inline-flex; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; gap: 2px; padding: 3px; border-radius: 10px; background: var(--mk-field); border: 1px solid var(--mk-line); max-width: 100%; }
+#MkiLoginShowcaseConfigPage .mk-seg input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
+#MkiLoginShowcaseConfigPage .mk-seg label { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: .87rem; font-weight: 600; color: var(--mk-dim); cursor: pointer; white-space: nowrap; }
+#MkiLoginShowcaseConfigPage .mk-seg label:hover { color: var(--mk-text); }
+#MkiLoginShowcaseConfigPage .mk-seg input:checked + label { color: var(--mk-text); background: var(--mk-surface-3); box-shadow: 0 0 0 1px var(--mk-line-2) inset, 0 -2px 0 rgba(var(--mk-a1-rgb),.9) inset; }
+#MkiLoginShowcaseConfigPage[data-tone="light"] .mk-seg input:checked + label { background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.14), 0 -2px 0 var(--mk-a1-l) inset; }
+#MkiLoginShowcaseConfigPage .mk-seg input:focus-visible + label { outline: 2px solid var(--mk-a1-ink); outline-offset: 1px; }
+#MkiLoginShowcaseConfigPage .mk-seg--sm label { padding: 4px 9px; font-size: .8rem; }
+
+/* Visual option tiles (layout pickers etc.): radios with a drawing */
+#MkiLoginShowcaseConfigPage .mk-opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; }
+#MkiLoginShowcaseConfigPage .mk-opt { position: relative; display: block; cursor: pointer; }
+#MkiLoginShowcaseConfigPage .mk-opt input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+#MkiLoginShowcaseConfigPage .mk-opt__card { display: block; height: 100%; box-sizing: border-box; padding: 8px 8px 9px; border-radius: 11px; border: 1px solid var(--mk-line); background: var(--mk-surface-2); transition: border-color .15s, background-color .15s; }
+#MkiLoginShowcaseConfigPage .mk-opt:hover .mk-opt__card { border-color: var(--mk-line-2); }
+#MkiLoginShowcaseConfigPage .mk-opt__art { display: block; position: relative; height: 58px; border-radius: 7px; overflow: hidden; background: var(--mk-surface-3); }
+#MkiLoginShowcaseConfigPage .mk-opt__name { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 8px; font-size: .84rem; font-weight: 600; }
+#MkiLoginShowcaseConfigPage .mk-opt__name .mk-ic { visibility: hidden; color: var(--mk-a1-ink); }
+#MkiLoginShowcaseConfigPage .mk-opt input:checked + .mk-opt__card { border-color: rgba(var(--mk-a1-rgb),.7); background: rgba(var(--mk-a1-rgb),.07); box-shadow: 0 0 0 1px rgba(var(--mk-a1-rgb),.45) inset; }
+#MkiLoginShowcaseConfigPage[data-tone="light"] .mk-opt input:checked + .mk-opt__card { border-color: var(--mk-a1-l); box-shadow: 0 0 0 1px var(--mk-a1-l) inset; }
+#MkiLoginShowcaseConfigPage .mk-opt input:checked + .mk-opt__card .mk-opt__name .mk-ic { visibility: visible; }
+#MkiLoginShowcaseConfigPage .mk-opt input:focus-visible + .mk-opt__card { outline: 2px solid var(--mk-a1-ink); outline-offset: 2px; }
+
+/* Toggle pills (multi-select checkboxes) */
+#MkiLoginShowcaseConfigPage .mk-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+#MkiLoginShowcaseConfigPage .mk-pill { position: relative; display: inline-flex; }
+#MkiLoginShowcaseConfigPage .mk-pill input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+#MkiLoginShowcaseConfigPage .mk-pill > span { display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px 7px 10px; border-radius: 99px; border: 1px solid var(--mk-line-2); color: var(--mk-dim); font-size: .87rem; font-weight: 600; cursor: pointer; }
+#MkiLoginShowcaseConfigPage .mk-pill > span .mk-ic { font-size: 1.1em; }
+#MkiLoginShowcaseConfigPage .mk-pill .mk-pill__on { display: none; }
+#MkiLoginShowcaseConfigPage .mk-pill input:checked + span { color: var(--mk-text); border-color: rgba(var(--mk-a1-rgb),.6); background: rgba(var(--mk-a1-rgb),.1); }
+#MkiLoginShowcaseConfigPage .mk-pill input:checked + span .mk-pill__on { display: inline; color: var(--mk-a1-ink); }
+#MkiLoginShowcaseConfigPage .mk-pill input:checked + span .mk-pill__off { display: none; }
+#MkiLoginShowcaseConfigPage .mk-pill input:focus-visible + span { outline: 2px solid var(--mk-a1-ink); outline-offset: 2px; }
+
+/* List editor (allow / block lists) */
+#MkiLoginShowcaseConfigPage .mk-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-height: 44px; padding: 6px; border-radius: 9px; background: var(--mk-field); border: 1px solid var(--mk-line); cursor: text; }
+#MkiLoginShowcaseConfigPage .mk-tags:focus-within { border-color: var(--mk-a1-ink); box-shadow: 0 0 0 3px rgba(var(--mk-a1-rgb),.15); }
+#MkiLoginShowcaseConfigPage .mk-tag { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; padding: 3px 3px 3px 9px; border-radius: 99px; font-size: .84rem; font-weight: 600; background: var(--mk-surface-3); border: 1px solid var(--mk-line); }
+#MkiLoginShowcaseConfigPage .mk-tag > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#MkiLoginShowcaseConfigPage .mk-tag .mk-ic { font-size: .95em; }
+#MkiLoginShowcaseConfigPage .mk-tag button { width: 20px; height: 20px; border-radius: 50%; border: 0; margin: 0; padding: 0; display: grid; place-items: center; background: transparent; color: var(--mk-dim); cursor: pointer; }
+#MkiLoginShowcaseConfigPage .mk-tag button:hover { background: var(--mk-surface-3); color: var(--mk-text); }
+#MkiLoginShowcaseConfigPage .mk-tags--allow .mk-tag { border-color: rgba(var(--mk-ok-rgb),.4); background: rgba(var(--mk-ok-rgb),.1); }
+#MkiLoginShowcaseConfigPage .mk-tags--allow .mk-tag > .mk-ic { color: var(--mk-ok); }
+#MkiLoginShowcaseConfigPage .mk-tags--block .mk-tag { border-color: rgba(var(--mk-bad-rgb),.4); background: rgba(var(--mk-bad-rgb),.09); }
+#MkiLoginShowcaseConfigPage .mk-tags--block .mk-tag > .mk-ic { color: var(--mk-bad); }
+#MkiLoginShowcaseConfigPage .mk-tag.is-conflict { box-shadow: 0 0 0 2px rgba(var(--mk-warn-rgb),.7); }
+#MkiLoginShowcaseConfigPage .mk-tags input { flex: 1 1 8em; min-width: 7em; border: 0; margin: 0; background: transparent; color: inherit; font: inherit; font-size: .9rem; padding: 4px 6px; }
+#MkiLoginShowcaseConfigPage .mk-tags input:focus { outline: none; }
+#MkiLoginShowcaseConfigPage .mk-suggest { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; align-items: center; font-size: .78rem; color: var(--mk-faint); }
+#MkiLoginShowcaseConfigPage .mk-suggest button { font: inherit; font-size: .78rem; font-weight: 600; color: var(--mk-dim); background: transparent; border: 1px dashed var(--mk-line-2); border-radius: 99px; padding: 2px 9px; cursor: pointer; }
+#MkiLoginShowcaseConfigPage .mk-suggest button:hover { color: var(--mk-text); border-style: solid; }
+
+/* ---------- 7. Buttons ---------- */
+#MkiLoginShowcaseConfigPage .mk-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin: 0;
+  font: inherit; font-size: .9rem; font-weight: 650; line-height: 1.2; color: var(--mk-text); text-decoration: none;
+  padding: 9px 15px; border-radius: 10px; border: 1px solid var(--mk-line-2); background: var(--mk-surface-2); cursor: pointer;
+  transition: background-color .15s, border-color .15s, box-shadow .2s;
+}
+#MkiLoginShowcaseConfigPage .mk-btn:hover { background: var(--mk-surface-3); }
+#MkiLoginShowcaseConfigPage .mk-btn:disabled { opacity: .5; cursor: not-allowed; }
+#MkiLoginShowcaseConfigPage .mk-btn--primary {
+  border: 1px solid transparent;
+  background: linear-gradient(var(--mk-solid), var(--mk-solid)) padding-box, var(--mk-grad) border-box;
+  box-shadow: 0 0 22px -10px rgba(var(--mk-a1-rgb),.9);
+}
+#MkiLoginShowcaseConfigPage .mk-btn--primary:hover { background: linear-gradient(rgba(var(--mk-a1-rgb),.12), rgba(var(--mk-a2-rgb),.12)) padding-box, var(--mk-grad) border-box; }
+#MkiLoginShowcaseConfigPage .mk-btn--primary .mk-ic { color: var(--mk-a1-ink); }
+#MkiLoginShowcaseConfigPage[data-tone="light"] .mk-btn--primary { background: linear-gradient(#fff,#fff) padding-box, var(--mk-grad-ink) border-box; box-shadow: none; }
+#MkiLoginShowcaseConfigPage .mk-btn--danger { color: #fff; background: #b3261e; border-color: #b3261e; }
+#MkiLoginShowcaseConfigPage .mk-btn--danger:hover { background: #c62828; }
+#MkiLoginShowcaseConfigPage .mk-btn--danger-soft { color: var(--mk-bad); border-color: rgba(var(--mk-bad-rgb),.45); background: rgba(var(--mk-bad-rgb),.08); }
+#MkiLoginShowcaseConfigPage .mk-btn--danger-soft:hover { background: rgba(var(--mk-bad-rgb),.15); }
+#MkiLoginShowcaseConfigPage .mk-btn--ghost { background: transparent; border-color: transparent; color: var(--mk-dim); }
+#MkiLoginShowcaseConfigPage .mk-btn--ghost:hover { color: var(--mk-text); background: var(--mk-surface-2); }
+#MkiLoginShowcaseConfigPage .mk-btn--sm { padding: 6px 10px; font-size: .82rem; border-radius: 8px; gap: 6px; }
+#MkiLoginShowcaseConfigPage .mk-btn--block { width: 100%; }
+#MkiLoginShowcaseConfigPage .mk-iconbtn { width: 36px; height: 36px; display: inline-grid; place-items: center; margin: 0; padding: 0; border-radius: 9px; border: 1px solid var(--mk-line); background: var(--mk-surface-2); color: var(--mk-dim); cursor: pointer; }
+#MkiLoginShowcaseConfigPage .mk-iconbtn:hover { color: var(--mk-text); background: var(--mk-surface-3); }
+#MkiLoginShowcaseConfigPage .mk-iconbtn[aria-pressed="true"] { color: var(--mk-a1-ink); border-color: rgba(var(--mk-a1-rgb),.5); }
+
+/* ---------- 8. Status chips, notes, badges ---------- */
+#MkiLoginShowcaseConfigPage .mk-chip {
+  --c: var(--mk-idle); --c-rgb: var(--mk-idle-rgb);
+  display: inline-flex; align-items: center; gap: 6px; max-width: 100%;
+  padding: 3px 10px 3px 8px; border-radius: 99px; font-size: .8rem; font-weight: 650; line-height: 1.35; white-space: nowrap;
+  color: var(--c); background: rgba(var(--c-rgb),.12); border: 1px solid rgba(var(--c-rgb),.3);
+}
+#MkiLoginShowcaseConfigPage .mk-chip .mk-ic { font-size: 1.05em; }
+#MkiLoginShowcaseConfigPage .mk-chip--ok { --c: var(--mk-ok); --c-rgb: var(--mk-ok-rgb); }
+#MkiLoginShowcaseConfigPage .mk-chip--warn { --c: var(--mk-warn); --c-rgb: var(--mk-warn-rgb); }
+#MkiLoginShowcaseConfigPage .mk-chip--bad { --c: var(--mk-bad); --c-rgb: var(--mk-bad-rgb); }
+#MkiLoginShowcaseConfigPage .mk-chip--info { --c: var(--mk-info); --c-rgb: var(--mk-info-rgb); }
+#MkiLoginShowcaseConfigPage .mk-chip--accent { --c: var(--mk-a1-ink); --c-rgb: var(--mk-a1-rgb); }
+#MkiLoginShowcaseConfigPage .mk-chip--plain { color: var(--mk-dim); background: transparent; border-color: var(--mk-line-2); }
+#MkiLoginShowcaseConfigPage .mk-chip--lg { font-size: .88rem; padding: 5px 12px 5px 9px; }
+#MkiLoginShowcaseConfigPage .mk-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
+#MkiLoginShowcaseConfigPage .mk-dot--live { box-shadow: 0 0 0 0 currentColor; animation: mk-pulse 2.2s ease-out infinite; }
+@keyframes mk-pulse { 0% { box-shadow: 0 0 0 0 rgba(var(--c-rgb),.55); } 80%,100% { box-shadow: 0 0 0 7px rgba(var(--c-rgb),0); } }
+#MkiLoginShowcaseConfigPage .mk-badge { display: inline-flex; align-items: center; gap: 4px; padding: 1px 7px; border-radius: 6px; font-size: .72rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--mk-dim); border: 1px solid var(--mk-line-2); white-space: nowrap; }
+#MkiLoginShowcaseConfigPage .mk-num-badge { display: inline-grid; place-items: center; width: 24px; height: 24px; flex: none; border-radius: 7px; font-size: .78rem; font-weight: 800; color: var(--mk-dim); border: 1px solid var(--mk-line-2); background: var(--mk-surface-2); }
+
+#MkiLoginShowcaseConfigPage .mk-note {
+  --c: var(--mk-info); --c-rgb: var(--mk-info-rgb);
+  display: flex; gap: 10px; align-items: flex-start; padding: 10px 13px; margin: 10px 0 0;
+  border-radius: 10px; font-size: .86rem; line-height: 1.5;
+  background: rgba(var(--c-rgb),.07); border: 1px solid rgba(var(--c-rgb),.24);
+}
+#MkiLoginShowcaseConfigPage .mk-note > .mk-ic { color: var(--c); margin-top: 1px; }
+#MkiLoginShowcaseConfigPage .mk-note b { font-weight: 700; }
+#MkiLoginShowcaseConfigPage .mk-note--ok { --c: var(--mk-ok); --c-rgb: var(--mk-ok-rgb); }
+#MkiLoginShowcaseConfigPage .mk-note--warn { --c: var(--mk-warn); --c-rgb: var(--mk-warn-rgb); }
+#MkiLoginShowcaseConfigPage .mk-note--bad { --c: var(--mk-bad); --c-rgb: var(--mk-bad-rgb); }
+
+/* Disclosure */
+#MkiLoginShowcaseConfigPage details.mk-more { border-top: 1px solid var(--mk-line); }
+#MkiLoginShowcaseConfigPage details.mk-more > summary { list-style: none; display: flex; align-items: center; gap: 8px; padding: 11px 0; cursor: pointer; font-size: .88rem; font-weight: 650; color: var(--mk-dim); }
+#MkiLoginShowcaseConfigPage details.mk-more > summary::-webkit-details-marker { display: none; }
+#MkiLoginShowcaseConfigPage details.mk-more > summary .mk-ic { transition: transform .2s; }
+#MkiLoginShowcaseConfigPage details.mk-more[open] > summary .mk-ic { transform: rotate(180deg); }
+#MkiLoginShowcaseConfigPage details.mk-more > summary:hover { color: var(--mk-text); }
+
+/* ---------- 9. Diagrams ---------- */
+/* Flow: nodes joined by animated edges. Wraps to a vertical flow on phones. */
+#MkiLoginShowcaseConfigPage .mk-flow { display: flex; align-items: stretch; gap: 0; }
+#MkiLoginShowcaseConfigPage .mk-flow__node {
+  flex: 1 1 0; min-width: 0; position: relative; padding: 11px 12px; border-radius: 12px;
+  border: 1px solid var(--mk-line-2); background: var(--mk-surface-2);
+}
+#MkiLoginShowcaseConfigPage .mk-flow__node--accent { border-color: rgba(var(--mk-a1-rgb),.55); background: linear-gradient(160deg, rgba(var(--mk-a1-rgb),.1), rgba(var(--mk-a2-rgb),.07)); }
+#MkiLoginShowcaseConfigPage .mk-flow__node--dashed { border-style: dashed; }
+#MkiLoginShowcaseConfigPage .mk-flow__node--off { opacity: .5; }
+#MkiLoginShowcaseConfigPage .mk-flow__kicker { display: flex; align-items: center; gap: 6px; font-size: .68rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mk-dim); }
+#MkiLoginShowcaseConfigPage .mk-flow__title { font-weight: 700; font-size: .95rem; margin-top: 4px; line-height: 1.3; }
+#MkiLoginShowcaseConfigPage .mk-flow__sub { font-size: .8rem; color: var(--mk-dim); margin-top: 3px; line-height: 1.4; }
+#MkiLoginShowcaseConfigPage .mk-flow__edge { flex: 0 0 22px; position: relative; align-self: center; height: 2px; background: linear-gradient(90deg, rgba(var(--mk-a1-rgb),.75), rgba(var(--mk-a2-rgb),.75)); }
+#MkiLoginShowcaseConfigPage .mk-flow__edge::after { content: ""; position: absolute; right: -1px; top: -4px; border: 5px solid transparent; border-left: 7px solid rgba(var(--mk-a2-rgb),.9); border-right: 0; }
+#MkiLoginShowcaseConfigPage .mk-flow__edge::before { content: ""; position: absolute; top: -2px; left: 0; width: 6px; height: 6px; border-radius: 50%; background: #fff; box-shadow: 0 0 8px rgba(var(--mk-a1-rgb),1); animation: mk-travel 2.4s linear infinite; }
+#MkiLoginShowcaseConfigPage .mk-flow__edge--off { background: var(--mk-line-2); }
+#MkiLoginShowcaseConfigPage .mk-flow__edge--off::before { display: none; }
+#MkiLoginShowcaseConfigPage .mk-flow__edge--off::after { border-left-color: var(--mk-line-2); }
+@keyframes mk-travel { from { left: 0; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } to { left: calc(100% - 6px); opacity: 0; } }
+
+/* Timeline: a horizontal track with markers */
+#MkiLoginShowcaseConfigPage .mk-tl { position: relative; height: 70px; margin: 6px 4px 0; }
+#MkiLoginShowcaseConfigPage .mk-tl__track { position: absolute; left: 0; right: 0; top: 30px; height: 4px; border-radius: 2px; background: var(--mk-surface-3); }
+#MkiLoginShowcaseConfigPage .mk-tl__fill { position: absolute; left: 0; top: 30px; height: 4px; border-radius: 2px; background: var(--mk-grad); }
+#MkiLoginShowcaseConfigPage .mk-tl__mark { position: absolute; top: 0; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: .74rem; font-weight: 650; color: var(--mk-dim); white-space: nowrap; }
+#MkiLoginShowcaseConfigPage .mk-tl__mark i { display: block; width: 12px; height: 12px; margin-top: 3px; border-radius: 50%; background: var(--mk-solid); border: 2px solid var(--mk-line-2); }
+#MkiLoginShowcaseConfigPage .mk-tl__mark--now i { border-color: var(--mk-a1-ink); background: var(--mk-a1-ink); box-shadow: 0 0 10px rgba(var(--mk-a1-rgb),.8); }
+#MkiLoginShowcaseConfigPage .mk-tl__mark--ok i { border-color: var(--mk-ok); }
+#MkiLoginShowcaseConfigPage .mk-tl__mark--warn i { border-color: var(--mk-warn); background: var(--mk-warn); }
+#MkiLoginShowcaseConfigPage .mk-tl__mark--bad i { border-color: var(--mk-bad); background: var(--mk-bad); border-radius: 3px; }
+#MkiLoginShowcaseConfigPage .mk-tl__mark b { color: var(--mk-text); font-weight: 700; }
+#MkiLoginShowcaseConfigPage .mk-tl__mark--start { transform: none; align-items: flex-start; margin-left: -6px; }
+#MkiLoginShowcaseConfigPage .mk-tl__mark--end { transform: translateX(-100%); align-items: flex-end; margin-left: 6px; }
+#MkiLoginShowcaseConfigPage .mk-tl__mark span { font-weight: 500; }
+#MkiLoginShowcaseConfigPage .mk-tl__tick { position: absolute; top: 28px; width: 2px; height: 8px; margin-left: -1px; background: var(--mk-line-2); }
+#MkiLoginShowcaseConfigPage .mk-tl__label { position: absolute; top: 46px; transform: translateX(-50%); font-size: .72rem; color: var(--mk-faint); white-space: nowrap; }
+
+/* Meter: stacked bar + legend (legend carries the meaning, not the colour) */
+#MkiLoginShowcaseConfigPage .mk-meter { display: flex; gap: 2px; height: 8px; border-radius: 4px; overflow: hidden; background: var(--mk-surface-3); }
+#MkiLoginShowcaseConfigPage .mk-meter > i { display: block; height: 100%; min-width: 3px; }
+#MkiLoginShowcaseConfigPage .mk-meter--lg { height: 12px; border-radius: 6px; }
+#MkiLoginShowcaseConfigPage .mk-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 8px; font-size: .8rem; color: var(--mk-dim); }
+#MkiLoginShowcaseConfigPage .mk-legend span { display: inline-flex; align-items: center; gap: 6px; }
+#MkiLoginShowcaseConfigPage .mk-legend i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+#MkiLoginShowcaseConfigPage .mk-legend b { color: var(--mk-text); }
+#MkiLoginShowcaseConfigPage .mk-c-ok { background: var(--mk-ok); }
+#MkiLoginShowcaseConfigPage .mk-c-warn { background: var(--mk-warn); }
+#MkiLoginShowcaseConfigPage .mk-c-bad { background: var(--mk-bad); }
+#MkiLoginShowcaseConfigPage .mk-c-info { background: var(--mk-info); }
+#MkiLoginShowcaseConfigPage .mk-c-idle { background: rgba(var(--mk-idle-rgb),.55); }
+#MkiLoginShowcaseConfigPage .mk-c-a1 { background: var(--mk-a1-ink); }
+#MkiLoginShowcaseConfigPage .mk-c-a2 { background: var(--mk-a2-ink); }
+#MkiLoginShowcaseConfigPage .mk-c-a3 { background: rgba(var(--mk-a1-rgb),.45); }
+#MkiLoginShowcaseConfigPage .mk-c-a4 { background: rgba(var(--mk-a2-rgb),.45); }
+
+/* Progress bar */
+#MkiLoginShowcaseConfigPage .mk-progress { display: block; height: 6px; border-radius: 3px; background: var(--mk-surface-3); overflow: hidden; }
+#MkiLoginShowcaseConfigPage .mk-progress > i { display: block; height: 100%; width: 0; border-radius: 3px; background: var(--mk-grad); transition: width .4s var(--mk-ease); }
+
+/* Checklist (readiness checks) */
+#MkiLoginShowcaseConfigPage .mk-checks { list-style: none; margin: 0; padding: 0; }
+#MkiLoginShowcaseConfigPage .mk-checks li { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-top: 1px solid var(--mk-line); font-size: .88rem; line-height: 1.45; }
+#MkiLoginShowcaseConfigPage .mk-checks li:first-child { border-top: 0; }
+#MkiLoginShowcaseConfigPage .mk-checks .mk-ic { margin-top: 1px; }
+#MkiLoginShowcaseConfigPage .mk-checks .is-ok > .mk-ic { color: var(--mk-ok); }
+#MkiLoginShowcaseConfigPage .mk-checks .is-warn > .mk-ic { color: var(--mk-warn); }
+#MkiLoginShowcaseConfigPage .mk-checks .is-bad > .mk-ic { color: var(--mk-bad); }
+#MkiLoginShowcaseConfigPage .mk-checks small { display: block; color: var(--mk-dim); font-size: .8rem; }
+
+/* Data list (responsive table: rows on desktop, cards on phones) */
+#MkiLoginShowcaseConfigPage .mk-list { display: grid; }
+#MkiLoginShowcaseConfigPage .mk-list__head, #MkiLoginShowcaseConfigPage .mk-list__row { display: grid; grid-template-columns: var(--cols); gap: 10px 14px; align-items: center; padding: 10px 14px; }
+#MkiLoginShowcaseConfigPage .mk-list__head { font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--mk-faint); padding-top: 4px; padding-bottom: 8px; }
+#MkiLoginShowcaseConfigPage .mk-list__row { border-top: 1px solid var(--mk-line); }
+#MkiLoginShowcaseConfigPage .mk-list__row.is-mark { background: rgba(var(--mk-a1-rgb),.08); box-shadow: inset 3px 0 0 var(--mk-a1-ink); }
+#MkiLoginShowcaseConfigPage .mk-list__row.is-dim > :not(.mk-list__actions) { opacity: .55; }
+#MkiLoginShowcaseConfigPage .mk-list__actions { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
+#MkiLoginShowcaseConfigPage .mk-cell-label { display: none; }
+
+/* ---------- 10. Popover, toasts, dialog ---------- */
+#MkiLoginShowcaseConfigPage .mk-savewrap { position: relative; flex: none; }
+#MkiLoginShowcaseConfigPage .mk-pop__foot { border-top: 1px solid var(--mk-line); margin-top: 6px; padding-top: 10px; display: flex; }
+#MkiLoginShowcaseConfigPage .mk-pop {
+  position: absolute; z-index: 60; right: 6px; top: calc(100% + 8px); width: min(380px, calc(100vw - 32px));
+  border-radius: 14px; border: 1px solid var(--mk-line-2); background: var(--mk-solid); color: var(--mk-text);
+  box-shadow: 0 24px 60px -18px rgba(0,0,0,.75); padding: 12px;
+}
+#MkiLoginShowcaseConfigPage .mk-pop[hidden] { display: none; }
+#MkiLoginShowcaseConfigPage .mk-pop__title { font-size: .72rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--mk-dim); margin: 2px 4px 8px; }
+#MkiLoginShowcaseConfigPage .mk-log { list-style: none; margin: 0; padding: 0; max-height: 260px; overflow: auto; }
+#MkiLoginShowcaseConfigPage .mk-log li { display: flex; gap: 10px; align-items: center; padding: 8px 6px; border-top: 1px solid var(--mk-line); font-size: .85rem; }
+#MkiLoginShowcaseConfigPage .mk-log li:first-child { border-top: 0; }
+#MkiLoginShowcaseConfigPage .mk-log time { color: var(--mk-faint); font-size: .76rem; flex: none; }
+#MkiLoginShowcaseConfigPage .mk-log__empty { color: var(--mk-dim); font-size: .85rem; padding: 6px 4px 10px; }
+
+#MkiLoginShowcaseConfigPage .mk-toasts { position: fixed; z-index: 1000; left: 50%; bottom: 22px; transform: translateX(-50%); display: flex; flex-direction: column; gap: 8px; align-items: center; width: max-content; max-width: calc(100vw - 24px); pointer-events: none; }
+#MkiLoginShowcaseConfigPage .mk-toast {
+  pointer-events: auto; display: flex; align-items: center; gap: 12px; min-width: 0; max-width: 560px;
+  padding: 9px 9px 9px 14px; border-radius: 12px; font-size: .88rem; line-height: 1.35;
+  color: #f2f2f2; background: #222; border: 1px solid rgba(255,255,255,.14); box-shadow: 0 18px 44px -14px rgba(0,0,0,.7);
+  animation: mk-in .22s var(--mk-ease);
+}
+#MkiLoginShowcaseConfigPage .mk-toast .mk-ic { color: #3ddc84; }
+#MkiLoginShowcaseConfigPage .mk-toast--bad .mk-ic { color: #ff6b6b; }
+#MkiLoginShowcaseConfigPage .mk-toast__text { flex: 1 1 auto; min-width: 0; }
+#MkiLoginShowcaseConfigPage .mk-toast button { flex: none; font: inherit; font-size: .84rem; font-weight: 700; color: #fff; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); border-radius: 8px; padding: 5px 11px; cursor: pointer; }
+#MkiLoginShowcaseConfigPage .mk-toast button:hover { background: rgba(255,255,255,.18); }
+@keyframes mk-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+#MkiLoginShowcaseConfigPage dialog.mk-dialog {
+  width: min(520px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: auto; padding: 0; margin: auto;
+  color: var(--mk-text); background: var(--mk-solid); border: 1px solid var(--mk-line-2); border-radius: 16px;
+  box-shadow: 0 40px 90px -20px rgba(0,0,0,.8);
+}
+#MkiLoginShowcaseConfigPage dialog.mk-dialog::backdrop { background: rgba(0,0,0,.62); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+#MkiLoginShowcaseConfigPage .mk-dialog__head { display: flex; gap: 12px; align-items: flex-start; padding: 18px 20px 4px; }
+#MkiLoginShowcaseConfigPage .mk-dialog__icon { flex: none; width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; }
+#MkiLoginShowcaseConfigPage .mk-dialog__icon--bad { color: var(--mk-bad); background: rgba(var(--mk-bad-rgb),.12); }
+#MkiLoginShowcaseConfigPage .mk-dialog__icon--warn { color: var(--mk-warn); background: rgba(var(--mk-warn-rgb),.12); }
+#MkiLoginShowcaseConfigPage .mk-dialog__icon--accent { color: var(--mk-a1-ink); background: rgba(var(--mk-a1-rgb),.12); }
+#MkiLoginShowcaseConfigPage .mk-dialog__title { margin: 0; font-size: 1.12rem; font-weight: 750; line-height: 1.3; }
+#MkiLoginShowcaseConfigPage .mk-dialog__body { padding: 8px 20px 4px; font-size: .9rem; line-height: 1.55; color: var(--mk-dim); }
+#MkiLoginShowcaseConfigPage .mk-dialog__body > * + * { margin-top: 10px; }
+#MkiLoginShowcaseConfigPage .mk-dialog__foot { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; padding: 14px 20px 18px; }
+#MkiLoginShowcaseConfigPage .mk-secret { font-family: ui-monospace, "DejaVu Sans Mono", Consolas, monospace; font-size: 1.3rem; letter-spacing: .06em; text-align: center; padding: 14px; border-radius: 10px; color: var(--mk-text); background: var(--mk-surface-3); border: 1px dashed var(--mk-line-2); user-select: all; overflow-wrap: anywhere; }  /* breaks after a hyphen first, never mid-word unless it must */
+
+/* ---------- 11. Kit runtime parts: loading, deck toggle, finder, history ---------- */
+/* Loading and load errors: the page shows no settings to edit until the server answered. */
+#MkiLoginShowcaseConfigPage .mk-loadbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 14px 0 0; padding: 10px 13px; border-radius: 10px; font-size: .88rem; border: 1px solid var(--mk-line-2); background: var(--mk-surface-2); }
+#MkiLoginShowcaseConfigPage .mk-loadbar[hidden] { display: none; }
+#MkiLoginShowcaseConfigPage .mk-loadbar .mk-ic { color: var(--mk-info); }
+#MkiLoginShowcaseConfigPage .mk-loadbar.is-bad { border-color: rgba(var(--mk-bad-rgb),.45); background: rgba(var(--mk-bad-rgb),.08); }
+#MkiLoginShowcaseConfigPage .mk-loadbar.is-bad .mk-ic { color: var(--mk-bad); }
+#MkiLoginShowcaseConfigPage .mk-loadbar__text { flex: 1 1 220px; min-width: 0; }
+#MkiLoginShowcaseConfigPage[data-load="loading"] .mk-main, #MkiLoginShowcaseConfigPage[data-load="error"] .mk-main,
+#MkiLoginShowcaseConfigPage[data-load="loading"] [data-needs-load], #MkiLoginShowcaseConfigPage[data-load="error"] [data-needs-load] { opacity: .45; pointer-events: none; }
+#MkiLoginShowcaseConfigPage[data-load="loading"] .mk-tile__value, #MkiLoginShowcaseConfigPage[data-load="error"] .mk-tile__value { color: var(--mk-faint); }
+
+/* Phones: the deck folds to title, state and "Next"; the toggle shows the tiles. */
+#MkiLoginShowcaseConfigPage .mk-deck__toggle { display: none; }
+
+/* Find a setting */
+#MkiLoginShowcaseConfigPage .mk-find { position: relative; min-width: 0; }
+#MkiLoginShowcaseConfigPage .mk-find__box { display: flex; align-items: center; gap: 8px; padding: 0 10px; border-radius: 9px; border: 1px solid var(--mk-line); background: var(--mk-field); }
+#MkiLoginShowcaseConfigPage .mk-find__box:focus-within { border-color: var(--mk-a1-ink); box-shadow: 0 0 0 3px rgba(var(--mk-a1-rgb),.18); }
+#MkiLoginShowcaseConfigPage .mk-find__box .mk-ic { color: var(--mk-dim); }
+#MkiLoginShowcaseConfigPage .mk-find__input { flex: 1 1 auto; min-width: 0; border: 0; margin: 0; padding: 8px 0; background: transparent; color: inherit; font: inherit; font-size: .9rem; }
+#MkiLoginShowcaseConfigPage .mk-find__input:focus { outline: none; }
+#MkiLoginShowcaseConfigPage .mk-find__list { position: absolute; z-index: 70; left: 0; right: 0; top: calc(100% + 6px); min-width: 260px; max-height: 340px; overflow: auto; margin: 0; padding: 6px; list-style: none; border-radius: 12px; border: 1px solid var(--mk-line-2); background: var(--mk-solid); box-shadow: 0 24px 60px -18px rgba(0,0,0,.75); }
+#MkiLoginShowcaseConfigPage .mk-find__list[hidden] { display: none; }
+#MkiLoginShowcaseConfigPage .mk-find__list button { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; width: 100%; margin: 0; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; color: var(--mk-text); font: inherit; font-size: .88rem; font-weight: 600; text-align: left; cursor: pointer; }
+#MkiLoginShowcaseConfigPage .mk-find__list button small { font-size: .76rem; font-weight: 500; color: var(--mk-dim); }
+#MkiLoginShowcaseConfigPage .mk-find__list button:hover, #MkiLoginShowcaseConfigPage .mk-find__list button.is-active { background: var(--mk-surface-3); }
+#MkiLoginShowcaseConfigPage .mk-find__none { padding: 8px 10px; font-size: .85rem; color: var(--mk-dim); }
+#MkiLoginShowcaseConfigPage .is-found { animation: mk-found 1.8s var(--mk-ease); border-radius: 8px; }
+@keyframes mk-found { 0%, 45% { box-shadow: 0 0 0 2px rgba(var(--mk-a1-rgb),.6); background-color: rgba(var(--mk-a1-rgb),.07); } 100% { box-shadow: 0 0 0 2px transparent; } }
+
+/* "Changes this visit": settings (with undo), unsaved changes, and actions (cannot be undone here) */
+#MkiLoginShowcaseConfigPage .mk-log li.is-pending { color: var(--mk-bad); }
+#MkiLoginShowcaseConfigPage .mk-log li.is-action b { font-weight: 650; }
+#MkiLoginShowcaseConfigPage .mk-log .mk-badge { margin-left: 6px; }
+#MkiLoginShowcaseConfigPage .mk-log__what { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+
+/* "Runs with": what an action will use, built from the saved settings */
+#MkiLoginShowcaseConfigPage .mk-uses { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: .8rem; color: var(--mk-dim); }
+#MkiLoginShowcaseConfigPage .mk-uses > b { font-weight: 650; margin-right: 2px; }
+
+/* Busy buttons */
+#MkiLoginShowcaseConfigPage .mk-btn.is-busy { pointer-events: none; }
+#MkiLoginShowcaseConfigPage .mk-btn.is-busy > .mk-ic { animation: mk-spin 1s linear infinite; }
+
+/* Dialog extras: a one-time secret that stays until the admin confirms */
+#MkiLoginShowcaseConfigPage .mk-dialog__copy { display: flex; gap: 8px; flex-wrap: wrap; }
+#MkiLoginShowcaseConfigPage .mk-dialog__copy .mk-btn { flex: 1 1 180px; }
+
+/* ---------- 12. Responsive ---------- */
+@media (max-width: 900px) {
+  #MkiLoginShowcaseConfigPage .mk-tiles { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  #MkiLoginShowcaseConfigPage .mk-grid2 { grid-template-columns: minmax(0,1fr); }
+}
+@media (max-width: 640px) {
+  #MkiLoginShowcaseConfigPage .mk-deck { padding: 16px 14px 14px; }
+  #MkiLoginShowcaseConfigPage .mk-title { font-size: 1.5rem; }
+  #MkiLoginShowcaseConfigPage .mk-tiles { gap: 8px; }
+  #MkiLoginShowcaseConfigPage .mk-tile { padding: 10px 11px; }
+  #MkiLoginShowcaseConfigPage .mk-tile__value { font-size: 1.18rem; }
+  #MkiLoginShowcaseConfigPage .mk-master { width: 100%; justify-content: space-between; }
+  #MkiLoginShowcaseConfigPage .mk-card__head { padding: 13px 14px 2px; }
+  #MkiLoginShowcaseConfigPage .mk-card__body { padding: 6px 14px 14px; }
+  #MkiLoginShowcaseConfigPage .mk-card__foot { padding: 10px 14px; }
+  #MkiLoginShowcaseConfigPage .mk-bar { margin: 12px -4px 14px; border-radius: 12px; gap: 4px; }
+  #MkiLoginShowcaseConfigPage .mk-tab { padding: 8px 10px; font-size: .86rem; }
+  #MkiLoginShowcaseConfigPage .mk-save { padding: 7px 9px; }
+  #MkiLoginShowcaseConfigPage .mk-save .mk-ic { font-size: 1.3em; }
+  #MkiLoginShowcaseConfigPage .mk-save__text { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+  #MkiLoginShowcaseConfigPage .mk-tabs.is-overflow { -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); padding-right: 22px; }
+  #MkiLoginShowcaseConfigPage .mk-deck__toggle { display: inline-flex; }
+  #MkiLoginShowcaseConfigPage .mk-deck:not(.is-open) .mk-tiles, #MkiLoginShowcaseConfigPage .mk-deck:not(.is-open) .mk-lede, #MkiLoginShowcaseConfigPage .mk-deck:not(.is-open) .mk-rule { display: none; }
+  #MkiLoginShowcaseConfigPage .mk-seg label { padding: 6px 9px; }
+  #MkiLoginShowcaseConfigPage .mk-row { flex-wrap: wrap; }
+  #MkiLoginShowcaseConfigPage .mk-row__text { flex-basis: 150px; }
+  #MkiLoginShowcaseConfigPage .mk-row--wide .mk-row__text { flex-basis: 100%; }
+  #MkiLoginShowcaseConfigPage .mk-row--wide .mk-row__control, #MkiLoginShowcaseConfigPage .mk-row .mk-range { flex-basis: 100%; }
+  #MkiLoginShowcaseConfigPage .mk-flow { flex-direction: column; }
+  #MkiLoginShowcaseConfigPage .mk-flow__edge { flex: 0 0 22px; width: 2px; height: 22px; align-self: center; background: linear-gradient(180deg, rgba(var(--mk-a1-rgb),.75), rgba(var(--mk-a2-rgb),.75)); }
+  #MkiLoginShowcaseConfigPage .mk-flow__edge::after { right: auto; left: -4px; top: auto; bottom: -1px; border: 5px solid transparent; border-top: 7px solid rgba(var(--mk-a2-rgb),.9); border-bottom: 0; }
+  #MkiLoginShowcaseConfigPage .mk-flow__edge::before { animation-name: mk-travel-v; left: -2px; }
+  #MkiLoginShowcaseConfigPage .mk-list__head { display: none; }
+  #MkiLoginShowcaseConfigPage .mk-list__row { grid-template-columns: 1fr 1fr; padding: 12px 2px; }
+  #MkiLoginShowcaseConfigPage .mk-list__row > .mk-span { grid-column: 1 / -1; }
+  #MkiLoginShowcaseConfigPage .mk-cell-label { display: block; font-size: .7rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--mk-faint); margin-bottom: 3px; }
+  #MkiLoginShowcaseConfigPage .mk-list__actions { justify-content: flex-start; }
+  #MkiLoginShowcaseConfigPage .mk-dialog__foot .mk-btn { flex: 1 1 auto; }
+}
+@keyframes mk-travel-v { from { top: 0; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } to { top: calc(100% - 6px); opacity: 0; } }
+
+/* ---------- 13. Motion & forced colours ---------- */
+@media (prefers-reduced-motion: reduce) {
+  #MkiLoginShowcaseConfigPage *, #MkiLoginShowcaseConfigPage *::before, #MkiLoginShowcaseConfigPage *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  #MkiLoginShowcaseConfigPage .mk-flow__edge::before { display: none; }
+}
+@media (forced-colors: active) {
+  #MkiLoginShowcaseConfigPage .mk-switch:checked::before { background: Highlight; }
+  #MkiLoginShowcaseConfigPage .mk-chip, #MkiLoginShowcaseConfigPage .mk-note, #MkiLoginShowcaseConfigPage .mk-card { border: 1px solid CanvasText; }
+}
+/* MKI-KIT:CSS END */
+</style>
+<style>
+/* ---------- Login Showcase: accent pair and page-specific parts ---------- */
+#MkiLoginShowcaseConfigPage.mk-show { --mk-a1:#FFE45C; --mk-a2:#FF3D9E; --mk-a1-rgb:255,228,92; --mk-a2-rgb:255,61,158; --mk-a1-l:#7a6400; --mk-a2-l:#b8126a; }
+#MkiLoginShowcaseConfigPage .ls-barinfo { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 8px; margin: 0; padding: 0 10px; font-size: .86rem; color: var(--mk-dim); }
+#MkiLoginShowcaseConfigPage .ls-barinfo .mk-ic { color: var(--mk-a1-ink); }
+#MkiLoginShowcaseConfigPage .ls-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+#MkiLoginShowcaseConfigPage .ls-grid > .mk-card { margin: 0; }
+#MkiLoginShowcaseConfigPage .ls-wide { grid-column: 1 / -1; }
+#MkiLoginShowcaseConfigPage .mk-card[tabindex="-1"]:focus { outline: none; }
+#MkiLoginShowcaseConfigPage .mk-next { overflow-wrap: anywhere; }
+/* stacked rows: label above, the picker across the full width */
+#MkiLoginShowcaseConfigPage .mk-row--stack .mk-row__text { flex: none; }
+#MkiLoginShowcaseConfigPage .mk-row--stack .mk-row__control { display: block; width: 100%; }
+
+/* the preview: the sign-in page's own drawing code, with a stand-in sign-in form */
+#MkiLoginShowcaseConfigPage .ls-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0 0 12px; }
+#MkiLoginShowcaseConfigPage .ls-tools .mk-grow { flex: 1 1 auto; }
+#MkiLoginShowcaseConfigPage .ls-screen { position: relative; margin: 0 auto; background: #05060B; overflow: hidden; color: #EEF1FF; }
+#MkiLoginShowcaseConfigPage .ls-screen.is-desktop { width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; border: 1px solid var(--mk-line-2); }
+#MkiLoginShowcaseConfigPage .ls-screen.is-phone { width: 230px; max-width: 70%; aspect-ratio: 9 / 19.5; border-radius: 28px; border: 7px solid #1b1d29; box-shadow: 0 0 0 1px var(--mk-line-2); }
+#MkiLoginShowcaseConfigPage .ls-host { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
+#MkiLoginShowcaseConfigPage .ls-msg { position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 9; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 18px; text-align: center; font-size: .9rem; line-height: 1.45; color: #EEF1FF; background: rgba(5,6,11,.82); }
+#MkiLoginShowcaseConfigPage .ls-msg .mk-ic { font-size: 28px; color: #FFE45C; }
+#MkiLoginShowcaseConfigPage .ls-ribbon { position: absolute; left: 10px; top: 10px; z-index: 10; display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px 3px 7px; border-radius: 999px; font-size: .74rem; font-weight: 700; color: #fff; background: rgba(0,0,0,.66); border: 1px solid rgba(255,255,255,.18); }
+#MkiLoginShowcaseConfigPage .ls-ribbon .mk-ic { font-size: 15px; }
+#MkiLoginShowcaseConfigPage .ls-cap { margin: 10px 0 0; font-size: .8rem; color: var(--mk-dim); line-height: 1.45; }
+#MkiLoginShowcaseConfigPage .ls-titles { margin: 8px 0 0; font-size: .84rem; }
+#MkiLoginShowcaseConfigPage .ls-titles summary { cursor: pointer; color: var(--mk-a1-ink); font-weight: 600; width: max-content; max-width: 100%; border-radius: 4px; }
+#MkiLoginShowcaseConfigPage .ls-titles summary:focus-visible { outline: 2px solid var(--mk-a1-ink); outline-offset: 2px; }
+#MkiLoginShowcaseConfigPage .ls-titles ol { columns: 2 17em; column-gap: 24px; margin: 8px 0 0; padding-left: 1.6em; color: var(--mk-text); line-height: 1.6; }
+#MkiLoginShowcaseConfigPage .ls-titles li { break-inside: avoid; overflow-wrap: anywhere; }
+#MkiLoginShowcaseConfigPage .ls-titles li small { color: var(--mk-dim); }
+
+/* style pictures: small drawings of each layout, always dark like the sign-in page */
+#MkiLoginShowcaseConfigPage .ls-styles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#MkiLoginShowcaseConfigPage #lsLookCard { --ls-a1-rgb: 0,229,255; --ls-a2-rgb: 255,43,214; }
+#MkiLoginShowcaseConfigPage .ls-art { height: 70px; background: #070814; }
+#MkiLoginShowcaseConfigPage .ls-art::before, #MkiLoginShowcaseConfigPage .ls-art::after { content: ""; position: absolute; }
+#MkiLoginShowcaseConfigPage .ls-art > i { position: absolute; z-index: 2; width: 26%; height: 54%; border-radius: 3px; background: rgba(8,9,16,.86); border: 1px solid rgba(var(--ls-a1-rgb),.75); box-shadow: 0 0 6px rgba(var(--ls-a2-rgb),.5); }
+#MkiLoginShowcaseConfigPage .ls-art > i::after { content: ""; position: absolute; left: 14%; right: 14%; bottom: 14%; height: 14%; border-radius: 2px; background: linear-gradient(90deg, rgb(var(--ls-a1-rgb)), rgb(var(--ls-a2-rgb))); }
+#MkiLoginShowcaseConfigPage .ls-art--wall::before { top: -40%; left: -20%; right: -20%; bottom: -40%; transform: rotate(-12deg);
+  background: linear-gradient(0deg, #070814 0 3px, transparent 3px) 0 0 / 100% 24px, repeating-linear-gradient(90deg, rgba(var(--ls-a2-rgb),.55) 0 15px, transparent 15px 19px, rgba(var(--ls-a1-rgb),.45) 19px 34px, transparent 34px 38px); }
+#MkiLoginShowcaseConfigPage .ls-art--wall::after { top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(ellipse at center, rgba(5,6,11,.55), rgba(5,6,11,.15) 60%, rgba(5,6,11,.7)); }
+#MkiLoginShowcaseConfigPage .ls-art--wall > i { left: 37%; top: 23%; }
+#MkiLoginShowcaseConfigPage .ls-art--spot::before { top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 28% 40%, rgba(var(--ls-a1-rgb),.55), transparent 45%), linear-gradient(120deg, rgba(var(--ls-a2-rgb),.55), rgba(var(--ls-a1-rgb),.2) 55%, #05060B 88%); }
+#MkiLoginShowcaseConfigPage .ls-art--spot::after { left: 8%; bottom: 14%; width: 34%; height: 5px; border-radius: 3px; background: rgba(255,255,255,.8); box-shadow: 0 -8px 0 -1px rgba(255,255,255,.35); }
+#MkiLoginShowcaseConfigPage .ls-art--spot > i { right: 7%; top: 23%; }
+#MkiLoginShowcaseConfigPage .ls-art--hz::before { left: 0; right: 0; top: 10%; height: 24%; background: repeating-linear-gradient(90deg, rgba(var(--ls-a2-rgb),.7) 0 9px, transparent 9px 13px, rgba(var(--ls-a1-rgb),.6) 13px 22px, transparent 22px 26px); }
+#MkiLoginShowcaseConfigPage .ls-art--hz::after { left: -30%; right: -30%; top: 34%; bottom: -30%; transform: perspective(40px) rotateX(55deg); transform-origin: 50% 0;
+  border-top: 2px solid rgb(var(--ls-a2-rgb)); background: linear-gradient(rgba(var(--ls-a1-rgb),.75) 1px, transparent 1px) 0 0 / 10px 8px, linear-gradient(90deg, rgba(var(--ls-a2-rgb),.7) 1px, transparent 1px) 0 0 / 10px 8px; }
+#MkiLoginShowcaseConfigPage .ls-art--hz > i { left: 37%; top: 40%; height: 50%; }
+#MkiLoginShowcaseConfigPage .ls-art--mo::before { top: 3px; right: 3px; bottom: 3px; left: 3px; background: linear-gradient(0deg, #070814 0 3px, transparent 3px) 0 0 / 100% 22px, repeating-linear-gradient(90deg, rgba(var(--ls-a1-rgb),.5) 0 13px, transparent 13px 16px, rgba(var(--ls-a2-rgb),.55) 16px 29px, transparent 29px 32px); }
+#MkiLoginShowcaseConfigPage .ls-art--mo::after { top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, rgba(5,6,11,.97), rgba(5,6,11,.9) 38%, rgba(5,6,11,.15) 62%); }
+#MkiLoginShowcaseConfigPage .ls-art--mo > i { left: 8%; top: 23%; background: transparent; border-color: transparent; box-shadow: none; }
+
+#MkiLoginShowcaseConfigPage .ls-accents { flex-wrap: wrap; }
+#MkiLoginShowcaseConfigPage .ls-sw { display: inline-block; width: 16px; height: 16px; border-radius: 50%; flex: none; box-shadow: 0 0 0 1px rgba(255,255,255,.25) inset; }
+#MkiLoginShowcaseConfigPage .ls-desc { margin: 6px 0 0; font-size: .82rem; color: var(--mk-dim); line-height: 1.45; }
+
+/* libraries */
+#MkiLoginShowcaseConfigPage .ls-libs { display: grid; gap: 8px; margin: 2px 0 6px; }
+#MkiLoginShowcaseConfigPage .ls-lib { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 4px 12px; padding: 10px 12px; border-radius: 11px; border: 1px solid var(--mk-line); background: var(--mk-surface-2); cursor: pointer; }
+#MkiLoginShowcaseConfigPage .ls-lib:hover { border-color: var(--mk-line-2); }
+#MkiLoginShowcaseConfigPage .ls-lib.is-on { border-color: rgba(var(--mk-a1-rgb),.6); background: rgba(var(--mk-a1-rgb),.06); }
+#MkiLoginShowcaseConfigPage[data-tone="light"] .ls-lib.is-on { border-color: var(--mk-a1-l); }
+#MkiLoginShowcaseConfigPage .ls-lib.is-flag:not(.is-on) { border-style: dashed; }
+#MkiLoginShowcaseConfigPage .ls-lib__name { min-width: 0; }
+#MkiLoginShowcaseConfigPage .ls-lib__name b { display: block; font-weight: 700; overflow-wrap: anywhere; }
+#MkiLoginShowcaseConfigPage .ls-lib__name small { display: block; font-size: .78rem; color: var(--mk-dim); }
+#MkiLoginShowcaseConfigPage .ls-lib .mk-chip { justify-self: end; }
+#MkiLoginShowcaseConfigPage .ls-empty { display: flex; gap: 10px; align-items: flex-start; margin: 0; padding: 12px 14px; border-radius: 11px; border: 1px dashed var(--mk-line-2); color: var(--mk-dim); font-size: .88rem; line-height: 1.45; }
+#MkiLoginShowcaseConfigPage .ls-empty .mk-ic { color: var(--mk-faint); }
+#MkiLoginShowcaseConfigPage .mk-row.is-idle .mk-row__label { opacity: .75; }
+#MkiLoginShowcaseConfigPage .mk-row.is-idle .mk-switch { opacity: .65; }
+/* the two setting cards end at the same height */
+#MkiLoginShowcaseConfigPage #lsLookCard, #MkiLoginShowcaseConfigPage #lsSeeCard { align-self: stretch; }
+
+@media (max-width: 900px) {
+  #MkiLoginShowcaseConfigPage .ls-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 640px) {
+  #MkiLoginShowcaseConfigPage .ls-barinfo span { display: none; }
+  #MkiLoginShowcaseConfigPage .ls-barinfo::after { content: "Each change saves itself"; }
+  #MkiLoginShowcaseConfigPage .ls-lib { grid-template-columns: auto minmax(0, 1fr); }
+  #MkiLoginShowcaseConfigPage .ls-lib .mk-chip { grid-column: 2; justify-self: start; }
+  #MkiLoginShowcaseConfigPage .ls-accents { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+}
+</style>
+
+<div data-role="content"><div class="content-primary mk-wrap">
+
+<header class="mk-deck" aria-labelledby="lsTitle">
+  <div class="mk-deck__head">
+    <div class="mk-brand">
+      <p class="mk-kicker">MKI · Jellyfin plugin</p>
+      <h1 class="mk-title" id="lsTitle">Login <b>Showcase</b></h1>
+      <span class="mk-rule"></span>
+      <p class="mk-lede">An animated showcase of your library behind the Jellyfin sign-in page. Everyone who opens your Jellyfin address sees it before signing in, so it shows only artwork from the libraries you pick, up to the age rating you set.</p>
+    </div>
+    <label class="mk-master" for="lsEnabled">
+      <span class="mk-master__text"><span class="mk-master__label">Sign-in page</span><span class="mk-master__state" id="lsMasterState">Loading…</span></span>
+      <input type="checkbox" class="mk-switch" role="switch" id="lsEnabled" data-key="Enabled" data-label="Showcase on the sign-in page">
+    </label>
+  </div>
+
+  <div class="mk-tiles">
+    <button type="button" class="mk-tile" data-goto="lsPreviewCard">
+      <span class="mk-tile__label"><span class="material-icons mk-ic" aria-hidden="true">login</span>Sign-in page</span>
+      <span class="mk-tile__value" id="lsTileOn">…</span>
+      <span class="mk-tile__sub" id="lsTileOnSub"></span>
+    </button>
+    <button type="button" class="mk-tile" data-goto="lsLookCard">
+      <span class="mk-tile__label"><span class="material-icons mk-ic" aria-hidden="true">auto_awesome</span>Style</span>
+      <span class="mk-tile__value" id="lsTileStyle">…</span>
+      <span class="mk-tile__sub" id="lsTileStyleSub"></span>
+    </button>
+    <button type="button" class="mk-tile" data-goto="lsSeeCard">
+      <span class="mk-tile__label"><span class="material-icons mk-ic" aria-hidden="true">video_library</span>Libraries shown</span>
+      <span class="mk-tile__value" id="lsTileLibs">…</span>
+      <span class="mk-tile__sub" id="lsTileLibsSub"></span>
+    </button>
+    <button type="button" class="mk-tile" data-goto="lsPreviewCard">
+      <span class="mk-tile__label"><span class="material-icons mk-ic" aria-hidden="true">collections</span>Current pick</span>
+      <span class="mk-tile__value" id="lsTilePick">…</span>
+      <span class="mk-tile__sub" id="lsTilePickSub"></span>
+    </button>
+  </div>
+
+  <div class="mk-deck__foot">
+    <p class="mk-next"><span class="material-icons mk-ic" aria-hidden="true">tips_and_updates</span><span id="lsNext">Loading…</span></p>
+    <div class="mk-actions">
+      <button type="button" class="mk-btn mk-btn--ghost" id="lsShuffle" data-needs-load><span class="material-icons mk-ic" aria-hidden="true">shuffle</span><span>New titles now</span></button>
+    </div>
+  </div>
+</header>
+
+<div class="mk-bar">
+  <p class="ls-barinfo"><span class="material-icons mk-ic" aria-hidden="true">tune</span><span>Each change saves itself, with undo. Open sign-in pages follow within a minute; pages opened while the showcase was off need a reload</span></p>
+</div>
+
+<div class="mk-main ls-grid">
+
+<section class="mk-card ls-wide" id="lsPreviewCard" aria-labelledby="lsPreviewT" tabindex="-1">
+  <div class="mk-card__head">
+    <span class="mk-card__icon"><span class="material-icons mk-ic" aria-hidden="true">preview</span></span>
+    <div class="mk-card__titles"><h2 class="mk-card__title" id="lsPreviewT">Preview</h2><p class="mk-card__desc">The current pick in the chosen style, with a stand-in for the sign-in form. Visitors see the same pictures.</p></div>
+  </div>
+  <div class="mk-card__body">
+    <div class="ls-tools">
+      <div class="mk-seg" role="radiogroup" aria-label="Preview screen">
+        <input type="radio" name="lsScreen" id="lsScreenDesktop" value="desktop" data-nosave checked><label for="lsScreenDesktop"><span class="material-icons mk-ic" aria-hidden="true">computer</span>Computer</label>
+        <input type="radio" name="lsScreen" id="lsScreenPhone" value="phone" data-nosave><label for="lsScreenPhone"><span class="material-icons mk-ic" aria-hidden="true">smartphone</span>Phone</label>
+      </div>
+      <span class="mk-grow"></span>
+    </div>
+    <div class="ls-screen is-desktop" id="lsScreen">
+      <div class="ls-host" id="lsHost"></div>
+      <span class="ls-ribbon" id="lsRibbon" hidden></span>
+      <div class="ls-msg" id="lsMsg"><span class="material-icons mk-ic" aria-hidden="true">hourglass_empty</span><span id="lsMsgT">Loading the preview…</span></div>
+    </div>
+    <p class="ls-cap" id="lsCap"></p>
+    <details class="ls-titles" id="lsTitlesList" hidden><summary id="lsTitlesSum"></summary><ol id="lsTitlesOl"></ol></details>
+  </div>
+</section>
+
+<section class="mk-card" id="lsLookCard" aria-labelledby="lsLookT" tabindex="-1">
+  <div class="mk-card__head">
+    <span class="mk-card__icon"><span class="material-icons mk-ic" aria-hidden="true">palette</span></span>
+    <div class="mk-card__titles"><h2 class="mk-card__title" id="lsLookT">Look</h2><p class="mk-card__desc">How the sign-in page looks. The style also decides whether posters or backdrops are sent.</p></div>
+  </div>
+  <div class="mk-card__body">
+    <div class="mk-row mk-row--stack">
+      <div class="mk-row__text"><span class="mk-row__label" id="lsStyleLabel">Style</span></div>
+      <div class="mk-row__control">
+        <div class="mk-opts ls-styles" role="radiogroup" aria-labelledby="lsStyleLabel">
+          <label class="mk-opt"><input type="radio" name="lsStyle" value="PosterWall" data-key="Style" data-label="Style"><span class="mk-opt__card"><span class="mk-opt__art ls-art ls-art--wall"><i></i></span><span class="mk-opt__name" data-name="Poster Wall">Poster Wall<span class="material-icons mk-ic" aria-hidden="true">check_circle</span></span></span></label>
+          <label class="mk-opt"><input type="radio" name="lsStyle" value="Spotlight" data-key="Style"><span class="mk-opt__card"><span class="mk-opt__art ls-art ls-art--spot"><i></i></span><span class="mk-opt__name" data-name="Backdrop Spotlight">Backdrop Spotlight<span class="material-icons mk-ic" aria-hidden="true">check_circle</span></span></span></label>
+          <label class="mk-opt"><input type="radio" name="lsStyle" value="Horizon" data-key="Style"><span class="mk-opt__card"><span class="mk-opt__art ls-art ls-art--hz"><i></i></span><span class="mk-opt__name" data-name="Neon Horizon">Neon Horizon<span class="material-icons mk-ic" aria-hidden="true">check_circle</span></span></span></label>
+          <label class="mk-opt"><input type="radio" name="lsStyle" value="Mosaic" data-key="Style"><span class="mk-opt__card"><span class="mk-opt__art ls-art ls-art--mo"><i></i></span><span class="mk-opt__name" data-name="Flip Mosaic">Flip Mosaic<span class="material-icons mk-ic" aria-hidden="true">check_circle</span></span></span></label>
+        </div>
+        <p class="ls-desc" id="lsStyleDesc"></p>
+      </div>
+    </div>
+    <div class="mk-row mk-row--stack">
+      <div class="mk-row__text"><span class="mk-row__label" id="lsAccentLabel">Colours</span></div>
+      <div class="mk-row__control">
+        <div class="mk-seg ls-accents" role="radiogroup" aria-labelledby="lsAccentLabel">
+          <input type="radio" name="lsAccent" id="lsAccMki" value="Mki" data-key="Accent" data-label="Colours"><label for="lsAccMki" data-name="MKI neon"><i class="ls-sw" style="background:linear-gradient(135deg,#00E5FF,#FF2BD6)"></i>MKI neon</label>
+          <input type="radio" name="lsAccent" id="lsAccJf" value="Jellyfin" data-key="Accent"><label for="lsAccJf" data-name="Jellyfin"><i class="ls-sw" style="background:linear-gradient(135deg,#AA5CC3,#00A4DC)"></i>Jellyfin</label>
+          <input type="radio" name="lsAccent" id="lsAccSun" value="Sunset" data-key="Accent"><label for="lsAccSun" data-name="Sunset"><i class="ls-sw" style="background:linear-gradient(135deg,#FFE45C,#FF3D9E)"></i>Sunset</label>
+          <input type="radio" name="lsAccent" id="lsAccLime" value="Lime" data-key="Accent"><label for="lsAccLime" data-name="Lime"><i class="ls-sw" style="background:linear-gradient(135deg,#B6FF3B,#22D3EE)"></i>Lime</label>
+        </div>
+      </div>
+    </div>
+    <div class="mk-row">
+      <div class="mk-row__text"><span class="mk-row__label" id="lsMotionLabel">Motion</span><span class="mk-row__desc">Calm moves at half speed, good for TVs left on the sign-in page. Still shows the pictures without movement; Backdrop Spotlight then changes the picture once a minute. Devices set to reduce motion always get Still.</span></div>
+      <div class="mk-row__control">
+        <div class="mk-seg" role="radiogroup" aria-labelledby="lsMotionLabel">
+          <input type="radio" name="lsMotion" id="lsMoNormal" value="Normal" data-key="Motion" data-label="Motion"><label for="lsMoNormal">Normal</label>
+          <input type="radio" name="lsMotion" id="lsMoCalm" value="Calm" data-key="Motion"><label for="lsMoCalm">Calm</label>
+          <input type="radio" name="lsMotion" id="lsMoStill" value="Still" data-key="Motion"><label for="lsMoStill">Still</label>
+        </div>
+      </div>
+    </div>
+    <div class="mk-row">
+      <div class="mk-row__text"><label class="mk-row__label" for="lsCard">Neon sign-in card</label><span class="mk-row__desc">Puts Jellyfin's sign-in form on a glass card in the chosen colours, placed beside the artwork on large screens. Off: Jellyfin's own form on a dark panel in the middle, and no title names.</span></div>
+      <div class="mk-row__control"><input type="checkbox" class="mk-switch" role="switch" id="lsCard" data-key="NeonCard" data-label="Neon sign-in card"></div>
+    </div>
+  </div>
+</section>
+
+<section class="mk-card" id="lsSeeCard" aria-labelledby="lsSeeT" tabindex="-1">
+  <div class="mk-card__head">
+    <span class="mk-card__icon"><span class="material-icons mk-ic" aria-hidden="true">visibility</span></span>
+    <div class="mk-card__titles"><h2 class="mk-card__title" id="lsSeeT">What visitors can see</h2><p class="mk-card__desc">Only movies and shows from the libraries ticked here, with artwork stored on your server.</p></div>
+  </div>
+  <div class="mk-card__body">
+    <div class="mk-row mk-row--stack" id="lsLibRow" tabindex="-1">
+      <div class="mk-row__text"><span class="mk-row__label" id="lsLibLabel">Libraries</span><span class="mk-row__desc">None is ticked after installing. Libraries whose name suggests kids or adult content are marked, so they are not ticked by mistake.</span></div>
+      <div class="mk-row__control">
+        <div id="lsLibIds" data-key="LibraryIds" data-type="json" data-label="Libraries" hidden></div>
+        <div class="ls-libs" id="lsLibs" role="group" aria-labelledby="lsLibLabel"></div>
+      </div>
+    </div>
+    <div class="mk-row">
+      <div class="mk-row__text"><label class="mk-row__label" for="lsRating">Age rating limit</label><span class="mk-row__desc">Only titles rated up to this age. Anyone can open the sign-in page, children included.</span></div>
+      <div class="mk-row__control">
+        <select class="mk-select" id="lsRating" data-key="MaxRating" data-label="Age rating limit" data-other="Up to {v}">
+          <option value="0">All ages only</option>
+          <option value="6">Up to 6</option>
+          <option value="12">Up to 12</option>
+          <option value="16">Up to 16</option>
+          <option value="18">Up to 18</option>
+        </select>
+      </div>
+    </div>
+    <div class="mk-row">
+      <div class="mk-row__text"><label class="mk-row__label" for="lsUnrated">Include titles without a rating</label><span class="mk-row__desc">Without a rating the limit cannot check a title, so these stay out unless you turn this on.</span></div>
+      <div class="mk-row__control"><input type="checkbox" class="mk-switch" role="switch" id="lsUnrated" data-key="IncludeUnrated" data-label="Titles without a rating"></div>
+    </div>
+    <div class="mk-row">
+      <div class="mk-row__text"><label class="mk-row__label" for="lsPick">Which titles</label><span class="mk-row__desc">Up to 48 posters and 12 backdrops. A new pick comes every hour, and right after a change here.</span></div>
+      <div class="mk-row__control">
+        <select class="mk-select" id="lsPick" data-key="Pick" data-label="Which titles">
+          <option value="Random">A random mix</option>
+          <option value="Recent">Recently added</option>
+          <option value="TopRated">Top rated</option>
+        </select>
+      </div>
+    </div>
+    <div class="mk-row" id="lsTitlesRow">
+      <div class="mk-row__text"><label class="mk-row__label" for="lsTitles">Show title names</label><span class="mk-row__desc" id="lsTitlesDesc">Backdrop Spotlight names each title on screen. Off: pictures only.</span></div>
+      <div class="mk-row__control"><input type="checkbox" class="mk-switch" role="switch" id="lsTitles" data-key="ShowTitles" data-label="Show title names"></div>
+    </div>
+    <div class="mk-row" id="lsCountsRow">
+      <div class="mk-row__text"><label class="mk-row__label" for="lsCounts">Show library size</label><span class="mk-row__desc" id="lsCountsDesc">Flip Mosaic shows how many movies and shows of the ticked libraries the sign-in page may show.</span></div>
+      <div class="mk-row__control"><input type="checkbox" class="mk-switch" role="switch" id="lsCounts" data-key="ShowCounts" data-label="Show library size"></div>
+    </div>
+  </div>
+</section>
+
+<section class="mk-card ls-wide" id="lsSendsCard" aria-labelledby="lsSendsT">
+  <div class="mk-card__head">
+    <span class="mk-card__icon"><span class="material-icons mk-ic" aria-hidden="true">shield</span></span>
+    <div class="mk-card__titles"><h2 class="mk-card__title" id="lsSendsT">What the sign-in page gets</h2><p class="mk-card__desc">Before anyone signs in, from the saved settings.</p></div>
+  </div>
+  <div class="mk-card__body">
+    <ul class="mk-checks" id="lsSends"></ul>
+    <p class="mk-note" id="lsWebNote" hidden><span class="material-icons mk-ic" aria-hidden="true">warning</span><span id="lsWebNoteT"></span></p>
+  </div>
+</section>
+
+</div>
+</div></div>
+
+<script type="text/javascript">
+(function () {
+'use strict';
+/* MKI-KIT:JS BEGIN (generated from ui/mki-kit.js by build/kit.py, do not edit here) */
+/* MKI kit runtime: shared behaviour of the MKI plugin settings pages ("Control Deck").
+   Source of truth: ui/mki-kit.js. build/kit.py copies it into every configPage.html between the MKI-KIT markers,
+   inside the page's own script, so nothing here is global and each page gets its own instance.
+
+   Usage (inside the page script):
+     var kit = MkiKit(page, { pluginId: '...', onLoad: fn(cfg), onSaved: fn(batch), confirm: { Key: fn(to, from) -> Promise<bool> } });
+
+   Rules this runtime keeps:
+   - Everything is looked up inside `page`. Listeners are bound once, when the page script runs; pageshow only loads data.
+   - Settings save themselves: switches and pickers 350 ms after the last change (one batch), text when the field is left.
+     Only the changed keys are written, on top of a fresh copy of the server's configuration, one save at a time.
+   - A value that fails validation is never saved. A failed save keeps the value on screen and offers Retry.
+   - Server text only ever reaches the page through textContent or attributes. ES5 on purpose. */
+function MkiKit(page, o) {
+  'use strict';
+  o = o || {};
+  var kit = { page: page };
+  var EN = 'en-GB';
+  var disposers = [];
+
+  /* ---------- small helpers ---------- */
+  function $(s, root) { return (root || page).querySelector(s); }
+  function $$(s, root) { return Array.prototype.slice.call((root || page).querySelectorAll(s)); }
+  function byId(id) { return id ? page.querySelector('[id="' + String(id).replace(/"/g, '') + '"]') : null; }
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function ic(name, cls) { var s = el('span', 'material-icons mk-ic' + (cls ? ' ' + cls : ''), name); s.setAttribute('aria-hidden', 'true'); return s; }
+  function fill(node, parts) {
+    node.textContent = '';
+    (Array.isArray(parts) ? parts : [parts]).forEach(function (p) {
+      if (p == null || p === false) return;
+      node.appendChild(typeof p === 'string' || typeof p === 'number' ? document.createTextNode(String(p)) : p);
+    });
+    return node;
+  }
+  function btn(text, cls, icon) { var b = el('button', 'mk-btn' + (cls ? ' ' + cls : '')); b.type = 'button'; if (icon) b.appendChild(ic(icon)); b.appendChild(el('span', null, text)); return b; }
+  function count(obj) { return Object.keys(obj).length; }
+  function same(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
+  function listen(target, type, fn, opt) { target.addEventListener(type, fn, opt); disposers.push(function () { target.removeEventListener(type, fn, opt); }); }
+  function hhmm(d) { return d.toLocaleTimeString(EN, { hour: '2-digit', minute: '2-digit' }); }
+  function day(d) { return d.toLocaleDateString(EN, { weekday: 'short', day: 'numeric', month: 'short' }); }
+  function dayTime(d) {
+    var now = new Date(), y = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+    if (d.toDateString() === now.toDateString()) return 'today ' + hhmm(d);
+    if (d.toDateString() === y.toDateString()) return 'yesterday ' + hhmm(d);
+    return day(d) + ', ' + hhmm(d);
+  }
+  function span(ms) {
+    var s = Math.round(Math.abs(ms) / 1000);
+    if (s < 60) return s + ' s';
+    var m = Math.round(s / 60); if (m < 60) return m + ' min';
+    var h = Math.floor(m / 60), r = m % 60; if (h < 48) return h + ' h' + (r ? ' ' + r + ' min' : '');
+    return Math.round(h / 24) + ' days';
+  }
+  function plural(n, one, many) { return n + ' ' + (n === 1 ? one : (many || one + 's')); }
+  function num(n) { return Number(n).toLocaleString(EN); }
+  function param(name) {
+    var q = (location.search || '') + '&' + ((location.hash || '').split('?')[1] || ''), m = new RegExp('[?&]' + name + '=([^&#]*)').exec(q);
+    return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : null;
+  }
+  function store(key, val) {
+    try { if (val === undefined) return sessionStorage.getItem('mki:' + page.id + ':' + key); sessionStorage.setItem('mki:' + page.id + ':' + key, val); } catch (e) { return null; }
+  }
+
+  /* ---------- theme: Jellyfin's own palette first, background luminance as fallback ---------- */
+  function parseColor(s) {
+    s = String(s || '').trim();
+    var m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(s);
+    if (m) { var h = m[1].length === 3 ? m[1].replace(/./g, '$&$&') : m[1]; return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16), 1]; }
+    m = /rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:\s*[,\/]\s*([\d.]+%?))?/.exec(s);
+    if (!m) return null;
+    var a = m[4] == null ? 1 : (/%$/.test(m[4]) ? parseFloat(m[4]) / 100 : +m[4]);
+    return [+m[1], +m[2], +m[3], a];
+  }
+  function tone() {
+    var c = parseColor(getComputedStyle(document.documentElement).getPropertyValue('--jf-palette-background-default'));
+    for (var n = page; !c && n && n.nodeType === 1; n = n.parentElement) { var b = parseColor(getComputedStyle(n).backgroundColor); if (b && b[3] > 0.5) c = b; }
+    if (!c) c = parseColor(getComputedStyle(document.body).backgroundColor) || [16, 16, 16, 1];
+    var l = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255;
+    page.setAttribute('data-tone', l > 0.5 ? 'light' : 'dark');
+  }
+  /* the sticky bar stops under Jellyfin's fixed header */
+  function stickyTop() {
+    var top = 0;
+    Array.prototype.forEach.call(document.querySelectorAll('.MuiAppBar-root, .skinHeader'), function (h) {
+      var cs = getComputedStyle(h), r = h.getBoundingClientRect();
+      if ((cs.position === 'fixed' || cs.position === 'sticky') && cs.visibility !== 'hidden' && r.top <= 0 && r.bottom > top && r.bottom < 240) top = Math.round(r.bottom);
+    });
+    page.style.setProperty('--mk-sticky-top', top + 'px');
+  }
+  tone();
+  if (window.MutationObserver) {
+    var mo = new MutationObserver(tone);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class', 'style'] });
+    disposers.push(function () { mo.disconnect(); });
+  }
+  listen(window, 'resize', function () { stickyTop(); tabOverflow(); });
+
+  /* ---------- tabs (role=tablist, arrow keys, ?tab= deep link, remembered per visit) ---------- */
+  var tabs = $$('.mk-tab[role="tab"]'), tabList = $('.mk-tabs');
+  function tabOverflow() { if (tabList) tabList.classList.toggle('is-overflow', tabList.scrollWidth > tabList.clientWidth + 2); }
+  function selectTab(t, focus) {
+    if (!t) return;
+    tabs.forEach(function (x) {
+      var on = x === t; x.setAttribute('aria-selected', String(on)); x.tabIndex = on ? 0 : -1;
+      var p = byId(x.getAttribute('aria-controls')); if (p) p.hidden = !on;
+    });
+    if (focus) t.focus();
+    var tl = t.parentElement, tr = t.getBoundingClientRect(), lr = tl.getBoundingClientRect();
+    if (tr.left < lr.left || tr.right > lr.right) tl.scrollLeft += (tr.left - lr.left) - (lr.width - tr.width) / 2;
+    store('tab', t.getAttribute('data-tab') || '');
+    if (o.onTab) o.onTab(t.getAttribute('data-tab'));
+  }
+  function tabByName(name) { return tabs.filter(function (x) { return x.getAttribute('data-tab') === name; })[0]; }
+  function tabOf(node) {
+    var p = node && node.closest('[role="tabpanel"]');
+    return p ? tabs.filter(function (x) { return x.getAttribute('aria-controls') === p.id; })[0] : null;
+  }
+  tabs.forEach(function (t, i) {
+    t.addEventListener('click', function () { selectTab(t); });
+    t.addEventListener('keydown', function (e) {
+      var j = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : null;
+      if (j == null) return; e.preventDefault(); selectTab(tabs[(j + tabs.length) % tabs.length], true);
+    });
+  });
+  if (tabs.length) selectTab(tabByName(param('tab')) || tabByName(store('tab')) || tabs.filter(function (x) { return x.getAttribute('aria-selected') === 'true'; })[0] || tabs[0]);
+  /* in-page links: <button data-goto="cardId"> switches tab if needed and brings the card into view */
+  function reveal(node, focusNode) {
+    if (!node) return;
+    var t = tabOf(node); if (t && t.getAttribute('aria-selected') !== 'true') selectTab(t);
+    var deck = node.closest('.mk-deck'); if (deck) deck.classList.add('is-open');
+    node.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    var f = focusNode || node; if (f.tabIndex < 0 && !f.hasAttribute('tabindex')) f.setAttribute('tabindex', '-1');
+    try { f.focus({ preventScroll: true }); } catch (e) { f.focus(); }
+    node.classList.remove('is-found'); void node.offsetWidth; node.classList.add('is-found');
+  }
+  page.addEventListener('click', function (e) {
+    var g = e.target.closest && e.target.closest('[data-goto]'); if (!g || !page.contains(g)) return;
+    e.preventDefault(); reveal(byId(g.getAttribute('data-goto')));
+  });
+
+  /* ---------- deck folds on phones ---------- */
+  var deck = $('.mk-deck');
+  if (deck) {
+    var foot = $('.mk-deck__foot', deck), tg = el('button', 'mk-btn mk-btn--sm mk-btn--ghost mk-deck__toggle');
+    tg.type = 'button'; tg.appendChild(ic('expand_more')); tg.appendChild(el('span', null, 'Show status'));
+    var setDeck = function (open) {
+      deck.classList.toggle('is-open', open); tg.setAttribute('aria-expanded', String(open));
+      tg.lastChild.textContent = open ? 'Hide status' : 'Show status'; tg.firstChild.textContent = open ? 'expand_less' : 'expand_more';
+    };
+    tg.addEventListener('click', function () { var open = !deck.classList.contains('is-open'); setDeck(open); store('deck', open ? '1' : '0'); });
+    setDeck(store('deck') === '1');
+    if (foot) foot.appendChild(tg); else deck.appendChild(tg);
+  }
+
+  /* ---------- sliders: range <-> number box, fill, default tick, reset ---------- */
+  function rangeSync(r) {
+    var min = +r.min || 0, max = +r.max || 100, v = +r.value;
+    r.style.setProperty('--p', ((v - min) / ((max - min) || 1) * 100) + '%');
+    var wrap = r.closest('.mk-range'); if (!wrap) return;
+    var box = $('[data-sync-for="' + r.id + '"]', wrap); if (box && document.activeElement !== box) box.value = r.value;
+    var out = $('[data-out-for="' + r.id + '"]', wrap); if (out) out.textContent = r.value + (r.getAttribute('data-unit') ? ' ' + r.getAttribute('data-unit') : '');
+    if (r.hasAttribute('data-default')) wrap.classList.toggle('is-changed', String(v) !== r.getAttribute('data-default'));
+  }
+  $$('.mk-range input[type="range"]').forEach(function (r) {
+    var wrap = r.closest('.mk-range');
+    if (r.hasAttribute('data-default')) {
+      var d = +r.getAttribute('data-default'), min = +r.min || 0, max = +r.max || 100, tr = $('.mk-range__track', wrap);
+      if (tr) { var t = el('i', 'mk-tick'); t.style.left = ((d - min) / ((max - min) || 1) * 100) + '%'; t.title = 'Default: ' + d; tr.appendChild(t); }
+      var rs = $('.mk-reset', wrap);
+      if (rs) rs.addEventListener('click', function () { r.value = d; rangeSync(r); r.dispatchEvent(new Event('input', { bubbles: true })); r.dispatchEvent(new Event('change', { bubbles: true })); });
+    }
+    r.addEventListener('input', function () { rangeSync(r); });
+    var box = $('[data-sync-for="' + r.id + '"]', wrap);
+    if (box) {
+      box.addEventListener('input', function () { var n = +box.value; if (box.value !== '' && n >= +r.min && n <= +r.max) { r.value = n; rangeSync(r); r.dispatchEvent(new Event('input', { bubbles: true })); } });
+      box.addEventListener('change', function (e) {
+        e.stopPropagation();
+        var st = +r.step || 1, n = Math.round(Math.min(+r.max, Math.max(+r.min, +box.value || 0)) / st) * st;
+        box.value = n; r.value = n; rangeSync(r); r.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+    }
+    rangeSync(r);
+  });
+
+  /* ---------- steppers: [-] value [+]; the value saves once the clicking stops ---------- */
+  $$('.mk-stepper').forEach(function (s) {
+    var inp = $('input', s), timer;
+    $$('button', s).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var step = +(b.getAttribute('data-step') || 1), lo = inp.min === '' ? -Infinity : +inp.min, hi = inp.max === '' ? Infinity : +inp.max;
+        inp.value = Math.min(hi, Math.max(lo, (+inp.value || 0) + step));
+        inp.dispatchEvent(new Event('input', { bubbles: true }));
+        clearTimeout(timer); timer = setTimeout(function () { inp.dispatchEvent(new Event('change', { bubbles: true })); }, 450);
+      });
+    });
+  });
+
+  /* ---------- list editors (allow/block lists). Entries are rendered with textContent only. ---------- */
+  function tagsSet(box, list) {
+    box._tags = (list || []).slice();
+    $$('.mk-tag', box).forEach(function (t) { t.parentNode.removeChild(t); });
+    var input = $('input', box), kind = box.classList.contains('mk-tags--block') ? 'block' : box.classList.contains('mk-tags--allow') ? 'check' : null;
+    box._tags.forEach(function (txt, i) {
+      var t = el('span', 'mk-tag'); if (kind) t.appendChild(ic(kind));
+      t.appendChild(el('span', null, txt));
+      var x = el('button'); x.type = 'button'; x.setAttribute('aria-label', 'Remove ' + txt); x.appendChild(ic('close', 'mk-ic--sm'));
+      x.addEventListener('click', function () { var l = box._tags.slice(); l.splice(i, 1); tagsSet(box, l); box.dispatchEvent(new Event('change', { bubbles: true })); input.focus(); });
+      t.appendChild(x); box.insertBefore(t, input);
+    });
+    box.dispatchEvent(new Event('mk-tags', { bubbles: true }));
+  }
+  $$('.mk-tags').forEach(function (box) {
+    var input = $('input', box);
+    tagsSet(box, []);
+    box.addEventListener('click', function (e) { if (e.target === box) input.focus(); });
+    function add(raw) {
+      var parts = String(raw).split(/\n/).map(function (s) { return s.trim(); }).filter(Boolean), l = box._tags.slice(), changed = false;
+      parts.forEach(function (p) { if (l.map(function (x) { return x.toLowerCase(); }).indexOf(p.toLowerCase()) < 0) { l.push(p); changed = true; } });
+      input.value = ''; if (changed) { tagsSet(box, l); box.dispatchEvent(new Event('change', { bubbles: true })); }
+    }
+    box._add = add;
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); if (input.value.trim()) add(input.value); }
+      else if (e.key === 'Backspace' && !input.value && box._tags.length) { var l = box._tags.slice(); l.pop(); tagsSet(box, l); box.dispatchEvent(new Event('change', { bubbles: true })); }
+    });
+    input.addEventListener('change', function (e) { e.stopPropagation(); });
+    input.addEventListener('input', function (e) { e.stopPropagation(); });
+    input.addEventListener('paste', function (e) { var t = (e.clipboardData || window.clipboardData).getData('text'); if (/\n/.test(t)) { e.preventDefault(); add(t); } });
+    input.addEventListener('blur', function () { if (input.value.trim()) add(input.value); });
+    var sug = box.id && $('.mk-suggest[data-for="' + box.id + '"]');
+    if (sug) $$('button', sug).forEach(function (b) { b.addEventListener('click', function () { add(b.getAttribute('data-value') || b.textContent); }); });
+  });
+
+  /* ---------- secrets: the eye button only ever touches a field of this page ---------- */
+  $$('[data-reveal]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var f = byId(b.getAttribute('data-reveal')); if (!f) return;
+      var show = f.type === 'password';
+      f.type = show ? 'text' : 'password'; b.setAttribute('aria-pressed', String(show)); b.setAttribute('aria-label', show ? 'Hide' : 'Show');
+      var i = $('.mk-ic', b); if (i) i.textContent = show ? 'visibility_off' : 'visibility';
+    });
+  });
+
+  /* ---------- validation ---------- */
+  var RULES = {
+    url: function (v) {
+      if (!v) return null;
+      if (!/^https?:\/\//i.test(v)) return 'Start with http:// or https://';
+      try { var u = new URL(v); if (!u.hostname) return 'That is not a complete address'; } catch (e) { return 'That is not a valid address'; }
+      return null;
+    },
+    lang: function (v) { return /^[a-z]{2}$/i.test(v) ? null : 'Use a two-letter code such as en, de or fr'; },
+    domain: function (v) { if (!v) return null; return /^\.?([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/i.test(v) ? null : 'Use a domain such as .example.org, without http:// or a path'; },
+    css: function (v) { var a = (v.match(/\{/g) || []).length, b = (v.match(/\}/g) || []).length; return a === b ? null : (a > b ? (a - b) + ' "{" not closed' : (b - a) + ' "}" too many'); },
+    int: function (v, e) {
+      if (v === '' || !/^-?\d+$/.test(v)) return 'Enter a whole number';
+      var n = +v; if ((e.min !== '' && n < +e.min) || (e.max !== '' && n > +e.max)) return 'Between ' + e.min + ' and ' + e.max;
+      return null;
+    }
+  };
+  if (o.rules) Object.keys(o.rules).forEach(function (k) { RULES[k] = o.rules[k]; });
+  function msgFor(c) {
+    var id = c.getAttribute('data-msg'); if (id) return byId(id);
+    var f = c.closest('.mk-field, .mk-row'); return f ? $('.mk-msg[data-auto]', f) : null;
+  }
+  function validate(c) {
+    var rule = c.getAttribute('data-validate'); if (!rule || !RULES[rule]) return true;
+    var err = RULES[rule](String(c.value).trim(), c), m = msgFor(c);
+    c.setAttribute('aria-invalid', err ? 'true' : 'false');
+    if (m && (err || m.getAttribute('data-kit') === 'err')) {
+      m.textContent = ''; m.className = 'mk-msg' + (err ? ' mk-msg--bad' : '');
+      if (err) { m.setAttribute('data-kit', 'err'); m.appendChild(ic('error')); m.appendChild(el('span', null, err + '. Not saved.')); }
+      else m.removeAttribute('data-kit');
+    }
+    return !err;
+  }
+
+  /* ---------- reading and writing controls ---------- */
+  function keyEls(k) { return $$('[data-key="' + k + '"]'); }
+  /* single-line text is saved without leading or trailing spaces (data-notrim keeps them) */
+  function trim(e) { if (e && e.tagName === 'INPUT' && /^(text|url|password|search|email|tel)$/.test(e.type) && !e.hasAttribute('data-notrim') && e.value !== e.value.trim()) e.value = e.value.trim(); }
+  function isText(e) { return e && (e.tagName === 'TEXTAREA' || (e.tagName === 'INPUT' && /^(text|url|password|search|number|email|tel)$/.test(e.type))); }
+  function copyJson(v) { return v == null ? null : JSON.parse(JSON.stringify(v)); }
+  function read(k) {
+    var els = keyEls(k), e = els[0]; if (!e) return undefined;
+    /* data-type="json": the page keeps a structured value (e.g. a list of objects) on the element as mkValue */
+    if (e.getAttribute('data-type') === 'json') return copyJson(e.mkValue);
+    if (e.classList.contains('mk-tags')) return (e._tags || []).slice();
+    if (e.type === 'radio') { var c = els.filter(function (x) { return x.checked; })[0]; return c ? c.value : null; }
+    if (e.type === 'checkbox') return els.length > 1 ? els.filter(function (x) { return x.checked; }).map(function (x) { return x.value; }) : e.checked;
+    return e.value;
+  }
+  function write(k, v) {
+    var els = keyEls(k), e = els[0]; if (!e) return;
+    if (e.getAttribute('data-type') === 'json') e.mkValue = copyJson(v);
+    else if (e.classList.contains('mk-tags')) tagsSet(e, v || []);
+    else if (e.type === 'radio') els.forEach(function (x) { x.checked = x.value === String(v); });
+    else if (e.type === 'checkbox') { if (els.length > 1) els.forEach(function (x) { x.checked = (v || []).indexOf(x.value) >= 0; }); else e.checked = !!v; }
+    else if (e.tagName === 'SELECT' && v != null && !$$('option', e).some(function (op) { return op.value === String(v); })) {
+      /* a stored value the page has no option for keeps its own option instead of falling back to the first one */
+      var op = el('option', null, (e.getAttribute('data-other') || '{v}').replace('{v}', String(v))); op.value = String(v); op.setAttribute('data-kit', 'other'); e.appendChild(op); e.value = String(v);
+    }
+    else { e.value = v == null ? '' : v; if (e.type === 'range') rangeSync(e); }
+    if (isText(e) && e.hasAttribute('data-validate')) validate(e);
+    e.dispatchEvent(new CustomEvent('mk-restored', { bubbles: true }));
+  }
+  function typeOf(k) {
+    var e = keyEls(k)[0], t = e && e.getAttribute('data-type'); if (t) return t;
+    var v = cfg ? cfg[k] : undefined;
+    if (Array.isArray(v)) return v.length && typeof v[0] === 'number' ? 'number[]' : v.length && v[0] !== null && typeof v[0] === 'object' ? 'json' : 'string[]';
+    if (v !== null && typeof v === 'object') return 'json';
+    if (typeof v === 'boolean') return 'bool';
+    if (typeof v === 'number') return 'number';
+    return 'string';
+  }
+  function toServer(k, v) {
+    switch (typeOf(k)) {
+      case 'bool': return v === true || v === 'true';
+      case 'number': return v === '' || v == null || isNaN(+v) ? (cfg && typeof cfg[k] === 'number' ? cfg[k] : 0) : +v;
+      case 'number[]': return (v || []).map(Number);
+      case 'string[]': return (v || []).map(String);
+      case 'json': return copyJson(v);
+      default: return v == null ? '' : String(v);
+    }
+  }
+  function toDom(k, v) {
+    var els = keyEls(k), e = els[0]; if (!e) return v;
+    if (e.getAttribute('data-type') === 'json') return copyJson(v);
+    if (e.classList.contains('mk-tags') || (e.type === 'checkbox' && els.length > 1)) return (v || []).map(String);
+    if (e.type === 'checkbox') return v === true || v === 'true';
+    return v == null ? '' : String(v);
+  }
+  function labelOf(k) {
+    var e = keyEls(k)[0]; if (!e) return k;
+    if (e.getAttribute('data-label')) return e.getAttribute('data-label');
+    var row = e.closest('.mk-row, .mk-field'), l = row && $('.mk-row__label, .mk-field__label', row);
+    return l ? l.textContent.trim() : (e.getAttribute('aria-label') || k);
+  }
+  function show(k, v) {
+    if (o.show) { var custom = o.show(k, toServer(k, v)); if (custom != null) return custom; }
+    var els = keyEls(k), e = els[0];
+    if (v === true) return 'On'; if (v === false) return 'Off';
+    if (Array.isArray(v)) return v.length ? (v.length > 3 || typeof v[0] === 'object' ? plural(v.length, 'entry', 'entries') : v.join(', ')) : 'none';
+    if (v !== null && typeof v === 'object') return 'changed';
+    if (e && e.type === 'radio') {
+      var r = els.filter(function (x) { return x.value === String(v); })[0], lb = r && r.labels && r.labels[0];
+      var dn = lb && (lb.hasAttribute('data-name') ? lb : lb.querySelector('[data-name]'));
+      return dn ? dn.getAttribute('data-name') : lb ? lb.textContent.trim() : String(v);
+    }
+    if (e && e.tagName === 'SELECT') { var op = $$('option', e).filter(function (x) { return x.value === String(v); })[0]; return op ? op.textContent : String(v); }
+    var s = String(v); if (!s) return 'empty';
+    if (e && (e.getAttribute('data-secret') === '1' || e.type === 'password')) return '••••••';
+    if (s.length > 34) s = s.slice(0, 32) + '…';
+    return s + (e && e.getAttribute('data-unit') ? ' ' + e.getAttribute('data-unit') : '');
+  }
+  function allKeys() { var seen = {}; $$('[data-key]').forEach(function (e) { seen[e.getAttribute('data-key')] = 1; }); return Object.keys(seen); }
+
+  /* ---------- save chip + "Changes this visit" (built by the kit into .mk-bar) ---------- */
+  var bar = $('.mk-bar'), save = null, saveText = null, saveIcon = null, pop = null, logList = null, logEmpty = null, revertBtn = null;
+  if (bar) {
+    var wrap = el('div', 'mk-savewrap');
+    save = el('button', 'mk-save'); save.type = 'button';
+    save.setAttribute('aria-haspopup', 'dialog'); save.setAttribute('aria-expanded', 'false');
+    save.title = 'Every change saves itself. Open for this visit\'s changes and undo.';
+    saveIcon = ic('cloud_done'); saveText = el('span', 'mk-save__text', 'Loading…');
+    save.appendChild(saveIcon); save.appendChild(saveText);
+    var live = el('span', 'mk-sr'); live.setAttribute('aria-live', 'polite'); save.appendChild(live);
+    pop = el('div', 'mk-pop'); pop.hidden = true; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'Changes this visit');
+    pop.appendChild(el('div', 'mk-pop__title', 'Changes this visit'));
+    logEmpty = el('p', 'mk-log__empty', 'Nothing changed yet. Every change saves itself and shows up here with an undo.');
+    logList = el('ul', 'mk-log');
+    pop.appendChild(logEmpty); pop.appendChild(logList);
+    var pf = el('div', 'mk-pop__foot');
+    revertBtn = btn('Put everything back', 'mk-btn--sm', 'history'); revertBtn.disabled = true;
+    pf.appendChild(revertBtn); pop.appendChild(pf);
+    wrap.appendChild(save); wrap.appendChild(pop); bar.appendChild(wrap);
+  }
+  var lastAnnounce = '';
+  function setState(state, text) {
+    if (!save) return;
+    save.setAttribute('data-state', state);
+    saveText.textContent = text; save.setAttribute('aria-label', text + '. Show the changes made during this visit.');
+    saveIcon.textContent = ({ saved: 'cloud_done', saving: 'sync', editing: 'edit', invalid: 'warning', error: 'cloud_off', warn: 'report', loading: 'hourglass_empty' })[state] || 'cloud_done';
+    saveIcon.classList.toggle('mk-spin', state === 'saving');
+    if (state !== 'saving' && state !== 'editing' && text !== lastAnnounce) { lastAnnounce = text; live.textContent = text; }
+  }
+
+  /* ---------- the save engine ---------- */
+  var pluginId = o.pluginId, cfg = null, loaded = false, loading = null;
+  var committed = {}, opened = {}, pending = {}, invalid = {}, warns = {};
+  var flushTimer = null, inFlight = null, sending = {}, again = false, failed = false, failToast = null, lastSaved = null, openedAt = null, log = [];
+
+  function restState() {
+    if (!loaded) return;
+    if (failed) return setState('error', 'Not saved · the server did not answer');
+    var n = count(invalid);
+    if (n) return setState('invalid', n === 1 ? '1 field needs a fix · not saved' : n + ' fields need a fix · not saved');
+    if (inFlight || flushTimer || count(pending)) return setState('saving', 'Saving…');
+    var a = document.activeElement;
+    if (a && page.contains(a) && isText(a) && a.hasAttribute('data-key') && !same(read(a.getAttribute('data-key')), base(a.getAttribute('data-key')))) return setState('editing', 'Editing · saves when you leave the field');
+    var w = Object.keys(warns);
+    if (w.length) return setState('warn', 'Saved · ' + (w.length === 1 ? warns[w[0]] : w.length + ' warnings'));
+    setState('saved', 'All changes saved' + (lastSaved ? ' · ' + hhmm(lastSaved) : ''));
+  }
+  /* what the server has, or will have once the save on its way lands */
+  function base(k) { return Object.prototype.hasOwnProperty.call(sending, k) ? sending[k] : committed[k]; }
+  /* a failed save is over once nothing is waiting to be sent any more */
+  function settleFailed() {
+    if (!failed || count(pending)) return;
+    failed = false; if (failToast) { dropToast(failToast); failToast = null; } renderLog();
+  }
+  /* Undo only while the change is still what the server has; a later change of the same key would be lost */
+  function current(k, to) { return same(committed[k], to) && !pending[k] && !Object.prototype.hasOwnProperty.call(sending, k); }
+  function queue(k, opt) {
+    var v = read(k);
+    /* back to that value: nothing to send */
+    if (same(v, base(k))) {
+      delete pending[k]; settleFailed();
+      restState(); return;
+    }
+    pending[k] = { from: pending[k] ? pending[k].from : base(k), to: v, undo: !!(opt && opt.undo) };
+    setState('saving', 'Saving…');
+    clearTimeout(flushTimer); flushTimer = setTimeout(flush, 350);
+  }
+  function flush() {
+    clearTimeout(flushTimer); flushTimer = null;
+    if (inFlight) { again = true; return; }
+    var keys = Object.keys(pending);
+    if (!keys.length) { settleFailed(); restState(); return; }
+    var batch = keys.map(function (k) { return { k: k, from: pending[k].from, to: pending[k].to, undo: pending[k].undo }; });
+    setState('saving', 'Saving…');
+    sending = {}; batch.forEach(function (b) { sending[b.k] = b.to; });
+    inFlight = ApiClient.getPluginConfiguration(pluginId).then(function (c) {
+      batch.forEach(function (b) { c[b.k] = toServer(b.k, b.to); });
+      return ApiClient.updatePluginConfiguration(pluginId, c).then(function () { return c; });
+    }).then(function (c) {
+      inFlight = null; sending = {}; failed = false; cfg = c; lastSaved = new Date();
+      if (failToast) { dropToast(failToast); failToast = null; }
+      batch.forEach(function (b) {
+        committed[b.k] = b.to;
+        if (pending[b.k] && same(pending[b.k].to, b.to)) delete pending[b.k];
+        else if (pending[b.k]) pending[b.k].from = b.to;
+        log.unshift({ k: b.k, from: b.from, to: b.to, t: lastSaved, undo: b.undo });
+      });
+      renderLog();
+      if (o.onSaved) o.onSaved(batch.map(function (b) { return { key: b.k, from: toServer(b.k, b.from), to: toServer(b.k, b.to), undo: b.undo }; }));
+      savedToast(batch);
+      if (again || count(pending)) { again = false; clearTimeout(flushTimer); flushTimer = setTimeout(flush, 120); }
+      restState();
+    }, function () {
+      inFlight = null; sending = {}; again = false; failed = true;
+      restState(); renderLog();
+      if (failToast) dropToast(failToast);
+      failToast = toast('Could not save ' + keys.map(labelOf).join(', ') + '. Your change is still on the page and is not active yet.', { bad: true, action: 'Retry', onAction: function () { failToast = null; flush(); }, sticky: true });
+    });
+  }
+  function savedToast(batch) {
+    var custom = o.toastFor && o.toastFor(batch.map(function (b) { return { key: b.k, from: toServer(b.k, b.from), to: toServer(b.k, b.to), undo: b.undo }; }));
+    if (custom === false) return;
+    if (custom) { toast(custom.text, custom); return; }
+    if (batch.length === 1) {
+      var b0 = batch[0];
+      toast((b0.undo ? 'Undone: ' : 'Saved: ') + labelOf(b0.k) + ' → ' + show(b0.k, b0.to), b0.undo ? {} : { action: 'Undo', onAction: function () { undoIfCurrent(b0.k, b0.from, b0.to); } });
+    } else toast(batch.length + ' changes saved', { action: 'Show', onAction: openPop });
+  }
+  function undoIfCurrent(k, from, to) {
+    if (current(k, to)) { undoTo(k, from); return; }
+    toast('Not undone: ' + labelOf(k) + ' has changed again since. Undo the newer change first (Changes this visit).', { bad: true, icon: 'history', action: 'Show', onAction: openPop });
+  }
+  /* an undo asks the same question as the change itself (e.g. going live, locking an account) */
+  function undoTo(k, v) {
+    var go = function () { write(k, v); delete invalid[k]; queue(k, { undo: true }); };
+    var hook = o.confirm && o.confirm[k];
+    if (hook && !same(v, base(k))) Promise.resolve(hook(toServer(k, v), toServer(k, base(k)))).then(function (ok) { if (ok) go(); });
+    else go();
+  }
+  function onChange(e) {
+    if (!loaded) return;
+    var c = e.target.closest && e.target.closest('[data-key]'); if (!c || !page.contains(c) || c.hasAttribute('data-nosave')) return;
+    var k = c.getAttribute('data-key');
+    trim(c);
+    if (c.hasAttribute('data-validate') && !validate(c)) { invalid[k] = 1; delete pending[k]; settleFailed(); restState(); return; }
+    delete invalid[k];
+    var hook = o.confirm && o.confirm[k];
+    /* the page is gone (a field left focused loses it now): a change that would need a question is put back, never asked */
+    if (hook && away) { if (quiet(k)) queue(k); else write(k, pending[k] ? pending[k].to : base(k)); restState(); return; }
+    if (hook && !same(read(k), base(k))) {
+      var to = read(k), answer = hook(toServer(k, to), toServer(k, base(k)));
+      if (answer === true) { queue(k); return; }
+      /* a save can land while the question is open: yes saves what was asked about, no puts back the last
+         accepted value (a change still waiting to be sent, or what the server has) so the screen matches */
+      Promise.resolve(answer).then(function (ok) {
+        if (ok) { write(k, to); queue(k); } else { write(k, pending[k] ? pending[k].to : base(k)); restState(); }
+      });
+      return;
+    }
+    queue(k);
+  }
+  page.addEventListener('change', onChange);
+  page.addEventListener('input', function (e) {
+    if (!loaded) return;
+    var c = e.target.closest && e.target.closest('[data-key]'); if (!c || !isText(c)) return;
+    var k = c.getAttribute('data-key');
+    if (c.hasAttribute('data-validate')) { if (validate(c)) delete invalid[k]; else invalid[k] = 1; }
+    restState();
+  });
+  page.addEventListener('focusout', function () { setTimeout(restState, 0); });
+  /* Esc in a text field puts the saved value back */
+  page.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    var c = e.target; if (!isText(c) || !c.hasAttribute('data-key')) return;
+    var k = c.getAttribute('data-key'); if (same(read(k), base(k))) return;
+    e.preventDefault(); e.stopPropagation();
+    write(k, base(k)); delete pending[k]; delete invalid[k]; validate(c); settleFailed(); restState();
+  });
+
+  /* leaving the page: a valid draft in the focused field is saved, waiting changes go out at once.
+     No question can be asked while the page goes away, and a hidden page must not keep a modal dialog open (it would
+     block the whole web client): open dialogs are cancelled, and a draft of a key with a question is put back unsaved. */
+  var away = false;
+  /* o.quiet[k](to, from): true when this change of a key with a question surely needs none. It must only look at the values
+     (no dialogs, no requests); without it, a draft of such a key is not saved when the page is left. */
+  function quiet(k) { var q = o.quiet && o.quiet[k]; return !!q && q(toServer(k, read(k)), toServer(k, base(k))) === true; }
+  function leave(unloading) {
+    /* the browser may still keep the page (the admin can choose to stay), so an unload only saves */
+    if (unloading !== true) { away = true; openDialogs.slice().forEach(function (f) { f(); }); }
+    var a = document.activeElement;
+    if (a && page.contains(a) && isText(a) && a.hasAttribute('data-key') && loaded) {
+      var k = a.getAttribute('data-key');
+      trim(a);
+      if (!same(read(k), base(k))) {
+        var ok = validate(a) && (!(o.confirm && o.confirm[k]) || quiet(k));
+        if (ok) { delete invalid[k]; queue(k); }
+        else if (o.confirm && o.confirm[k]) { write(k, pending[k] ? pending[k].to : base(k)); delete invalid[k]; }
+      }
+    }
+    if (count(pending)) flush();
+    closePop();
+  }
+  page.addEventListener('viewbeforehide', function () { leave(); });
+  listen(window, 'beforeunload', function (e) {
+    leave(true);
+    if (count(pending) || inFlight || count(invalid) || failed) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  function setLoad(state, text) {
+    page.setAttribute('data-load', state);
+    var gated = $$('.mk-main, .mk-master, [data-needs-load]');
+    gated.forEach(function (g) { if (state === 'ready') g.removeAttribute('inert'); else g.setAttribute('inert', ''); });
+    if (!loadbar) return;
+    loadbar.hidden = state === 'ready';
+    loadbar.classList.toggle('is-bad', state === 'error');
+    fill(loadbar, state === 'error'
+      ? [ic('cloud_off'), el('span', 'mk-loadbar__text', text || 'Could not load the settings from the server. Nothing can be changed until they load.'), retryBtn]
+      : [ic('hourglass_empty', 'mk-spin'), el('span', 'mk-loadbar__text', 'Loading the settings…')]);
+    if (state !== 'ready') setState(state === 'error' ? 'error' : 'loading', state === 'error' ? 'Settings not loaded' : 'Loading…');
+  }
+  var loadbar = el('div', 'mk-loadbar'); loadbar.setAttribute('role', 'status');
+  var retryBtn = btn('Try again', 'mk-btn--sm', 'refresh'); retryBtn.addEventListener('click', function () { load(); });
+  if (deck) { var head = $('.mk-deck__head', deck); if (head && head.nextSibling) deck.insertBefore(loadbar, head.nextSibling); else deck.appendChild(loadbar); }
+  else if (bar) bar.parentNode.insertBefore(loadbar, bar);
+
+  function load() {
+    if (loading) return loading;
+    setLoad('loading');
+    var extra = o.preload ? Promise.resolve(o.preload()) : Promise.resolve();
+    loading = Promise.all([ApiClient.getPluginConfiguration(pluginId), extra]).then(function (res) {
+      loading = null;
+      var c = res[0];
+      cfg = c; loaded = true;
+      allKeys().forEach(function (k) {
+        if (Object.prototype.hasOwnProperty.call(c, k)) write(k, toDom(k, c[k]));
+        committed[k] = read(k); opened[k] = committed[k];
+      });
+      pending = {}; invalid = {}; failed = false; log = []; openedAt = new Date(); lastSaved = null;
+      setLoad('ready'); restState(); renderLog();
+      if (o.onLoad) o.onLoad(cfg, res[1]);
+    }, function (err) {
+      loading = null;
+      setLoad('error', o.loadError ? o.loadError(err) : null);
+      return null;
+    });
+    return loading;
+  }
+  page.addEventListener('pageshow', function () {
+    away = false;
+    tone(); stickyTop(); setTimeout(tabOverflow, 0);
+    var busy = count(pending) || inFlight || count(invalid) || failed;
+    if (!loaded || !busy) load();
+    if (o.onShow) o.onShow();
+  });
+
+  /* ---------- history popover ---------- */
+  function renderLog() {
+    if (!pop) return;
+    logList.textContent = '';
+    var rows = [];
+    Object.keys(pending).forEach(function (k) {
+      if (!failed) return;
+      var li = el('li', 'is-pending'); li.appendChild(ic('cloud_off', 'mk-ic--sm'));
+      var t = el('span', 'mk-log__what'); t.appendChild(el('b', null, labelOf(k))); t.appendChild(document.createTextNode(' ' + show(k, pending[k].from) + ' → ' + show(k, pending[k].to) + ' · not saved'));
+      li.appendChild(t); var r = btn('Retry', 'mk-btn--sm mk-btn--ghost', 'refresh'); r.addEventListener('click', function () { flush(); }); li.appendChild(r);
+      rows.push(li);
+    });
+    log.slice(0, 15).forEach(function (x) {
+      var li = el('li', x.action ? 'is-action' : null);
+      li.appendChild(el('time', null, hhmm(x.t)));
+      var t = el('span', 'mk-log__what');
+      if (x.action) { t.appendChild(el('b', null, x.text)); var bd = el('span', 'mk-badge', 'Action'); bd.title = 'Actions cannot be undone here'; t.appendChild(bd); li.appendChild(t); }
+      else {
+        t.appendChild(el('b', null, labelOf(x.k))); t.appendChild(document.createTextNode(' ' + show(x.k, x.from) + ' → ' + show(x.k, x.to)));
+        li.appendChild(t);
+        if (current(x.k, x.to)) { var b = btn('Undo', 'mk-btn--sm mk-btn--ghost', 'undo'); b.addEventListener('click', function () { undoTo(x.k, x.from); }); li.appendChild(b); }
+      }
+      rows.push(li);
+    });
+    rows.forEach(function (r) { logList.appendChild(r); });
+    logEmpty.hidden = rows.length > 0;
+    var changed = allKeys().some(function (k) { return !same(committed[k], opened[k]); });
+    revertBtn.disabled = !changed;
+    revertBtn.lastChild.textContent = openedAt ? 'Put everything back as it was at ' + hhmm(openedAt) : 'Put everything back';
+  }
+  function openPop() { if (!pop) return; renderLog(); pop.hidden = false; save.setAttribute('aria-expanded', 'true'); }
+  function closePop() { if (!pop || pop.hidden) return; pop.hidden = true; save.setAttribute('aria-expanded', 'false'); }
+  if (save) {
+    save.addEventListener('click', function (e) {
+      e.stopPropagation();
+      /* "needs a fix" or a warning: the chip takes you to the field */
+      var bad = Object.keys(invalid)[0] || (!failed && Object.keys(warns)[0]), f = bad && keyEls(bad)[0];
+      if (f && pop.hidden) { reveal(f.closest('.mk-row, .mk-field') || f, f); return; }
+      if (pop.hidden) openPop(); else closePop();
+    });
+    listen(document, 'click', function (e) { if (pop && !pop.hidden && !pop.contains(e.target) && e.target !== save) closePop(); });
+    pop.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); closePop(); save.focus(); } });
+    revertBtn.addEventListener('click', function () {
+      closePop();
+      confirmBox({ title: 'Put everything back as it was at ' + hhmm(openedAt) + '?', body: 'Every setting you changed during this visit returns to the value it had when you opened the page. Actions you ran are not undone.', ok: 'Put it back', icon: 'history', tone: 'warn' })
+        .then(function (ok) {
+          if (!ok) return;
+          /* plain keys go back at once; keys with a question (going live, locking accounts) still ask, one after another */
+          var chain = Promise.resolve();
+          allKeys().forEach(function (k) {
+            if (same(committed[k], opened[k]) && same(read(k), opened[k])) return;
+            var hook = o.confirm && o.confirm[k];
+            if (hook) chain = chain.then(function () { return Promise.resolve(hook(toServer(k, opened[k]), toServer(k, base(k)))).then(function (y) { if (y) { write(k, opened[k]); delete invalid[k]; queue(k, { undo: true }); } }); });
+            else { write(k, opened[k]); delete invalid[k]; queue(k, { undo: true }); }
+          });
+        });
+    });
+  }
+
+  /* ---------- toasts ---------- */
+  var toasts = el('div', 'mk-toasts'); toasts.setAttribute('aria-live', 'polite'); page.appendChild(toasts);
+  function dropToast(t) { if (t && t.parentNode) t.parentNode.removeChild(t); }
+  function toast(text, opt) {
+    opt = opt || {};
+    var t = el('div', 'mk-toast' + (opt.bad ? ' mk-toast--bad' : '')); t.setAttribute('role', opt.bad ? 'alert' : 'status');
+    t.appendChild(ic(opt.icon || (opt.bad ? 'error' : 'check_circle'))); t.appendChild(el('span', 'mk-toast__text', text));
+    if (opt.action) { var b = el('button', null, opt.action); b.type = 'button'; b.addEventListener('click', function () { dropToast(t); opt.onAction(); }); t.appendChild(b); }
+    if (opt.sticky) { var x = el('button'); x.type = 'button'; x.setAttribute('aria-label', 'Dismiss'); x.appendChild(ic('close', 'mk-ic--sm')); x.addEventListener('click', function () { dropToast(t); if (t === failToast) failToast = null; }); t.appendChild(x); }
+    /* at most three at a time; the oldest goes first, a failed-save notice stays */
+    var old = Array.prototype.filter.call(toasts.children, function (x) { return x !== failToast; });
+    while (old.length > 1 + (failToast ? 0 : 1)) dropToast(old.shift());
+    toasts.appendChild(t);
+    if (!opt.sticky) setTimeout(function () { dropToast(t); }, opt.timeout || (opt.action ? 8000 : 3800));
+    return t;
+  }
+
+  /* ---------- dialogs (native <dialog>, built fresh for every question) ---------- */
+  var openDialogs = [];
+  function dialog(d) {
+    return new Promise(function (resolve) {
+      /* the page was left while the question was on its way (a check or request still running): never open a modal on a
+         hidden page, it would block the whole web client; the dialog counts as cancelled */
+      if (away) { resolve(d.cancelValue === undefined ? null : d.cancelValue); return; }
+      var dlg = el('dialog', 'mk-dialog'), result = null, done = false;
+      var head = el('div', 'mk-dialog__head'), icw = el('div', 'mk-dialog__icon mk-dialog__icon--' + (d.tone || 'accent'));
+      icw.appendChild(ic(d.icon || 'help', 'mk-ic--lg')); head.appendChild(icw);
+      var title = el('h2', 'mk-dialog__title', d.title); title.id = page.id + '-dlg-' + Date.now(); head.appendChild(title);
+      dlg.setAttribute('aria-labelledby', title.id);
+      var body = el('div', 'mk-dialog__body');
+      if (d.body) (Array.isArray(d.body) ? d.body : [d.body]).forEach(function (p) { body.appendChild(typeof p === 'string' ? el('p', null, p) : p); });
+      if (d.node) body.appendChild(d.node);
+      var foot = el('div', 'mk-dialog__foot'), focusBtn = null;
+      (d.buttons || []).forEach(function (b) {
+        var x = btn(b.text, b.kind === 'primary' ? 'mk-btn--primary' : b.kind === 'danger' ? 'mk-btn--danger' : b.kind === 'ghost' ? 'mk-btn--ghost' : '', b.icon);
+        x.addEventListener('click', function () { finish(b.value); });
+        if (b.value === d.focus) focusBtn = x;
+        foot.appendChild(x);
+      });
+      dlg.appendChild(head); dlg.appendChild(body); dlg.appendChild(foot);
+      function finish(v) { if (done) return; done = true; result = v; openDialogs = openDialogs.filter(function (f) { return f !== cancel; }); if (dlg.open) dlg.close(); if (dlg.parentNode) dlg.parentNode.removeChild(dlg); resolve(v); }
+      /* leaving the page cancels the dialog, also a locked one */
+      function cancel() { finish(d.cancelValue === undefined ? null : d.cancelValue); }
+      openDialogs.push(cancel);
+      /* a locked dialog (a one-time password) cannot be closed by Esc or by anything but its own buttons */
+      dlg.addEventListener('cancel', function (e) { if (d.locked) e.preventDefault(); });
+      dlg.addEventListener('close', function () {
+        if (done) return;
+        if (d.locked && dlg.isConnected) { try { dlg.showModal(); } catch (e) { } return; }
+        finish(d.cancelValue === undefined ? null : d.cancelValue);
+      });
+      page.appendChild(dlg);
+      dlg.showModal();
+      if (d.onOpen) d.onOpen(dlg, finish);
+      (focusBtn || foot.firstChild || dlg).focus();
+    });
+  }
+  function confirmBox(c) {
+    var buttons = c.okOnly ? [] : [{ value: false, text: c.cancel || 'Cancel' }];
+    buttons.push({ value: true, text: c.ok || 'OK', kind: c.danger ? 'danger' : 'primary', icon: c.okIcon });
+    return dialog({ title: c.title, body: c.body, node: c.node, icon: c.icon, tone: c.tone, buttons: buttons, focus: c.okOnly || c.focusOk ? true : false, cancelValue: false })
+      .then(function (v) { return v === true; });
+  }
+
+  /* ---------- clipboard: works on plain http too (most home servers) ---------- */
+  function copy(text, what) {
+    return new Promise(function (resolve) {
+      function fallback() {
+        var ta = el('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.top = '-1000px'; ta.style.opacity = '0';
+        var host = $('dialog[open]') || page; host.appendChild(ta); ta.select();
+        var ok = false; try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+        host.removeChild(ta); resolve(ok);
+      }
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(function () { resolve(true); }, fallback);
+      else fallback();
+    }).then(function (ok) {
+      toast(ok ? (what || 'Text') + ' copied' : 'Could not copy. Select the text and press Ctrl+C.', ok ? { icon: 'content_copy' } : { bad: true });
+      return ok;
+    });
+  }
+
+  /* ---------- actions ---------- */
+  function busy(b, promise) {
+    b.disabled = true; b.classList.add('is-busy');
+    var i = $('.mk-ic', b), old = i && i.textContent; if (i) i.textContent = 'sync';
+    var end = function () { b.disabled = false; b.classList.remove('is-busy'); if (i) i.textContent = old; };
+    return Promise.resolve(promise).then(function (v) { end(); return v; }, function (e) { end(); throw e; });
+  }
+  /* resolves true once every waiting change is saved, false if a save failed (actions then refuse to run) */
+  function whenSaved() {
+    return new Promise(function (resolve) {
+      (function check() {
+        if (failed) return resolve(false);
+        if (flushTimer) flush();
+        if (!inFlight && !flushTimer && !count(pending)) return resolve(true);
+        setTimeout(check, 100);
+      })();
+    });
+  }
+  function logAction(text) { log.unshift({ action: true, text: text, t: new Date() }); renderLog(); }
+  function api(type, path, data, json) {
+    var req = { type: type, url: ApiClient.getUrl(path) };
+    if (json !== false) req.dataType = 'json';
+    if (data !== undefined) { req.data = JSON.stringify(data); req.contentType = 'application/json'; }
+    return ApiClient.ajax(req);
+  }
+
+  /* ---------- find a setting (optional: a .mk-find box on the page) ---------- */
+  var finder = $('.mk-find');
+  if (finder) {
+    var fin = $('.mk-find__input', finder), flist = el('ul', 'mk-find__list'); flist.hidden = true; flist.setAttribute('role', 'listbox'); finder.appendChild(flist);
+    fin.setAttribute('role', 'combobox'); fin.setAttribute('aria-expanded', 'false'); fin.setAttribute('autocomplete', 'off');
+    var hits = [], act = -1;
+    var index = function () {
+      return $$('.mk-row, .mk-field, [data-find]').filter(function (r) { return !r.closest('.mk-find') && !r.closest('.mk-dialog'); }).map(function (r) {
+        var l = $('.mk-row__label, .mk-field__label', r) || r, t = tabOf(r), key = $('[data-key]', r) || (r.hasAttribute('data-key') ? r : null);
+        var label = (r.getAttribute('data-find-label') || l.textContent || '').replace(/\s+/g, ' ').trim();
+        return { row: r, label: label, where: t ? t.textContent.replace(/\s*\d+\s*$/, '').trim() : '', text: (label + ' ' + (r.getAttribute('data-find') || '') + ' ' + (key ? key.getAttribute('data-key') : '')).toLowerCase(), ctl: key || $('input, select, textarea, button', r) };
+      }).filter(function (x) { return x.label; });
+    };
+    var pick = function (h) { flist.hidden = true; fin.setAttribute('aria-expanded', 'false'); fin.value = ''; reveal(h.row, h.ctl && !h.ctl.disabled ? h.ctl : null); };
+    var renderHits = function () {
+      flist.textContent = '';
+      if (!hits.length) { flist.appendChild(el('li', 'mk-find__none', 'No setting matches. Try another word.')); return; }
+      hits.forEach(function (h, i) {
+        var li = el('li'), b = el('button'); b.type = 'button'; b.setAttribute('role', 'option'); if (i === act) b.className = 'is-active';
+        b.appendChild(el('span', null, h.label)); if (h.where) b.appendChild(el('small', null, h.where));
+        b.addEventListener('mousedown', function (e) { e.preventDefault(); }); b.addEventListener('click', function () { pick(h); });
+        li.appendChild(b); flist.appendChild(li);
+      });
+    };
+    fin.addEventListener('input', function () {
+      var q = fin.value.trim().toLowerCase();
+      if (!q) { flist.hidden = true; fin.setAttribute('aria-expanded', 'false'); return; }
+      var words = q.split(/\s+/);
+      hits = index().filter(function (x) { return words.every(function (w) { return x.text.indexOf(w) >= 0; }); }).slice(0, 8);
+      act = hits.length ? 0 : -1; renderHits(); flist.hidden = false; fin.setAttribute('aria-expanded', 'true');
+    });
+    fin.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (!hits.length) return; act = (act + (e.key === 'ArrowDown' ? 1 : -1) + hits.length) % hits.length; renderHits(); }
+      else if (e.key === 'Enter') { e.preventDefault(); if (hits[act]) pick(hits[act]); }
+      else if (e.key === 'Escape') { e.stopPropagation(); fin.value = ''; flist.hidden = true; fin.setAttribute('aria-expanded', 'false'); }
+    });
+    fin.addEventListener('blur', function () { setTimeout(function () { flist.hidden = true; fin.setAttribute('aria-expanded', 'false'); }, 150); });
+  }
+
+  /* ---------- clean up when Jellyfin throws the view away ---------- */
+  page.addEventListener('viewdestroy', function () { disposers.forEach(function (d) { d(); }); disposers = []; });
+
+  setLoad('loading');
+
+  kit.$ = $; kit.$$ = $$; kit.byId = byId; kit.el = el; kit.ic = ic; kit.fill = fill; kit.btn = btn;
+  kit.hhmm = hhmm; kit.day = day; kit.dayTime = dayTime; kit.span = span; kit.plural = plural; kit.num = num; kit.param = param; kit.store = store;
+  kit.toast = toast; kit.dropToast = dropToast; kit.confirm = confirmBox; kit.dialog = dialog; kit.copy = copy;
+  kit.read = read; kit.write = write; kit.validate = validate; kit.rules = RULES; kit.label = labelOf; kit.show = show;
+  /* a copy for structured values, so a page can never change what the kit counts as saved */
+  kit.saved = function (k) { var v = cfg ? cfg[k] : undefined; return v !== null && typeof v === 'object' ? copyJson(v) : v; };
+  kit.value = function (k) { return toServer(k, read(k)); };
+  kit.config = function () { return cfg; };
+  kit.loaded = function () { return loaded; };
+  kit.reload = load;
+  /* undo a saved change from a custom toast (toastFor): asks the key's question like the kit's own Undo */
+  kit.undo = function (k, from, to) { undoIfCurrent(k, toDom(k, from), toDom(k, to)); };
+  kit.whenSaved = whenSaved; kit.flush = flush; kit.busy = busy; kit.logAction = logAction; kit.api = api;
+  kit.warn = function (k, text) { if (text) warns[k] = text; else delete warns[k]; restState(); };
+  kit.selectTab = function (name) { selectTab(tabByName(name)); };
+  kit.reveal = reveal; kit.rangeSync = rangeSync; kit.tagsSet = tagsSet;
+  kit.state = function () { return { loaded: loaded, failed: failed, invalid: count(invalid), pending: count(pending) + (inFlight ? 1 : 0) }; };
+  return kit;
+}
+/* MKI-KIT:JS END */
+var all = document.querySelectorAll('#MkiLoginShowcaseConfigPage'), page = all[all.length - 1];
+if (!page || page.getAttribute('data-mki-bound')) return;
+page.setAttribute('data-mki-bound', '1');
+
+var STYLES = { PosterWall: 'Poster Wall', Spotlight: 'Backdrop Spotlight', Horizon: 'Neon Horizon', Mosaic: 'Flip Mosaic' };
+var STYLE_DESC = {
+    PosterWall: 'Tilted columns of posters drifting up and down, with the sign-in card in the middle.',
+    Spotlight: 'One backdrop at a time, slowly zooming and fading to the next, with the sign-in card on the right.',
+    Horizon: 'Posters gliding along a neon horizon above a moving grid floor, with the sign-in card on the floor.',
+    Mosaic: 'A wall of posters where single tiles flip to new titles, with the sign-in form on the dark left side.'
+};
+var ACCENTS = { Mki: 'MKI neon', Jellyfin: 'Jellyfin', Sunset: 'Sunset', Lime: 'Lime' };
+var PICKS = { Random: 'a random mix', Recent: 'recently added titles', TopRated: 'top rated titles' };
+/* the rating limit after installing; raising it above this asks first */
+var SAFE_RATING = 12;
+var data = null, failedLoad = false, seq = 0;
+
+var kit = MkiKit(page, {
+    pluginId: 'f61ac908-2f39-419b-b7d3-302f7930455b',
+    /* the rating steps of the server's country, so the limit lists names people know (FSK 12, PG-13 …) */
+    preload: function () { return ApiClient.ajax({ type: 'GET', url: ApiClient.getUrl('Localization/ParentalRatings'), dataType: 'json' }).then(ratingOptions, function () { }); },
+    onLoad: function () { renderLibs(); render(); refresh(); },
+    onSaved: function () { render(); later(); },
+    onShow: function () { var st = kit.state(); if (st.loaded && (st.pending || st.invalid || st.failed)) refresh(); preview(); },
+    confirm: {
+        Enabled: confirmEnabled, LibraryIds: confirmLibs, MaxRating: confirmRating, IncludeUnrated: confirmUnrated,
+        Style: confirmPublic('Style'), ShowTitles: confirmPublic('ShowTitles'), ShowCounts: confirmPublic('ShowCounts'), NeonCard: confirmPublic('NeonCard')
+    },
+    quiet: {
+        Enabled: function (to) { return to === false; },
+        LibraryIds: function (to, from) { return !flaggedAdded(to, from).length; },
+        MaxRating: function (to, from) { return to <= from || to <= SAFE_RATING; },
+        IncludeUnrated: function (to) { return to === false; },
+        Style: function (to) { return !newlyPublic('Style', to); },
+        ShowTitles: function (to) { return !newlyPublic('ShowTitles', to); },
+        ShowCounts: function (to) { return !newlyPublic('ShowCounts', to); },
+        NeonCard: function (to) { return !newlyPublic('NeonCard', to); }
+    },
+    show: function (k, v) {
+        if (k === 'LibraryIds') return v && v.length ? libNames(v) : 'none';
+        if (k === 'MaxRating') return ratingText(v);
+        return null;
+    }
+});
+var $ = kit.$, $$ = kit.$$, el = kit.el, ic = kit.ic, fill = kit.fill;
+
+function saved(k) { return kit.saved(k); }
+function chip(kind, icon, text) { var c = el('span', 'mk-chip mk-chip--' + kind); if (icon) c.appendChild(ic(icon)); c.appendChild(el('span', null, text)); return c; }
+function norm(id) { return String(id || '').replace(/-/g, '').toLowerCase(); }
+function andList(list) { return list.length < 2 ? list.join('') : list.slice(0, -1).join(', ') + ' and ' + list[list.length - 1]; }
+function ratingText(v) { v = +v; return v <= 0 ? 'all ages only' : 'up to ' + v; }
+
+/* ---------- age rating steps ---------- */
+function ratingOptions(list) {
+    var by = {};
+    (list || []).forEach(function (r) {
+        var s = r && r.RatingScore && typeof r.RatingScore.score === 'number' ? r.RatingScore.score : (r && typeof r.Value === 'number' ? r.Value : null);
+        /* 1000 and above are adult-only ratings: never offered */
+        if (s == null || s < 0 || s > 21 || !r.Name || /^\d+$/.test(r.Name)) return;
+        var names = by[s] || (by[s] = []), key = r.Name.replace(/[^a-z0-9]/gi, '').toLowerCase();
+        if (!names.some(function (n) { return n.key === key; })) names.push({ key: key, name: r.Name });
+    });
+    var scores = Object.keys(by).map(Number);
+    if (!scores.length) return;
+    var sel = $('#lsRating');
+    sel.textContent = '';
+    /* all ages and the limit after installing are always offered, in their place */
+    [0, SAFE_RATING].forEach(function (s) { if (scores.indexOf(s) < 0) scores.push(s); });
+    scores.sort(function (a, b) { return a - b; });
+    scores.forEach(function (s) {
+        var names = (by[s] || []).slice(0, 3).map(function (n) { return n.name; });
+        var o = el('option', null, (s === 0 ? 'All ages only' : 'Up to ' + s) + (names.length ? ' · ' + names.join(', ') : ''));
+        o.value = String(s);
+        sel.appendChild(o);
+    });
+}
+
+/* ---------- libraries: the ticked ones are kept on #lsLibIds (data-type json) ---------- */
+function libs() { return (data && data.Libraries) || []; }
+function libById(id) { return libs().filter(function (l) { return norm(l.Id) === norm(id); })[0]; }
+function libNames(ids) {
+    var n = (ids || []).map(function (id) { var l = libById(id); return l ? l.Name : null; }).filter(Boolean);
+    var gone = (ids || []).length - n.length;
+    if (gone) n.push(kit.plural(gone, 'removed library', 'removed libraries'));
+    return andList(n);
+}
+function chosen() { return ($('#lsLibIds').mkValue || []).map(norm); }
+function flaggedAdded(to, from) {
+    var was = (from || []).map(norm);
+    return (to || []).map(norm).filter(function (id) { var l = libById(id); return was.indexOf(id) < 0 && l && l.Looks; }).map(libById);
+}
+function renderLibs() {
+    var box = $('#lsLibs'), on = chosen();
+    var f = document.activeElement, focusId = f && box.contains(f) ? f.getAttribute('data-id') : null;
+    box.textContent = '';
+    if (!data) {
+        var p = el('p', 'ls-empty'); p.appendChild(ic(failedLoad ? 'cloud_off' : 'hourglass_empty'));
+        p.appendChild(el('span', null, failedLoad ? 'Could not load the libraries. Check that the server is reachable, then reload the page.' : 'Loading the libraries…'));
+        box.appendChild(p); return;
+    }
+    if (!libs().length) {
+        var e = el('p', 'ls-empty'); e.appendChild(ic('video_library'));
+        e.appendChild(el('span', null, 'There is no movie, show or mixed library yet. Home videos, photos, music and books are never offered.'));
+        box.appendChild(e); return;
+    }
+    libs().forEach(function (l) {
+        var id = norm(l.Id), isOn = on.indexOf(id) >= 0;
+        var row = el('label', 'ls-lib' + (isOn ? ' is-on' : '') + (l.Looks ? ' is-flag' : ''));
+        var cb = el('input', 'mk-check'); cb.type = 'checkbox'; cb.checked = isOn; cb.setAttribute('data-id', id); cb.setAttribute('data-nosave', '');
+        cb.setAttribute('aria-label', l.Name + (l.Looks ? ' (looks like ' + (l.Looks === 'adult' ? 'an adult' : 'a kids') + ' library)' : ''));
+        var nm = el('span', 'ls-lib__name');
+        nm.appendChild(el('b', null, l.Name));
+        var kind = l.Type === 'movies' ? 'Movies' : l.Type === 'tvshows' ? 'Shows' : 'Mixed';
+        var unr = saved('IncludeUnrated') === true && kind !== 'Mixed';
+        nm.appendChild(el('small', null, kind + ' · ' + l.Shown + ' of ' + kit.plural(l.Titles, 'title') + (unr ? ' within the rating limit or without a rating' : ' within the rating limit') + ', with artwork' +
+            (kind === 'Mixed' ? '. Never titles without a rating: home videos land here as movies.' : '')));
+        row.appendChild(cb); row.appendChild(nm);
+        if (l.Looks === 'adult') row.appendChild(chip('bad', 'no_adult_content', 'Looks like adult content'));
+        else if (l.Looks === 'kids') row.appendChild(chip('warn', 'child_care', 'Looks like a kids library'));
+        box.appendChild(row);
+    });
+    if (focusId) $$('input[data-id]', box).forEach(function (x) { if (x.getAttribute('data-id') === focusId) x.focus(); });
+}
+$('#lsLibs').addEventListener('change', function (e) {
+    var cb = e.target; if (!cb || !cb.hasAttribute('data-id')) return;
+    e.stopPropagation();
+    var known = libs().map(function (l) { return norm(l.Id); });
+    /* ids of libraries that no longer exist are dropped with the next change, so a library made again later never
+       comes back on its own */
+    var next = $$('input[data-id]', $('#lsLibs')).filter(function (x) { return x.checked; }).map(function (x) { return x.getAttribute('data-id'); })
+        .filter(function (id) { return known.indexOf(id) >= 0; });
+    var holder = $('#lsLibIds');
+    holder.mkValue = next;
+    renderLibs();
+    holder.dispatchEvent(new Event('change', { bubbles: true }));
+});
+/* the kit put a value back (undo, a declined question, a reload) */
+$('#lsLibIds').addEventListener('mk-restored', function () { renderLibs(); render(); });
+
+/* ---------- questions before a change that shows more to people who are not signed in ---------- */
+function summary(c) {
+    var ids = c.LibraryIds || [];
+    return 'Artwork from ' + libNames(ids) + ', rated ' + ratingText(c.MaxRating) + (c.IncludeUnrated ? ', unrated titles included' : '') + '.';
+}
+function confirmEnabled(to) {
+    if (to !== true) return true;
+    var ids = kit.value('LibraryIds') || [];
+    if (!ids.length) {
+        return kit.confirm({ title: 'Pick the libraries first', icon: 'video_library', okOnly: true, ok: 'Show the libraries',
+            body: ['The sign-in page only shows artwork from libraries you tick, and none is ticked yet. Tick at least one under What visitors can see, then turn the showcase on.'] })
+            .then(function () { kit.reveal($('#lsLibRow')); return false; });
+    }
+    var c = { LibraryIds: ids, MaxRating: kit.value('MaxRating'), IncludeUnrated: kit.value('IncludeUnrated') };
+    var extra = [];
+    if (kit.value('ShowTitles') && kit.value('Style') === 'Spotlight' && kit.value('NeonCard')) extra.push('title names');
+    if (kit.value('ShowCounts') && kit.value('Style') === 'Mosaic') extra.push('how many movies and shows it may show');
+    return kit.confirm({ title: 'Show the showcase on the sign-in page?', icon: 'login', ok: 'Turn on', okIcon: 'check',
+        body: ['Everyone who opens your Jellyfin address sees it, before signing in.', summary(c) + (extra.length ? ' Also ' + andList(extra) + '.' : ' Pictures only, no titles.')] });
+}
+function confirmLibs(to, from) {
+    var add = flaggedAdded(to, from);
+    if (!add.length) return true;
+    var adult = add.filter(function (l) { return l.Looks === 'adult'; }).length > 0;
+    var names = add.map(function (l) { return l.Name; });
+    /* mixed libraries never give titles without a rating */
+    var unrated = kit.value('IncludeUnrated') ? add.filter(function (l) { return l.Type === 'movies' || l.Type === 'tvshows'; }).map(function (l) { return l.Name; }) : [];
+    if (!unrated.length) unrated = null;
+    return kit.confirm({ title: 'Show artwork from ' + andList(names) + '?', icon: adult ? 'no_adult_content' : 'child_care', tone: adult ? 'bad' : 'warn', danger: adult,
+        ok: 'Show it', okIcon: 'check',
+        body: [(names.length === 1 ? 'Its name suggests ' : 'Their names suggest ') + (adult ? 'adult content.' : 'a kids library, for example family videos.') +
+            ' Anyone who opens the sign-in page would see ' + (names.length === 1 ? 'its' : 'their') + ' artwork, within the age rating limit (' + ratingText(kit.value('MaxRating')) + ').' +
+            (unrated ? ' Titles without a rating are included, so every one of them in ' + andList(unrated) + ' would appear too, whatever its content.' : '')] });
+}
+function confirmRating(to, from) {
+    if (to <= from || to <= SAFE_RATING) return true;
+    return kit.confirm({ title: 'Allow titles rated up to ' + to + '?', icon: 'escalator_warning', tone: 'warn', ok: 'Allow up to ' + to,
+        body: ['Anyone can open the sign-in page, children included. Posters of titles rated up to ' + to + ' would appear there.'] });
+}
+/* title names and counts go public only after a question: when the showcase is on and a change of the style, the
+   card or the two switches starts sending them (names need the neon card: without it the page shows none) */
+function sendsNames(c) { return c.Enabled === true && c.ShowTitles === true && c.Style === 'Spotlight' && c.NeonCard === true; }
+function sendsCounts(c) { return c.Enabled === true && c.ShowCounts === true && c.Style === 'Mosaic'; }
+function newlyPublic(key, to) {
+    var before = {}, after = {};
+    ['Enabled', 'Style', 'ShowTitles', 'ShowCounts', 'NeonCard'].forEach(function (k) { before[k] = saved(k); after[k] = kit.value(k); });
+    after[key] = to;
+    return sendsNames(after) && !sendsNames(before) ? 'names' : sendsCounts(after) && !sendsCounts(before) ? 'counts' : null;
+}
+function confirmPublic(key) {
+    return function (to) {
+        var what = newlyPublic(key, to);
+        if (!what) return true;
+        var names = what === 'names', sw = names ? 'ShowTitles' : 'ShowCounts';
+        var buttons = [{ value: false, text: 'Cancel' }];
+        /* a new style or the card can also go ahead with the switch turned off */
+        if (key !== sw) buttons.push({ value: 'without', text: (key === 'Style' ? 'Use ' + (STYLES[to] || to) : 'Turn on the card') + ' without ' + (names ? 'names' : 'counts') });
+        buttons.push({ value: true, text: names ? 'Show names' : 'Show counts', kind: 'primary', icon: 'check' });
+        return kit.dialog({ title: names ? 'Show title names on the sign-in page?' : 'Show how many titles there are?', icon: names ? 'title' : 'numbers', tone: 'warn',
+            buttons: buttons, cancelValue: false,
+            body: [(names ? (key === 'NeonCard' ? 'With the neon sign-in card, ' : '') + 'Backdrop Spotlight would name each title it shows.' : 'Flip Mosaic would show how many movies and shows the sign-in page may show.') +
+                ' Anyone who opens your Jellyfin address can read ' + (names ? 'them' : 'the numbers') + ', before signing in.'] })
+            .then(function (v) {
+                if (v === 'without') {
+                    var x = $('[data-key="' + sw + '"]');
+                    x.checked = false;
+                    x.dispatchEvent(new Event('change', { bubbles: true }));
+                    return true;
+                }
+                return v === true;
+            });
+    };
+}
+function confirmUnrated(to) {
+    if (to !== true) return true;
+    var adult = (kit.value('LibraryIds') || []).map(libById).filter(function (l) { return l && l.Looks === 'adult'; }).map(function (l) { return l.Name; });
+    return kit.confirm({ title: 'Include titles without a rating?', icon: adult.length ? 'no_adult_content' : 'help_outline', tone: adult.length ? 'bad' : 'warn', danger: adult.length > 0, ok: 'Include them',
+        body: ['The age rating limit cannot check a title without a rating. Anything in the ticked libraries that has no rating would appear, for example home videos that were added as movies.' +
+            (adult.length ? ' ' + andList(adult) + (adult.length === 1 ? ' is ticked and its name suggests' : ' are ticked and their names suggest') + ' adult content, which often has no rating.' : '')] });
+}
+
+/* ---------- what the plugin has picked (the preview pictures) ---------- */
+function refresh() {
+    var my = ++seq, b = $('#lsShuffle');
+    return kit.api('GET', 'MkiLoginShowcase/Overview').then(function (o) {
+        if (my !== seq) return;
+        data = o; failedLoad = false;
+        renderLibs(); render();
+    }, function () {
+        if (my !== seq) return;
+        if (data) { kit.toast('Could not refresh the preview. It shows what was loaded before.', { bad: true, action: 'Retry', onAction: function () { refresh(); } }); return; }
+        failedLoad = true; renderLibs(); render();
+    }).then(function () { return b; });
+}
+/* after a save the server makes a new pick: fetch it once the save batch has settled */
+var laterTimer = null;
+function later() { clearTimeout(laterTimer); laterTimer = setTimeout(function () { kit.whenSaved().then(function (ok) { if (ok) refresh(); }); }, 400); }
+$('#lsShuffle').addEventListener('click', function () {
+    var b = this;
+    kit.busy(b, kit.whenSaved().then(function (ok) {
+        if (!ok) { kit.toast('Save the waiting changes first.', { bad: true }); return; }
+        return kit.api('POST', 'MkiLoginShowcase/Shuffle').then(function (o) {
+            ++seq; data = o; failedLoad = false; renderLibs(); render();
+            kit.toast('New titles picked. Open sign-in pages show them within a minute.', { icon: 'shuffle' });
+        }, function () { kit.toast('Could not pick new titles. Try again.', { bad: true }); });
+    }));
+});
+
+/* ---------- the preview ---------- */
+var client = null, ctrl = null, drawn = null, previewTimer = null, visible = true;
+/* how many users the sign-in page shows as tiles (Jellyfin's own setting per user), for the stand-in form */
+var publicUsers = 0;
+kit.api('GET', 'Users/Public').then(function (list) { publicUsers = Array.isArray(list) ? list.length : 0; preview(); }, function () { });
+function ensureClient() {
+    if (window.MkiLoginShowcase && window.MkiLoginShowcase.render) return Promise.resolve(true);
+    if (client) return client;
+    client = new Promise(function (resolve) {
+        var s = document.createElement('script');
+        s.src = ApiClient.getUrl('MkiLoginShowcase/login.js');
+        s.onload = function () { resolve(!!(window.MkiLoginShowcase && window.MkiLoginShowcase.render)); };
+        s.onerror = function () { client = null; resolve(false); };
+        document.head.appendChild(s);
+    });
+    return client;
+}
+function stopPreview() { if (ctrl) { ctrl.stop(); ctrl = null; } drawn = null; $('#lsHost').textContent = ''; }
+function message(icon, text) {
+    var m = $('#lsMsg');
+    m.hidden = !text;
+    if (text) { fill(m, [ic(icon), el('span', null, text)]); }
+}
+function preview() { clearTimeout(previewTimer); previewTimer = setTimeout(drawPreview, 120); }
+function drawPreview() {
+    if (!visible || !kit.loaded()) return;
+    var phone = $('#lsScreenPhone').checked;
+    $('#lsScreen').className = 'ls-screen ' + (phone ? 'is-phone' : 'is-desktop');
+    var on = saved('Enabled') === true, ribbon = $('#lsRibbon');
+    ribbon.hidden = on;
+    if (!on) fill(ribbon, [ic('visibility_off'), el('span', null, 'Off: visitors see Jellyfin\'s own sign-in page')]);
+    if (!data) { stopPreview(); message(failedLoad ? 'cloud_off' : 'hourglass_empty', failedLoad ? 'Could not load the current pick.' : 'Loading the preview…'); return; }
+    if (!(kit.value('LibraryIds') || []).length) { stopPreview(); message('video_library', 'Tick a library under What visitors can see. Nothing is shown before that.'); return; }
+    if (!data.Items || !data.Items.length) { stopPreview(); message('image_not_supported', 'No title in the ticked libraries passes the rating limit with artwork stored on the server.'); return; }
+    ensureClient().then(function (ok) {
+        if (!visible) return;
+        if (!ok) { stopPreview(); message('error_outline', 'Could not load the drawing code from the server. Reload the page.'); return; }
+        var style = kit.value('Style'), titles = kit.value('ShowTitles') && style === 'Spotlight' && kit.value('NeonCard'), counts = kit.value('ShowCounts') && style === 'Mosaic';
+        /* the style was just changed to one with the other kind of picture: the server makes a new pick once it is saved */
+        if (data.Style && (data.Style === 'Spotlight') !== (style === 'Spotlight')) {
+            stopPreview();
+            var name = STYLES[style] || style;
+            message('hourglass_empty', 'Picking ' + (style === 'Spotlight' ? 'backdrops' : 'posters') + ' for ' + name + '…');
+            kit.whenSaved().then(function (ok) { if (!ok && kit.value('Style') === style) message('cloud_off', 'Not saved yet: the preview follows once ' + name + ' is saved.'); });
+            return;
+        }
+        var items = data.Items, d = {
+            Style: style, Accent: kit.value('Accent'), Motion: kit.value('Motion'), Card: kit.value('NeonCard'),
+            Items: items.map(function (it) { return { P: !!it.PosterTag, B: !!it.BackdropTag, T: titles ? it.Name : null }; }),
+            Caption: titles ? ({ Recent: 'Recently added', TopRated: 'Top rated' })[saved('Pick')] || 'From the library' : null,
+            Movies: counts ? data.Movies : null, Series: counts ? data.Series : null
+        };
+        /* the same picture again (a save of what is already on screen): keep it running instead of starting over */
+        var sig = JSON.stringify([phone, data.Set, d, publicUsers]);
+        if (ctrl && sig === drawn) return;
+        stopPreview(); message(null, null);
+        drawn = sig;
+        ctrl = window.MkiLoginShowcase.render($('#lsHost'), d, {
+            mockCard: true,
+            users: publicUsers,
+            image: function (i, kind) {
+                var it = items[i] || {}, p = kind === 'p';
+                return ApiClient.getScaledImageUrl(it.Id, { type: p ? 'Primary' : 'Backdrop', maxWidth: p ? 240 : 960, tag: p ? it.PosterTag : it.BackdropTag, quality: 80 });
+            }
+        });
+    });
+}
+$$('input[name="lsScreen"]').forEach(function (r) { r.addEventListener('change', preview); });
+/* on a phone, the phone preview first */
+if (window.innerWidth < 640) $('#lsScreenPhone').checked = true;
+/* the look changes on screen at once, before it is saved */
+['Style', 'Accent', 'Motion', 'NeonCard', 'ShowTitles', 'ShowCounts'].forEach(function (k) {
+    $$('[data-key="' + k + '"]').forEach(function (x) { ['change', 'mk-restored'].forEach(function (ev) { x.addEventListener(ev, function () { preview(); renderLook(); }); }); });
+});
+/* a style put back after a question: focus follows the checked style, so arrow keys go on from there */
+$$('input[name="lsStyle"]').forEach(function (x) {
+    x.addEventListener('mk-restored', function () {
+        var a = document.activeElement, on = $('input[name="lsStyle"]:checked');
+        if (on && a && a.name === 'lsStyle' && a !== on) on.focus();
+    });
+});
+page.addEventListener('viewbeforehide', function () { visible = false; clearTimeout(previewTimer); clearTimeout(laterTimer); stopPreview(); });
+page.addEventListener('pageshow', function () { visible = true; });
+
+/* ---------- settings-driven parts (deck from the saved values) ---------- */
+var ACCENT_RGB = { Mki: ['0,229,255', '255,43,214'], Jellyfin: ['170,92,195', '0,164,220'], Sunset: ['255,228,92', '255,61,158'], Lime: ['182,255,59', '34,211,238'] };
+function reducedMotion() { try { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) { return false; } }
+function renderLook() {
+    var style = kit.value('Style');
+    /* the style pictures in the chosen colours */
+    var pair = ACCENT_RGB[kit.value('Accent')] || ACCENT_RGB.Mki, look = $('#lsLookCard');
+    look.style.setProperty('--ls-a1-rgb', pair[0]); look.style.setProperty('--ls-a2-rgb', pair[1]);
+    fill($('#lsStyleDesc'), STYLE_DESC[style] || '');
+    var card = kit.value('NeonCard') === true, titles = style === 'Spotlight' && card, counts = style === 'Mosaic';
+    $('#lsTitlesRow').classList.toggle('is-idle', !titles);
+    $('#lsCountsRow').classList.toggle('is-idle', !counts);
+    fill($('#lsTitlesDesc'), 'Backdrop Spotlight names each title on screen, on the neon sign-in card.' + (titles ? ' Off: pictures only.'
+        : style !== 'Spotlight' ? ' The chosen style shows no names, so none are sent either way.' : ' The card is off, so no names are shown or sent either way.'));
+    fill($('#lsCountsDesc'), 'Flip Mosaic shows how many movies and shows of the ticked libraries the sign-in page may show.' + (counts ? '' : ' The chosen style shows no counts, so none are sent either way.'));
+}
+function webProblem() {
+    var s = data && data.WebClient;
+    if (saved('Enabled') !== true || !s) return null;
+    if (s === 'missing') return 'Jellyfin\'s web client folder was not found, so the sign-in page cannot load the showcase.';
+    if (s === 'failed') return 'Jellyfin\'s web client could not be changed (often a read-only web folder), so the sign-in page cannot load the showcase.';
+    return null;
+}
+function sends() {
+    var list = $('#lsSends'); list.textContent = '';
+    var on = saved('Enabled') === true, style = saved('Style');
+    function item(kind, icon, text, small) {
+        var li = el('li', 'is-' + kind); li.appendChild(ic(icon));
+        var t = el('span', null, text); if (small) t.appendChild(el('small', null, small));
+        li.appendChild(t); list.appendChild(li);
+    }
+    if (!on) { item('ok', 'check_circle', 'Nothing. The showcase is off and the web client is left exactly as Jellyfin ships it.'); return; }
+    item('ok', 'image', 'Pictures only: ' + (style === 'Spotlight' ? 'the backdrops' : 'the posters') + ' the chosen style draws, redrawn by Jellyfin at screen size.', 'The showcase never sends original files, so no file details, camera or location data. Only artwork stored on your server.');
+    item('ok', 'link_off', 'No item ids, file paths or library names.', 'Pictures are asked for by their place in the current pick, which changes every hour.');
+    var ids = saved('LibraryIds') || [];
+    item(ids.length ? 'ok' : 'warn', 'video_library', ids.length ? 'Artwork from ' + libNames(ids) + ' only.' : 'Nothing yet: no library is ticked.');
+    item('ok', 'escalator_warning', 'Rated ' + ratingText(saved('MaxRating')) + '.', saved('IncludeUnrated') ? null : 'Titles without a rating are left out.');
+    if (saved('IncludeUnrated')) item('warn', 'help_outline', 'Titles without a rating are included.', 'The limit cannot check them. Mixed libraries never show titles without a rating.');
+    if (saved('ShowTitles') && style === 'Spotlight' && saved('NeonCard')) item('warn', 'title', 'Title names of the backdrops shown.');
+    else item('ok', 'title', 'No title names.');
+    if (saved('ShowCounts') && style === 'Mosaic') item('warn', 'numbers', 'How many movies and shows the sign-in page may show.');
+    else item('ok', 'numbers', 'No counts.');
+    item('ok', 'lock', 'Signing in works exactly as before.', 'The form, Quick Connect, Forgot Password and other plugins on the sign-in page are left alone.');
+    item('ok', 'devices', 'Shown in browsers and in apps built on Jellyfin\'s web client.', 'Apps with their own sign-in screen (for example Android TV, Swiftfin, Findroid or Roku) show that screen unchanged.');
+}
+function render() {
+    if (!kit.loaded()) return;
+    renderLook();
+    var on = saved('Enabled') === true, ids = saved('LibraryIds') || [], style = saved('Style');
+    var problem = webProblem();
+    fill($('#lsMasterState'), on ? (problem ? 'On, but not shown' : 'On') : 'Off');
+    fill($('#lsTileOn'), on ? (problem ? chip('warn', 'warning', 'Not shown') : chip('ok', 'check_circle', 'On')) : chip('plain', 'block', 'Off'));
+    fill($('#lsTileOnSub'), on ? (problem ? 'The web client could not be changed' : 'Visitors see it before signing in') : 'Jellyfin\'s own sign-in page');
+    fill($('#lsTileStyle'), STYLES[style] || style);
+    fill($('#lsTileStyleSub'), (ACCENTS[saved('Accent')] || '') + ' colours · ' + String(saved('Motion') || 'Normal').toLowerCase() + ' motion');
+    var flagged = ids.map(libById).filter(function (l) { return l && l.Looks; });
+    fill($('#lsTileLibs'), data ? [String(ids.filter(function (id) { return libById(id); }).length), el('small', null, ' of ' + libs().length)] : String(ids.length));
+    fill($('#lsTileLibsSub'), !ids.length ? 'None ticked: nothing is shown' : flagged.length ? [chip('warn', 'warning', 'Marked library ticked')] : libNames(ids));
+    var items = (data && data.Items) || [];
+    var posters = items.filter(function (x) { return x.PosterTag; }).length, backdrops = items.filter(function (x) { return x.BackdropTag; }).length;
+    fill($('#lsTilePick'), data ? kit.plural(items.length, 'title') : failedLoad ? '–' : '…');
+    var kinds = (posters ? kit.plural(posters, 'poster') : '') + (posters && backdrops ? ' · ' : '') + (backdrops ? kit.plural(backdrops, 'backdrop') : '');
+    fill($('#lsTilePickSub'), data ? (kinds || 'no pictures') + (data.NextPick && items.length ? ' · new at ' + kit.hhmm(new Date(data.NextPick)) : '') : '');
+
+    var bits = [el('b', null, 'Next: ')];
+    if (!data && !failedLoad) bits.push('loading…');
+    else if (!ids.length) bits.push('tick at least one library under What visitors can see. Nothing is shown before that.');
+    else if (data && !items.length) bits.push('no title in ' + libNames(ids) + ' is rated ' + ratingText(saved('MaxRating')) + ' with artwork stored on the server. Tick another library or change the limit.');
+    else if (!on) bits.push('check the preview, then turn the showcase on at the top. Until then visitors see Jellyfin\'s own sign-in page.');
+    else if (problem) bits.push(problem + ' Let Jellyfin write to its web folder, then turn the showcase off and on again.');
+    else bits.push('a new pick of ' + PICKS[saved('Pick')] + ' from ' + libNames(ids) + (data && data.NextPick ? ' at ' + kit.hhmm(new Date(data.NextPick)) : ' within the hour') + '. Until then visitors see the ' + (STYLES[style] || style) + ' with the titles in the preview below; New titles now picks again right away.');
+    fill($('#lsNext'), bits);
+
+    var note = $('#lsWebNote');
+    note.hidden = !problem;
+    note.className = 'mk-note mk-note--warn';
+    if (problem) fill($('#lsWebNoteT'), problem + ' Let Jellyfin write to its web folder, then turn the showcase off and on again.');
+    var cap = data && items.length ? 'Current pick: ' + kit.plural(items.length, 'title') + ' (' + kinds + '), picked ' + kit.dayTime(new Date(data.Built)) + '.' : '';
+    if (cap && (saved('Motion') === 'Still' || reducedMotion())) cap += saved('Motion') === 'Still' ? ' Motion is set to Still.' : ' This device asks for reduced motion, so the preview stands still here.';
+    fill($('#lsCap'), cap);
+    /* every title in the pick, with its rating, so it can be checked before anyone sees it */
+    var list = $('#lsTitlesList'), ol = $('#lsTitlesOl');
+    list.hidden = !(data && items.length);
+    fill($('#lsTitlesSum'), 'See the ' + kit.plural(items.length, 'title') + ' in the pick');
+    ol.textContent = '';
+    items.forEach(function (it) {
+        var li = el('li', null, it.Name || 'Untitled');
+        li.appendChild(el('small', null, (it.Year ? ' (' + it.Year + ')' : '') + ' · ' + (it.Rating || 'no rating')));
+        ol.appendChild(li);
+    });
+    sends();
+    preview();
+}
+})();
+</script>
+</div>
+</body>
+</html>

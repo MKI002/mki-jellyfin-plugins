@@ -53,6 +53,8 @@
         return {};
       });
     },
+    /* artwork comes from the mock's drawings (MkiDemo.image), since there is no library */
+    getScaledImageUrl: function (id, o) { return MkiDemo.image ? MkiDemo.image({ Id: id }, o && o.type, o && o.maxWidth) || '' : ''; },
     getScheduledTasks: function () { return ApiClient.ajax({ type: 'GET', url: 'api/ScheduledTasks', dataType: 'json' }); },
     ajax: function (req) {
       var u = splitUrl(req.url), type = String(req.type || 'GET').toUpperCase(), body;

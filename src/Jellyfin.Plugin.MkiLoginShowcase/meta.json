@@ -1,0 +1,11 @@
+{
+  "guid": "f61ac908-2f39-419b-b7d3-302f7930455b",
+  "name": "MKI Login Showcase",
+  "overview": "An animated showcase of your library's artwork behind the Jellyfin sign-in page, in four neon styles.",
+  "description": "Turns the Jellyfin sign-in page into a showcase of your own library: a drifting poster wall, a slowly zooming backdrop spotlight, a neon horizon with posters gliding along it, or a flip mosaic, with the sign-in form as a neon glass card. You choose which libraries it may show and the highest age rating; titles without a rating, title names and library counts stay hidden unless you turn them on. People who are not signed in only ever get the pictures, never item ids or library names. It respects reduced motion and has calm and still modes for TVs. Everything starts turned off; the sign-in page stays as Jellyfin ships it until an administrator turns the showcase on and picks libraries.",
+  "owner": "MKI",
+  "category": "General",
+  "targetAbi": "12.0.0.0",
+  "version": "1.0.0.0",
+  "changelog": "First release. An animated showcase of library artwork behind the sign-in page in four styles (Poster Wall, Backdrop Spotlight, Neon Horizon, Flip Mosaic) and four neon colour pairs, with the sign-in form as a glass card. You pick the libraries and the highest age rating; unrated titles, title names and library counts stay hidden unless you turn them on. Calm and still motion modes, and reduced motion is respected. Everything starts turned off."
+}
