@@ -91,14 +91,19 @@ public static class ScreenRules
 
 	// Picks the Full HD version to play instead of the default one, or says why it keeps the default.
 	// sources[0] is the version Jellyfin plays by default; audio and subtitle are the stream indexes the client
-	// asked for in that version. work tells how much work a version means for this player (null when unknown):
-	// a version that would need more work than the default one is never chosen.
+	// asked for in that version. work tells how much work a version means for this player, null when the player
+	// sent no device profile: then nothing is swapped, and a version that would need more work than the default one
+	// is never chosen.
 	public static VersionChoice Choose(IReadOnlyList<MediaSourceInfo> sources, int? audio, int? subtitle, Func<MediaSourceInfo, int?, int?, int>? work)
 	{
 		var from = sources[0];
 		if (!IsAboveFullHd(from.VideoStream))
 		{
 			return VersionChoice.Nothing;
+		}
+		if (work == null)
+		{
+			return VersionChoice.Keep("the player sent no device profile, so it is unknown whether it can play the Full HD version");
 		}
 		var candidates = sources.Skip(1)
 			.Where(s => PlainFile(s) && IsFullHd(s.VideoStream))
@@ -127,14 +132,11 @@ public static class ScreenRules
 				reason = "the Full HD version lacks the chosen subtitles";
 				continue;
 			}
-			if (work != null)
+			fromWork ??= work(from, audio, subtitle);
+			if (work(to, newAudio, newSubtitle) > fromWork.Value)
 			{
-				fromWork ??= work(from, audio, subtitle);
-				if (work(to, newAudio, newSubtitle) > fromWork.Value)
-				{
-					reason = "this player would need a transcode for the Full HD version (for example image subtitles or another codec)";
-					continue;
-				}
+				reason = "this player would need a transcode for the Full HD version (for example image subtitles, another codec or a higher bitrate)";
+				continue;
 			}
 			return new VersionChoice { From = from, To = to, Audio = newAudio, Subtitle = newSubtitle };
 		}
@@ -143,8 +145,9 @@ public static class ScreenRules
 
 	// After a swap, Jellyfin puts the Full HD version first because it was watched last. On a screen that is not
 	// Full HD that order only exists because of the plugin, so the item's own version (4K) is played again, with
-	// the same audio and subtitles. swapped tells whether the plugin played that Full HD version for this user.
-	public static VersionChoice Restore(IReadOnlyList<MediaSourceInfo> sources, string ownId, int? audio, int? subtitle, Func<string, bool> swapped)
+	// the same audio and subtitles. swapped tells whether the plugin played that Full HD version for this user; work
+	// (null when unknown) keeps the Full HD version when the 4K one would mean more work for this player.
+	public static VersionChoice Restore(IReadOnlyList<MediaSourceInfo> sources, string ownId, int? audio, int? subtitle, Func<string, bool> swapped, Func<MediaSourceInfo, int?, int?, int>? work)
 	{
 		var from = sources[0];
 		if (string.Equals(from.Id, ownId, StringComparison.OrdinalIgnoreCase) || !IsFullHd(from.VideoStream) || string.IsNullOrEmpty(from.Id) || !swapped(from.Id))
@@ -153,7 +156,8 @@ public static class ScreenRules
 		}
 		var to = sources.FirstOrDefault(s => string.Equals(s.Id, ownId, StringComparison.OrdinalIgnoreCase));
 		if (to == null || !PlainFile(to) || !IsAboveFullHd(to.VideoStream) || !SameLength(from, to)
-			|| !MapAudio(from, to, audio, out int? newAudio) || !MapSubtitle(from, to, subtitle, out int? newSubtitle))
+			|| !MapAudio(from, to, audio, out int? newAudio) || !MapSubtitle(from, to, subtitle, out int? newSubtitle)
+			|| (work != null && work(to, newAudio, newSubtitle) > work(from, audio, subtitle)))
 		{
 			return VersionChoice.Nothing;
 		}
@@ -161,7 +165,8 @@ public static class ScreenRules
 	}
 
 	// How much work Jellyfin's plan for a version means: played as it is, remuxed (container or audio), or the
-	// picture re-encoded (including burned-in subtitles).
+	// picture re-encoded (including burned-in subtitles, and a bitrate limit below the file's own bitrate, for
+	// which Jellyfin names no video reason).
 	public static int Work(StreamInfo? plan)
 	{
 		if (plan == null)
@@ -173,7 +178,24 @@ public static class ScreenRules
 			return PlayedAsIs;
 		}
 		bool burnIn = plan.SubtitleDeliveryMethod == SubtitleDeliveryMethod.Encode && plan.SubtitleStreamIndex >= 0;
-		return burnIn || (plan.PlayMethod == PlayMethod.Transcode && (plan.TranscodeReasons & VideoReasons) != 0) ? Reencoded : Remuxed;
+		if (burnIn || (plan.PlayMethod == PlayMethod.Transcode && (plan.TranscodeReasons & VideoReasons) != 0))
+		{
+			return Reencoded;
+		}
+		return plan.PlayMethod == PlayMethod.Transcode && ReencodesVideo(plan.MediaSource?.VideoStream, PlanUrl(plan)) ? Reencoded : Remuxed;
+	}
+
+	// The transcode URL Jellyfin would write for this plan: the values it later reads to decide whether to copy.
+	private static string? PlanUrl(StreamInfo plan)
+	{
+		try
+		{
+			return plan.ToUrl(null, null, null);
+		}
+		catch (Exception)
+		{
+			return null;
+		}
 	}
 
 	// A single video file that is there now: a missing file or a disc folder would fail where the default plays.
@@ -271,18 +293,32 @@ public static class ScreenRules
 	// may copy the video (EncodingHelper.CanStreamCopyVideo), from the transcode URL and the source. Where the URL
 	// leaves it open the answer is no: a size limit on a transcode that would copy the video forces a re-encode,
 	// which costs far more than it saves.
-	public static bool ReencodesVideo(MediaSourceInfo source)
+	public static bool ReencodesVideo(MediaSourceInfo source) =>
+		string.IsNullOrEmpty(source.LiveStreamId) && !source.RequiresOpening && ReencodesVideo(source.VideoStream, source.TranscodingUrl);
+
+	public static bool ReencodesVideo(MediaStream? video, string? url)
 	{
-		var video = source.VideoStream;
-		var query = Query(source.TranscodingUrl);
+		var query = Query(url);
 		if (video == null || query == null)
 		{
 			return false;
 		}
 		string codec = video.Codec ?? string.Empty;
-		string? Arg(string name) => query.FirstOrDefault(p => string.Equals(p.Key, name, StringComparison.OrdinalIgnoreCase)).Value;
-		// Codec options are read as Jellyfin reads them: "hevc-level", else "level".
-		string? Option(string name) => query.FirstOrDefault(p => p.Key == codec + "-" + name).Value ?? query.FirstOrDefault(p => p.Key == name).Value;
+		// A value given twice is read differently by different parts of Jellyfin: treated as not given.
+		string? Only(Func<string, bool> match)
+		{
+			var found = query.Where(p => match(p.Key)).Take(2).ToList();
+			return found.Count == 1 ? found[0].Value : null;
+		}
+		string? Arg(string name) => Only(k => string.Equals(k, name, StringComparison.OrdinalIgnoreCase));
+		// As Jellyfin reads them: the request's own value ("Level", in any case) first, then the codec option
+		// ("hevc-level"), then the plain option ("level").
+		string? Option(string top, string name) => Arg(top) ?? Only(k => k == codec + "-" + name) ?? Only(k => k == name);
+		// An opened stream (live TV, a tuner): Jellyfin may copy its video even without a known bitrate.
+		if (!string.IsNullOrEmpty(Arg("LiveStreamId")))
+		{
+			return false;
+		}
 		if (codec.Length == 0)
 		{
 			return true;
@@ -314,15 +350,15 @@ public static class ScreenRules
 		{
 			return true;
 		}
-		if ((Number(Option("videobitdepth")) is long depth && video.BitDepth > depth) || (Number(Option("maxrefframes")) is long refs && video.RefFrames > refs))
+		if ((Number(Option("MaxVideoBitDepth", "videobitdepth")) is long depth && video.BitDepth > depth) || (Number(Option("MaxRefFrames", "maxrefframes")) is long refs && video.RefFrames > refs))
 		{
 			return true;
 		}
-		if (double.TryParse(Option("level"), NumberStyles.Float, CultureInfo.InvariantCulture, out double level) && video.Level > level)
+		if (double.TryParse(Option("Level", "level"), NumberStyles.Float, CultureInfo.InvariantCulture, out double level) && video.Level > level)
 		{
 			return true;
 		}
-		var ranges = List(Arg("VideoRangeType") ?? Option("rangetype"));
+		var ranges = List(Option("VideoRangeType", "rangetype"));
 		if (ranges.Length > 0)
 		{
 			var range = video.VideoRangeType;

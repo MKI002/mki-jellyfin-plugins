@@ -6,7 +6,7 @@ A 4K movie started on a Full HD laptop makes Jellyfin do the most work for nothi
 
 ## Features
 
-- **Full HD version on Full HD screens.** When a movie has a 4K and a Full HD version (for example merged by [MKI Merge Versions](../Jellyfin.Plugin.MkiMergeVersions)) and someone starts it on a screen up to 1200 pixels tall (1080p and 1200p monitors, most laptops, phones), the Full HD file plays instead. 4K screens still get 4K.
+- **Full HD version on Full HD screens.** When a movie has a 4K and a Full HD version (for example merged by [MKI Merge Versions](../Jellyfin.Plugin.MkiMergeVersions)) and someone starts it on a screen up to 1200 pixels on its shorter side (1080p and 1200p monitors, most laptops, phones), the Full HD file plays instead. 4K screens still get 4K.
 - **Transcodes no larger than the screen.** When Jellyfin has to re-encode the video anyway, the plugin keeps the picture no larger than the screen (never below 1280×720). A 4K-to-4K transcode for a Full HD laptop becomes a 4K-to-1080p one, a quarter of the pixels to encode.
 - **Screens are measured, or set per device.** Browsers and the Jellyfin apps built on the web client (desktop, Android, iOS) report their screen size. TV apps such as Android TV, Fire TV or Swiftfin cannot, so the settings page lists every device with its screen and lets you mark one as a Full HD screen, or leave it alone.
 - **Recent decisions.** The settings page lists what the plugin did lately, and why it kept 4K where it did.
@@ -18,13 +18,13 @@ A 4K movie started on a Full HD laptop makes Jellyfin do the most work for nothi
 |---|---|
 | Bitrate limits (per user and for remote playback) and transcode throttling | The plugin never touches bitrate or throttling settings. |
 | Direct play and remuxing | The size limit applies only when Jellyfin re-encodes the video anyway (another codec, HDR to SDR, burned-in subtitles, a lower bitrate). A transcode that copies the video stays a copy. |
-| Work for the player | The Full HD version is used only when the player can take it with no more work than the 4K one. If only the Full HD file had image subtitles that would have to be burned in, or a codec the player cannot play, 4K stays. |
-| A version picked by hand | When someone picks a version that is not the default, it plays as picked. |
+| Work for the player | The Full HD version is used only when the player can take it with no more work than the 4K one, judged with the player's own device profile and the bitrate limit Jellyfin applies to it. If only the Full HD file had image subtitles that would have to be burned in, a codec the player cannot play, or a bitrate above the limit, 4K stays. A player that sends no device profile keeps 4K. |
+| A version picked by hand | When someone picks a version that is not the default, it plays as picked, and it stays their choice when they resume. |
 | Different cuts | Versions whose lengths differ by more than 15 seconds (theatrical, extended) are never swapped. |
 | Audio and subtitles | The Full HD version is used only when it has the chosen audio and subtitle language; otherwise 4K stays. |
-| Unknown screens | Without a trustworthy screen size nothing changes. TV browsers, which draw at 1080p even on a 4K panel, and browsers that hide the screen size for privacy count as unknown. |
+| Unknown screens | Without a trustworthy screen size the plugin plays no Full HD version and limits no transcode. TV browsers, which draw at 1080p even on a 4K panel, and browsers that hide the screen size for privacy count as unknown. The one thing it still does there is described below. |
 
-The resume position carries over between versions. Jellyfin offers the version that was watched last first; when that is the Full HD version only because the plugin played it on a laptop, every screen that is not a known Full HD screen gets the 4K version again, at the same spot.
+The resume position carries over between versions. Jellyfin offers the version that was watched last first; when that is the Full HD version only because the plugin played it on a laptop, every screen that is not a known Full HD screen (a 4K TV, or a screen the plugin does not know) gets the 4K version again, at the same spot. That is what Jellyfin would have offered without the plugin. It does not happen when the 4K version would mean more work for that player than the Full HD one, or when the Full HD part is turned off: then Jellyfin offers the version watched last, as it always does.
 
 ## Setup
 

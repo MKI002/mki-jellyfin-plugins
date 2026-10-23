@@ -15,6 +15,9 @@ public class SwapMemory : IDisposable
 {
 	public const int MaxEntries = 5000;
 
+	// Per user, so one account that plays many movies can never push out everyone else's.
+	public const int MaxPerUser = 1000;
+
 	// A movie is rarely resumed later than this.
 	public static readonly TimeSpan MaxAge = TimeSpan.FromDays(180);
 
@@ -28,10 +31,18 @@ public class SwapMemory : IDisposable
 	{
 		_file = new SavedFile(Path.Combine(paths.PluginConfigurationsPath, "MkiScreenFit", "swaps.json"), Snapshot, logger);
 		var oldest = DateTime.UtcNow - MaxAge;
-		_swaps = (_file.Load<List<SwapEntry>>() ?? new List<SwapEntry>())
+		var loaded = _file.Load<List<SwapEntry>>() ?? new List<SwapEntry>();
+		// The same limits as for new entries, so an older file cannot bring back more than they allow.
+		_swaps = loaded
 			.Where(s => s != null && !string.IsNullOrEmpty(s.SourceId) && s.At > oldest)
+			.GroupBy(s => Key(s.UserId, s.SourceId)).Select(g => g.OrderByDescending(s => s.At).First())
+			.GroupBy(s => s.UserId).SelectMany(g => g.OrderByDescending(s => s.At).Take(MaxPerUser))
 			.OrderByDescending(s => s.At).Take(MaxEntries)
-			.GroupBy(s => Key(s.UserId, s.SourceId)).ToDictionary(g => g.Key, g => g.First());
+			.ToDictionary(s => Key(s.UserId, s.SourceId));
+		if (_swaps.Count != loaded.Count)
+		{
+			_file.Changed();
+		}
 	}
 
 	public void Remember(Guid userId, string sourceId)
@@ -39,6 +50,14 @@ public class SwapMemory : IDisposable
 		lock (_lock)
 		{
 			_swaps[Key(userId, sourceId)] = new SwapEntry { UserId = userId, SourceId = sourceId, At = DateTime.UtcNow };
+			var own = _swaps.Where(s => s.Value.UserId == userId).ToList();
+			if (own.Count > MaxPerUser)
+			{
+				foreach (var gone in own.OrderBy(s => s.Value.At).Take(own.Count - MaxPerUser).Select(s => s.Key).ToList())
+				{
+					_swaps.Remove(gone);
+				}
+			}
 			if (_swaps.Count > MaxEntries)
 			{
 				foreach (var gone in _swaps.OrderBy(s => s.Value.At).Take(_swaps.Count - MaxEntries).Select(s => s.Key).ToList())
@@ -48,6 +67,20 @@ public class SwapMemory : IDisposable
 			}
 		}
 		_file.Changed();
+	}
+
+	// The user picked this version by hand on a screen that is not Full HD: from now on it is their own choice.
+	public void Forget(Guid userId, string sourceId)
+	{
+		bool removed;
+		lock (_lock)
+		{
+			removed = _swaps.Remove(Key(userId, sourceId));
+		}
+		if (removed)
+		{
+			_file.Changed();
+		}
 	}
 
 	// True when the plugin played this version for this user instead of the default.

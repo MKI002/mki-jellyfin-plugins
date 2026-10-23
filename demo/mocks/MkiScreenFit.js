@@ -35,7 +35,9 @@
     };
   });
   MkiDemo.route('POST', /^MkiScreenFit\/DeviceRule$/, function (r) {
-    var b = r.body || {};
+    var b = r.body || {}, now = rules.filter(function (x) { return x.DeviceId === b.DeviceId; }).map(function (x) { return x.Mode; })[0] || 'Auto';
+    /* an undo after a newer change made elsewhere is refused, as on a real server */
+    if (b.From && b.From !== now) throw MkiDemo.fail(412, 'This device\'s setting was changed elsewhere since.');
     rules = rules.filter(function (x) { return x.DeviceId !== b.DeviceId; });
     if (b.Mode !== 'Auto') rules.push({ DeviceId: b.DeviceId, Mode: b.Mode });
     return { DeviceRules: rules };

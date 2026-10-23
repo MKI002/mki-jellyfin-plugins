@@ -3,7 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Jellyfin.Database.Implementations.Entities;
 using Jellyfin.Plugin.MkiScreenFit.Configuration;
+using MediaBrowser.Common.Extensions;
+using MediaBrowser.Common.Net;
+using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Devices;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
@@ -12,6 +16,7 @@ using MediaBrowser.Controller.MediaEncoding;
 using MediaBrowser.Model.Dlna;
 using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.MediaInfo;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -46,9 +51,13 @@ public class PlaybackInfoFilter : IAsyncActionFilter
 
 	private readonly IDeviceManager _devices;
 
+	private readonly INetworkManager _network;
+
+	private readonly IServerConfigurationManager _server;
+
 	private readonly ILogger<PlaybackInfoFilter> _logger;
 
-	public PlaybackInfoFilter(ScreenStore screens, SwapMemory swaps, ActivityLog activity, IUserManager users, ILibraryManager library, IMediaSourceManager mediaSources, IMediaEncoder encoder, IDeviceManager devices, ILogger<PlaybackInfoFilter> logger)
+	public PlaybackInfoFilter(ScreenStore screens, SwapMemory swaps, ActivityLog activity, IUserManager users, ILibraryManager library, IMediaSourceManager mediaSources, IMediaEncoder encoder, IDeviceManager devices, INetworkManager network, IServerConfigurationManager server, ILogger<PlaybackInfoFilter> logger)
 	{
 		_screens = screens;
 		_swaps = swaps;
@@ -58,6 +67,8 @@ public class PlaybackInfoFilter : IAsyncActionFilter
 		_mediaSources = mediaSources;
 		_encoder = encoder;
 		_devices = devices;
+		_network = network;
+		_server = server;
 		_logger = logger;
 	}
 
@@ -157,7 +168,9 @@ public class PlaybackInfoFilter : IAsyncActionFilter
 		return plan.Known ? plan : null;
 	}
 
-	private (BaseItem Item, IReadOnlyList<MediaSourceInfo> Sources)? Versions(Plan plan, Request request)
+	// The item's versions, or null when there is only one. Picked is a version other than the default that was
+	// picked by hand: that choice stays.
+	private Found? Versions(Plan plan, Request request)
 	{
 		var user = _users.GetUserById(plan.UserId);
 		var item = user == null ? null : _library.GetItemById<BaseItem>(plan.ItemId, user);
@@ -169,22 +182,22 @@ public class PlaybackInfoFilter : IAsyncActionFilter
 		plan.UserName = user.Username;
 		// Only versions this user may see (library access, parental rating), as Jellyfin's own answer.
 		var sources = _mediaSources.GetStaticMediaSources(item, false, user);
-		// A version other than the default was picked by hand: that choice stays.
-		if (sources.Count < 2 || (!string.IsNullOrEmpty(request.MediaSourceId) && !string.Equals(request.MediaSourceId, sources[0].Id, StringComparison.OrdinalIgnoreCase)))
+		if (sources.Count < 2)
 		{
 			return null;
 		}
-		return (item, sources);
+		string? picked = !string.IsNullOrEmpty(request.MediaSourceId) && !string.Equals(request.MediaSourceId, sources[0].Id, StringComparison.OrdinalIgnoreCase) ? request.MediaSourceId : null;
+		return new Found(user, item, sources, picked);
 	}
 
 	private void SwapVersion(ActionExecutingContext context, Plan plan, Request request)
 	{
-		if (Versions(plan, request) is not { } found)
+		if (Versions(plan, request) is not { Picked: null } found)
 		{
 			return;
 		}
 		var sources = found.Sources;
-		var choice = ScreenRules.Choose(sources, request.Audio, request.Subtitle, WorkFor(plan, request));
+		var choice = ScreenRules.Choose(sources, request.Audio, request.Subtitle, WorkFor(context.HttpContext, plan, request, found.User));
 		if (choice.To != null)
 		{
 			Apply(context.ActionArguments, choice, request);
@@ -214,9 +227,15 @@ public class PlaybackInfoFilter : IAsyncActionFilter
 		{
 			return;
 		}
+		if (found.Picked != null)
+		{
+			// Picked by hand on this screen: from now on that version is the user's own choice, not the plugin's.
+			_swaps.Forget(plan.UserId, found.Picked);
+			return;
+		}
 		// The default version is the primary one, also when Continue Watching opens the Full HD version directly.
 		var primary = found.Item is Video { PrimaryVersionId: { } id } ? id : found.Item.Id;
-		var choice = ScreenRules.Restore(found.Sources, primary.ToString("N"), request.Audio, request.Subtitle, sourceId => _swaps.Played(plan.UserId, sourceId));
+		var choice = ScreenRules.Restore(found.Sources, primary.ToString("N"), request.Audio, request.Subtitle, sourceId => _swaps.Played(plan.UserId, sourceId), WorkFor(context.HttpContext, plan, request, found.User));
 		if (choice.To == null)
 		{
 			return;
@@ -247,13 +266,14 @@ public class PlaybackInfoFilter : IAsyncActionFilter
 
 	// How much work a version means for this player, worked out the way Jellyfin plans playback for it, or null
 	// when the player sent no device profile.
-	private Func<MediaSourceInfo, int?, int?, int>? WorkFor(Plan plan, Request request)
+	private Func<MediaSourceInfo, int?, int?, int>? WorkFor(HttpContext http, Plan plan, Request request, User user)
 	{
 		var profile = request.Profile ?? _devices.GetCapabilities(plan.DeviceId)?.DeviceProfile;
 		if (profile == null)
 		{
 			return null;
 		}
+		int? maxBitrate = MaxBitrate(http, request.MaxBitrate ?? profile.MaxStreamingBitrate, user);
 		var builder = new StreamBuilder(_encoder, NullLogger.Instance);
 		return (source, audio, subtitle) => ScreenRules.Work(builder.GetOptimalVideoStream(new MediaOptions
 		{
@@ -266,7 +286,7 @@ public class PlaybackInfoFilter : IAsyncActionFilter
 			AudioStreamIndex = audio,
 			SubtitleStreamIndex = subtitle,
 			MaxAudioChannels = request.MaxAudioChannels,
-			MaxBitrate = request.MaxBitrate ?? profile.MaxStreamingBitrate,
+			MaxBitrate = maxBitrate,
 			EnableDirectPlay = request.EnableDirectPlay,
 			// As in Jellyfin: direct streaming over plain HTTP is not offered.
 			EnableDirectStream = false,
@@ -274,6 +294,22 @@ public class PlaybackInfoFilter : IAsyncActionFilter
 			AllowVideoStreamCopy = request.AllowVideoCopy,
 			AlwaysBurnInSubtitleWhenTranscoding = request.AlwaysBurnIn
 		}));
+	}
+
+	// The bitrate limit Jellyfin plans with (MediaInfoHelper.GetMaxBitrate): the player's own, lowered for players
+	// outside the local network to the user's or the server's limit for remote clients. Only read, never changed.
+	private int? MaxBitrate(HttpContext http, int? requested, User user)
+	{
+		int remote = user.RemoteClientBitrateLimit ?? 0;
+		if (remote <= 0)
+		{
+			remote = _server.Configuration.RemoteClientBitrateLimit;
+		}
+		if (remote > 0 && http.GetNormalizedRemoteIP() is { } ip && !_network.IsInLocalNetwork(ip))
+		{
+			return Math.Min(requested ?? remote, remote);
+		}
+		return requested;
 	}
 
 	private void After(ActionExecutedContext executed, Plan plan)
@@ -291,12 +327,18 @@ public class PlaybackInfoFilter : IAsyncActionFilter
 			}
 			int maxWidth = Math.Max(ScreenRules.MinLimitWidth, plan.Width);
 			int maxHeight = Math.Max(ScreenRules.MinLimitHeight, plan.Height);
+			// The picture as shown: Jellyfin turns a video stored on its side before it scales it.
+			int width = video.Width ?? 0, height = video.Height ?? 0;
+			if (Math.Abs(video.Rotation ?? 0) % 180 == 90)
+			{
+				(width, height) = (height, width);
+			}
 			// The screen turns with the picture: a portrait video is held against the screen's long side.
-			if ((video.Height ?? 0) > (video.Width ?? 0))
+			if (height > width)
 			{
 				(maxWidth, maxHeight) = (maxHeight, maxWidth);
 			}
-			if (((video.Width ?? 0) <= maxWidth && (video.Height ?? 0) <= maxHeight) || !ScreenRules.ReencodesVideo(source))
+			if ((width <= maxWidth && height <= maxHeight) || !ScreenRules.ReencodesVideo(source))
 			{
 				continue;
 			}
@@ -342,6 +384,8 @@ public class PlaybackInfoFilter : IAsyncActionFilter
 	}
 
 	private static string NameOf(BaseItem item) => item is Episode e && !string.IsNullOrEmpty(e.SeriesName) ? e.SeriesName + " · " + e.Name : item.Name ?? string.Empty;
+
+	private sealed record Found(User User, BaseItem Item, IReadOnlyList<MediaSourceInfo> Sources, string? Picked);
 
 	private sealed class Plan
 	{

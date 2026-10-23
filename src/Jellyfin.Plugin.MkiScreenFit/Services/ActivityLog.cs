@@ -36,12 +36,13 @@ public class ActivityLog
 		lock (_lock)
 		{
 			var now = DateTime.UtcNow;
+			// Stored ids are cut, so the new one is cut before it is compared.
+			d.DeviceId = Cut(d.DeviceId);
 			if (_entries.Any(e => e.Kind == d.Kind && e.UserId == d.UserId && e.DeviceId == d.DeviceId && e.ItemId == d.ItemId && now - e.At < Repeat))
 			{
 				return false;
 			}
 			d.At = now;
-			d.DeviceId = Cut(d.DeviceId);
 			d.DeviceName = Cut(d.DeviceName);
 			d.Client = Cut(d.Client);
 			d.UserName = Cut(d.UserName);

@@ -1,5 +1,5 @@
 {
-  "_comment": "Every endpoint anyone can call without signing in, every request middleware (IStartupFilter) and every MVC filter that wraps Jellyfin's own API actions. build/checks.py fails when one is added or removed without updating this list. Add an entry only after the security review in RELEASING.md step 3. All entries below were reviewed in the October 2026 audit (PR #15).",
+  "_comment": "Every endpoint anyone can call without signing in, every request middleware (IStartupFilter) and every MVC filter or convention that wraps Jellyfin's own API actions, and every place that adds one to MVC. build/checks.py fails when one is added or removed without updating this list. Add an entry only after the security review in RELEASING.md step 3. All entries below were reviewed in the October 2026 audit (PR #15).",
   "anonymousEndpoints": [
     "src/Jellyfin.Plugin.MediaHero/Api/MediaHeroController.cs::GetScript",
     "src/Jellyfin.Plugin.MediaHero/Api/MediaHeroController.cs::GetStyle",
@@ -22,5 +22,9 @@
   ],
   "mvcFilters": [
     "src/Jellyfin.Plugin.MkiScreenFit/Services/PlaybackInfoFilter.cs::PlaybackInfoFilter"
+  ],
+  "mvcSetup": [
+    "src/Jellyfin.Plugin.MkiScreenFit/PluginServiceRegistrator.cs::Configure<MvcOptions>",
+    "src/Jellyfin.Plugin.MkiScreenFit/PluginServiceRegistrator.cs::Filters.AddService<PlaybackInfoFilter>"
   ]
 }

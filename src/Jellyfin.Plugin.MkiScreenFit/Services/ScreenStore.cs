@@ -32,10 +32,18 @@ public class ScreenStore : IDisposable
 	{
 		_file = new SavedFile(Path.Combine(paths.PluginConfigurationsPath, "MkiScreenFit", "screens.json"), Snapshot, logger);
 		var oldest = DateTime.UtcNow - MaxAge;
-		_reports = (_file.Load<List<ScreenReport>>() ?? new List<ScreenReport>())
+		var loaded = _file.Load<List<ScreenReport>>() ?? new List<ScreenReport>();
+		// The same limits as for new reports, so an older file cannot bring back more than they allow.
+		_reports = loaded
 			.Where(r => r != null && !string.IsNullOrEmpty(r.DeviceId) && ScreenRules.ValidSize(r.Width, r.Height) && r.At > oldest)
+			.GroupBy(r => Key(r.UserId, r.DeviceId)).Select(g => g.OrderByDescending(r => r.At).First())
+			.GroupBy(r => r.UserId).SelectMany(g => g.OrderByDescending(r => r.At).Take(MaxPerUser))
 			.OrderByDescending(r => r.At).Take(MaxEntries)
-			.GroupBy(r => Key(r.UserId, r.DeviceId)).ToDictionary(g => g.Key, g => g.First());
+			.ToDictionary(r => Key(r.UserId, r.DeviceId));
+		if (_reports.Count != loaded.Count)
+		{
+			_file.Changed();
+		}
 	}
 
 	public void Report(Guid userId, string deviceId, int width, int height, bool reliable)
@@ -90,11 +98,13 @@ public class ScreenStore : IDisposable
 		}
 	}
 
+	// Reports that still count; older ones are dropped from the file at the next save.
 	public List<ScreenReport> All()
 	{
 		lock (_lock)
 		{
-			return _reports.Values.Select(r => r.Copy()).ToList();
+			var oldest = DateTime.UtcNow - MaxAge;
+			return _reports.Values.Where(r => r.At > oldest).Select(r => r.Copy()).ToList();
 		}
 	}
 

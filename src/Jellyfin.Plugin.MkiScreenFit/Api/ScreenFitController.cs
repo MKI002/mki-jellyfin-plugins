@@ -152,11 +152,19 @@ public class ScreenFitController : ControllerBase
 	public ActionResult SetDeviceRule([FromBody] DeviceRuleRequest request)
 	{
 		Private();
-		if (request == null || string.IsNullOrEmpty(request.DeviceId) || request.DeviceId.Length > 256 || !Enum.IsDefined(request.Mode))
+		if (request == null || request.Mode is not { } mode || !Enum.IsDefined(mode) || (request.From is { } from && !Enum.IsDefined(from)))
 		{
 			return Error(StatusCodes.Status400BadRequest, "Not a device setting.");
 		}
-		var rules = Plugin.SetRule(request.DeviceId, request.Mode);
+		if (!Plugin.UsableDeviceId(request.DeviceId))
+		{
+			return Error(StatusCodes.Status400BadRequest, "This device's id cannot be kept in a setting.");
+		}
+		var rules = Plugin.SetRule(request.DeviceId, mode, request.From, out bool stale);
+		if (stale)
+		{
+			return StatusCode(StatusCodes.Status412PreconditionFailed, new { Message = "This device's setting was changed elsewhere since.", DeviceRules = rules });
+		}
 		if (rules == null)
 		{
 			return Error(StatusCodes.Status409Conflict, "Too many device settings.");
@@ -179,7 +187,11 @@ public class DeviceRuleRequest
 {
 	public string DeviceId { get; set; } = string.Empty;
 
-	public DeviceMode Mode { get; set; }
+	// Required: a request without it must not remove a setting.
+	public DeviceMode? Mode { get; set; }
+
+	// For an undo: the mode the device must still have, so a newer change made elsewhere is not overwritten.
+	public DeviceMode? From { get; set; }
 }
 
 public class ScreenRequest
