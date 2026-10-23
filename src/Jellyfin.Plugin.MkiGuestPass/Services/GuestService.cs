@@ -458,7 +458,7 @@ public class GuestService
 				var p = d.Pass(passId) ?? throw new GuestError(404, "That pass does not exist any more.");
 				if (p.RemoteAccess != from)
 				{
-					throw new GuestError(409, "Where this pass works was changed in the meantime. Nothing was changed; look again.");
+					throw new GuestError(409, "Where this pass works was changed in the meantime. Look again.");
 				}
 				p.RemoteAccess = remote;
 				return (p.Name, p.Guests.Select(g => g.UserId).ToList());

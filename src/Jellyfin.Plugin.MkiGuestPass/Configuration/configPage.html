@@ -1933,7 +1933,7 @@ function quote(t) { return '“' + t + '”'; }
 function later(fn, ms) { return setTimeout(fn, ms); }
 /* the server's own message for a refused action, or a plain fallback */
 function why(e, fallback) {
-    function both(m) { m = m ? String(m).trim() : ''; return !m || m === fallback ? fallback : fallback + ' ' + m; }
+    function both(m) { m = m ? String(m).trim() : ''; return !m || m === fallback ? fallback : m.indexOf(fallback.replace(/\.$/, '')) >= 0 ? m : fallback + ' ' + m; }
     if (e && typeof e.json === 'function') return e.json().then(function (b) { return both(b && b.Message); }, function () { return fallback; });
     /* a refusal that already carries its text (an HTTP status and a message) */
     return Promise.resolve(both(e && typeof e.status === 'number' && e.status >= 400 && typeof e.message === 'string' ? e.message : ''));
@@ -1944,7 +1944,13 @@ var acting = {};
 function oneAtATime(id, run) {
     if (acting[id]) return;
     acting[id] = true;
-    var done = function () { delete acting[id]; };
+    /* the card is drawn again while the question is open: whatever the answer, focus is not left on the page body */
+    var a = document.activeElement, key = a && a.getAttribute ? a.getAttribute('data-focus') : null;
+    var done = function () {
+        delete acting[id];
+        var now = document.activeElement;
+        if (key && (!now || now === document.body || !now.isConnected)) focusAfter(key, id);
+    };
     Promise.resolve().then(run).then(done, done);
 }
 function passOf(id) { return ov && ov.Passes.filter(function (p) { return p.Id === id; })[0]; }

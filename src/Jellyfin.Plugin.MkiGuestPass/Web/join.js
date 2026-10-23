@@ -19,6 +19,8 @@
     var token = null, code = null, peek = null, me = null;
     /* the kept guest whose Continue was just refused: Try again asks for them again */
     var again = null;
+    /* the screen a Try again started from, so the same answer again says it checked */
+    var retried = null;
 
     /* ---------- small helpers ---------- */
     function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
@@ -42,7 +44,8 @@
         p.setAttribute('fill', 'currentColor'); p.setAttribute('d', ICONS[name]); s.appendChild(p);
         return s;
     }
-    function clear() { while (view.firstChild) view.removeChild(view.firstChild); }
+    function clear() { while (view.firstChild) view.removeChild(view.firstChild); view.removeAttribute('data-screen'); }
+    function checkedNote() { var c = el('p', 'hint', 'Checked again at ' + new Date().toLocaleTimeString(EN, { hour: '2-digit', minute: '2-digit' }) + ': nothing has changed yet.'); c.setAttribute('role', 'status'); return c; }
     function big(name, ok) { var b = el('div', 'big' + (ok ? ' ok' : '')); b.appendChild(icon(name, 28)); return b; }
     /* "today 16:00", "tomorrow 16:00", else "Fri, 23 Oct, 16:00", in this device's time zone */
     function when(iso) {
@@ -248,7 +251,7 @@
     function retryable(reason, status) { return reason === 'paused' || reason === 'home' || reason === 'update' || (reason === 'ended' && !!(token || code || again)) || (!reason && (status === 0 || status === 429 || status >= 500)); }
     /* asks the server again for the link or code in use; without one, back to the guests kept here or code entry */
     function tryAgain(b) {
-        if (b) { if (b.disabled) return; busy(b, true, 'Checking…'); }
+        if (b) { if (b.disabled) return; busy(b, true, 'Checking…'); retried = view.getAttribute('data-screen'); }
         if (!token && !code) {
             if (again) { rejoin(again).then(null, function (e) { if (!retryable(e.reason, e.status)) again = null; problem(e.message, null, e.reason || 'ended', e.status); }); return; }
             if (kept().length) backScreen(null); else codeScreen();
@@ -269,7 +272,9 @@
         var ul = el('ul'), a = el('li'), b = el('li');
         a.appendChild(el('b', null, 'At ' + whose + ' home? ')); a.appendChild(document.createTextNode('Connect this device to the Wi-Fi there, not mobile data, then tap Try again.'));
         b.appendChild(el('b', null, 'Somewhere else? ')); b.appendChild(document.createTextNode('Ask ' + host() + ' to allow this pass from anywhere, then tap Try again. The link stays the same.'));
-        ul.appendChild(a); ul.appendChild(b); box.appendChild(ul);
+        var c = el('li');
+        c.appendChild(el('b', null, 'On that Wi-Fi and still refused? ')); c.appendChild(document.createTextNode('Then Jellyfin does not count it as home: ask ' + host() + ' to allow this pass from anywhere.'));
+        ul.appendChild(a); ul.appendChild(b); ul.appendChild(c); box.appendChild(ul);
         box.appendChild(retryButton());
         return box;
     }
@@ -281,11 +286,15 @@
         /* codes are refused just the same while a plugin needs an update */
         if (reason === 'update') after = 'nocode';
         foot(false);
+        var screen = (reason || 'error') + ':' + (status || 0), same = retried === screen;
+        retried = null;
         clear();
+        view.setAttribute('data-screen', screen);
         view.appendChild(big(kind[0]));
         view.appendChild(heading(kind[1]));
         /* the home network box says it all, in the guest's words */
         if (reason !== 'home') view.appendChild(el('p', 'lede', text));
+        if (same) view.appendChild(checkedNote());
         var next = nextStep(reason, status);
         if (reason === 'home') view.appendChild(homeHelp(false));
         else {
@@ -361,7 +370,13 @@
         if (p.PlacesLeft <= 0) { problem(p.MaxGuests === 1 ? 'This guest pass has already been used.' : 'All ' + p.MaxGuests + ' places on this guest pass are taken.', null, 'full'); return; }
         if (p.NeedsUpdate) { problem('A plugin on this server needs an update before guests can join.', null, 'update'); return; }
         /* what to do comes first, in view on a phone; the facts below say what the pass is */
-        if (blocked) view.appendChild(homeHelp(true));
+        if (blocked) {
+            var same = retried === 'home:invite';
+            view.setAttribute('data-screen', 'home:invite');
+            if (same) view.appendChild(checkedNote());
+            view.appendChild(homeHelp(true));
+        }
+        retried = null;
         var facts = el('ul', 'facts');
         facts.appendChild(fact('clock', 'Access until', cap(when(p.EndUtc)), left(p.EndUtc) === 'ended' ? null : 'Ends ' + left(p.EndUtc) + ', on its own'));
         facts.appendChild(fact('film', 'Libraries', (p.Libraries || []).join(', ') || 'None'));
@@ -409,7 +424,8 @@
                 inp.disabled = false; shc.disabled = false; busy(b, false, 'Start watching');
                 if (e.reason === 'ended' || e.reason === 'full' || e.reason === 'home' || e.reason === 'update' || e.status === 410) { problem(e.message, null, e.reason || 'ended', e.status); return; }
                 msg.textContent = ''; msg.appendChild(error(e.message));
-                if (e.status === 400) { inp.setAttribute('aria-invalid', 'true'); inp.focus(); }
+                if (e.status === 400) inp.setAttribute('aria-invalid', 'true');
+                inp.focus();
             });
         }
         b.addEventListener('click', go);
