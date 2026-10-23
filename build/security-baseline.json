@@ -8,6 +8,7 @@
     "src/Jellyfin.Plugin.MkiPasswordPolicy/Api/PasswordPolicyController.cs::ChangeRules",
     "src/Jellyfin.Plugin.MkiPasswordPolicy/Api/PasswordPolicyController.cs::GetChangePage",
     "src/Jellyfin.Plugin.MkiPasswordPolicy/Api/PasswordPolicyController.cs::GetScript",
+    "src/Jellyfin.Plugin.MkiScreenFit/Api/ScreenFitController.cs::GetScript",
     "src/Jellyfin.Plugin.SeerrBridge/Api/SeerrBridgeController.cs::GetScript",
     "src/Jellyfin.Plugin.SeerrBridge/Api/SeerrBridgeController.cs::GetStyle",
     "src/Jellyfin.Plugin.SeerrBridge/Api/SeerrBridgeController.cs::Repository",

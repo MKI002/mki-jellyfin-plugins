@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>Jellyfin.Plugin.MkiScreenFit</AssemblyName>
+    <RootNamespace>Jellyfin.Plugin.MkiScreenFit</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Jellyfin.Controller" Version="12.2.0" ExcludeAssets="runtime" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Configuration/configPage.html" LogicalName="Jellyfin.Plugin.MkiScreenFit.Configuration.configPage.html" />
+    <EmbeddedResource Include="Web/client.js" LogicalName="Jellyfin.Plugin.MkiScreenFit.Web.client.js" />
+  </ItemGroup>
+</Project>

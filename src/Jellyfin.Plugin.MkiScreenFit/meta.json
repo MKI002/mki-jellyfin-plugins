@@ -1,0 +1,11 @@
+{
+  "guid": "10b53a4f-258a-459a-962b-2e29418e0775",
+  "name": "MKI Screen Fit",
+  "overview": "Full HD screens play the Full HD version, and transcodes stay no larger than the screen.",
+  "description": "When a movie has a 4K and a Full HD version (for example merged by MKI Merge Versions) and someone starts it on a screen that cannot show more than Full HD, the Full HD file plays instead: no transcode of a 4K file for a laptop. Only when both versions are the same cut and the Full HD one has the chosen audio and subtitle language, and never when someone picked a version by hand. Optionally, a transcode that has to re-encode the video anyway (unsupported codec or HDR, burned-in subtitles, a bitrate limit) is kept no larger than the screen. Browsers and the Jellyfin apps built on the web client measure their screen; for TV apps you choose per device. Bitrate limits, transcode throttling, direct play and remuxing stay exactly as Jellyfin decides. Everything starts turned off.",
+  "owner": "MKI",
+  "category": "General",
+  "targetAbi": "12.0.0.0",
+  "version": "1.0.0.0",
+  "changelog": "First release. Plays the Full HD version of a movie with several versions on screens up to 1200 pixels tall, and can keep re-encoded transcodes no larger than the screen. Browsers and the Jellyfin apps built on the web client report their screen; TV apps can be set per device on the settings page, which also lists recent decisions. Everything starts turned off."
+}

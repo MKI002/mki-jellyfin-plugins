@@ -1,0 +1,1981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>MKI Screen Fit</title>
+</head>
+<body>
+<div id="MkiScreenFitConfigPage" data-role="page" class="page type-interior pluginConfigurationPage mkiui mk-fit">
+<style>
+/* MKI-KIT:CSS BEGIN (generated from ui/mki-kit.css by build/kit.py, do not edit here) */
+/* ---------- 1. Tokens ---------- */
+#MkiScreenFitConfigPage {
+  --mk-a1: #00a4dc; --mk-a2: #00a4dc;
+  --mk-a1-rgb: 0,164,220; --mk-a2-rgb: 0,164,220;
+  --mk-a1-l: #00729a; --mk-a2-l: #00729a;
+  --mk-a1-ink: var(--mk-a1); --mk-a2-ink: var(--mk-a2);
+  --mk-grad: linear-gradient(90deg, var(--mk-a1), var(--mk-a2));
+  --mk-grad-ink: linear-gradient(90deg, var(--mk-a1-ink), var(--mk-a2-ink));
+  --mk-on: var(--mk-a1);            /* switch / selection fill   */
+  --mk-on-fg: #0b0b0b;              /* thumb / text on that fill */
+
+  --mk-text: rgba(255,255,255,.92);
+  --mk-dim: rgba(255,255,255,.66);
+  --mk-faint: rgba(255,255,255,.44);
+  --mk-surface: rgba(255,255,255,.035);
+  --mk-surface-2: rgba(255,255,255,.06);
+  --mk-surface-3: rgba(255,255,255,.1);
+  --mk-field: rgba(255,255,255,.07);
+  --mk-line: rgba(255,255,255,.085);
+  --mk-line-2: rgba(255,255,255,.16);
+  --mk-solid: var(--jf-palette-background-paper, #1c1c1c); /* opaque colour (buttons, popovers, dialogs) */
+  --mk-glass: rgba(20,20,20,.88);
+  --mk-shadow: 0 1px 0 rgba(255,255,255,.035) inset, 0 18px 40px -28px rgba(0,0,0,.9);
+
+  --mk-ok: #3ddc84;   --mk-ok-rgb: 61,220,132;
+  --mk-warn: #ffb547; --mk-warn-rgb: 255,181,71;
+  --mk-bad: #ff6b6b;  --mk-bad-rgb: 255,107,107;
+  --mk-info: #39b9ec; --mk-info-rgb: 57,185,236;
+  --mk-idle: rgba(255,255,255,.6); --mk-idle-rgb: 160,160,160;
+
+  --mk-r: 14px; --mk-r-sm: 10px; --mk-r-xs: 7px;
+  --mk-sticky-top: 0px;             /* set by kit.js to the bottom of Jellyfin's fixed header */
+  --mk-ease: cubic-bezier(.2,.7,.2,1);
+  color: var(--mk-text);
+  font-variant-numeric: tabular-nums;
+}
+#MkiScreenFitConfigPage[data-tone="light"] {
+  --mk-a1-ink: var(--mk-a1-l); --mk-a2-ink: var(--mk-a2-l);
+  --mk-on: var(--mk-a1-l); --mk-on-fg: #fff;
+  --mk-text: rgba(0,0,0,.87);
+  --mk-dim: rgba(0,0,0,.64);
+  --mk-faint: rgba(0,0,0,.45);
+  --mk-surface: #ffffff;
+  --mk-surface-2: rgba(0,0,0,.03);
+  --mk-surface-3: rgba(0,0,0,.07);
+  --mk-field: rgba(0,0,0,.045);
+  --mk-line: rgba(0,0,0,.1);
+  --mk-line-2: rgba(0,0,0,.2);
+  --mk-solid: #ffffff;
+  --mk-glass: rgba(246,246,246,.9);
+  --mk-shadow: 0 1px 2px rgba(0,0,0,.05), 0 14px 34px -26px rgba(0,0,0,.45);
+  --mk-ok: #12804a;   --mk-ok-rgb: 18,128,74;
+  --mk-warn: #9a5800; --mk-warn-rgb: 190,110,0;
+  --mk-bad: #c62828;  --mk-bad-rgb: 198,40,40;
+  --mk-info: #00729a; --mk-info-rgb: 0,114,154;
+  --mk-idle: rgba(0,0,0,.55); --mk-idle-rgb: 110,110,110;
+}
+/* Plugin accent pairs (dark-theme neon + light-theme ink variants). */
+#MkiScreenFitConfigPage.mk-hero  { --mk-a1:#00E5FF; --mk-a2:#FF2BD6; --mk-a1-rgb:0,229,255;   --mk-a2-rgb:255,43,214;  --mk-a1-l:#007c91; --mk-a2-l:#b0168f; }
+#MkiScreenFitConfigPage.mk-merge { --mk-a1:#B6FF3B; --mk-a2:#22D3EE; --mk-a1-rgb:182,255,59;  --mk-a2-rgb:34,211,238;  --mk-a1-l:#467800; --mk-a2-l:#0e7490; }
+#MkiScreenFitConfigPage.mk-seerr { --mk-a1:#A855F7; --mk-a2:#FF4FA3; --mk-a1-rgb:168,85,247;  --mk-a2-rgb:255,79,163;  --mk-a1-l:#7e22ce; --mk-a2-l:#be185d; --mk-on-fg:#fff; }
+#MkiScreenFitConfigPage.mk-pw    { --mk-a1:#FFC53D; --mk-a2:#FF5A36; --mk-a1-rgb:255,197,61;  --mk-a2-rgb:255,90,54;   --mk-a1-l:#965f00; --mk-a2-l:#c2410c; }
+
+/* ---------- 2. Base ---------- */
+#MkiScreenFitConfigPage *, #MkiScreenFitConfigPage *::before, #MkiScreenFitConfigPage *::after { box-sizing: border-box; }
+#MkiScreenFitConfigPage .mk-wrap { max-width: 1120px; }
+#MkiScreenFitConfigPage > [data-role="content"] { overflow: visible; }   /* Jellyfin clips it, which would stop the sticky bar */
+#MkiScreenFitConfigPage :focus { outline: none; }
+#MkiScreenFitConfigPage :focus-visible { outline: 2px solid var(--mk-a1-ink); outline-offset: 2px; border-radius: 6px; }
+#MkiScreenFitConfigPage .mk-ic {
+  font-family: "Material Icons"; font-weight: normal; font-style: normal; font-size: 1.25em; line-height: 1;
+  display: inline-block; width: 1em; height: 1em; flex: none; overflow: hidden; vertical-align: -.22em;
+  letter-spacing: normal; text-transform: none; white-space: nowrap; word-wrap: normal; direction: ltr;
+  -webkit-font-feature-settings: "liga"; font-feature-settings: "liga"; -webkit-font-smoothing: antialiased; user-select: none;
+}
+#MkiScreenFitConfigPage .mk-ic--sm { font-size: 1.05em; }
+#MkiScreenFitConfigPage .mk-ic--lg { font-size: 1.5em; }
+#MkiScreenFitConfigPage .mk-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+#MkiScreenFitConfigPage .mk-dim { color: var(--mk-dim); }
+#MkiScreenFitConfigPage .mk-mono { font-family: ui-monospace, "DejaVu Sans Mono", Consolas, monospace; font-size: .92em; }
+#MkiScreenFitConfigPage .mk-grow { flex: 1 1 auto; min-width: 0; }
+#MkiScreenFitConfigPage .mk-hidden, #MkiScreenFitConfigPage [hidden] { display: none !important; }
+#MkiScreenFitConfigPage p { margin: 0; }
+#MkiScreenFitConfigPage code { font-family: ui-monospace, "DejaVu Sans Mono", Consolas, monospace; font-size: .88em; padding: .08em .35em; border-radius: 5px; background: var(--mk-surface-3); }
+
+/* ---------- 3. Deck: the status header every page opens with ---------- */
+#MkiScreenFitConfigPage .mk-deck {
+  position: relative; overflow: hidden; isolation: isolate;
+  border: 1px solid var(--mk-line); border-radius: var(--mk-r);
+  background: linear-gradient(180deg, var(--mk-surface-2), var(--mk-surface));
+  box-shadow: var(--mk-shadow);
+  padding: 20px 22px 16px; margin: 4px 0 0;
+}
+/* gradient hairline + faint neon grid in the corner (brand cue, used once per page) */
+#MkiScreenFitConfigPage .mk-deck::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px;
+  background: var(--mk-grad); opacity: .85; z-index: 1;
+}
+#MkiScreenFitConfigPage .mk-deck::after {
+  content: ""; position: absolute; right: -10px; top: -10px; width: 360px; height: 220px; z-index: -1;
+  background-image:
+    linear-gradient(rgba(var(--mk-a1-rgb),.13) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--mk-a2-rgb),.11) 1px, transparent 1px);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(ellipse at 100% 0%, #000 0%, transparent 70%);
+          mask-image: radial-gradient(ellipse at 100% 0%, #000 0%, transparent 70%);
+}
+#MkiScreenFitConfigPage .mk-deck__head { display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+#MkiScreenFitConfigPage .mk-brand { flex: 1 1 260px; min-width: 0; }
+#MkiScreenFitConfigPage .mk-kicker {
+  font-size: .7rem; font-weight: 700; letter-spacing: .26em; text-transform: uppercase;
+  color: var(--mk-a1-ink); margin: 0 0 6px;
+}
+#MkiScreenFitConfigPage .mk-title {
+  margin: 0; font-size: 1.9rem; line-height: 1.1; font-weight: 750; letter-spacing: -.005em;
+}
+#MkiScreenFitConfigPage .mk-title b {
+  font-weight: 750; background: var(--mk-grad-ink);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+#MkiScreenFitConfigPage .mk-rule { display: block; width: 46px; height: 3px; border-radius: 2px; background: var(--mk-grad); margin: 10px 0 8px; }
+#MkiScreenFitConfigPage .mk-lede { color: var(--mk-dim); font-size: .9rem; line-height: 1.45; max-width: 46em; }
+
+/* master on/off for the whole plugin */
+#MkiScreenFitConfigPage .mk-master {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 14px;
+  border-radius: 12px; border: 1px solid var(--mk-line-2); background: var(--mk-surface-2);
+  cursor: pointer;
+}
+#MkiScreenFitConfigPage .mk-master__text { display: flex; flex-direction: column; line-height: 1.2; }
+#MkiScreenFitConfigPage .mk-master__label { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--mk-dim); font-weight: 700; }
+#MkiScreenFitConfigPage .mk-master__state { font-weight: 650; font-size: .95rem; }
+
+#MkiScreenFitConfigPage .mk-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 16px 0 0; }
+#MkiScreenFitConfigPage .mk-tile {
+  position: relative; min-width: 0; padding: 11px 13px 12px; border-radius: var(--mk-r-sm);
+  border: 1px solid var(--mk-line); background: var(--mk-surface-2);
+}
+#MkiScreenFitConfigPage button.mk-tile { font: inherit; color: inherit; text-align: left; cursor: pointer; width: 100%; margin: 0; display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; }
+#MkiScreenFitConfigPage .mk-tile > span { display: block; }
+#MkiScreenFitConfigPage .mk-tile > .mk-meter { display: flex; }
+#MkiScreenFitConfigPage .mk-tile > .mk-tile__label, #MkiScreenFitConfigPage .mk-tile > .mk-tile__value { display: flex; }
+#MkiScreenFitConfigPage .mk-tile > .mk-chip { display: inline-flex; align-self: flex-start; white-space: normal; }
+#MkiScreenFitConfigPage button.mk-tile:hover { border-color: var(--mk-line-2); }
+#MkiScreenFitConfigPage .mk-tile__label { display: flex; align-items: center; gap: 6px; font-size: .7rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--mk-dim); }
+#MkiScreenFitConfigPage .mk-tile__value { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; font-size: 1.4rem; font-weight: 750; line-height: 1.15; margin: 6px 0 2px; }
+#MkiScreenFitConfigPage .mk-tile__value small { font-size: .82rem; font-weight: 600; color: var(--mk-dim); }
+#MkiScreenFitConfigPage .mk-tile__sub { font-size: .8rem; color: var(--mk-dim); line-height: 1.35; }
+#MkiScreenFitConfigPage .mk-tile .mk-meter { margin-top: 8px; }
+
+#MkiScreenFitConfigPage .mk-deck__foot { display: flex; align-items: center; gap: 12px 16px; flex-wrap: wrap; margin: 14px 0 0; padding-top: 12px; border-top: 1px dashed var(--mk-line-2); }
+#MkiScreenFitConfigPage .mk-next { flex: 1 1 320px; display: flex; gap: 10px; align-items: flex-start; font-size: .88rem; line-height: 1.45; color: var(--mk-dim); }
+#MkiScreenFitConfigPage .mk-next b { color: var(--mk-text); font-weight: 650; }
+#MkiScreenFitConfigPage .mk-next .mk-ic { color: var(--mk-a1-ink); margin-top: 1px; }
+#MkiScreenFitConfigPage .mk-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ---------- 4. Sticky bar: section tabs + save state ---------- */
+#MkiScreenFitConfigPage .mk-bar {
+  position: sticky; top: var(--mk-sticky-top); z-index: 30;
+  display: flex; align-items: center; gap: 10px;
+  margin: 14px 0 16px; padding: 5px; border-radius: 13px;
+  background: var(--mk-glass); border: 1px solid var(--mk-line);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+}
+#MkiScreenFitConfigPage .mk-tabs { display: flex; gap: 2px; flex: 1 1 auto; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+#MkiScreenFitConfigPage .mk-tabs::-webkit-scrollbar { display: none; }
+#MkiScreenFitConfigPage .mk-tab {
+  position: relative; appearance: none; -webkit-appearance: none; border: 0; margin: 0;
+  background: transparent; color: var(--mk-dim); font: inherit; font-size: .9rem; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+  padding: 9px 13px; border-radius: 9px; cursor: pointer;
+}
+#MkiScreenFitConfigPage .mk-tab:hover { color: var(--mk-text); background: var(--mk-surface-2); }
+#MkiScreenFitConfigPage .mk-tab[aria-selected="true"] { color: var(--mk-text); background: var(--mk-surface-3); }
+#MkiScreenFitConfigPage .mk-tab[aria-selected="true"]::after {
+  content: ""; position: absolute; left: 13px; right: 13px; bottom: 3px; height: 2px; border-radius: 2px; background: var(--mk-grad);
+}
+#MkiScreenFitConfigPage .mk-tab__count { font-size: .72rem; font-weight: 700; padding: 1px 6px; border-radius: 99px; background: var(--mk-surface-3); color: var(--mk-dim); }
+#MkiScreenFitConfigPage .mk-tab__count--warn { background: rgba(var(--mk-warn-rgb),.16); color: var(--mk-warn); }
+#MkiScreenFitConfigPage .mk-panel[hidden] { display: none; }
+
+/* save state: one place, always visible, never colour-only */
+#MkiScreenFitConfigPage .mk-save {
+  flex: none; display: inline-flex; align-items: center; gap: 7px; margin: 0;
+  font: inherit; font-size: .82rem; font-weight: 600; white-space: nowrap; color: var(--mk-dim);
+  padding: 7px 11px; border-radius: 9px; border: 1px solid transparent; background: transparent; cursor: pointer;
+}
+#MkiScreenFitConfigPage .mk-save:hover { background: var(--mk-surface-2); }
+#MkiScreenFitConfigPage .mk-save .mk-ic { font-size: 1.15em; }
+#MkiScreenFitConfigPage .mk-save[data-state="saved"] .mk-ic { color: var(--mk-ok); }
+#MkiScreenFitConfigPage .mk-save[data-state="saving"] .mk-ic { color: var(--mk-info); animation: mk-spin 1s linear infinite; }
+#MkiScreenFitConfigPage .mk-save[data-state="editing"] .mk-ic { color: var(--mk-info); }
+#MkiScreenFitConfigPage .mk-save[data-state="invalid"] { color: var(--mk-warn); border-color: rgba(var(--mk-warn-rgb),.4); background: rgba(var(--mk-warn-rgb),.1); }
+#MkiScreenFitConfigPage .mk-save[data-state="warn"] .mk-ic { color: var(--mk-warn); }
+#MkiScreenFitConfigPage .mk-save[data-state="error"] { color: var(--mk-bad); border-color: rgba(var(--mk-bad-rgb),.45); background: rgba(var(--mk-bad-rgb),.1); }
+@keyframes mk-spin { to { transform: rotate(360deg); } }
+#MkiScreenFitConfigPage .mk-ic.mk-spin, #MkiScreenFitConfigPage .mk-spin > .mk-ic { animation: mk-spin 1s linear infinite; }
+
+/* ---------- 5. Cards, rows, layout helpers ---------- */
+#MkiScreenFitConfigPage .mk-card {
+  border: 1px solid var(--mk-line); border-radius: var(--mk-r); background: var(--mk-surface);
+  box-shadow: var(--mk-shadow); margin: 0 0 14px; min-width: 0;
+}
+#MkiScreenFitConfigPage .mk-card__head { display: flex; align-items: flex-start; gap: 12px; padding: 15px 18px 4px; flex-wrap: wrap; }
+#MkiScreenFitConfigPage .mk-card__icon {
+  flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
+  color: var(--mk-a1-ink);
+  background: linear-gradient(135deg, rgba(var(--mk-a1-rgb),.16), rgba(var(--mk-a2-rgb),.12));
+  border: 1px solid rgba(var(--mk-a1-rgb),.22);
+}
+#MkiScreenFitConfigPage .mk-card__titles { flex: 1 1 220px; min-width: 0; }
+#MkiScreenFitConfigPage .mk-card__title { margin: 0; font-size: 1.02rem; font-weight: 700; line-height: 1.3; }
+#MkiScreenFitConfigPage .mk-card__desc { margin: 3px 0 0; font-size: .85rem; line-height: 1.45; color: var(--mk-dim); }
+#MkiScreenFitConfigPage .mk-card__aside { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+#MkiScreenFitConfigPage .mk-card__body { padding: 8px 18px 16px; }
+#MkiScreenFitConfigPage .mk-card__foot { padding: 11px 18px; border-top: 1px solid var(--mk-line); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: .85rem; color: var(--mk-dim); }
+
+#MkiScreenFitConfigPage .mk-grid2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+#MkiScreenFitConfigPage .mk-grid2 > .mk-card { margin: 0; }
+#MkiScreenFitConfigPage .mk-grid2 > .mk-field + .mk-field { margin-top: 0; }  /* grid gap spaces them */
+#MkiScreenFitConfigPage .mk-stack > * + * { margin-top: 12px; }
+#MkiScreenFitConfigPage .mk-split { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+#MkiScreenFitConfigPage .mk-row { display: flex; align-items: center; gap: 10px 18px; padding: 12px 0; border-top: 1px solid var(--mk-line); }
+#MkiScreenFitConfigPage .mk-row:first-child { border-top: 0; }
+#MkiScreenFitConfigPage .mk-row__text { flex: 1 1 240px; min-width: 0; }
+#MkiScreenFitConfigPage .mk-row__label { display: block; font-size: .95rem; font-weight: 600; line-height: 1.35; cursor: default; }
+#MkiScreenFitConfigPage label.mk-row__label { cursor: pointer; }
+#MkiScreenFitConfigPage .mk-row__desc { display: block; margin-top: 2px; font-size: .83rem; line-height: 1.45; color: var(--mk-dim); }
+#MkiScreenFitConfigPage .mk-row__control { flex: none; display: flex; align-items: center; gap: 8px; max-width: 100%; }
+#MkiScreenFitConfigPage .mk-row--wide { flex-wrap: wrap; }
+#MkiScreenFitConfigPage .mk-row--wide .mk-row__text { flex: 1 1 170px; }
+#MkiScreenFitConfigPage .mk-row--wide .mk-row__control { flex: 3 1 300px; }
+#MkiScreenFitConfigPage .mk-row--stack { flex-direction: column; align-items: stretch; }
+#MkiScreenFitConfigPage .mk-row--sub { margin-left: 22px; padding-left: 16px; border-top: 0; border-left: 2px solid var(--mk-line-2); padding-top: 6px; }
+#MkiScreenFitConfigPage .mk-row.is-inert .mk-row__label, #MkiScreenFitConfigPage .mk-row.is-inert .mk-row__control { opacity: .5; }
+#MkiScreenFitConfigPage .mk-why { display: inline-flex; align-items: center; gap: 5px; margin-top: 4px; font-size: .78rem; color: var(--mk-faint); }
+
+/* ---------- 6. Controls ---------- */
+/* Switch: a real checkbox with role="switch". Position + fill + label text carry the state. */
+#MkiScreenFitConfigPage .mk-switch {
+  -webkit-appearance: none; appearance: none; margin: 0; flex: none; cursor: pointer; position: relative;
+  width: 46px; height: 26px; border-radius: 13px;
+  background: var(--mk-surface-3); border: 1px solid var(--mk-line-2);
+  transition: background-color .18s var(--mk-ease), border-color .18s;
+}
+#MkiScreenFitConfigPage .mk-switch::before {
+  content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--mk-dim); transition: transform .2s var(--mk-ease), background-color .2s;
+}
+#MkiScreenFitConfigPage .mk-switch:checked { background: var(--mk-on); border-color: transparent; box-shadow: 0 0 14px -4px rgba(var(--mk-a1-rgb),.65); }
+#MkiScreenFitConfigPage .mk-switch:checked::before { transform: translateX(20px); background: var(--mk-on-fg); }
+#MkiScreenFitConfigPage .mk-switch:disabled { opacity: .45; cursor: not-allowed; }
+#MkiScreenFitConfigPage[data-tone="light"] .mk-switch:checked { box-shadow: none; }
+#MkiScreenFitConfigPage .mk-switch:focus-visible { outline-offset: 3px; border-radius: 13px; }
+
+/* Plain checkbox (bulk select etc.) */
+#MkiScreenFitConfigPage .mk-check { width: 18px; height: 18px; margin: 0; accent-color: var(--mk-on); cursor: pointer; }
+
+/* Text, number, select, textarea */
+#MkiScreenFitConfigPage .mk-input, #MkiScreenFitConfigPage .mk-select, #MkiScreenFitConfigPage .mk-textarea {
+  width: 100%; margin: 0; font: inherit; font-size: .95rem; color: var(--mk-text);
+  background: var(--mk-field); border: 1px solid var(--mk-line); border-radius: 8px; padding: 9px 11px;
+  transition: border-color .15s, box-shadow .15s;
+}
+#MkiScreenFitConfigPage .mk-input:hover, #MkiScreenFitConfigPage .mk-select:hover, #MkiScreenFitConfigPage .mk-textarea:hover { border-color: var(--mk-line-2); }
+#MkiScreenFitConfigPage .mk-input:focus, #MkiScreenFitConfigPage .mk-select:focus, #MkiScreenFitConfigPage .mk-textarea:focus { border-color: var(--mk-a1-ink); box-shadow: 0 0 0 3px rgba(var(--mk-a1-rgb),.18); outline: none; }
+#MkiScreenFitConfigPage .mk-input[aria-invalid="true"], #MkiScreenFitConfigPage .mk-textarea[aria-invalid="true"] { border-color: var(--mk-bad); box-shadow: 0 0 0 3px rgba(var(--mk-bad-rgb),.14); }
+#MkiScreenFitConfigPage .mk-input:disabled, #MkiScreenFitConfigPage .mk-select:disabled { opacity: .5; cursor: not-allowed; }
+#MkiScreenFitConfigPage .mk-select { -webkit-appearance: none; appearance: none; padding-right: 32px; cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 17px) 52%, calc(100% - 12px) 52%; background-size: 5px 5px; background-repeat: no-repeat; }
+#MkiScreenFitConfigPage .mk-select option { background: var(--mk-solid); color: var(--mk-text); }
+#MkiScreenFitConfigPage .mk-select { text-overflow: ellipsis; }
+#MkiScreenFitConfigPage .mk-textarea { min-height: 84px; resize: vertical; line-height: 1.5; }
+#MkiScreenFitConfigPage .mk-textarea.mk-code { font-family: ui-monospace, "DejaVu Sans Mono", Consolas, monospace; font-size: .86rem; min-height: 150px; tab-size: 2; }
+#MkiScreenFitConfigPage .mk-input--num { width: 5.4em; text-align: right; padding-right: 8px; }
+#MkiScreenFitConfigPage .mk-input--sm { padding: 6px 9px; font-size: .9rem; }
+#MkiScreenFitConfigPage .mk-field { display: block; min-width: 0; }
+#MkiScreenFitConfigPage .mk-field + .mk-field { margin-top: 12px; }
+#MkiScreenFitConfigPage .mk-field__label { display: flex; align-items: center; gap: 8px; font-size: .84rem; font-weight: 600; color: var(--mk-dim); margin: 0 0 6px; }
+#MkiScreenFitConfigPage .mk-field__hint { display: block; font-size: .8rem; color: var(--mk-faint); margin-top: 5px; line-height: 1.45; }
+#MkiScreenFitConfigPage .mk-affix { display: flex; align-items: stretch; }
+#MkiScreenFitConfigPage .mk-affix > .mk-input { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+#MkiScreenFitConfigPage .mk-affix > .mk-iconbtn { border-radius: 0 8px 8px 0; border: 1px solid var(--mk-line); border-left: 0; background: var(--mk-field); width: 42px; height: auto; }
+#MkiScreenFitConfigPage .mk-unit { font-size: .82rem; color: var(--mk-dim); white-space: nowrap; }
+
+/* Inline validation message (icon + text, never colour alone) */
+#MkiScreenFitConfigPage .mk-msg { display: flex; gap: 7px; align-items: flex-start; font-size: .82rem; line-height: 1.4; margin-top: 6px; }
+#MkiScreenFitConfigPage .mk-msg:empty { display: none; }
+#MkiScreenFitConfigPage .mk-msg .mk-ic { font-size: 1.1em; margin-top: 1px; }
+#MkiScreenFitConfigPage .mk-msg--ok { color: var(--mk-ok); }
+#MkiScreenFitConfigPage .mk-msg--warn { color: var(--mk-warn); }
+#MkiScreenFitConfigPage .mk-msg--bad { color: var(--mk-bad); }
+#MkiScreenFitConfigPage .mk-msg--info { color: var(--mk-dim); }
+
+/* Stepper: [-] value [+] */
+#MkiScreenFitConfigPage .mk-stepper { display: inline-flex; align-items: center; border: 1px solid var(--mk-line); border-radius: 9px; background: var(--mk-field); overflow: hidden; }
+#MkiScreenFitConfigPage .mk-stepper button { width: 32px; height: 34px; border: 0; margin: 0; background: transparent; color: var(--mk-dim); cursor: pointer; display: grid; place-items: center; font: inherit; }
+#MkiScreenFitConfigPage .mk-stepper button:hover { background: var(--mk-surface-3); color: var(--mk-text); }
+#MkiScreenFitConfigPage .mk-stepper input { width: 3.2em; border: 0; background: transparent; color: inherit; font: inherit; font-weight: 650; text-align: center; padding: 0; -moz-appearance: textfield; }
+#MkiScreenFitConfigPage .mk-stepper input::-webkit-inner-spin-button, #MkiScreenFitConfigPage .mk-stepper input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+#MkiScreenFitConfigPage .mk-stepper:focus-within { border-color: var(--mk-a1-ink); }
+#MkiScreenFitConfigPage .mk-stepper.is-disabled { opacity: .45; pointer-events: none; }
+
+/* Slider with number box, default tick and reset */
+#MkiScreenFitConfigPage .mk-range { display: flex; align-items: center; gap: 12px; width: 100%; }
+#MkiScreenFitConfigPage .mk-range__track { position: relative; flex: 1 1 auto; min-width: 120px; display: flex; align-items: center; height: 28px; }
+#MkiScreenFitConfigPage .mk-range input[type="range"] {
+  -webkit-appearance: none; appearance: none; width: 100%; height: 6px; margin: 0; border-radius: 3px; cursor: pointer;
+  background: linear-gradient(90deg, rgba(var(--mk-a1-rgb),.95), rgba(var(--mk-a2-rgb),.95)) 0 0 / var(--p, 50%) 100% no-repeat, var(--mk-surface-3);
+}
+#MkiScreenFitConfigPage[data-tone="light"] .mk-range input[type="range"] { background: linear-gradient(90deg, var(--mk-a1-l), var(--mk-a2-l)) 0 0 / var(--p, 50%) 100% no-repeat, var(--mk-surface-3); }
+#MkiScreenFitConfigPage .mk-range input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 3px solid var(--mk-a1-ink); box-shadow: 0 2px 8px rgba(0,0,0,.45); }
+#MkiScreenFitConfigPage .mk-range input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 3px solid var(--mk-a1-ink); }
+#MkiScreenFitConfigPage .mk-range input[type="range"]:focus-visible { outline: 2px solid var(--mk-a1-ink); outline-offset: 6px; }
+#MkiScreenFitConfigPage .mk-tick { position: absolute; top: 21px; width: 2px; height: 7px; margin-left: -1px; border-radius: 1px; background: var(--mk-faint); pointer-events: none; }
+#MkiScreenFitConfigPage .mk-range__out { display: flex; align-items: center; gap: 6px; flex: none; }
+#MkiScreenFitConfigPage .mk-reset { visibility: hidden; }
+#MkiScreenFitConfigPage .mk-range.is-changed .mk-reset { visibility: visible; }
+
+/* Segmented control: native radios, label is the button */
+#MkiScreenFitConfigPage .mk-seg { display: inline-flex; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; gap: 2px; padding: 3px; border-radius: 10px; background: var(--mk-field); border: 1px solid var(--mk-line); max-width: 100%; }
+#MkiScreenFitConfigPage .mk-seg input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
+#MkiScreenFitConfigPage .mk-seg label { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: .87rem; font-weight: 600; color: var(--mk-dim); cursor: pointer; white-space: nowrap; }
+#MkiScreenFitConfigPage .mk-seg label:hover { color: var(--mk-text); }
+#MkiScreenFitConfigPage .mk-seg input:checked + label { color: var(--mk-text); background: var(--mk-surface-3); box-shadow: 0 0 0 1px var(--mk-line-2) inset, 0 -2px 0 rgba(var(--mk-a1-rgb),.9) inset; }
+#MkiScreenFitConfigPage[data-tone="light"] .mk-seg input:checked + label { background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.14), 0 -2px 0 var(--mk-a1-l) inset; }
+#MkiScreenFitConfigPage .mk-seg input:focus-visible + label { outline: 2px solid var(--mk-a1-ink); outline-offset: 1px; }
+#MkiScreenFitConfigPage .mk-seg--sm label { padding: 4px 9px; font-size: .8rem; }
+
+/* Visual option tiles (layout pickers etc.): radios with a drawing */
+#MkiScreenFitConfigPage .mk-opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; }
+#MkiScreenFitConfigPage .mk-opt { position: relative; display: block; cursor: pointer; }
+#MkiScreenFitConfigPage .mk-opt input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+#MkiScreenFitConfigPage .mk-opt__card { display: block; height: 100%; box-sizing: border-box; padding: 8px 8px 9px; border-radius: 11px; border: 1px solid var(--mk-line); background: var(--mk-surface-2); transition: border-color .15s, background-color .15s; }
+#MkiScreenFitConfigPage .mk-opt:hover .mk-opt__card { border-color: var(--mk-line-2); }
+#MkiScreenFitConfigPage .mk-opt__art { display: block; position: relative; height: 58px; border-radius: 7px; overflow: hidden; background: var(--mk-surface-3); }
+#MkiScreenFitConfigPage .mk-opt__name { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 8px; font-size: .84rem; font-weight: 600; }
+#MkiScreenFitConfigPage .mk-opt__name .mk-ic { visibility: hidden; color: var(--mk-a1-ink); }
+#MkiScreenFitConfigPage .mk-opt input:checked + .mk-opt__card { border-color: rgba(var(--mk-a1-rgb),.7); background: rgba(var(--mk-a1-rgb),.07); box-shadow: 0 0 0 1px rgba(var(--mk-a1-rgb),.45) inset; }
+#MkiScreenFitConfigPage[data-tone="light"] .mk-opt input:checked + .mk-opt__card { border-color: var(--mk-a1-l); box-shadow: 0 0 0 1px var(--mk-a1-l) inset; }
+#MkiScreenFitConfigPage .mk-opt input:checked + .mk-opt__card .mk-opt__name .mk-ic { visibility: visible; }
+#MkiScreenFitConfigPage .mk-opt input:focus-visible + .mk-opt__card { outline: 2px solid var(--mk-a1-ink); outline-offset: 2px; }
+
+/* Toggle pills (multi-select checkboxes) */
+#MkiScreenFitConfigPage .mk-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+#MkiScreenFitConfigPage .mk-pill { position: relative; display: inline-flex; }
+#MkiScreenFitConfigPage .mk-pill input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+#MkiScreenFitConfigPage .mk-pill > span { display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px 7px 10px; border-radius: 99px; border: 1px solid var(--mk-line-2); color: var(--mk-dim); font-size: .87rem; font-weight: 600; cursor: pointer; }
+#MkiScreenFitConfigPage .mk-pill > span .mk-ic { font-size: 1.1em; }
+#MkiScreenFitConfigPage .mk-pill .mk-pill__on { display: none; }
+#MkiScreenFitConfigPage .mk-pill input:checked + span { color: var(--mk-text); border-color: rgba(var(--mk-a1-rgb),.6); background: rgba(var(--mk-a1-rgb),.1); }
+#MkiScreenFitConfigPage .mk-pill input:checked + span .mk-pill__on { display: inline; color: var(--mk-a1-ink); }
+#MkiScreenFitConfigPage .mk-pill input:checked + span .mk-pill__off { display: none; }
+#MkiScreenFitConfigPage .mk-pill input:focus-visible + span { outline: 2px solid var(--mk-a1-ink); outline-offset: 2px; }
+
+/* List editor (allow / block lists) */
+#MkiScreenFitConfigPage .mk-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-height: 44px; padding: 6px; border-radius: 9px; background: var(--mk-field); border: 1px solid var(--mk-line); cursor: text; }
+#MkiScreenFitConfigPage .mk-tags:focus-within { border-color: var(--mk-a1-ink); box-shadow: 0 0 0 3px rgba(var(--mk-a1-rgb),.15); }
+#MkiScreenFitConfigPage .mk-tag { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; padding: 3px 3px 3px 9px; border-radius: 99px; font-size: .84rem; font-weight: 600; background: var(--mk-surface-3); border: 1px solid var(--mk-line); }
+#MkiScreenFitConfigPage .mk-tag > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#MkiScreenFitConfigPage .mk-tag .mk-ic { font-size: .95em; }
+#MkiScreenFitConfigPage .mk-tag button { width: 20px; height: 20px; border-radius: 50%; border: 0; margin: 0; padding: 0; display: grid; place-items: center; background: transparent; color: var(--mk-dim); cursor: pointer; }
+#MkiScreenFitConfigPage .mk-tag button:hover { background: var(--mk-surface-3); color: var(--mk-text); }
+#MkiScreenFitConfigPage .mk-tags--allow .mk-tag { border-color: rgba(var(--mk-ok-rgb),.4); background: rgba(var(--mk-ok-rgb),.1); }
+#MkiScreenFitConfigPage .mk-tags--allow .mk-tag > .mk-ic { color: var(--mk-ok); }
+#MkiScreenFitConfigPage .mk-tags--block .mk-tag { border-color: rgba(var(--mk-bad-rgb),.4); background: rgba(var(--mk-bad-rgb),.09); }
+#MkiScreenFitConfigPage .mk-tags--block .mk-tag > .mk-ic { color: var(--mk-bad); }
+#MkiScreenFitConfigPage .mk-tag.is-conflict { box-shadow: 0 0 0 2px rgba(var(--mk-warn-rgb),.7); }
+#MkiScreenFitConfigPage .mk-tags input { flex: 1 1 8em; min-width: 7em; border: 0; margin: 0; background: transparent; color: inherit; font: inherit; font-size: .9rem; padding: 4px 6px; }
+#MkiScreenFitConfigPage .mk-tags input:focus { outline: none; }
+#MkiScreenFitConfigPage .mk-suggest { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; align-items: center; font-size: .78rem; color: var(--mk-faint); }
+#MkiScreenFitConfigPage .mk-suggest button { font: inherit; font-size: .78rem; font-weight: 600; color: var(--mk-dim); background: transparent; border: 1px dashed var(--mk-line-2); border-radius: 99px; padding: 2px 9px; cursor: pointer; }
+#MkiScreenFitConfigPage .mk-suggest button:hover { color: var(--mk-text); border-style: solid; }
+
+/* ---------- 7. Buttons ---------- */
+#MkiScreenFitConfigPage .mk-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin: 0;
+  font: inherit; font-size: .9rem; font-weight: 650; line-height: 1.2; color: var(--mk-text); text-decoration: none;
+  padding: 9px 15px; border-radius: 10px; border: 1px solid var(--mk-line-2); background: var(--mk-surface-2); cursor: pointer;
+  transition: background-color .15s, border-color .15s, box-shadow .2s;
+}
+#MkiScreenFitConfigPage .mk-btn:hover { background: var(--mk-surface-3); }
+#MkiScreenFitConfigPage .mk-btn:disabled { opacity: .5; cursor: not-allowed; }
+#MkiScreenFitConfigPage .mk-btn--primary {
+  border: 1px solid transparent;
+  background: linear-gradient(var(--mk-solid), var(--mk-solid)) padding-box, var(--mk-grad) border-box;
+  box-shadow: 0 0 22px -10px rgba(var(--mk-a1-rgb),.9);
+}
+#MkiScreenFitConfigPage .mk-btn--primary:hover { background: linear-gradient(rgba(var(--mk-a1-rgb),.12), rgba(var(--mk-a2-rgb),.12)) padding-box, var(--mk-grad) border-box; }
+#MkiScreenFitConfigPage .mk-btn--primary .mk-ic { color: var(--mk-a1-ink); }
+#MkiScreenFitConfigPage[data-tone="light"] .mk-btn--primary { background: linear-gradient(#fff,#fff) padding-box, var(--mk-grad-ink) border-box; box-shadow: none; }
+#MkiScreenFitConfigPage .mk-btn--danger { color: #fff; background: #b3261e; border-color: #b3261e; }
+#MkiScreenFitConfigPage .mk-btn--danger:hover { background: #c62828; }
+#MkiScreenFitConfigPage .mk-btn--danger-soft { color: var(--mk-bad); border-color: rgba(var(--mk-bad-rgb),.45); background: rgba(var(--mk-bad-rgb),.08); }
+#MkiScreenFitConfigPage .mk-btn--danger-soft:hover { background: rgba(var(--mk-bad-rgb),.15); }
+#MkiScreenFitConfigPage .mk-btn--ghost { background: transparent; border-color: transparent; color: var(--mk-dim); }
+#MkiScreenFitConfigPage .mk-btn--ghost:hover { color: var(--mk-text); background: var(--mk-surface-2); }
+#MkiScreenFitConfigPage .mk-btn--sm { padding: 6px 10px; font-size: .82rem; border-radius: 8px; gap: 6px; }
+#MkiScreenFitConfigPage .mk-btn--block { width: 100%; }
+#MkiScreenFitConfigPage .mk-iconbtn { width: 36px; height: 36px; display: inline-grid; place-items: center; margin: 0; padding: 0; border-radius: 9px; border: 1px solid var(--mk-line); background: var(--mk-surface-2); color: var(--mk-dim); cursor: pointer; }
+#MkiScreenFitConfigPage .mk-iconbtn:hover { color: var(--mk-text); background: var(--mk-surface-3); }
+#MkiScreenFitConfigPage .mk-iconbtn[aria-pressed="true"] { color: var(--mk-a1-ink); border-color: rgba(var(--mk-a1-rgb),.5); }
+
+/* ---------- 8. Status chips, notes, badges ---------- */
+#MkiScreenFitConfigPage .mk-chip {
+  --c: var(--mk-idle); --c-rgb: var(--mk-idle-rgb);
+  display: inline-flex; align-items: center; gap: 6px; max-width: 100%;
+  padding: 3px 10px 3px 8px; border-radius: 99px; font-size: .8rem; font-weight: 650; line-height: 1.35; white-space: nowrap;
+  color: var(--c); background: rgba(var(--c-rgb),.12); border: 1px solid rgba(var(--c-rgb),.3);
+}
+#MkiScreenFitConfigPage .mk-chip .mk-ic { font-size: 1.05em; }
+#MkiScreenFitConfigPage .mk-chip--ok { --c: var(--mk-ok); --c-rgb: var(--mk-ok-rgb); }
+#MkiScreenFitConfigPage .mk-chip--warn { --c: var(--mk-warn); --c-rgb: var(--mk-warn-rgb); }
+#MkiScreenFitConfigPage .mk-chip--bad { --c: var(--mk-bad); --c-rgb: var(--mk-bad-rgb); }
+#MkiScreenFitConfigPage .mk-chip--info { --c: var(--mk-info); --c-rgb: var(--mk-info-rgb); }
+#MkiScreenFitConfigPage .mk-chip--accent { --c: var(--mk-a1-ink); --c-rgb: var(--mk-a1-rgb); }
+#MkiScreenFitConfigPage .mk-chip--plain { color: var(--mk-dim); background: transparent; border-color: var(--mk-line-2); }
+#MkiScreenFitConfigPage .mk-chip--lg { font-size: .88rem; padding: 5px 12px 5px 9px; }
+#MkiScreenFitConfigPage .mk-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
+#MkiScreenFitConfigPage .mk-dot--live { box-shadow: 0 0 0 0 currentColor; animation: mk-pulse 2.2s ease-out infinite; }
+@keyframes mk-pulse { 0% { box-shadow: 0 0 0 0 rgba(var(--c-rgb),.55); } 80%,100% { box-shadow: 0 0 0 7px rgba(var(--c-rgb),0); } }
+#MkiScreenFitConfigPage .mk-badge { display: inline-flex; align-items: center; gap: 4px; padding: 1px 7px; border-radius: 6px; font-size: .72rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--mk-dim); border: 1px solid var(--mk-line-2); white-space: nowrap; }
+#MkiScreenFitConfigPage .mk-num-badge { display: inline-grid; place-items: center; width: 24px; height: 24px; flex: none; border-radius: 7px; font-size: .78rem; font-weight: 800; color: var(--mk-dim); border: 1px solid var(--mk-line-2); background: var(--mk-surface-2); }
+
+#MkiScreenFitConfigPage .mk-note {
+  --c: var(--mk-info); --c-rgb: var(--mk-info-rgb);
+  display: flex; gap: 10px; align-items: flex-start; padding: 10px 13px; margin: 10px 0 0;
+  border-radius: 10px; font-size: .86rem; line-height: 1.5;
+  background: rgba(var(--c-rgb),.07); border: 1px solid rgba(var(--c-rgb),.24);
+}
+#MkiScreenFitConfigPage .mk-note > .mk-ic { color: var(--c); margin-top: 1px; }
+#MkiScreenFitConfigPage .mk-note b { font-weight: 700; }
+#MkiScreenFitConfigPage .mk-note--ok { --c: var(--mk-ok); --c-rgb: var(--mk-ok-rgb); }
+#MkiScreenFitConfigPage .mk-note--warn { --c: var(--mk-warn); --c-rgb: var(--mk-warn-rgb); }
+#MkiScreenFitConfigPage .mk-note--bad { --c: var(--mk-bad); --c-rgb: var(--mk-bad-rgb); }
+
+/* Disclosure */
+#MkiScreenFitConfigPage details.mk-more { border-top: 1px solid var(--mk-line); }
+#MkiScreenFitConfigPage details.mk-more > summary { list-style: none; display: flex; align-items: center; gap: 8px; padding: 11px 0; cursor: pointer; font-size: .88rem; font-weight: 650; color: var(--mk-dim); }
+#MkiScreenFitConfigPage details.mk-more > summary::-webkit-details-marker { display: none; }
+#MkiScreenFitConfigPage details.mk-more > summary .mk-ic { transition: transform .2s; }
+#MkiScreenFitConfigPage details.mk-more[open] > summary .mk-ic { transform: rotate(180deg); }
+#MkiScreenFitConfigPage details.mk-more > summary:hover { color: var(--mk-text); }
+
+/* ---------- 9. Diagrams ---------- */
+/* Flow: nodes joined by animated edges. Wraps to a vertical flow on phones. */
+#MkiScreenFitConfigPage .mk-flow { display: flex; align-items: stretch; gap: 0; }
+#MkiScreenFitConfigPage .mk-flow__node {
+  flex: 1 1 0; min-width: 0; position: relative; padding: 11px 12px; border-radius: 12px;
+  border: 1px solid var(--mk-line-2); background: var(--mk-surface-2);
+}
+#MkiScreenFitConfigPage .mk-flow__node--accent { border-color: rgba(var(--mk-a1-rgb),.55); background: linear-gradient(160deg, rgba(var(--mk-a1-rgb),.1), rgba(var(--mk-a2-rgb),.07)); }
+#MkiScreenFitConfigPage .mk-flow__node--dashed { border-style: dashed; }
+#MkiScreenFitConfigPage .mk-flow__node--off { opacity: .5; }
+#MkiScreenFitConfigPage .mk-flow__kicker { display: flex; align-items: center; gap: 6px; font-size: .68rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mk-dim); }
+#MkiScreenFitConfigPage .mk-flow__title { font-weight: 700; font-size: .95rem; margin-top: 4px; line-height: 1.3; }
+#MkiScreenFitConfigPage .mk-flow__sub { font-size: .8rem; color: var(--mk-dim); margin-top: 3px; line-height: 1.4; }
+#MkiScreenFitConfigPage .mk-flow__edge { flex: 0 0 22px; position: relative; align-self: center; height: 2px; background: linear-gradient(90deg, rgba(var(--mk-a1-rgb),.75), rgba(var(--mk-a2-rgb),.75)); }
+#MkiScreenFitConfigPage .mk-flow__edge::after { content: ""; position: absolute; right: -1px; top: -4px; border: 5px solid transparent; border-left: 7px solid rgba(var(--mk-a2-rgb),.9); border-right: 0; }
+#MkiScreenFitConfigPage .mk-flow__edge::before { content: ""; position: absolute; top: -2px; left: 0; width: 6px; height: 6px; border-radius: 50%; background: #fff; box-shadow: 0 0 8px rgba(var(--mk-a1-rgb),1); animation: mk-travel 2.4s linear infinite; }
+#MkiScreenFitConfigPage .mk-flow__edge--off { background: var(--mk-line-2); }
+#MkiScreenFitConfigPage .mk-flow__edge--off::before { display: none; }
+#MkiScreenFitConfigPage .mk-flow__edge--off::after { border-left-color: var(--mk-line-2); }
+@keyframes mk-travel { from { left: 0; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } to { left: calc(100% - 6px); opacity: 0; } }
+
+/* Timeline: a horizontal track with markers */
+#MkiScreenFitConfigPage .mk-tl { position: relative; height: 70px; margin: 6px 4px 0; }
+#MkiScreenFitConfigPage .mk-tl__track { position: absolute; left: 0; right: 0; top: 30px; height: 4px; border-radius: 2px; background: var(--mk-surface-3); }
+#MkiScreenFitConfigPage .mk-tl__fill { position: absolute; left: 0; top: 30px; height: 4px; border-radius: 2px; background: var(--mk-grad); }
+#MkiScreenFitConfigPage .mk-tl__mark { position: absolute; top: 0; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: .74rem; font-weight: 650; color: var(--mk-dim); white-space: nowrap; }
+#MkiScreenFitConfigPage .mk-tl__mark i { display: block; width: 12px; height: 12px; margin-top: 3px; border-radius: 50%; background: var(--mk-solid); border: 2px solid var(--mk-line-2); }
+#MkiScreenFitConfigPage .mk-tl__mark--now i { border-color: var(--mk-a1-ink); background: var(--mk-a1-ink); box-shadow: 0 0 10px rgba(var(--mk-a1-rgb),.8); }
+#MkiScreenFitConfigPage .mk-tl__mark--ok i { border-color: var(--mk-ok); }
+#MkiScreenFitConfigPage .mk-tl__mark--warn i { border-color: var(--mk-warn); background: var(--mk-warn); }
+#MkiScreenFitConfigPage .mk-tl__mark--bad i { border-color: var(--mk-bad); background: var(--mk-bad); border-radius: 3px; }
+#MkiScreenFitConfigPage .mk-tl__mark b { color: var(--mk-text); font-weight: 700; }
+#MkiScreenFitConfigPage .mk-tl__mark--start { transform: none; align-items: flex-start; margin-left: -6px; }
+#MkiScreenFitConfigPage .mk-tl__mark--end { transform: translateX(-100%); align-items: flex-end; margin-left: 6px; }
+#MkiScreenFitConfigPage .mk-tl__mark span { font-weight: 500; }
+#MkiScreenFitConfigPage .mk-tl__tick { position: absolute; top: 28px; width: 2px; height: 8px; margin-left: -1px; background: var(--mk-line-2); }
+#MkiScreenFitConfigPage .mk-tl__label { position: absolute; top: 46px; transform: translateX(-50%); font-size: .72rem; color: var(--mk-faint); white-space: nowrap; }
+
+/* Meter: stacked bar + legend (legend carries the meaning, not the colour) */
+#MkiScreenFitConfigPage .mk-meter { display: flex; gap: 2px; height: 8px; border-radius: 4px; overflow: hidden; background: var(--mk-surface-3); }
+#MkiScreenFitConfigPage .mk-meter > i { display: block; height: 100%; min-width: 3px; }
+#MkiScreenFitConfigPage .mk-meter--lg { height: 12px; border-radius: 6px; }
+#MkiScreenFitConfigPage .mk-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 8px; font-size: .8rem; color: var(--mk-dim); }
+#MkiScreenFitConfigPage .mk-legend span { display: inline-flex; align-items: center; gap: 6px; }
+#MkiScreenFitConfigPage .mk-legend i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+#MkiScreenFitConfigPage .mk-legend b { color: var(--mk-text); }
+#MkiScreenFitConfigPage .mk-c-ok { background: var(--mk-ok); }
+#MkiScreenFitConfigPage .mk-c-warn { background: var(--mk-warn); }
+#MkiScreenFitConfigPage .mk-c-bad { background: var(--mk-bad); }
+#MkiScreenFitConfigPage .mk-c-info { background: var(--mk-info); }
+#MkiScreenFitConfigPage .mk-c-idle { background: rgba(var(--mk-idle-rgb),.55); }
+#MkiScreenFitConfigPage .mk-c-a1 { background: var(--mk-a1-ink); }
+#MkiScreenFitConfigPage .mk-c-a2 { background: var(--mk-a2-ink); }
+#MkiScreenFitConfigPage .mk-c-a3 { background: rgba(var(--mk-a1-rgb),.45); }
+#MkiScreenFitConfigPage .mk-c-a4 { background: rgba(var(--mk-a2-rgb),.45); }
+
+/* Progress bar */
+#MkiScreenFitConfigPage .mk-progress { display: block; height: 6px; border-radius: 3px; background: var(--mk-surface-3); overflow: hidden; }
+#MkiScreenFitConfigPage .mk-progress > i { display: block; height: 100%; width: 0; border-radius: 3px; background: var(--mk-grad); transition: width .4s var(--mk-ease); }
+
+/* Checklist (readiness checks) */
+#MkiScreenFitConfigPage .mk-checks { list-style: none; margin: 0; padding: 0; }
+#MkiScreenFitConfigPage .mk-checks li { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-top: 1px solid var(--mk-line); font-size: .88rem; line-height: 1.45; }
+#MkiScreenFitConfigPage .mk-checks li:first-child { border-top: 0; }
+#MkiScreenFitConfigPage .mk-checks .mk-ic { margin-top: 1px; }
+#MkiScreenFitConfigPage .mk-checks .is-ok > .mk-ic { color: var(--mk-ok); }
+#MkiScreenFitConfigPage .mk-checks .is-warn > .mk-ic { color: var(--mk-warn); }
+#MkiScreenFitConfigPage .mk-checks .is-bad > .mk-ic { color: var(--mk-bad); }
+#MkiScreenFitConfigPage .mk-checks small { display: block; color: var(--mk-dim); font-size: .8rem; }
+
+/* Data list (responsive table: rows on desktop, cards on phones) */
+#MkiScreenFitConfigPage .mk-list { display: grid; }
+#MkiScreenFitConfigPage .mk-list__head, #MkiScreenFitConfigPage .mk-list__row { display: grid; grid-template-columns: var(--cols); gap: 10px 14px; align-items: center; padding: 10px 14px; }
+#MkiScreenFitConfigPage .mk-list__head { font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--mk-faint); padding-top: 4px; padding-bottom: 8px; }
+#MkiScreenFitConfigPage .mk-list__row { border-top: 1px solid var(--mk-line); }
+#MkiScreenFitConfigPage .mk-list__row.is-mark { background: rgba(var(--mk-a1-rgb),.08); box-shadow: inset 3px 0 0 var(--mk-a1-ink); }
+#MkiScreenFitConfigPage .mk-list__row.is-dim > :not(.mk-list__actions) { opacity: .55; }
+#MkiScreenFitConfigPage .mk-list__actions { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
+#MkiScreenFitConfigPage .mk-cell-label { display: none; }
+
+/* ---------- 10. Popover, toasts, dialog ---------- */
+#MkiScreenFitConfigPage .mk-savewrap { position: relative; flex: none; }
+#MkiScreenFitConfigPage .mk-pop__foot { border-top: 1px solid var(--mk-line); margin-top: 6px; padding-top: 10px; display: flex; }
+#MkiScreenFitConfigPage .mk-pop {
+  position: absolute; z-index: 60; right: 6px; top: calc(100% + 8px); width: min(380px, calc(100vw - 32px));
+  border-radius: 14px; border: 1px solid var(--mk-line-2); background: var(--mk-solid); color: var(--mk-text);
+  box-shadow: 0 24px 60px -18px rgba(0,0,0,.75); padding: 12px;
+}
+#MkiScreenFitConfigPage .mk-pop[hidden] { display: none; }
+#MkiScreenFitConfigPage .mk-pop__title { font-size: .72rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--mk-dim); margin: 2px 4px 8px; }
+#MkiScreenFitConfigPage .mk-log { list-style: none; margin: 0; padding: 0; max-height: 260px; overflow: auto; }
+#MkiScreenFitConfigPage .mk-log li { display: flex; gap: 10px; align-items: center; padding: 8px 6px; border-top: 1px solid var(--mk-line); font-size: .85rem; }
+#MkiScreenFitConfigPage .mk-log li:first-child { border-top: 0; }
+#MkiScreenFitConfigPage .mk-log time { color: var(--mk-faint); font-size: .76rem; flex: none; }
+#MkiScreenFitConfigPage .mk-log__empty { color: var(--mk-dim); font-size: .85rem; padding: 6px 4px 10px; }
+
+#MkiScreenFitConfigPage .mk-toasts { position: fixed; z-index: 1000; left: 50%; bottom: 22px; transform: translateX(-50%); display: flex; flex-direction: column; gap: 8px; align-items: center; width: max-content; max-width: calc(100vw - 24px); pointer-events: none; }
+#MkiScreenFitConfigPage .mk-toast {
+  pointer-events: auto; display: flex; align-items: center; gap: 12px; min-width: 0; max-width: 560px;
+  padding: 9px 9px 9px 14px; border-radius: 12px; font-size: .88rem; line-height: 1.35;
+  color: #f2f2f2; background: #222; border: 1px solid rgba(255,255,255,.14); box-shadow: 0 18px 44px -14px rgba(0,0,0,.7);
+  animation: mk-in .22s var(--mk-ease);
+}
+#MkiScreenFitConfigPage .mk-toast .mk-ic { color: #3ddc84; }
+#MkiScreenFitConfigPage .mk-toast--bad .mk-ic { color: #ff6b6b; }
+#MkiScreenFitConfigPage .mk-toast__text { flex: 1 1 auto; min-width: 0; }
+#MkiScreenFitConfigPage .mk-toast button { flex: none; font: inherit; font-size: .84rem; font-weight: 700; color: #fff; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); border-radius: 8px; padding: 5px 11px; cursor: pointer; }
+#MkiScreenFitConfigPage .mk-toast button:hover { background: rgba(255,255,255,.18); }
+@keyframes mk-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+#MkiScreenFitConfigPage dialog.mk-dialog {
+  width: min(520px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: auto; padding: 0; margin: auto;
+  color: var(--mk-text); background: var(--mk-solid); border: 1px solid var(--mk-line-2); border-radius: 16px;
+  box-shadow: 0 40px 90px -20px rgba(0,0,0,.8);
+}
+#MkiScreenFitConfigPage dialog.mk-dialog::backdrop { background: rgba(0,0,0,.62); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+#MkiScreenFitConfigPage .mk-dialog__head { display: flex; gap: 12px; align-items: flex-start; padding: 18px 20px 4px; }
+#MkiScreenFitConfigPage .mk-dialog__icon { flex: none; width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; }
+#MkiScreenFitConfigPage .mk-dialog__icon--bad { color: var(--mk-bad); background: rgba(var(--mk-bad-rgb),.12); }
+#MkiScreenFitConfigPage .mk-dialog__icon--warn { color: var(--mk-warn); background: rgba(var(--mk-warn-rgb),.12); }
+#MkiScreenFitConfigPage .mk-dialog__icon--accent { color: var(--mk-a1-ink); background: rgba(var(--mk-a1-rgb),.12); }
+#MkiScreenFitConfigPage .mk-dialog__title { margin: 0; font-size: 1.12rem; font-weight: 750; line-height: 1.3; }
+#MkiScreenFitConfigPage .mk-dialog__body { padding: 8px 20px 4px; font-size: .9rem; line-height: 1.55; color: var(--mk-dim); }
+#MkiScreenFitConfigPage .mk-dialog__body > * + * { margin-top: 10px; }
+#MkiScreenFitConfigPage .mk-dialog__foot { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; padding: 14px 20px 18px; }
+#MkiScreenFitConfigPage .mk-secret { font-family: ui-monospace, "DejaVu Sans Mono", Consolas, monospace; font-size: 1.3rem; letter-spacing: .06em; text-align: center; padding: 14px; border-radius: 10px; color: var(--mk-text); background: var(--mk-surface-3); border: 1px dashed var(--mk-line-2); user-select: all; overflow-wrap: anywhere; }  /* breaks after a hyphen first, never mid-word unless it must */
+
+/* ---------- 11. Kit runtime parts: loading, deck toggle, finder, history ---------- */
+/* Loading and load errors: the page shows no settings to edit until the server answered. */
+#MkiScreenFitConfigPage .mk-loadbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 14px 0 0; padding: 10px 13px; border-radius: 10px; font-size: .88rem; border: 1px solid var(--mk-line-2); background: var(--mk-surface-2); }
+#MkiScreenFitConfigPage .mk-loadbar[hidden] { display: none; }
+#MkiScreenFitConfigPage .mk-loadbar .mk-ic { color: var(--mk-info); }
+#MkiScreenFitConfigPage .mk-loadbar.is-bad { border-color: rgba(var(--mk-bad-rgb),.45); background: rgba(var(--mk-bad-rgb),.08); }
+#MkiScreenFitConfigPage .mk-loadbar.is-bad .mk-ic { color: var(--mk-bad); }
+#MkiScreenFitConfigPage .mk-loadbar__text { flex: 1 1 220px; min-width: 0; }
+#MkiScreenFitConfigPage[data-load="loading"] .mk-main, #MkiScreenFitConfigPage[data-load="error"] .mk-main,
+#MkiScreenFitConfigPage[data-load="loading"] [data-needs-load], #MkiScreenFitConfigPage[data-load="error"] [data-needs-load] { opacity: .45; pointer-events: none; }
+#MkiScreenFitConfigPage[data-load="loading"] .mk-tile__value, #MkiScreenFitConfigPage[data-load="error"] .mk-tile__value { color: var(--mk-faint); }
+
+/* Phones: the deck folds to title, state and "Next"; the toggle shows the tiles. */
+#MkiScreenFitConfigPage .mk-deck__toggle { display: none; }
+
+/* Find a setting */
+#MkiScreenFitConfigPage .mk-find { position: relative; min-width: 0; }
+#MkiScreenFitConfigPage .mk-find__box { display: flex; align-items: center; gap: 8px; padding: 0 10px; border-radius: 9px; border: 1px solid var(--mk-line); background: var(--mk-field); }
+#MkiScreenFitConfigPage .mk-find__box:focus-within { border-color: var(--mk-a1-ink); box-shadow: 0 0 0 3px rgba(var(--mk-a1-rgb),.18); }
+#MkiScreenFitConfigPage .mk-find__box .mk-ic { color: var(--mk-dim); }
+#MkiScreenFitConfigPage .mk-find__input { flex: 1 1 auto; min-width: 0; border: 0; margin: 0; padding: 8px 0; background: transparent; color: inherit; font: inherit; font-size: .9rem; }
+#MkiScreenFitConfigPage .mk-find__input:focus { outline: none; }
+#MkiScreenFitConfigPage .mk-find__list { position: absolute; z-index: 70; left: 0; right: 0; top: calc(100% + 6px); min-width: 260px; max-height: 340px; overflow: auto; margin: 0; padding: 6px; list-style: none; border-radius: 12px; border: 1px solid var(--mk-line-2); background: var(--mk-solid); box-shadow: 0 24px 60px -18px rgba(0,0,0,.75); }
+#MkiScreenFitConfigPage .mk-find__list[hidden] { display: none; }
+#MkiScreenFitConfigPage .mk-find__list button { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; width: 100%; margin: 0; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; color: var(--mk-text); font: inherit; font-size: .88rem; font-weight: 600; text-align: left; cursor: pointer; }
+#MkiScreenFitConfigPage .mk-find__list button small { font-size: .76rem; font-weight: 500; color: var(--mk-dim); }
+#MkiScreenFitConfigPage .mk-find__list button:hover, #MkiScreenFitConfigPage .mk-find__list button.is-active { background: var(--mk-surface-3); }
+#MkiScreenFitConfigPage .mk-find__none { padding: 8px 10px; font-size: .85rem; color: var(--mk-dim); }
+#MkiScreenFitConfigPage .is-found { animation: mk-found 1.8s var(--mk-ease); border-radius: 8px; }
+@keyframes mk-found { 0%, 45% { box-shadow: 0 0 0 2px rgba(var(--mk-a1-rgb),.6); background-color: rgba(var(--mk-a1-rgb),.07); } 100% { box-shadow: 0 0 0 2px transparent; } }
+
+/* "Changes this visit": settings (with undo), unsaved changes, and actions (cannot be undone here) */
+#MkiScreenFitConfigPage .mk-log li.is-pending { color: var(--mk-bad); }
+#MkiScreenFitConfigPage .mk-log li.is-action b { font-weight: 650; }
+#MkiScreenFitConfigPage .mk-log .mk-badge { margin-left: 6px; }
+#MkiScreenFitConfigPage .mk-log__what { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+
+/* "Runs with": what an action will use, built from the saved settings */
+#MkiScreenFitConfigPage .mk-uses { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: .8rem; color: var(--mk-dim); }
+#MkiScreenFitConfigPage .mk-uses > b { font-weight: 650; margin-right: 2px; }
+
+/* Busy buttons */
+#MkiScreenFitConfigPage .mk-btn.is-busy { pointer-events: none; }
+#MkiScreenFitConfigPage .mk-btn.is-busy > .mk-ic { animation: mk-spin 1s linear infinite; }
+
+/* Dialog extras: a one-time secret that stays until the admin confirms */
+#MkiScreenFitConfigPage .mk-dialog__copy { display: flex; gap: 8px; flex-wrap: wrap; }
+#MkiScreenFitConfigPage .mk-dialog__copy .mk-btn { flex: 1 1 180px; }
+
+/* ---------- 12. Responsive ---------- */
+@media (max-width: 900px) {
+  #MkiScreenFitConfigPage .mk-tiles { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  #MkiScreenFitConfigPage .mk-grid2 { grid-template-columns: minmax(0,1fr); }
+}
+@media (max-width: 640px) {
+  #MkiScreenFitConfigPage .mk-deck { padding: 16px 14px 14px; }
+  #MkiScreenFitConfigPage .mk-title { font-size: 1.5rem; }
+  #MkiScreenFitConfigPage .mk-tiles { gap: 8px; }
+  #MkiScreenFitConfigPage .mk-tile { padding: 10px 11px; }
+  #MkiScreenFitConfigPage .mk-tile__value { font-size: 1.18rem; }
+  #MkiScreenFitConfigPage .mk-master { width: 100%; justify-content: space-between; }
+  #MkiScreenFitConfigPage .mk-card__head { padding: 13px 14px 2px; }
+  #MkiScreenFitConfigPage .mk-card__body { padding: 6px 14px 14px; }
+  #MkiScreenFitConfigPage .mk-card__foot { padding: 10px 14px; }
+  #MkiScreenFitConfigPage .mk-bar { margin: 12px -4px 14px; border-radius: 12px; gap: 4px; }
+  #MkiScreenFitConfigPage .mk-tab { padding: 8px 10px; font-size: .86rem; }
+  #MkiScreenFitConfigPage .mk-save { padding: 7px 9px; }
+  #MkiScreenFitConfigPage .mk-save .mk-ic { font-size: 1.3em; }
+  #MkiScreenFitConfigPage .mk-save__text { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+  #MkiScreenFitConfigPage .mk-tabs.is-overflow { -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); padding-right: 22px; }
+  #MkiScreenFitConfigPage .mk-deck__toggle { display: inline-flex; }
+  #MkiScreenFitConfigPage .mk-deck:not(.is-open) .mk-tiles, #MkiScreenFitConfigPage .mk-deck:not(.is-open) .mk-lede, #MkiScreenFitConfigPage .mk-deck:not(.is-open) .mk-rule { display: none; }
+  #MkiScreenFitConfigPage .mk-seg label { padding: 6px 9px; }
+  #MkiScreenFitConfigPage .mk-row { flex-wrap: wrap; }
+  #MkiScreenFitConfigPage .mk-row__text { flex-basis: 150px; }
+  #MkiScreenFitConfigPage .mk-row--wide .mk-row__text { flex-basis: 100%; }
+  #MkiScreenFitConfigPage .mk-row--wide .mk-row__control, #MkiScreenFitConfigPage .mk-row .mk-range { flex-basis: 100%; }
+  #MkiScreenFitConfigPage .mk-flow { flex-direction: column; }
+  #MkiScreenFitConfigPage .mk-flow__edge { flex: 0 0 22px; width: 2px; height: 22px; align-self: center; background: linear-gradient(180deg, rgba(var(--mk-a1-rgb),.75), rgba(var(--mk-a2-rgb),.75)); }
+  #MkiScreenFitConfigPage .mk-flow__edge::after { right: auto; left: -4px; top: auto; bottom: -1px; border: 5px solid transparent; border-top: 7px solid rgba(var(--mk-a2-rgb),.9); border-bottom: 0; }
+  #MkiScreenFitConfigPage .mk-flow__edge::before { animation-name: mk-travel-v; left: -2px; }
+  #MkiScreenFitConfigPage .mk-list__head { display: none; }
+  #MkiScreenFitConfigPage .mk-list__row { grid-template-columns: 1fr 1fr; padding: 12px 2px; }
+  #MkiScreenFitConfigPage .mk-list__row > .mk-span { grid-column: 1 / -1; }
+  #MkiScreenFitConfigPage .mk-cell-label { display: block; font-size: .7rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--mk-faint); margin-bottom: 3px; }
+  #MkiScreenFitConfigPage .mk-list__actions { justify-content: flex-start; }
+  #MkiScreenFitConfigPage .mk-dialog__foot .mk-btn { flex: 1 1 auto; }
+}
+@keyframes mk-travel-v { from { top: 0; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } to { top: calc(100% - 6px); opacity: 0; } }
+
+/* ---------- 13. Motion & forced colours ---------- */
+@media (prefers-reduced-motion: reduce) {
+  #MkiScreenFitConfigPage *, #MkiScreenFitConfigPage *::before, #MkiScreenFitConfigPage *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  #MkiScreenFitConfigPage .mk-flow__edge::before { display: none; }
+}
+@media (forced-colors: active) {
+  #MkiScreenFitConfigPage .mk-switch:checked::before { background: Highlight; }
+  #MkiScreenFitConfigPage .mk-chip, #MkiScreenFitConfigPage .mk-note, #MkiScreenFitConfigPage .mk-card { border: 1px solid CanvasText; }
+}
+/* MKI-KIT:CSS END */
+</style>
+<style>
+/* ---------- Screen Fit: accent pair and page-specific parts ---------- */
+#MkiScreenFitConfigPage.mk-fit { --mk-a1:#FFA62B; --mk-a2:#7B6CFF; --mk-a1-rgb:255,166,43; --mk-a2-rgb:123,108,255; --mk-a1-l:#9a5800; --mk-a2-l:#4c3fd1; }
+#MkiScreenFitConfigPage .fit-barinfo { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 8px; margin: 0; padding: 0 10px; font-size: .86rem; color: var(--mk-dim); }
+#MkiScreenFitConfigPage .fit-barinfo .mk-ic { color: var(--mk-a1-ink); }
+#MkiScreenFitConfigPage .fit-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+#MkiScreenFitConfigPage .fit-grid > .mk-card { margin: 0; }
+#MkiScreenFitConfigPage .fit-wide { grid-column: 1 / -1; }
+#MkiScreenFitConfigPage .mk-card[tabindex="-1"]:focus { outline: none; }
+
+/* the two screens: what a viewer gets */
+#MkiScreenFitConfigPage .fit-demo { display: flex; gap: 14px; margin: 6px 0 4px; flex-wrap: wrap; }
+#MkiScreenFitConfigPage .fit-shot { flex: 1 1 170px; min-width: 0; }
+#MkiScreenFitConfigPage .fit-shot__k { display: flex; align-items: center; gap: 6px; margin: 0 0 6px; font-size: .72rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--mk-faint); }
+#MkiScreenFitConfigPage .fit-screen { position: relative; aspect-ratio: 16 / 9; border-radius: 8px; border: 2px solid var(--mk-line-2); background: linear-gradient(135deg, rgba(var(--mk-a1-rgb), .22), rgba(var(--mk-a2-rgb), .22)), var(--mk-surface-3); overflow: hidden; }
+#MkiScreenFitConfigPage .fit-screen::after { content: ""; position: absolute; left: 38%; right: 38%; bottom: -8px; height: 6px; border-radius: 3px; background: var(--mk-line-2); }
+#MkiScreenFitConfigPage .fit-screen__tag { position: absolute; left: 8px; top: 8px; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: .72rem; font-weight: 800; letter-spacing: .04em; color: #fff; background: rgba(0,0,0,.55); }
+#MkiScreenFitConfigPage .fit-screen__tag.is-new { box-shadow: 0 0 0 2px rgba(var(--mk-a1-rgb), .9); }
+#MkiScreenFitConfigPage .fit-screen__size { position: absolute; right: 8px; bottom: 8px; font-size: .72rem; font-weight: 700; color: rgba(255,255,255,.85); text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+#MkiScreenFitConfigPage .fit-shot__cap { margin: 10px 0 0; font-size: .78rem; color: var(--mk-dim); line-height: 1.4; }
+#MkiScreenFitConfigPage .fit-off-demo .fit-screen__tag.is-new { box-shadow: none; }
+
+#MkiScreenFitConfigPage .fit-flow .mk-flow__node { display: flex; flex-direction: column; }
+#MkiScreenFitConfigPage .fit-rules { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 6px; }
+#MkiScreenFitConfigPage .fit-rules li { display: flex; gap: 8px; align-items: flex-start; font-size: .85rem; line-height: 1.45; color: var(--mk-dim); }
+#MkiScreenFitConfigPage .fit-rules .mk-ic { color: var(--mk-a1-ink); margin-top: 2px; }
+
+/* devices */
+#MkiScreenFitConfigPage .fit-tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 0 0 8px; }
+#MkiScreenFitConfigPage .fit-tools .mk-find__box { flex: 1 1 220px; min-width: 0; }
+#MkiScreenFitConfigPage .fit-filter { position: relative; flex: 1 1 220px; min-width: 0; max-width: 360px; }
+#MkiScreenFitConfigPage .fit-count { font-size: .82rem; color: var(--mk-faint); }
+#MkiScreenFitConfigPage .fit-devices .mk-list__row { font-size: .88rem; }
+#MkiScreenFitConfigPage .fit-dev { min-width: 0; }
+#MkiScreenFitConfigPage .fit-dev b { display: block; font-weight: 700; overflow-wrap: anywhere; }
+#MkiScreenFitConfigPage .fit-dev small { display: block; font-size: .78rem; color: var(--mk-dim); overflow-wrap: anywhere; }
+#MkiScreenFitConfigPage .fit-scr { min-width: 0; }
+#MkiScreenFitConfigPage .fit-scr .mk-chip { max-width: 100%; }
+#MkiScreenFitConfigPage .fit-scr small { display: block; margin-top: 4px; font-size: .76rem; color: var(--mk-faint); }
+#MkiScreenFitConfigPage .fit-does { font-size: .82rem; color: var(--mk-dim); line-height: 1.4; min-width: 0; }
+#MkiScreenFitConfigPage .fit-does b { color: var(--mk-text); font-weight: 700; }
+#MkiScreenFitConfigPage .fit-mode { width: 100%; min-width: 0; }
+#MkiScreenFitConfigPage .fit-devices .mk-list__row.is-set { box-shadow: inset 3px 0 0 var(--mk-a1-ink); }
+#MkiScreenFitConfigPage .fit-empty { display: flex; gap: 10px; align-items: flex-start; margin: 0; padding: 12px 14px; border-radius: 11px; border: 1px dashed var(--mk-line-2); color: var(--mk-dim); font-size: .88rem; line-height: 1.45; }
+#MkiScreenFitConfigPage .fit-empty .mk-ic { color: var(--mk-faint); }
+#MkiScreenFitConfigPage .fit-more { margin: 10px 0 0; }
+
+/* recent decisions */
+#MkiScreenFitConfigPage .fit-log .mk-list__row { font-size: .86rem; }
+#MkiScreenFitConfigPage .fit-log .mk-chip { justify-self: start; }
+#MkiScreenFitConfigPage .fit-what { min-width: 0; color: var(--mk-dim); line-height: 1.4; }
+#MkiScreenFitConfigPage .fit-what b { color: var(--mk-text); font-weight: 700; overflow-wrap: anywhere; }
+
+@media (max-width: 900px) {
+  #MkiScreenFitConfigPage .fit-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 640px) {
+  #MkiScreenFitConfigPage .fit-barinfo span { display: none; }
+  #MkiScreenFitConfigPage .fit-barinfo::after { content: "Each change saves itself"; }
+  #MkiScreenFitConfigPage .fit-devices .mk-list__row > .fit-dev, #MkiScreenFitConfigPage .fit-devices .mk-list__row > .fit-does { grid-column: 1 / -1; }
+  #MkiScreenFitConfigPage .fit-devices .mk-list__row > .fit-does { order: 5; }
+  #MkiScreenFitConfigPage .fit-log .mk-list__row > .fit-what { grid-column: 1 / -1; }
+  #MkiScreenFitConfigPage .fit-shot { flex: 1 1 100%; max-width: 300px; }
+  #MkiScreenFitConfigPage .fit-filter { max-width: none; }
+}
+</style>
+
+<div data-role="content"><div class="content-primary mk-wrap">
+
+<header class="mk-deck" aria-labelledby="fitTitle">
+  <div class="mk-deck__head">
+    <div class="mk-brand">
+      <p class="mk-kicker">MKI · Jellyfin plugin</p>
+      <h1 class="mk-title" id="fitTitle">Screen <b>Fit</b></h1>
+      <span class="mk-rule"></span>
+      <p class="mk-lede">Plays the Full HD version of a movie on screens that cannot show 4K, and keeps transcodes no larger than the screen. Bitrate limits and transcode throttling stay exactly as you set them in Jellyfin.</p>
+    </div>
+  </div>
+
+  <div class="mk-tiles">
+    <button type="button" class="mk-tile" data-goto="fitVersionRow">
+      <span class="mk-tile__label"><span class="material-icons mk-ic" aria-hidden="true">swap_horiz</span>Full HD version</span>
+      <span class="mk-tile__value" id="fitTileVersion">…</span>
+      <span class="mk-tile__sub" id="fitTileVersionSub"></span>
+    </button>
+    <button type="button" class="mk-tile" data-goto="fitLimitRow">
+      <span class="mk-tile__label"><span class="material-icons mk-ic" aria-hidden="true">photo_size_select_large</span>Transcode limit</span>
+      <span class="mk-tile__value" id="fitTileLimit">…</span>
+      <span class="mk-tile__sub" id="fitTileLimitSub"></span>
+    </button>
+    <button type="button" class="mk-tile" data-goto="fitDevicesCard">
+      <span class="mk-tile__label"><span class="material-icons mk-ic" aria-hidden="true">devices</span>Screens known</span>
+      <span class="mk-tile__value" id="fitTileScreens">…</span>
+      <span class="mk-tile__sub" id="fitTileScreensSub"></span>
+    </button>
+    <button type="button" class="mk-tile" data-goto="fitLogCard">
+      <span class="mk-tile__label"><span class="material-icons mk-ic" aria-hidden="true">fact_check</span>Since Jellyfin started</span>
+      <span class="mk-tile__value" id="fitTileDone">…</span>
+      <span class="mk-tile__sub" id="fitTileDoneSub"></span>
+    </button>
+  </div>
+
+  <div class="mk-deck__foot">
+    <p class="mk-next"><span class="material-icons mk-ic" aria-hidden="true">tips_and_updates</span><span id="fitNext">Loading…</span></p>
+    <div class="mk-actions">
+      <button type="button" class="mk-btn mk-btn--ghost" id="fitRefresh"><span class="material-icons mk-ic" aria-hidden="true">refresh</span><span>Refresh</span></button>
+    </div>
+  </div>
+</header>
+
+<div class="mk-bar">
+  <p class="fit-barinfo"><span class="material-icons mk-ic" aria-hidden="true">tune</span><span>2 switches and a choice per device · each change saves itself, with undo</span></p>
+</div>
+
+<div class="mk-main fit-grid">
+
+<section class="mk-card" id="fitRulesCard" aria-labelledby="fitRulesT" tabindex="-1">
+  <div class="mk-card__head">
+    <span class="mk-card__icon"><span class="material-icons mk-ic" aria-hidden="true">tune</span></span>
+    <div class="mk-card__titles"><h2 class="mk-card__title" id="fitRulesT">What the plugin does</h2><p class="mk-card__desc">For every user, on the devices whose screen is known.</p></div>
+  </div>
+  <div class="mk-card__body">
+    <div class="mk-row" id="fitVersionRow" tabindex="-1">
+      <div class="mk-row__text"><label class="mk-row__label" for="fitVersion">Play the Full HD version on Full HD screens</label><span class="mk-row__desc">For movies with a 4K and a Full HD version, for example merged by MKI Merge Versions. Only when both are the same cut and the Full HD one has the chosen audio and subtitle language; otherwise 4K stays.</span></div>
+      <div class="mk-row__control"><input type="checkbox" class="mk-switch" role="switch" id="fitVersion" data-key="EnableFullHdVersion" data-label="Full HD version"></div>
+    </div>
+    <div class="mk-row" id="fitLimitRow" tabindex="-1">
+      <div class="mk-row__text"><label class="mk-row__label" for="fitLimit">Keep transcodes no larger than the screen</label><span class="mk-row__desc">Only when Jellyfin re-encodes the video anyway: an unsupported codec or HDR, burned-in subtitles, a bitrate limit. Direct play and remuxing are never touched. Never smaller than 1280×720.</span></div>
+      <div class="mk-row__control"><input type="checkbox" class="mk-switch" role="switch" id="fitLimit" data-key="EnableTranscodeLimit" data-label="Transcode limit"></div>
+    </div>
+    <div class="fit-demo" id="fitDemo">
+      <div class="fit-shot">
+        <p class="fit-shot__k"><span class="material-icons mk-ic mk-ic--sm" aria-hidden="true">laptop</span>Full HD laptop</p>
+        <div class="fit-screen" aria-hidden="true"><span class="fit-screen__tag is-new" id="fitDemoLaptop">1080p version</span><span class="fit-screen__size">1920×1080</span></div>
+        <p class="fit-shot__cap" id="fitDemoLaptopCap">Starts the Full HD file. A transcode, if one is needed, works on a quarter of the pixels.</p>
+      </div>
+      <div class="fit-shot">
+        <p class="fit-shot__k"><span class="material-icons mk-ic mk-ic--sm" aria-hidden="true">tv</span>4K TV</p>
+        <div class="fit-screen" aria-hidden="true"><span class="fit-screen__tag">4K version</span><span class="fit-screen__size">3840×2160</span></div>
+        <p class="fit-shot__cap">Nothing changes: 4K screens get 4K, as before.</p>
+      </div>
+    </div>
+    <p class="mk-note" id="fitOnNote"><span class="material-icons mk-ic" aria-hidden="true">info</span><span id="fitOnNoteT"></span></p>
+  </div>
+</section>
+
+<section class="mk-card" aria-labelledby="fitHowT">
+  <div class="mk-card__head">
+    <span class="mk-card__icon"><span class="material-icons mk-ic" aria-hidden="true">account_tree</span></span>
+    <div class="mk-card__titles"><h2 class="mk-card__title" id="fitHowT">How it decides</h2><p class="mk-card__desc">Each time a video starts, before Jellyfin answers the player.</p></div>
+  </div>
+  <div class="mk-card__body">
+    <div class="mk-flow fit-flow">
+      <div class="mk-flow__node">
+        <span class="mk-flow__kicker"><span class="material-icons mk-ic" aria-hidden="true">monitor</span>1 · Screen</span>
+        <span class="mk-flow__title">Measured or set</span>
+        <span class="mk-flow__sub">Browsers and apps built on the web client measure their screen. For other apps you set it per device.</span>
+      </div>
+      <span class="mk-flow__edge" id="fitEdge1"></span>
+      <div class="mk-flow__node" id="fitNodeVersion">
+        <span class="mk-flow__kicker"><span class="material-icons mk-ic" aria-hidden="true">swap_horiz</span>2 · Version</span>
+        <span class="mk-flow__title">Full HD file on a Full HD screen</span>
+        <span class="mk-flow__sub">Screens up to 1200 pixels tall: 1080p monitors, most laptops, phones.</span>
+      </div>
+      <span class="mk-flow__edge" id="fitEdge2"></span>
+      <div class="mk-flow__node" id="fitNodeLimit">
+        <span class="mk-flow__kicker"><span class="material-icons mk-ic" aria-hidden="true">photo_size_select_large</span>3 · Transcode</span>
+        <span class="mk-flow__title">No larger than the screen</span>
+        <span class="mk-flow__sub">Only for a re-encode. Copying the video stays a copy.</span>
+      </div>
+    </div>
+    <ul class="fit-rules">
+      <li><span class="material-icons mk-ic mk-ic--sm" aria-hidden="true">help_outline</span><span>Screen unknown: nothing changes. A doubtful measurement (TV browsers, privacy settings) counts as unknown.</span></li>
+      <li><span class="material-icons mk-ic mk-ic--sm" aria-hidden="true">touch_app</span><span>A version picked by hand that is not the default always plays as picked.</span></li>
+      <li><span class="material-icons mk-ic mk-ic--sm" aria-hidden="true">speed</span><span>Never changes bitrate limits, transcode throttling, codecs or audio. The resume position carries over.</span></li>
+    </ul>
+  </div>
+</section>
+
+<section class="mk-card fit-wide" id="fitDevicesCard" aria-labelledby="fitDevicesT" tabindex="-1">
+  <div class="mk-card__head">
+    <span class="mk-card__icon"><span class="material-icons mk-ic" aria-hidden="true">devices</span></span>
+    <div class="mk-card__titles"><h2 class="mk-card__title" id="fitDevicesT">Devices</h2><p class="mk-card__desc" id="fitDevicesDesc">The screen each device reported, and what happens there. Change it for apps that cannot report their screen.</p></div>
+  </div>
+  <div class="mk-card__body">
+    <div id="fitRules" data-key="DeviceRules" data-type="json" data-label="Device settings" hidden></div>
+    <div class="fit-tools">
+      <div class="fit-filter"><div class="mk-find__box"><span class="material-icons mk-ic" aria-hidden="true">filter_list</span><input type="search" class="mk-find__input" id="fitFilter" placeholder="Filter by device, app or user" aria-label="Filter devices" autocomplete="off"></div></div>
+      <span class="fit-count" id="fitCount" aria-live="polite"></span>
+    </div>
+    <div class="mk-list fit-devices" id="fitDevices" style="--cols: minmax(0,1.35fr) minmax(0,1fr) minmax(0,1.3fr) minmax(150px,.9fr)"></div>
+    <div class="fit-more"><button type="button" class="mk-btn mk-btn--sm mk-btn--ghost" id="fitMore" hidden></button></div>
+  </div>
+</section>
+
+<section class="mk-card fit-wide" id="fitLogCard" aria-labelledby="fitLogT" tabindex="-1">
+  <div class="mk-card__head">
+    <span class="mk-card__icon"><span class="material-icons mk-ic" aria-hidden="true">fact_check</span></span>
+    <div class="mk-card__titles"><h2 class="mk-card__title" id="fitLogT">Recent decisions</h2><p class="mk-card__desc" id="fitLogDesc">The last 100 since Jellyfin started. Each start of the same video on the same device is listed once.</p></div>
+  </div>
+  <div class="mk-card__body">
+    <div class="mk-list fit-log" id="fitLog" style="--cols: 104px minmax(0,1fr) minmax(0,1.6fr)"></div>
+  </div>
+</section>
+
+</div>
+</div></div>
+
+<script type="text/javascript">
+(function () {
+'use strict';
+/* MKI-KIT:JS BEGIN (generated from ui/mki-kit.js by build/kit.py, do not edit here) */
+/* MKI kit runtime: shared behaviour of the MKI plugin settings pages ("Control Deck").
+   Source of truth: ui/mki-kit.js. build/kit.py copies it into every configPage.html between the MKI-KIT markers,
+   inside the page's own script, so nothing here is global and each page gets its own instance.
+
+   Usage (inside the page script):
+     var kit = MkiKit(page, { pluginId: '...', onLoad: fn(cfg), onSaved: fn(batch), confirm: { Key: fn(to, from) -> Promise<bool> } });
+
+   Rules this runtime keeps:
+   - Everything is looked up inside `page`. Listeners are bound once, when the page script runs; pageshow only loads data.
+   - Settings save themselves: switches and pickers 350 ms after the last change (one batch), text when the field is left.
+     Only the changed keys are written, on top of a fresh copy of the server's configuration, one save at a time.
+   - A value that fails validation is never saved. A failed save keeps the value on screen and offers Retry.
+   - Server text only ever reaches the page through textContent or attributes. ES5 on purpose. */
+function MkiKit(page, o) {
+  'use strict';
+  o = o || {};
+  var kit = { page: page };
+  var EN = 'en-GB';
+  var disposers = [];
+
+  /* ---------- small helpers ---------- */
+  function $(s, root) { return (root || page).querySelector(s); }
+  function $$(s, root) { return Array.prototype.slice.call((root || page).querySelectorAll(s)); }
+  function byId(id) { return id ? page.querySelector('[id="' + String(id).replace(/"/g, '') + '"]') : null; }
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function ic(name, cls) { var s = el('span', 'material-icons mk-ic' + (cls ? ' ' + cls : ''), name); s.setAttribute('aria-hidden', 'true'); return s; }
+  function fill(node, parts) {
+    node.textContent = '';
+    (Array.isArray(parts) ? parts : [parts]).forEach(function (p) {
+      if (p == null || p === false) return;
+      node.appendChild(typeof p === 'string' || typeof p === 'number' ? document.createTextNode(String(p)) : p);
+    });
+    return node;
+  }
+  function btn(text, cls, icon) { var b = el('button', 'mk-btn' + (cls ? ' ' + cls : '')); b.type = 'button'; if (icon) b.appendChild(ic(icon)); b.appendChild(el('span', null, text)); return b; }
+  function count(obj) { return Object.keys(obj).length; }
+  function same(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
+  function listen(target, type, fn, opt) { target.addEventListener(type, fn, opt); disposers.push(function () { target.removeEventListener(type, fn, opt); }); }
+  function hhmm(d) { return d.toLocaleTimeString(EN, { hour: '2-digit', minute: '2-digit' }); }
+  function day(d) { return d.toLocaleDateString(EN, { weekday: 'short', day: 'numeric', month: 'short' }); }
+  function dayTime(d) {
+    var now = new Date(), y = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+    if (d.toDateString() === now.toDateString()) return 'today ' + hhmm(d);
+    if (d.toDateString() === y.toDateString()) return 'yesterday ' + hhmm(d);
+    return day(d) + ', ' + hhmm(d);
+  }
+  function span(ms) {
+    var s = Math.round(Math.abs(ms) / 1000);
+    if (s < 60) return s + ' s';
+    var m = Math.round(s / 60); if (m < 60) return m + ' min';
+    var h = Math.floor(m / 60), r = m % 60; if (h < 48) return h + ' h' + (r ? ' ' + r + ' min' : '');
+    return Math.round(h / 24) + ' days';
+  }
+  function plural(n, one, many) { return n + ' ' + (n === 1 ? one : (many || one + 's')); }
+  function num(n) { return Number(n).toLocaleString(EN); }
+  function param(name) {
+    var q = (location.search || '') + '&' + ((location.hash || '').split('?')[1] || ''), m = new RegExp('[?&]' + name + '=([^&#]*)').exec(q);
+    return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : null;
+  }
+  function store(key, val) {
+    try { if (val === undefined) return sessionStorage.getItem('mki:' + page.id + ':' + key); sessionStorage.setItem('mki:' + page.id + ':' + key, val); } catch (e) { return null; }
+  }
+
+  /* ---------- theme: Jellyfin's own palette first, background luminance as fallback ---------- */
+  function parseColor(s) {
+    s = String(s || '').trim();
+    var m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(s);
+    if (m) { var h = m[1].length === 3 ? m[1].replace(/./g, '$&$&') : m[1]; return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16), 1]; }
+    m = /rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:\s*[,\/]\s*([\d.]+%?))?/.exec(s);
+    if (!m) return null;
+    var a = m[4] == null ? 1 : (/%$/.test(m[4]) ? parseFloat(m[4]) / 100 : +m[4]);
+    return [+m[1], +m[2], +m[3], a];
+  }
+  function tone() {
+    var c = parseColor(getComputedStyle(document.documentElement).getPropertyValue('--jf-palette-background-default'));
+    for (var n = page; !c && n && n.nodeType === 1; n = n.parentElement) { var b = parseColor(getComputedStyle(n).backgroundColor); if (b && b[3] > 0.5) c = b; }
+    if (!c) c = parseColor(getComputedStyle(document.body).backgroundColor) || [16, 16, 16, 1];
+    var l = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255;
+    page.setAttribute('data-tone', l > 0.5 ? 'light' : 'dark');
+  }
+  /* the sticky bar stops under Jellyfin's fixed header */
+  function stickyTop() {
+    var top = 0;
+    Array.prototype.forEach.call(document.querySelectorAll('.MuiAppBar-root, .skinHeader'), function (h) {
+      var cs = getComputedStyle(h), r = h.getBoundingClientRect();
+      if ((cs.position === 'fixed' || cs.position === 'sticky') && cs.visibility !== 'hidden' && r.top <= 0 && r.bottom > top && r.bottom < 240) top = Math.round(r.bottom);
+    });
+    page.style.setProperty('--mk-sticky-top', top + 'px');
+  }
+  tone();
+  if (window.MutationObserver) {
+    var mo = new MutationObserver(tone);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class', 'style'] });
+    disposers.push(function () { mo.disconnect(); });
+  }
+  listen(window, 'resize', function () { stickyTop(); tabOverflow(); });
+
+  /* ---------- tabs (role=tablist, arrow keys, ?tab= deep link, remembered per visit) ---------- */
+  var tabs = $$('.mk-tab[role="tab"]'), tabList = $('.mk-tabs');
+  function tabOverflow() { if (tabList) tabList.classList.toggle('is-overflow', tabList.scrollWidth > tabList.clientWidth + 2); }
+  function selectTab(t, focus) {
+    if (!t) return;
+    tabs.forEach(function (x) {
+      var on = x === t; x.setAttribute('aria-selected', String(on)); x.tabIndex = on ? 0 : -1;
+      var p = byId(x.getAttribute('aria-controls')); if (p) p.hidden = !on;
+    });
+    if (focus) t.focus();
+    var tl = t.parentElement, tr = t.getBoundingClientRect(), lr = tl.getBoundingClientRect();
+    if (tr.left < lr.left || tr.right > lr.right) tl.scrollLeft += (tr.left - lr.left) - (lr.width - tr.width) / 2;
+    store('tab', t.getAttribute('data-tab') || '');
+    if (o.onTab) o.onTab(t.getAttribute('data-tab'));
+  }
+  function tabByName(name) { return tabs.filter(function (x) { return x.getAttribute('data-tab') === name; })[0]; }
+  function tabOf(node) {
+    var p = node && node.closest('[role="tabpanel"]');
+    return p ? tabs.filter(function (x) { return x.getAttribute('aria-controls') === p.id; })[0] : null;
+  }
+  tabs.forEach(function (t, i) {
+    t.addEventListener('click', function () { selectTab(t); });
+    t.addEventListener('keydown', function (e) {
+      var j = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : null;
+      if (j == null) return; e.preventDefault(); selectTab(tabs[(j + tabs.length) % tabs.length], true);
+    });
+  });
+  if (tabs.length) selectTab(tabByName(param('tab')) || tabByName(store('tab')) || tabs.filter(function (x) { return x.getAttribute('aria-selected') === 'true'; })[0] || tabs[0]);
+  /* in-page links: <button data-goto="cardId"> switches tab if needed and brings the card into view */
+  function reveal(node, focusNode) {
+    if (!node) return;
+    var t = tabOf(node); if (t && t.getAttribute('aria-selected') !== 'true') selectTab(t);
+    var deck = node.closest('.mk-deck'); if (deck) deck.classList.add('is-open');
+    node.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    var f = focusNode || node; if (f.tabIndex < 0 && !f.hasAttribute('tabindex')) f.setAttribute('tabindex', '-1');
+    try { f.focus({ preventScroll: true }); } catch (e) { f.focus(); }
+    node.classList.remove('is-found'); void node.offsetWidth; node.classList.add('is-found');
+  }
+  page.addEventListener('click', function (e) {
+    var g = e.target.closest && e.target.closest('[data-goto]'); if (!g || !page.contains(g)) return;
+    e.preventDefault(); reveal(byId(g.getAttribute('data-goto')));
+  });
+
+  /* ---------- deck folds on phones ---------- */
+  var deck = $('.mk-deck');
+  if (deck) {
+    var foot = $('.mk-deck__foot', deck), tg = el('button', 'mk-btn mk-btn--sm mk-btn--ghost mk-deck__toggle');
+    tg.type = 'button'; tg.appendChild(ic('expand_more')); tg.appendChild(el('span', null, 'Show status'));
+    var setDeck = function (open) {
+      deck.classList.toggle('is-open', open); tg.setAttribute('aria-expanded', String(open));
+      tg.lastChild.textContent = open ? 'Hide status' : 'Show status'; tg.firstChild.textContent = open ? 'expand_less' : 'expand_more';
+    };
+    tg.addEventListener('click', function () { var open = !deck.classList.contains('is-open'); setDeck(open); store('deck', open ? '1' : '0'); });
+    setDeck(store('deck') === '1');
+    if (foot) foot.appendChild(tg); else deck.appendChild(tg);
+  }
+
+  /* ---------- sliders: range <-> number box, fill, default tick, reset ---------- */
+  function rangeSync(r) {
+    var min = +r.min || 0, max = +r.max || 100, v = +r.value;
+    r.style.setProperty('--p', ((v - min) / ((max - min) || 1) * 100) + '%');
+    var wrap = r.closest('.mk-range'); if (!wrap) return;
+    var box = $('[data-sync-for="' + r.id + '"]', wrap); if (box && document.activeElement !== box) box.value = r.value;
+    var out = $('[data-out-for="' + r.id + '"]', wrap); if (out) out.textContent = r.value + (r.getAttribute('data-unit') ? ' ' + r.getAttribute('data-unit') : '');
+    if (r.hasAttribute('data-default')) wrap.classList.toggle('is-changed', String(v) !== r.getAttribute('data-default'));
+  }
+  $$('.mk-range input[type="range"]').forEach(function (r) {
+    var wrap = r.closest('.mk-range');
+    if (r.hasAttribute('data-default')) {
+      var d = +r.getAttribute('data-default'), min = +r.min || 0, max = +r.max || 100, tr = $('.mk-range__track', wrap);
+      if (tr) { var t = el('i', 'mk-tick'); t.style.left = ((d - min) / ((max - min) || 1) * 100) + '%'; t.title = 'Default: ' + d; tr.appendChild(t); }
+      var rs = $('.mk-reset', wrap);
+      if (rs) rs.addEventListener('click', function () { r.value = d; rangeSync(r); r.dispatchEvent(new Event('input', { bubbles: true })); r.dispatchEvent(new Event('change', { bubbles: true })); });
+    }
+    r.addEventListener('input', function () { rangeSync(r); });
+    var box = $('[data-sync-for="' + r.id + '"]', wrap);
+    if (box) {
+      box.addEventListener('input', function () { var n = +box.value; if (box.value !== '' && n >= +r.min && n <= +r.max) { r.value = n; rangeSync(r); r.dispatchEvent(new Event('input', { bubbles: true })); } });
+      box.addEventListener('change', function (e) {
+        e.stopPropagation();
+        var st = +r.step || 1, n = Math.round(Math.min(+r.max, Math.max(+r.min, +box.value || 0)) / st) * st;
+        box.value = n; r.value = n; rangeSync(r); r.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+    }
+    rangeSync(r);
+  });
+
+  /* ---------- steppers: [-] value [+]; the value saves once the clicking stops ---------- */
+  $$('.mk-stepper').forEach(function (s) {
+    var inp = $('input', s), timer;
+    $$('button', s).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var step = +(b.getAttribute('data-step') || 1), lo = inp.min === '' ? -Infinity : +inp.min, hi = inp.max === '' ? Infinity : +inp.max;
+        inp.value = Math.min(hi, Math.max(lo, (+inp.value || 0) + step));
+        inp.dispatchEvent(new Event('input', { bubbles: true }));
+        clearTimeout(timer); timer = setTimeout(function () { inp.dispatchEvent(new Event('change', { bubbles: true })); }, 450);
+      });
+    });
+  });
+
+  /* ---------- list editors (allow/block lists). Entries are rendered with textContent only. ---------- */
+  function tagsSet(box, list) {
+    box._tags = (list || []).slice();
+    $$('.mk-tag', box).forEach(function (t) { t.parentNode.removeChild(t); });
+    var input = $('input', box), kind = box.classList.contains('mk-tags--block') ? 'block' : box.classList.contains('mk-tags--allow') ? 'check' : null;
+    box._tags.forEach(function (txt, i) {
+      var t = el('span', 'mk-tag'); if (kind) t.appendChild(ic(kind));
+      t.appendChild(el('span', null, txt));
+      var x = el('button'); x.type = 'button'; x.setAttribute('aria-label', 'Remove ' + txt); x.appendChild(ic('close', 'mk-ic--sm'));
+      x.addEventListener('click', function () { var l = box._tags.slice(); l.splice(i, 1); tagsSet(box, l); box.dispatchEvent(new Event('change', { bubbles: true })); input.focus(); });
+      t.appendChild(x); box.insertBefore(t, input);
+    });
+    box.dispatchEvent(new Event('mk-tags', { bubbles: true }));
+  }
+  $$('.mk-tags').forEach(function (box) {
+    var input = $('input', box);
+    tagsSet(box, []);
+    box.addEventListener('click', function (e) { if (e.target === box) input.focus(); });
+    function add(raw) {
+      var parts = String(raw).split(/\n/).map(function (s) { return s.trim(); }).filter(Boolean), l = box._tags.slice(), changed = false;
+      parts.forEach(function (p) { if (l.map(function (x) { return x.toLowerCase(); }).indexOf(p.toLowerCase()) < 0) { l.push(p); changed = true; } });
+      input.value = ''; if (changed) { tagsSet(box, l); box.dispatchEvent(new Event('change', { bubbles: true })); }
+    }
+    box._add = add;
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); if (input.value.trim()) add(input.value); }
+      else if (e.key === 'Backspace' && !input.value && box._tags.length) { var l = box._tags.slice(); l.pop(); tagsSet(box, l); box.dispatchEvent(new Event('change', { bubbles: true })); }
+    });
+    input.addEventListener('change', function (e) { e.stopPropagation(); });
+    input.addEventListener('input', function (e) { e.stopPropagation(); });
+    input.addEventListener('paste', function (e) { var t = (e.clipboardData || window.clipboardData).getData('text'); if (/\n/.test(t)) { e.preventDefault(); add(t); } });
+    input.addEventListener('blur', function () { if (input.value.trim()) add(input.value); });
+    var sug = box.id && $('.mk-suggest[data-for="' + box.id + '"]');
+    if (sug) $$('button', sug).forEach(function (b) { b.addEventListener('click', function () { add(b.getAttribute('data-value') || b.textContent); }); });
+  });
+
+  /* ---------- secrets: the eye button only ever touches a field of this page ---------- */
+  $$('[data-reveal]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var f = byId(b.getAttribute('data-reveal')); if (!f) return;
+      var show = f.type === 'password';
+      f.type = show ? 'text' : 'password'; b.setAttribute('aria-pressed', String(show)); b.setAttribute('aria-label', show ? 'Hide' : 'Show');
+      var i = $('.mk-ic', b); if (i) i.textContent = show ? 'visibility_off' : 'visibility';
+    });
+  });
+
+  /* ---------- validation ---------- */
+  var RULES = {
+    url: function (v) {
+      if (!v) return null;
+      if (!/^https?:\/\//i.test(v)) return 'Start with http:// or https://';
+      try { var u = new URL(v); if (!u.hostname) return 'That is not a complete address'; } catch (e) { return 'That is not a valid address'; }
+      return null;
+    },
+    lang: function (v) { return /^[a-z]{2}$/i.test(v) ? null : 'Use a two-letter code such as en, de or fr'; },
+    domain: function (v) { if (!v) return null; return /^\.?([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/i.test(v) ? null : 'Use a domain such as .example.org, without http:// or a path'; },
+    css: function (v) { var a = (v.match(/\{/g) || []).length, b = (v.match(/\}/g) || []).length; return a === b ? null : (a > b ? (a - b) + ' "{" not closed' : (b - a) + ' "}" too many'); },
+    int: function (v, e) {
+      if (v === '' || !/^-?\d+$/.test(v)) return 'Enter a whole number';
+      var n = +v; if ((e.min !== '' && n < +e.min) || (e.max !== '' && n > +e.max)) return 'Between ' + e.min + ' and ' + e.max;
+      return null;
+    }
+  };
+  if (o.rules) Object.keys(o.rules).forEach(function (k) { RULES[k] = o.rules[k]; });
+  function msgFor(c) {
+    var id = c.getAttribute('data-msg'); if (id) return byId(id);
+    var f = c.closest('.mk-field, .mk-row'); return f ? $('.mk-msg[data-auto]', f) : null;
+  }
+  function validate(c) {
+    var rule = c.getAttribute('data-validate'); if (!rule || !RULES[rule]) return true;
+    var err = RULES[rule](String(c.value).trim(), c), m = msgFor(c);
+    c.setAttribute('aria-invalid', err ? 'true' : 'false');
+    if (m && (err || m.getAttribute('data-kit') === 'err')) {
+      m.textContent = ''; m.className = 'mk-msg' + (err ? ' mk-msg--bad' : '');
+      if (err) { m.setAttribute('data-kit', 'err'); m.appendChild(ic('error')); m.appendChild(el('span', null, err + '. Not saved.')); }
+      else m.removeAttribute('data-kit');
+    }
+    return !err;
+  }
+
+  /* ---------- reading and writing controls ---------- */
+  function keyEls(k) { return $$('[data-key="' + k + '"]'); }
+  /* single-line text is saved without leading or trailing spaces (data-notrim keeps them) */
+  function trim(e) { if (e && e.tagName === 'INPUT' && /^(text|url|password|search|email|tel)$/.test(e.type) && !e.hasAttribute('data-notrim') && e.value !== e.value.trim()) e.value = e.value.trim(); }
+  function isText(e) { return e && (e.tagName === 'TEXTAREA' || (e.tagName === 'INPUT' && /^(text|url|password|search|number|email|tel)$/.test(e.type))); }
+  function copyJson(v) { return v == null ? null : JSON.parse(JSON.stringify(v)); }
+  function read(k) {
+    var els = keyEls(k), e = els[0]; if (!e) return undefined;
+    /* data-type="json": the page keeps a structured value (e.g. a list of objects) on the element as mkValue */
+    if (e.getAttribute('data-type') === 'json') return copyJson(e.mkValue);
+    if (e.classList.contains('mk-tags')) return (e._tags || []).slice();
+    if (e.type === 'radio') { var c = els.filter(function (x) { return x.checked; })[0]; return c ? c.value : null; }
+    if (e.type === 'checkbox') return els.length > 1 ? els.filter(function (x) { return x.checked; }).map(function (x) { return x.value; }) : e.checked;
+    return e.value;
+  }
+  function write(k, v) {
+    var els = keyEls(k), e = els[0]; if (!e) return;
+    if (e.getAttribute('data-type') === 'json') e.mkValue = copyJson(v);
+    else if (e.classList.contains('mk-tags')) tagsSet(e, v || []);
+    else if (e.type === 'radio') els.forEach(function (x) { x.checked = x.value === String(v); });
+    else if (e.type === 'checkbox') { if (els.length > 1) els.forEach(function (x) { x.checked = (v || []).indexOf(x.value) >= 0; }); else e.checked = !!v; }
+    else if (e.tagName === 'SELECT' && v != null && !$$('option', e).some(function (op) { return op.value === String(v); })) {
+      /* a stored value the page has no option for keeps its own option instead of falling back to the first one */
+      var op = el('option', null, (e.getAttribute('data-other') || '{v}').replace('{v}', String(v))); op.value = String(v); op.setAttribute('data-kit', 'other'); e.appendChild(op); e.value = String(v);
+    }
+    else { e.value = v == null ? '' : v; if (e.type === 'range') rangeSync(e); }
+    if (isText(e) && e.hasAttribute('data-validate')) validate(e);
+    e.dispatchEvent(new CustomEvent('mk-restored', { bubbles: true }));
+  }
+  function typeOf(k) {
+    var e = keyEls(k)[0], t = e && e.getAttribute('data-type'); if (t) return t;
+    var v = cfg ? cfg[k] : undefined;
+    if (Array.isArray(v)) return v.length && typeof v[0] === 'number' ? 'number[]' : v.length && v[0] !== null && typeof v[0] === 'object' ? 'json' : 'string[]';
+    if (v !== null && typeof v === 'object') return 'json';
+    if (typeof v === 'boolean') return 'bool';
+    if (typeof v === 'number') return 'number';
+    return 'string';
+  }
+  function toServer(k, v) {
+    switch (typeOf(k)) {
+      case 'bool': return v === true || v === 'true';
+      case 'number': return v === '' || v == null || isNaN(+v) ? (cfg && typeof cfg[k] === 'number' ? cfg[k] : 0) : +v;
+      case 'number[]': return (v || []).map(Number);
+      case 'string[]': return (v || []).map(String);
+      case 'json': return copyJson(v);
+      default: return v == null ? '' : String(v);
+    }
+  }
+  function toDom(k, v) {
+    var els = keyEls(k), e = els[0]; if (!e) return v;
+    if (e.getAttribute('data-type') === 'json') return copyJson(v);
+    if (e.classList.contains('mk-tags') || (e.type === 'checkbox' && els.length > 1)) return (v || []).map(String);
+    if (e.type === 'checkbox') return v === true || v === 'true';
+    return v == null ? '' : String(v);
+  }
+  function labelOf(k) {
+    var e = keyEls(k)[0]; if (!e) return k;
+    if (e.getAttribute('data-label')) return e.getAttribute('data-label');
+    var row = e.closest('.mk-row, .mk-field'), l = row && $('.mk-row__label, .mk-field__label', row);
+    return l ? l.textContent.trim() : (e.getAttribute('aria-label') || k);
+  }
+  function show(k, v) {
+    if (o.show) { var custom = o.show(k, toServer(k, v)); if (custom != null) return custom; }
+    var els = keyEls(k), e = els[0];
+    if (v === true) return 'On'; if (v === false) return 'Off';
+    if (Array.isArray(v)) return v.length ? (v.length > 3 || typeof v[0] === 'object' ? plural(v.length, 'entry', 'entries') : v.join(', ')) : 'none';
+    if (v !== null && typeof v === 'object') return 'changed';
+    if (e && e.type === 'radio') {
+      var r = els.filter(function (x) { return x.value === String(v); })[0], lb = r && r.labels && r.labels[0];
+      var dn = lb && (lb.hasAttribute('data-name') ? lb : lb.querySelector('[data-name]'));
+      return dn ? dn.getAttribute('data-name') : lb ? lb.textContent.trim() : String(v);
+    }
+    if (e && e.tagName === 'SELECT') { var op = $$('option', e).filter(function (x) { return x.value === String(v); })[0]; return op ? op.textContent : String(v); }
+    var s = String(v); if (!s) return 'empty';
+    if (e && (e.getAttribute('data-secret') === '1' || e.type === 'password')) return '••••••';
+    if (s.length > 34) s = s.slice(0, 32) + '…';
+    return s + (e && e.getAttribute('data-unit') ? ' ' + e.getAttribute('data-unit') : '');
+  }
+  function allKeys() { var seen = {}; $$('[data-key]').forEach(function (e) { seen[e.getAttribute('data-key')] = 1; }); return Object.keys(seen); }
+
+  /* ---------- save chip + "Changes this visit" (built by the kit into .mk-bar) ---------- */
+  var bar = $('.mk-bar'), save = null, saveText = null, saveIcon = null, pop = null, logList = null, logEmpty = null, revertBtn = null;
+  if (bar) {
+    var wrap = el('div', 'mk-savewrap');
+    save = el('button', 'mk-save'); save.type = 'button';
+    save.setAttribute('aria-haspopup', 'dialog'); save.setAttribute('aria-expanded', 'false');
+    save.title = 'Every change saves itself. Open for this visit\'s changes and undo.';
+    saveIcon = ic('cloud_done'); saveText = el('span', 'mk-save__text', 'Loading…');
+    save.appendChild(saveIcon); save.appendChild(saveText);
+    var live = el('span', 'mk-sr'); live.setAttribute('aria-live', 'polite'); save.appendChild(live);
+    pop = el('div', 'mk-pop'); pop.hidden = true; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'Changes this visit');
+    pop.appendChild(el('div', 'mk-pop__title', 'Changes this visit'));
+    logEmpty = el('p', 'mk-log__empty', 'Nothing changed yet. Every change saves itself and shows up here with an undo.');
+    logList = el('ul', 'mk-log');
+    pop.appendChild(logEmpty); pop.appendChild(logList);
+    var pf = el('div', 'mk-pop__foot');
+    revertBtn = btn('Put everything back', 'mk-btn--sm', 'history'); revertBtn.disabled = true;
+    pf.appendChild(revertBtn); pop.appendChild(pf);
+    wrap.appendChild(save); wrap.appendChild(pop); bar.appendChild(wrap);
+  }
+  var lastAnnounce = '';
+  function setState(state, text) {
+    if (!save) return;
+    save.setAttribute('data-state', state);
+    saveText.textContent = text; save.setAttribute('aria-label', text + '. Show the changes made during this visit.');
+    saveIcon.textContent = ({ saved: 'cloud_done', saving: 'sync', editing: 'edit', invalid: 'warning', error: 'cloud_off', warn: 'report', loading: 'hourglass_empty' })[state] || 'cloud_done';
+    saveIcon.classList.toggle('mk-spin', state === 'saving');
+    if (state !== 'saving' && state !== 'editing' && text !== lastAnnounce) { lastAnnounce = text; live.textContent = text; }
+  }
+
+  /* ---------- the save engine ---------- */
+  var pluginId = o.pluginId, cfg = null, loaded = false, loading = null;
+  var committed = {}, opened = {}, pending = {}, invalid = {}, warns = {};
+  var flushTimer = null, inFlight = null, sending = {}, again = false, failed = false, failToast = null, lastSaved = null, openedAt = null, log = [];
+
+  function restState() {
+    if (!loaded) return;
+    if (failed) return setState('error', 'Not saved · the server did not answer');
+    var n = count(invalid);
+    if (n) return setState('invalid', n === 1 ? '1 field needs a fix · not saved' : n + ' fields need a fix · not saved');
+    if (inFlight || flushTimer || count(pending)) return setState('saving', 'Saving…');
+    var a = document.activeElement;
+    if (a && page.contains(a) && isText(a) && a.hasAttribute('data-key') && !same(read(a.getAttribute('data-key')), base(a.getAttribute('data-key')))) return setState('editing', 'Editing · saves when you leave the field');
+    var w = Object.keys(warns);
+    if (w.length) return setState('warn', 'Saved · ' + (w.length === 1 ? warns[w[0]] : w.length + ' warnings'));
+    setState('saved', 'All changes saved' + (lastSaved ? ' · ' + hhmm(lastSaved) : ''));
+  }
+  /* what the server has, or will have once the save on its way lands */
+  function base(k) { return Object.prototype.hasOwnProperty.call(sending, k) ? sending[k] : committed[k]; }
+  /* a failed save is over once nothing is waiting to be sent any more */
+  function settleFailed() {
+    if (!failed || count(pending)) return;
+    failed = false; if (failToast) { dropToast(failToast); failToast = null; } renderLog();
+  }
+  /* Undo only while the change is still what the server has; a later change of the same key would be lost */
+  function current(k, to) { return same(committed[k], to) && !pending[k] && !Object.prototype.hasOwnProperty.call(sending, k); }
+  function queue(k, opt) {
+    var v = read(k);
+    /* back to that value: nothing to send */
+    if (same(v, base(k))) {
+      delete pending[k]; settleFailed();
+      restState(); return;
+    }
+    pending[k] = { from: pending[k] ? pending[k].from : base(k), to: v, undo: !!(opt && opt.undo) };
+    setState('saving', 'Saving…');
+    clearTimeout(flushTimer); flushTimer = setTimeout(flush, 350);
+  }
+  function flush() {
+    clearTimeout(flushTimer); flushTimer = null;
+    if (inFlight) { again = true; return; }
+    var keys = Object.keys(pending);
+    if (!keys.length) { settleFailed(); restState(); return; }
+    var batch = keys.map(function (k) { return { k: k, from: pending[k].from, to: pending[k].to, undo: pending[k].undo }; });
+    setState('saving', 'Saving…');
+    sending = {}; batch.forEach(function (b) { sending[b.k] = b.to; });
+    inFlight = ApiClient.getPluginConfiguration(pluginId).then(function (c) {
+      batch.forEach(function (b) { c[b.k] = toServer(b.k, b.to); });
+      return ApiClient.updatePluginConfiguration(pluginId, c).then(function () { return c; });
+    }).then(function (c) {
+      inFlight = null; sending = {}; failed = false; cfg = c; lastSaved = new Date();
+      if (failToast) { dropToast(failToast); failToast = null; }
+      batch.forEach(function (b) {
+        committed[b.k] = b.to;
+        if (pending[b.k] && same(pending[b.k].to, b.to)) delete pending[b.k];
+        else if (pending[b.k]) pending[b.k].from = b.to;
+        log.unshift({ k: b.k, from: b.from, to: b.to, t: lastSaved, undo: b.undo });
+      });
+      renderLog();
+      if (o.onSaved) o.onSaved(batch.map(function (b) { return { key: b.k, from: toServer(b.k, b.from), to: toServer(b.k, b.to), undo: b.undo }; }));
+      savedToast(batch);
+      if (again || count(pending)) { again = false; clearTimeout(flushTimer); flushTimer = setTimeout(flush, 120); }
+      restState();
+    }, function () {
+      inFlight = null; sending = {}; again = false; failed = true;
+      restState(); renderLog();
+      if (failToast) dropToast(failToast);
+      failToast = toast('Could not save ' + keys.map(labelOf).join(', ') + '. Your change is still on the page and is not active yet.', { bad: true, action: 'Retry', onAction: function () { failToast = null; flush(); }, sticky: true });
+    });
+  }
+  function savedToast(batch) {
+    var custom = o.toastFor && o.toastFor(batch.map(function (b) { return { key: b.k, from: toServer(b.k, b.from), to: toServer(b.k, b.to), undo: b.undo }; }));
+    if (custom === false) return;
+    if (custom) { toast(custom.text, custom); return; }
+    if (batch.length === 1) {
+      var b0 = batch[0];
+      toast((b0.undo ? 'Undone: ' : 'Saved: ') + labelOf(b0.k) + ' → ' + show(b0.k, b0.to), b0.undo ? {} : { action: 'Undo', onAction: function () { undoIfCurrent(b0.k, b0.from, b0.to); } });
+    } else toast(batch.length + ' changes saved', { action: 'Show', onAction: openPop });
+  }
+  function undoIfCurrent(k, from, to) {
+    if (current(k, to)) { undoTo(k, from); return; }
+    toast('Not undone: ' + labelOf(k) + ' has changed again since. Undo the newer change first (Changes this visit).', { bad: true, icon: 'history', action: 'Show', onAction: openPop });
+  }
+  /* an undo asks the same question as the change itself (e.g. going live, locking an account) */
+  function undoTo(k, v) {
+    var go = function () { write(k, v); delete invalid[k]; queue(k, { undo: true }); };
+    var hook = o.confirm && o.confirm[k];
+    if (hook && !same(v, base(k))) Promise.resolve(hook(toServer(k, v), toServer(k, base(k)))).then(function (ok) { if (ok) go(); });
+    else go();
+  }
+  function onChange(e) {
+    if (!loaded) return;
+    var c = e.target.closest && e.target.closest('[data-key]'); if (!c || !page.contains(c) || c.hasAttribute('data-nosave')) return;
+    var k = c.getAttribute('data-key');
+    trim(c);
+    if (c.hasAttribute('data-validate') && !validate(c)) { invalid[k] = 1; delete pending[k]; settleFailed(); restState(); return; }
+    delete invalid[k];
+    var hook = o.confirm && o.confirm[k];
+    /* the page is gone (a field left focused loses it now): a change that would need a question is put back, never asked */
+    if (hook && away) { if (quiet(k)) queue(k); else write(k, pending[k] ? pending[k].to : base(k)); restState(); return; }
+    if (hook && !same(read(k), base(k))) {
+      var to = read(k), answer = hook(toServer(k, to), toServer(k, base(k)));
+      if (answer === true) { queue(k); return; }
+      /* a save can land while the question is open: yes saves what was asked about, no puts back the last
+         accepted value (a change still waiting to be sent, or what the server has) so the screen matches */
+      Promise.resolve(answer).then(function (ok) {
+        if (ok) { write(k, to); queue(k); } else { write(k, pending[k] ? pending[k].to : base(k)); restState(); }
+      });
+      return;
+    }
+    queue(k);
+  }
+  page.addEventListener('change', onChange);
+  page.addEventListener('input', function (e) {
+    if (!loaded) return;
+    var c = e.target.closest && e.target.closest('[data-key]'); if (!c || !isText(c)) return;
+    var k = c.getAttribute('data-key');
+    if (c.hasAttribute('data-validate')) { if (validate(c)) delete invalid[k]; else invalid[k] = 1; }
+    restState();
+  });
+  page.addEventListener('focusout', function () { setTimeout(restState, 0); });
+  /* Esc in a text field puts the saved value back */
+  page.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    var c = e.target; if (!isText(c) || !c.hasAttribute('data-key')) return;
+    var k = c.getAttribute('data-key'); if (same(read(k), base(k))) return;
+    e.preventDefault(); e.stopPropagation();
+    write(k, base(k)); delete pending[k]; delete invalid[k]; validate(c); settleFailed(); restState();
+  });
+
+  /* leaving the page: a valid draft in the focused field is saved, waiting changes go out at once.
+     No question can be asked while the page goes away, and a hidden page must not keep a modal dialog open (it would
+     block the whole web client): open dialogs are cancelled, and a draft of a key with a question is put back unsaved. */
+  var away = false;
+  /* o.quiet[k](to, from): true when this change of a key with a question surely needs none. It must only look at the values
+     (no dialogs, no requests); without it, a draft of such a key is not saved when the page is left. */
+  function quiet(k) { var q = o.quiet && o.quiet[k]; return !!q && q(toServer(k, read(k)), toServer(k, base(k))) === true; }
+  function leave(unloading) {
+    /* the browser may still keep the page (the admin can choose to stay), so an unload only saves */
+    if (unloading !== true) { away = true; openDialogs.slice().forEach(function (f) { f(); }); }
+    var a = document.activeElement;
+    if (a && page.contains(a) && isText(a) && a.hasAttribute('data-key') && loaded) {
+      var k = a.getAttribute('data-key');
+      trim(a);
+      if (!same(read(k), base(k))) {
+        var ok = validate(a) && (!(o.confirm && o.confirm[k]) || quiet(k));
+        if (ok) { delete invalid[k]; queue(k); }
+        else if (o.confirm && o.confirm[k]) { write(k, pending[k] ? pending[k].to : base(k)); delete invalid[k]; }
+      }
+    }
+    if (count(pending)) flush();
+    closePop();
+  }
+  page.addEventListener('viewbeforehide', function () { leave(); });
+  listen(window, 'beforeunload', function (e) {
+    leave(true);
+    if (count(pending) || inFlight || count(invalid) || failed) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  function setLoad(state, text) {
+    page.setAttribute('data-load', state);
+    var gated = $$('.mk-main, .mk-master, [data-needs-load]');
+    gated.forEach(function (g) { if (state === 'ready') g.removeAttribute('inert'); else g.setAttribute('inert', ''); });
+    if (!loadbar) return;
+    loadbar.hidden = state === 'ready';
+    loadbar.classList.toggle('is-bad', state === 'error');
+    fill(loadbar, state === 'error'
+      ? [ic('cloud_off'), el('span', 'mk-loadbar__text', text || 'Could not load the settings from the server. Nothing can be changed until they load.'), retryBtn]
+      : [ic('hourglass_empty', 'mk-spin'), el('span', 'mk-loadbar__text', 'Loading the settings…')]);
+    if (state !== 'ready') setState(state === 'error' ? 'error' : 'loading', state === 'error' ? 'Settings not loaded' : 'Loading…');
+  }
+  var loadbar = el('div', 'mk-loadbar'); loadbar.setAttribute('role', 'status');
+  var retryBtn = btn('Try again', 'mk-btn--sm', 'refresh'); retryBtn.addEventListener('click', function () { load(); });
+  if (deck) { var head = $('.mk-deck__head', deck); if (head && head.nextSibling) deck.insertBefore(loadbar, head.nextSibling); else deck.appendChild(loadbar); }
+  else if (bar) bar.parentNode.insertBefore(loadbar, bar);
+
+  function load() {
+    if (loading) return loading;
+    setLoad('loading');
+    var extra = o.preload ? Promise.resolve(o.preload()) : Promise.resolve();
+    loading = Promise.all([ApiClient.getPluginConfiguration(pluginId), extra]).then(function (res) {
+      loading = null;
+      var c = res[0];
+      cfg = c; loaded = true;
+      allKeys().forEach(function (k) {
+        if (Object.prototype.hasOwnProperty.call(c, k)) write(k, toDom(k, c[k]));
+        committed[k] = read(k); opened[k] = committed[k];
+      });
+      pending = {}; invalid = {}; failed = false; log = []; openedAt = new Date(); lastSaved = null;
+      setLoad('ready'); restState(); renderLog();
+      if (o.onLoad) o.onLoad(cfg, res[1]);
+    }, function (err) {
+      loading = null;
+      setLoad('error', o.loadError ? o.loadError(err) : null);
+      return null;
+    });
+    return loading;
+  }
+  page.addEventListener('pageshow', function () {
+    away = false;
+    tone(); stickyTop(); setTimeout(tabOverflow, 0);
+    var busy = count(pending) || inFlight || count(invalid) || failed;
+    if (!loaded || !busy) load();
+    if (o.onShow) o.onShow();
+  });
+
+  /* ---------- history popover ---------- */
+  function renderLog() {
+    if (!pop) return;
+    logList.textContent = '';
+    var rows = [];
+    Object.keys(pending).forEach(function (k) {
+      if (!failed) return;
+      var li = el('li', 'is-pending'); li.appendChild(ic('cloud_off', 'mk-ic--sm'));
+      var t = el('span', 'mk-log__what'); t.appendChild(el('b', null, labelOf(k))); t.appendChild(document.createTextNode(' ' + show(k, pending[k].from) + ' → ' + show(k, pending[k].to) + ' · not saved'));
+      li.appendChild(t); var r = btn('Retry', 'mk-btn--sm mk-btn--ghost', 'refresh'); r.addEventListener('click', function () { flush(); }); li.appendChild(r);
+      rows.push(li);
+    });
+    log.slice(0, 15).forEach(function (x) {
+      var li = el('li', x.action ? 'is-action' : null);
+      li.appendChild(el('time', null, hhmm(x.t)));
+      var t = el('span', 'mk-log__what');
+      if (x.action) { t.appendChild(el('b', null, x.text)); var bd = el('span', 'mk-badge', 'Action'); bd.title = 'Actions cannot be undone here'; t.appendChild(bd); li.appendChild(t); }
+      else {
+        t.appendChild(el('b', null, labelOf(x.k))); t.appendChild(document.createTextNode(' ' + show(x.k, x.from) + ' → ' + show(x.k, x.to)));
+        li.appendChild(t);
+        if (current(x.k, x.to)) { var b = btn('Undo', 'mk-btn--sm mk-btn--ghost', 'undo'); b.addEventListener('click', function () { undoTo(x.k, x.from); }); li.appendChild(b); }
+      }
+      rows.push(li);
+    });
+    rows.forEach(function (r) { logList.appendChild(r); });
+    logEmpty.hidden = rows.length > 0;
+    var changed = allKeys().some(function (k) { return !same(committed[k], opened[k]); });
+    revertBtn.disabled = !changed;
+    revertBtn.lastChild.textContent = openedAt ? 'Put everything back as it was at ' + hhmm(openedAt) : 'Put everything back';
+  }
+  function openPop() { if (!pop) return; renderLog(); pop.hidden = false; save.setAttribute('aria-expanded', 'true'); }
+  function closePop() { if (!pop || pop.hidden) return; pop.hidden = true; save.setAttribute('aria-expanded', 'false'); }
+  if (save) {
+    save.addEventListener('click', function (e) {
+      e.stopPropagation();
+      /* "needs a fix" or a warning: the chip takes you to the field */
+      var bad = Object.keys(invalid)[0] || (!failed && Object.keys(warns)[0]), f = bad && keyEls(bad)[0];
+      if (f && pop.hidden) { reveal(f.closest('.mk-row, .mk-field') || f, f); return; }
+      if (pop.hidden) openPop(); else closePop();
+    });
+    listen(document, 'click', function (e) { if (pop && !pop.hidden && !pop.contains(e.target) && e.target !== save) closePop(); });
+    pop.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.stopPropagation(); closePop(); save.focus(); } });
+    revertBtn.addEventListener('click', function () {
+      closePop();
+      confirmBox({ title: 'Put everything back as it was at ' + hhmm(openedAt) + '?', body: 'Every setting you changed during this visit returns to the value it had when you opened the page. Actions you ran are not undone.', ok: 'Put it back', icon: 'history', tone: 'warn' })
+        .then(function (ok) {
+          if (!ok) return;
+          /* plain keys go back at once; keys with a question (going live, locking accounts) still ask, one after another */
+          var chain = Promise.resolve();
+          allKeys().forEach(function (k) {
+            if (same(committed[k], opened[k]) && same(read(k), opened[k])) return;
+            var hook = o.confirm && o.confirm[k];
+            if (hook) chain = chain.then(function () { return Promise.resolve(hook(toServer(k, opened[k]), toServer(k, base(k)))).then(function (y) { if (y) { write(k, opened[k]); delete invalid[k]; queue(k, { undo: true }); } }); });
+            else { write(k, opened[k]); delete invalid[k]; queue(k, { undo: true }); }
+          });
+        });
+    });
+  }
+
+  /* ---------- toasts ---------- */
+  var toasts = el('div', 'mk-toasts'); toasts.setAttribute('aria-live', 'polite'); page.appendChild(toasts);
+  function dropToast(t) { if (t && t.parentNode) t.parentNode.removeChild(t); }
+  function toast(text, opt) {
+    opt = opt || {};
+    var t = el('div', 'mk-toast' + (opt.bad ? ' mk-toast--bad' : '')); t.setAttribute('role', opt.bad ? 'alert' : 'status');
+    t.appendChild(ic(opt.icon || (opt.bad ? 'error' : 'check_circle'))); t.appendChild(el('span', 'mk-toast__text', text));
+    if (opt.action) { var b = el('button', null, opt.action); b.type = 'button'; b.addEventListener('click', function () { dropToast(t); opt.onAction(); }); t.appendChild(b); }
+    if (opt.sticky) { var x = el('button'); x.type = 'button'; x.setAttribute('aria-label', 'Dismiss'); x.appendChild(ic('close', 'mk-ic--sm')); x.addEventListener('click', function () { dropToast(t); if (t === failToast) failToast = null; }); t.appendChild(x); }
+    /* at most three at a time; the oldest goes first, a failed-save notice stays */
+    var old = Array.prototype.filter.call(toasts.children, function (x) { return x !== failToast; });
+    while (old.length > 1 + (failToast ? 0 : 1)) dropToast(old.shift());
+    toasts.appendChild(t);
+    if (!opt.sticky) setTimeout(function () { dropToast(t); }, opt.timeout || (opt.action ? 8000 : 3800));
+    return t;
+  }
+
+  /* ---------- dialogs (native <dialog>, built fresh for every question) ---------- */
+  var openDialogs = [];
+  function dialog(d) {
+    return new Promise(function (resolve) {
+      /* the page was left while the question was on its way (a check or request still running): never open a modal on a
+         hidden page, it would block the whole web client; the dialog counts as cancelled */
+      if (away) { resolve(d.cancelValue === undefined ? null : d.cancelValue); return; }
+      var dlg = el('dialog', 'mk-dialog'), result = null, done = false;
+      var head = el('div', 'mk-dialog__head'), icw = el('div', 'mk-dialog__icon mk-dialog__icon--' + (d.tone || 'accent'));
+      icw.appendChild(ic(d.icon || 'help', 'mk-ic--lg')); head.appendChild(icw);
+      var title = el('h2', 'mk-dialog__title', d.title); title.id = page.id + '-dlg-' + Date.now(); head.appendChild(title);
+      dlg.setAttribute('aria-labelledby', title.id);
+      var body = el('div', 'mk-dialog__body');
+      if (d.body) (Array.isArray(d.body) ? d.body : [d.body]).forEach(function (p) { body.appendChild(typeof p === 'string' ? el('p', null, p) : p); });
+      if (d.node) body.appendChild(d.node);
+      var foot = el('div', 'mk-dialog__foot'), focusBtn = null;
+      (d.buttons || []).forEach(function (b) {
+        var x = btn(b.text, b.kind === 'primary' ? 'mk-btn--primary' : b.kind === 'danger' ? 'mk-btn--danger' : b.kind === 'ghost' ? 'mk-btn--ghost' : '', b.icon);
+        x.addEventListener('click', function () { finish(b.value); });
+        if (b.value === d.focus) focusBtn = x;
+        foot.appendChild(x);
+      });
+      dlg.appendChild(head); dlg.appendChild(body); dlg.appendChild(foot);
+      function finish(v) { if (done) return; done = true; result = v; openDialogs = openDialogs.filter(function (f) { return f !== cancel; }); if (dlg.open) dlg.close(); if (dlg.parentNode) dlg.parentNode.removeChild(dlg); resolve(v); }
+      /* leaving the page cancels the dialog, also a locked one */
+      function cancel() { finish(d.cancelValue === undefined ? null : d.cancelValue); }
+      openDialogs.push(cancel);
+      /* a locked dialog (a one-time password) cannot be closed by Esc or by anything but its own buttons */
+      dlg.addEventListener('cancel', function (e) { if (d.locked) e.preventDefault(); });
+      dlg.addEventListener('close', function () {
+        if (done) return;
+        if (d.locked && dlg.isConnected) { try { dlg.showModal(); } catch (e) { } return; }
+        finish(d.cancelValue === undefined ? null : d.cancelValue);
+      });
+      page.appendChild(dlg);
+      dlg.showModal();
+      if (d.onOpen) d.onOpen(dlg, finish);
+      (focusBtn || foot.firstChild || dlg).focus();
+    });
+  }
+  function confirmBox(c) {
+    var buttons = c.okOnly ? [] : [{ value: false, text: c.cancel || 'Cancel' }];
+    buttons.push({ value: true, text: c.ok || 'OK', kind: c.danger ? 'danger' : 'primary', icon: c.okIcon });
+    return dialog({ title: c.title, body: c.body, node: c.node, icon: c.icon, tone: c.tone, buttons: buttons, focus: c.okOnly || c.focusOk ? true : false, cancelValue: false })
+      .then(function (v) { return v === true; });
+  }
+
+  /* ---------- clipboard: works on plain http too (most home servers) ---------- */
+  function copy(text, what) {
+    return new Promise(function (resolve) {
+      function fallback() {
+        var ta = el('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.top = '-1000px'; ta.style.opacity = '0';
+        var host = $('dialog[open]') || page; host.appendChild(ta); ta.select();
+        var ok = false; try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+        host.removeChild(ta); resolve(ok);
+      }
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(function () { resolve(true); }, fallback);
+      else fallback();
+    }).then(function (ok) {
+      toast(ok ? (what || 'Text') + ' copied' : 'Could not copy. Select the text and press Ctrl+C.', ok ? { icon: 'content_copy' } : { bad: true });
+      return ok;
+    });
+  }
+
+  /* ---------- actions ---------- */
+  function busy(b, promise) {
+    b.disabled = true; b.classList.add('is-busy');
+    var i = $('.mk-ic', b), old = i && i.textContent; if (i) i.textContent = 'sync';
+    var end = function () { b.disabled = false; b.classList.remove('is-busy'); if (i) i.textContent = old; };
+    return Promise.resolve(promise).then(function (v) { end(); return v; }, function (e) { end(); throw e; });
+  }
+  /* resolves true once every waiting change is saved, false if a save failed (actions then refuse to run) */
+  function whenSaved() {
+    return new Promise(function (resolve) {
+      (function check() {
+        if (failed) return resolve(false);
+        if (flushTimer) flush();
+        if (!inFlight && !flushTimer && !count(pending)) return resolve(true);
+        setTimeout(check, 100);
+      })();
+    });
+  }
+  function logAction(text) { log.unshift({ action: true, text: text, t: new Date() }); renderLog(); }
+  function api(type, path, data, json) {
+    var req = { type: type, url: ApiClient.getUrl(path) };
+    if (json !== false) req.dataType = 'json';
+    if (data !== undefined) { req.data = JSON.stringify(data); req.contentType = 'application/json'; }
+    return ApiClient.ajax(req);
+  }
+
+  /* ---------- find a setting (optional: a .mk-find box on the page) ---------- */
+  var finder = $('.mk-find');
+  if (finder) {
+    var fin = $('.mk-find__input', finder), flist = el('ul', 'mk-find__list'); flist.hidden = true; flist.setAttribute('role', 'listbox'); finder.appendChild(flist);
+    fin.setAttribute('role', 'combobox'); fin.setAttribute('aria-expanded', 'false'); fin.setAttribute('autocomplete', 'off');
+    var hits = [], act = -1;
+    var index = function () {
+      return $$('.mk-row, .mk-field, [data-find]').filter(function (r) { return !r.closest('.mk-find') && !r.closest('.mk-dialog'); }).map(function (r) {
+        var l = $('.mk-row__label, .mk-field__label', r) || r, t = tabOf(r), key = $('[data-key]', r) || (r.hasAttribute('data-key') ? r : null);
+        var label = (r.getAttribute('data-find-label') || l.textContent || '').replace(/\s+/g, ' ').trim();
+        return { row: r, label: label, where: t ? t.textContent.replace(/\s*\d+\s*$/, '').trim() : '', text: (label + ' ' + (r.getAttribute('data-find') || '') + ' ' + (key ? key.getAttribute('data-key') : '')).toLowerCase(), ctl: key || $('input, select, textarea, button', r) };
+      }).filter(function (x) { return x.label; });
+    };
+    var pick = function (h) { flist.hidden = true; fin.setAttribute('aria-expanded', 'false'); fin.value = ''; reveal(h.row, h.ctl && !h.ctl.disabled ? h.ctl : null); };
+    var renderHits = function () {
+      flist.textContent = '';
+      if (!hits.length) { flist.appendChild(el('li', 'mk-find__none', 'No setting matches. Try another word.')); return; }
+      hits.forEach(function (h, i) {
+        var li = el('li'), b = el('button'); b.type = 'button'; b.setAttribute('role', 'option'); if (i === act) b.className = 'is-active';
+        b.appendChild(el('span', null, h.label)); if (h.where) b.appendChild(el('small', null, h.where));
+        b.addEventListener('mousedown', function (e) { e.preventDefault(); }); b.addEventListener('click', function () { pick(h); });
+        li.appendChild(b); flist.appendChild(li);
+      });
+    };
+    fin.addEventListener('input', function () {
+      var q = fin.value.trim().toLowerCase();
+      if (!q) { flist.hidden = true; fin.setAttribute('aria-expanded', 'false'); return; }
+      var words = q.split(/\s+/);
+      hits = index().filter(function (x) { return words.every(function (w) { return x.text.indexOf(w) >= 0; }); }).slice(0, 8);
+      act = hits.length ? 0 : -1; renderHits(); flist.hidden = false; fin.setAttribute('aria-expanded', 'true');
+    });
+    fin.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (!hits.length) return; act = (act + (e.key === 'ArrowDown' ? 1 : -1) + hits.length) % hits.length; renderHits(); }
+      else if (e.key === 'Enter') { e.preventDefault(); if (hits[act]) pick(hits[act]); }
+      else if (e.key === 'Escape') { e.stopPropagation(); fin.value = ''; flist.hidden = true; fin.setAttribute('aria-expanded', 'false'); }
+    });
+    fin.addEventListener('blur', function () { setTimeout(function () { flist.hidden = true; fin.setAttribute('aria-expanded', 'false'); }, 150); });
+  }
+
+  /* ---------- clean up when Jellyfin throws the view away ---------- */
+  page.addEventListener('viewdestroy', function () { disposers.forEach(function (d) { d(); }); disposers = []; });
+
+  setLoad('loading');
+
+  kit.$ = $; kit.$$ = $$; kit.byId = byId; kit.el = el; kit.ic = ic; kit.fill = fill; kit.btn = btn;
+  kit.hhmm = hhmm; kit.day = day; kit.dayTime = dayTime; kit.span = span; kit.plural = plural; kit.num = num; kit.param = param; kit.store = store;
+  kit.toast = toast; kit.dropToast = dropToast; kit.confirm = confirmBox; kit.dialog = dialog; kit.copy = copy;
+  kit.read = read; kit.write = write; kit.validate = validate; kit.rules = RULES; kit.label = labelOf; kit.show = show;
+  /* a copy for structured values, so a page can never change what the kit counts as saved */
+  kit.saved = function (k) { var v = cfg ? cfg[k] : undefined; return v !== null && typeof v === 'object' ? copyJson(v) : v; };
+  kit.value = function (k) { return toServer(k, read(k)); };
+  kit.config = function () { return cfg; };
+  kit.loaded = function () { return loaded; };
+  kit.reload = load;
+  /* undo a saved change from a custom toast (toastFor): asks the key's question like the kit's own Undo */
+  kit.undo = function (k, from, to) { undoIfCurrent(k, toDom(k, from), toDom(k, to)); };
+  kit.whenSaved = whenSaved; kit.flush = flush; kit.busy = busy; kit.logAction = logAction; kit.api = api;
+  kit.warn = function (k, text) { if (text) warns[k] = text; else delete warns[k]; restState(); };
+  kit.selectTab = function (name) { selectTab(tabByName(name)); };
+  kit.reveal = reveal; kit.rangeSync = rangeSync; kit.tagsSet = tagsSet;
+  kit.state = function () { return { loaded: loaded, failed: failed, invalid: count(invalid), pending: count(pending) + (inFlight ? 1 : 0) }; };
+  return kit;
+}
+/* MKI-KIT:JS END */
+var all = document.querySelectorAll('#MkiScreenFitConfigPage'), page = all[all.length - 1];
+if (!page || page.getAttribute('data-mki-bound')) return;
+page.setAttribute('data-mki-bound', '1');
+
+var RECENT_DAYS = 90, MODES = { Auto: 'Automatic', FullHd: 'Full HD screen', Off: 'Leave alone' };
+var data = null, failedLoad = false, showAll = false, seq = 0;
+
+var kit = MkiKit(page, {
+    pluginId: '10b53a4f-258a-459a-962b-2e29418e0775',
+    show: function (k, v) { return k === 'DeviceRules' ? rulesText(v) : null; },
+    toastFor: ruleToast,
+    onLoad: function () { render(); refresh(); },
+    onSaved: function () { render(); },
+    onShow: function () { if (kit.loaded()) refresh(); }
+});
+var $ = kit.$, el = kit.el, ic = kit.ic, fill = kit.fill;
+
+function versionOn() { return kit.saved('EnableFullHdVersion') === true; }
+function limitOn() { return kit.saved('EnableTranscodeLimit') === true; }
+function chip(kind, icon, text) { var c = el('span', 'mk-chip mk-chip--' + kind); if (icon) c.appendChild(ic(icon)); c.appendChild(el('span', null, text)); return c; }
+function size(w, h) { return w + '×' + h; }
+
+/* ---------- device rules: a structured key the kit saves like any other (data-type="json") ---------- */
+function rules() { return (kit.read('DeviceRules') || []).filter(function (r) { return r && r.DeviceId; }); }
+function savedRules() { return (kit.saved('DeviceRules') || []).filter(function (r) { return r && r.DeviceId; }); }
+function modeOf(list, id) { var r = list.filter(function (x) { return x.DeviceId === id; }).pop(); return r && MODES[r.Mode] ? r.Mode : 'Auto'; }
+function setRule(id, mode) {
+    var box = $('#fitRules'), list = rules().filter(function (r) { return r.DeviceId !== id; });
+    if (mode !== 'Auto') list.push({ DeviceId: id, Mode: mode });
+    box.mkValue = list;
+    box.dispatchEvent(new Event('change', { bubbles: true }));
+}
+function rulesText(v) {
+    var n = (v || []).filter(function (r) { return r && r.Mode && r.Mode !== 'Auto'; }).length;
+    return n ? kit.plural(n, 'device') + ' set by hand' : 'all automatic';
+}
+function nameOf(id) { var d = data && data.Devices.filter(function (x) { return x.Id === id; })[0]; return d ? d.Name : 'a device'; }
+/* one device changed: say which, with an undo that restores exactly the previous list */
+function ruleToast(batch) {
+    if (batch.length !== 1 || batch[0].key !== 'DeviceRules') return null;
+    var b = batch[0], from = b.from || [], to = b.to || [], ids = {};
+    from.concat(to).forEach(function (r) { if (r && r.DeviceId) ids[r.DeviceId] = 1; });
+    var changed = Object.keys(ids).filter(function (id) { return modeOf(from, id) !== modeOf(to, id); });
+    if (changed.length !== 1) return null;
+    var id = changed[0];
+    return {
+        text: (b.undo ? 'Undone: ' : 'Saved: ') + nameOf(id) + ' → ' + MODES[modeOf(to, id)],
+        action: b.undo ? null : 'Undo',
+        onAction: function () { kit.undo('DeviceRules', from, to); }
+    };
+}
+
+/* ---------- what the plugin knows: devices, screens, recent decisions ---------- */
+function refresh() {
+    var my = ++seq, b = $('#fitRefresh');
+    var p = kit.api('GET', 'MkiScreenFit/Overview').then(function (o) {
+        if (my !== seq) return;
+        data = o; failedLoad = false; render();
+    }, function () {
+        if (my !== seq) return;
+        failedLoad = true; render();
+    });
+    kit.busy(b, p);
+    return p;
+}
+$('#fitRefresh').addEventListener('click', function () { refresh(); });
+$('#fitFilter').addEventListener('input', function () { renderDevices(); });
+$('#fitMore').addEventListener('click', function () { showAll = !showAll; renderDevices(); });
+
+/* web client, desktop and mobile apps run the measuring script; TV and other native apps cannot */
+function kindOf(app) {
+    var a = String(app || '');
+    if (/Android TV|Swiftfin|Infuse|Findroid|Wholphin|Kodi|Moonfin|Reefin|Streamyfin|Fladder|Roku|tvOS|Xbox|Tizen|webOS|Fire ?TV|Jellyfin for/i.test(a)) return 'native';
+    if (/^Jellyfin (Web|Media Player|Desktop|Android|iOS|iPadOS|Mobile)/i.test(a)) return 'web';
+    return 'other';
+}
+function recent(d) { return d.LastActive && Date.now() - new Date(d.LastActive).getTime() < RECENT_DAYS * 864e5; }
+function screenOf(d, mode) {
+    if (mode === 'FullHd') return { w: 1920, h: 1080, src: 'rule' };
+    var s = d.Screen;
+    return s && s.Reliable && s.Current ? { w: s.Width, h: s.Height, src: 'reported' } : null;
+}
+function fullHd(s) { return Math.min(s.w, s.h) <= ((data && data.FullHdMaxShortSide) || 1200); }
+function limitSize(s) { var m = (data && data.MinLimit) || { Width: 1280, Height: 720 }; return size(Math.max(m.Width, s.w), Math.max(m.Height, s.h)); }
+
+function screenCell(d) {
+    var c = el('div', 'fit-scr'), s = d.Screen, k = kindOf(d.App);
+    c.appendChild(el('span', 'mk-cell-label', 'Screen'));
+    if (s && s.Reliable && s.Current) {
+        var hd = Math.min(s.Width, s.Height) <= ((data && data.FullHdMaxShortSide) || 1200);
+        c.appendChild(chip(hd ? 'accent' : 'info', hd ? 'laptop' : 'tv', size(s.Width, s.Height) + (hd ? ' · Full HD' : ' · larger')));
+        c.appendChild(el('small', null, 'Reported ' + kit.dayTime(new Date(s.At))));
+    } else if (s && !s.Reliable) {
+        var u = chip('warn', 'visibility_off', 'Not measurable');
+        u.title = 'The browser hid its real screen size (a TV browser or a privacy setting). Set the device by hand if needed.';
+        c.appendChild(u);
+        c.appendChild(el('small', null, 'TV browser or privacy setting'));
+    } else if (s && !s.Current) {
+        c.appendChild(chip('plain', 'history', 'Outdated'));
+        c.appendChild(el('small', null, 'Last report ' + kit.dayTime(new Date(s.At))));
+    } else {
+        c.appendChild(chip('plain', k === 'native' ? 'block' : 'hourglass_empty', k === 'native' ? 'App cannot report' : k === 'web' ? 'Not reported yet' : 'Unknown'));
+        if (k === 'web') c.appendChild(el('small', null, 'Reports when the app opens next'));
+    }
+    return c;
+}
+function doesCell(d, mode) {
+    var c = el('div', 'fit-does'), s = screenOf(d, mode), v = versionOn(), l = limitOn();
+    c.appendChild(el('span', 'mk-cell-label', 'What happens'));
+    if (mode === 'Off') { fill(c, [c.firstChild, 'Nothing: left alone on purpose.']); return c; }
+    if (!v && !l) { fill(c, [c.firstChild, 'Nothing: both switches are off.']); return c; }
+    if (!s) { fill(c, [c.firstChild, 'Nothing while the screen is unknown.']); return c; }
+    var parts = [c.firstChild];
+    if (v && fullHd(s)) parts.push(el('b', null, 'Full HD version'), ' of 4K movies');
+    else if (v) parts.push('4K stays 4K');
+    if (l) parts.push(parts.length > 1 ? '; ' : '', 're-encodes at most ', el('b', null, limitSize(s)));
+    parts.push('.');
+    fill(c, parts);
+    return c;
+}
+function modeCell(d, mode) {
+    var c = el('div'), sel = el('select', 'mk-select fit-mode');
+    c.appendChild(el('span', 'mk-cell-label', 'Setting'));
+    sel.setAttribute('aria-label', 'Setting for ' + d.Name);
+    sel.setAttribute('data-id', d.Id);
+    Object.keys(MODES).forEach(function (m) { var o = el('option', null, MODES[m]); o.value = m; sel.appendChild(o); });
+    sel.value = mode;
+    sel.addEventListener('change', function () { setRule(d.Id, sel.value); renderDevices(); render(); });
+    c.appendChild(sel);
+    return c;
+}
+function renderDevices() {
+    var box = $('#fitDevices'), more = $('#fitMore'), count = $('#fitCount');
+    /* a rebuilt list keeps the keyboard on the setting that was just changed */
+    var f = document.activeElement, focusId = f && box.contains(f) && f.classList.contains('fit-mode') ? f.getAttribute('data-id') : null;
+    box.textContent = '';
+    if (!data) {
+        var p = el('p', 'fit-empty'); p.appendChild(ic(failedLoad ? 'cloud_off' : 'hourglass_empty'));
+        p.appendChild(el('span', null, failedLoad ? 'Could not load the devices. Check that the server is reachable, then use Refresh.' : 'Loading the devices…'));
+        box.appendChild(p); more.hidden = true; fill(count, ''); return;
+    }
+    var list = rules(), q = ($('#fitFilter').value || '').trim().toLowerCase();
+    var all = data.Devices.filter(function (d) { return !q || [d.Name, d.App, (d.Users || []).join(' ')].join(' ').toLowerCase().indexOf(q) >= 0; });
+    var shown = all.filter(function (d) { return showAll || q || recent(d) || modeOf(list, d.Id) !== 'Auto'; });
+    var hidden = all.length - shown.length;
+    fill(count, q ? kit.plural(all.length, 'match', 'matches') : kit.plural(shown.length, 'device') + (showAll ? '' : ' active in the last ' + RECENT_DAYS + ' days'));
+    more.hidden = !!q || (!hidden && !showAll);
+    fill(more, [ic(showAll ? 'unfold_less' : 'unfold_more'), el('span', null, showAll ? 'Show only recent devices' : 'Show ' + kit.plural(hidden, 'older device'))]);
+    if (!shown.length) {
+        var e = el('p', 'fit-empty'); e.appendChild(ic('devices_other'));
+        e.appendChild(el('span', null, q ? 'No device matches the filter.' : 'No device was active in the last ' + RECENT_DAYS + ' days.'));
+        box.appendChild(e); return;
+    }
+    var head = el('div', 'mk-list__head'); head.setAttribute('aria-hidden', 'true');
+    ['Device', 'Screen', 'What happens', 'Setting'].forEach(function (t) { head.appendChild(el('span', null, t)); });
+    box.appendChild(head);
+    shown.forEach(function (d) {
+        var mode = modeOf(list, d.Id), row = el('div', 'mk-list__row' + (mode !== 'Auto' ? ' is-set' : '') + (mode === 'Off' ? ' is-dim' : ''));
+        var who = el('div', 'fit-dev');
+        who.appendChild(el('b', null, d.Name || 'Unnamed device'));
+        who.appendChild(el('small', null, [d.App, d.AppVersion].filter(Boolean).join(' ') + ((d.Users || []).length ? ' · ' + d.Users.join(', ') : '')));
+        who.appendChild(el('small', null, d.LastActive ? 'Active ' + kit.dayTime(new Date(d.LastActive)) : 'Never active'));
+        row.appendChild(who);
+        row.appendChild(screenCell(d));
+        row.appendChild(doesCell(d, mode));
+        row.appendChild(modeCell(d, mode));
+        box.appendChild(row);
+    });
+    if (focusId) { var again = box.querySelector('select[data-id="' + focusId.replace(/["\\]/g, '') + '"]'); if (again) again.focus(); }
+}
+
+function renderLog() {
+    var box = $('#fitLog');
+    box.textContent = '';
+    if (!data) return;
+    var rows = data.Activity || [];
+    if (!rows.length) {
+        var p = el('p', 'fit-empty'); p.appendChild(ic('hourglass_empty'));
+        p.appendChild(el('span', null, versionOn() || limitOn()
+            ? 'Nothing yet. Decisions appear here when someone starts a 4K video on a device whose screen is known.'
+            : 'Nothing yet. Both switches are off, so the plugin decides nothing.'));
+        box.appendChild(p); return;
+    }
+    var head = el('div', 'mk-list__head'); head.setAttribute('aria-hidden', 'true');
+    ['What', 'When and where', 'Video'].forEach(function (t) { head.appendChild(el('span', null, t)); });
+    box.appendChild(head);
+    rows.forEach(function (a) {
+        var row = el('div', 'mk-list__row' + (a.Kind === 'kept' ? ' is-dim' : ''));
+        row.appendChild(a.Kind === 'version' ? chip('accent', 'swap_horiz', 'Full HD')
+            : a.Kind === 'limit' ? chip('info', 'photo_size_select_large', 'Limited') : chip('plain', 'block', '4K kept'));
+        var where = el('div', 'fit-what');
+        where.appendChild(el('span', 'mk-cell-label', 'When and where'));
+        where.appendChild(el('b', null, kit.dayTime(new Date(a.At))));
+        where.appendChild(document.createTextNode(' · ' + [a.UserName, a.DeviceName].filter(Boolean).join(' on ') + (a.Screen ? ' (' + a.Screen.replace('x', '×') + ')' : '')));
+        row.appendChild(where);
+        var what = el('div', 'fit-what');
+        what.appendChild(el('span', 'mk-cell-label', 'Video'));
+        what.appendChild(el('b', null, a.ItemName || 'A video'));
+        var line = a.Kind === 'version' ? ': played the ' + a.To.replace('x', '×') + ' version instead of ' + a.From.replace('x', '×') + '.'
+            : a.Kind === 'limit' ? ': transcode of ' + a.From.replace('x', '×') + ' limited to ' + a.To.replace('x', '×') + (a.Reason ? ' (' + a.Reason + ')' : '') + '.'
+            : ': ' + a.From.replace('x', '×') + ' kept, ' + a.Reason + '.';
+        what.appendChild(document.createTextNode(line));
+        row.appendChild(what);
+        box.appendChild(row);
+    });
+}
+
+/* ---------- settings-driven parts (always from the saved values) ---------- */
+function render() {
+    if (!kit.loaded()) return;
+    var v = versionOn(), l = limitOn(), list = savedRules();
+    fill($('#fitTileVersion'), v ? chip('ok', 'check_circle', 'On') : chip('plain', 'block', 'Off'));
+    fill($('#fitTileVersionSub'), v ? 'On screens up to 1200 px tall' : '4K plays as Jellyfin decides');
+    fill($('#fitTileLimit'), l ? chip('ok', 'check_circle', 'On') : chip('plain', 'block', 'Off'));
+    fill($('#fitTileLimitSub'), l ? 'Re-encodes no larger than the screen' : 'Transcodes keep their size');
+    $('#fitDemo').classList.toggle('fit-off-demo', !v);
+    fill($('#fitDemoLaptop'), v ? '1080p version' : '4K version');
+    fill($('#fitDemoLaptopCap'), v ? 'Starts the Full HD file. A transcode, if one is needed, works on a quarter of the pixels.' : 'Off: the 4K file starts, and a transcode for this screen stays 4K.');
+    ['#fitNodeVersion', '#fitEdge1'].forEach(function (s) { $(s).classList.toggle(s.indexOf('Edge') > 0 ? 'mk-flow__edge--off' : 'mk-flow__node--off', !v); });
+    ['#fitNodeLimit', '#fitEdge2'].forEach(function (s) { $(s).classList.toggle(s.indexOf('Edge') > 0 ? 'mk-flow__edge--off' : 'mk-flow__node--off', !l); });
+    $('#fitNodeVersion').classList.toggle('mk-flow__node--accent', v);
+    $('#fitNodeLimit').classList.toggle('mk-flow__node--accent', l);
+    fill($('#fitOnNoteT'), v || l
+        ? 'On. Browsers and the Jellyfin apps built on the web client measure their screen the next time they open; a page reload is enough. TV apps need a setting under Devices.'
+        : 'Off. The web client is left exactly as Jellyfin ships it and nothing is measured.');
+
+    var tileS = $('#fitTileScreens'), tileSub = $('#fitTileScreensSub'), tileD = $('#fitTileDone'), tileDSub = $('#fitTileDoneSub');
+    var bits = [el('b', null, 'Next: ')];
+    if (!data) {
+        fill(tileS, failedLoad ? '–' : '…'); fill(tileSub, failedLoad ? 'Not loaded' : '');
+        fill(tileD, failedLoad ? '–' : '…'); fill(tileDSub, '');
+        bits.push(failedLoad ? 'unknown. The device list could not be loaded; use Refresh.' : 'loading the devices…');
+    } else {
+        var act = data.Devices.filter(function (d) { return recent(d) || modeOf(list, d.Id) !== 'Auto'; });
+        var known = act.map(function (d) { var m = modeOf(list, d.Id); return m === 'Off' ? null : screenOf(d, m) ? { d: d, s: screenOf(d, m) } : null; }).filter(Boolean);
+        var hd = known.filter(function (x) { return fullHd(x.s); });
+        fill(tileS, String(known.length));
+        fill(tileSub, known.length ? hd.length + ' Full HD · ' + (known.length - hd.length) + ' larger · ' + (act.length - known.length) + ' unknown' : 'of ' + kit.plural(act.length, 'recent device'));
+        fill(tileD, String((data.Versions || 0) + (data.Limits || 0)));
+        fill(tileDSub, kit.plural(data.Versions || 0, 'Full HD start') + ' · ' + kit.plural(data.Limits || 0, 'limited transcode'));
+        if (!v && !l) bits.push('nothing. Both switches are off, so every video plays exactly as Jellyfin decides.');
+        else if (!known.length) bits.push('screens are measured the next time someone opens the web client or a Jellyfin app built on it. Set TV apps by hand under Devices.');
+        else {
+            // Several browsers share a name ("Chrome"): list each name once.
+            var names = [];
+            hd.forEach(function (x) { if (names.indexOf(x.d.Name) < 0) names.push(x.d.Name); });
+            var where = hd.length === names.length && names.length <= 3
+                ? names.slice(0, -1).join(', ') + (names.length > 1 ? ' and ' : '') + names[names.length - 1]
+                : kit.plural(hd.length, 'device') + ' (' + names.slice(0, 3).join(', ') + (names.length > 3 ? ', …' : '') + ')';
+            if (v && hd.length) bits.push('on ' + where + ', 4K movies with a Full HD version start that version. ');
+            else if (v) bits.push('no known screen is Full HD, so 4K stays 4K everywhere. ');
+            if (l) bits.push('Re-encodes on ' + kit.plural(known.length, 'known screen') + ' are no larger than the screen.');
+        }
+    }
+    fill($('#fitNext'), bits);
+    renderDevices();
+    renderLog();
+}
+})();
+</script>
+</div>
+</body>
+</html>
