@@ -19,6 +19,25 @@
     ]
   },
   {
+    "guid": "3ae42f4f-a017-405f-ab3d-02c3d876c5a2",
+    "name": "MKI Guest Pass",
+    "overview": "Temporary guest accounts from a link, QR code or code: only the libraries you pick, locked and deleted when the pass ends.",
+    "description": "Create a pass on the settings page, pick the libraries, how long it lasts, how many people can use it, how many devices and streams each of them gets and the highest rating, then send the link, show the QR code or read out the code. A guest opens it, types a first name and is watching a minute later: the plugin creates a hidden guest account with no password and signs it in on that browser. TVs are signed in with Quick Connect from the guest's phone. When the pass ends, playback stops, every device is signed out and the account is locked, then deleted a few days later. Links hold 256 random bits and are stored only as a keyed fingerprint, codes and joins are rate-limited, and guests are never administrators: they cannot see other users, download, delete, change settings, use Seerr or start library scans. Turning the plugin off locks every guest; uninstalling deletes them.",
+    "owner": "MKI",
+    "category": "Authentication",
+    "imageUrl": "https://raw.githubusercontent.com/MKI002/mki-jellyfin-plugins/main/src/Jellyfin.Plugin.MkiGuestPass/logo.png",
+    "versions": [
+      {
+        "version": "1.0.0.0",
+        "changelog": "First release. Passes with a link, a QR code and an optional 8-character code, for up to 10 people each, with their own libraries, end time, devices and streams per guest, highest rating and home-only option. Guests join on a small page of their own, come back on the same browser without using another place, and sign in TVs with Quick Connect. A badge in the web client shows guests when their access ends. Passes can get a new link, a new end, be ended early or deleted, guests can be ended or deleted one by one. Works together with MKI Password Policy 1.1.1.0 or later, which leaves guest accounts alone.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/MKI002/mki-jellyfin-plugins/releases/download/v1.13.0/mkiguestpass_1.0.0.0.zip",
+        "checksum": "6e23d0e9cdec6b9ba910e5df293e46f3",
+        "timestamp": "2026-10-23T17:29:45Z"
+      }
+    ]
+  },
+  {
     "guid": "f61ac908-2f39-419b-b7d3-302f7930455b",
     "name": "MKI Login Showcase",
     "overview": "An animated showcase of your library's artwork behind the Jellyfin sign-in page, in four neon styles.",
@@ -180,6 +199,14 @@
     "category": "Authentication",
     "imageUrl": "https://raw.githubusercontent.com/MKI002/mki-jellyfin-plugins/main/src/Jellyfin.Plugin.MkiPasswordPolicy/logo.png",
     "versions": [
+      {
+        "version": "1.1.1.0",
+        "changelog": "Leaves guest accounts of MKI Guest Pass alone: they have no password by design, so they are never locked for having none, never asked for a new password, cannot get a temporary password and are left out of the user list and of requests for everyone. Nothing else changes.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/MKI002/mki-jellyfin-plugins/releases/download/v1.13.0/mkipasswordpolicy_1.1.1.0.zip",
+        "checksum": "69ab2fd3d06777871369724d9a7a88fd",
+        "timestamp": "2026-10-23T17:29:45Z"
+      },
       {
         "version": "1.1.0.0",
         "changelog": "New settings page in the shared MKI design, with tabs for Users, Require a new password, Profiles and More settings. The header shows who the rules apply to, the state of everyone's password, open requests and the time left to set a new one. The Users tab lists everyone with search and filters, and flags accounts without a password with a Temporary password button. Before any change that could lock someone out, the page names the accounts and asks; your own account can never be locked from here. A request for everyone shows who gets one and who was already asked, with the notice period chosen in the same dialog. A temporary password is shown once, in a dialog that stays open until you confirm you copied it. Profiles can be compared side by side and tried with a test password, checked in the browser only. Settings save as soon as you change them, with undo. Works on phones and in light and dark themes.",
