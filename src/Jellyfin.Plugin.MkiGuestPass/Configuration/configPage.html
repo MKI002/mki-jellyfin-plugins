@@ -704,7 +704,7 @@
 #MkiGuestPassConfigPage .gp-pass.is-ended .mk-card__icon { filter: grayscale(1); opacity: .7; }
 #MkiGuestPassConfigPage .gp-pass .mk-card__title { overflow-wrap: anywhere; }
 #MkiGuestPassConfigPage .gp-pass .mk-card__desc { overflow-wrap: anywhere; }
-#MkiGuestPassConfigPage .gp-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; }
+#MkiGuestPassConfigPage .gp-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin: 0; }
 #MkiGuestPassConfigPage .gp-fact { min-width: 0; padding: 9px 12px; border-radius: 10px; background: var(--mk-field); border: 1px solid var(--mk-line); }
 #MkiGuestPassConfigPage .gp-fact small { display: flex; align-items: center; gap: 5px; font-size: .7rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--mk-dim); }
 #MkiGuestPassConfigPage .gp-fact small .mk-ic { font-size: 15px; color: var(--mk-a2-ink); }
@@ -790,7 +790,7 @@
 #MkiGuestPassConfigPage .gp-safe li { display: flex; gap: 10px; align-items: flex-start; font-size: .86rem; line-height: 1.5; color: var(--mk-dim); }
 #MkiGuestPassConfigPage .gp-safe .mk-ic { color: var(--mk-a2-ink); margin-top: 1px; }
 #MkiGuestPassConfigPage .gp-safe b { color: var(--mk-text); }
-#MkiGuestPassConfigPage .gp-unit { display: inline-grid; place-items: center; padding: 0 10px; border: 1px solid var(--mk-line); border-left: 0; border-radius: 0 9px 9px 0; background: var(--mk-surface-3); color: var(--mk-dim); font-size: .84rem; }
+#MkiGuestPassConfigPage .gp-unit { display: inline-grid; place-items: center; min-width: 58px; box-sizing: border-box; padding: 0 10px; border: 1px solid var(--mk-line); border-left: 0; border-radius: 0 9px 9px 0; background: var(--mk-surface-3); color: var(--mk-dim); font-size: .84rem; }
 
 @media (max-width: 900px) {
   #MkiGuestPassConfigPage .gp-newgrid { grid-template-columns: minmax(0, 1fr); }
@@ -808,7 +808,10 @@
   #MkiGuestPassConfigPage .gp-fact small { font-size: .64rem; }
   #MkiGuestPassConfigPage .gp-fact small .mk-ic { display: none; }
   #MkiGuestPassConfigPage .gp-fact b { margin: 0; font-size: .82rem; }
-  #MkiGuestPassConfigPage .gp-fact span { display: none; }
+  #MkiGuestPassConfigPage .gp-fact > span { display: none; }
+  /* the timeline captions: one line each, under the bar */
+  #MkiGuestPassConfigPage .gp-life__cap { grid-column: 1 / -1; flex-direction: column; align-items: flex-start; gap: 1px; }
+  #MkiGuestPassConfigPage .gp-life__cap > span:last-child { text-align: left; }
   #MkiGuestPassConfigPage .gp-pass .mk-card__foot .mk-btn { flex: 1 1 calc(50% - 10px); }
   #MkiGuestPassConfigPage .gp-pass .mk-card__foot .mk-grow { display: none; }
 }
@@ -1895,7 +1898,8 @@ var ov = null, failedLoad = false, seq = 0, creating = false, timer = 0;
 var kit = MkiKit(page, {
     pluginId: '3ae42f4f-a017-405f-ab3d-02c3d876c5a2',
     onLoad: function () { render(); refresh(); },
-    onSaved: function () { render(); },
+    /* deletion dates come from the server: a new number of days is shown only after asking again */
+    onSaved: function (batch) { if (batch.some(function (b) { return b.key === 'DeleteAfterDays'; })) refresh(); else render(); },
     /* the kit reloads (and so refreshes) on a return visit unless a change is still on its way */
     onShow: function () { var st = kit.state(); if (st.loaded && (st.pending || st.invalid || st.failed)) refresh(); },
     /* fewer days applies to guests locked earlier too: they may be deleted at once */
@@ -1923,7 +1927,15 @@ function why(e, fallback) {
     /* a refusal that already carries its text (an HTTP status and a message) */
     return Promise.resolve(both(e && typeof e.status === 'number' && e.status >= 400 && typeof e.message === 'string' ? e.message : ''));
 }
-function failed(e, fallback) { return why(e, fallback).then(function (m) { kit.toast(m, { bad: true }); refresh(); }); }
+function failed(e, fallback, focusKey, id) { return why(e, fallback).then(function (m) { kit.toast(m, { bad: true }); return refresh().then(function () { if (focusKey) focusAfter(focusKey, id); }); }); }
+/* one question per pass at a time: a second click while the first still asks the server is ignored */
+var acting = {};
+function oneAtATime(id, run) {
+    if (acting[id]) return;
+    acting[id] = true;
+    var done = function () { delete acting[id]; };
+    Promise.resolve().then(run).then(done, done);
+}
 function passOf(id) { return ov && ov.Passes.filter(function (p) { return p.Id === id; })[0]; }
 function guestsOf(p) { return p.Guests || []; }
 function activeGuests(p) { return guestsOf(p).filter(function (g) { return g.State === 'Active'; }); }
@@ -1963,7 +1975,7 @@ function confirmDeleteDays(to, from) {
     if (due.length) {
         var one = due.length === 1;
         return kit.confirm({ title: 'Delete ' + (one ? due[0] + '’s account' : kit.plural(due.length, 'locked account')) + ' now?', icon: 'auto_delete', tone: 'bad', danger: true, ok: 'Use ' + kit.plural(to, 'day'), okIcon: 'delete',
-            body: [names(due) + (one ? ' was' : ' were') + ' locked more than ' + kit.plural(to, 'day') + ' ago. With ' + kit.plural(to, 'day') + ', ' + (one ? 'this account is' : 'these accounts are') + ' deleted within a minute, with watch history and favourites.', 'This cannot be undone.'] });
+            body: [names(due) + (one ? ' was' : ' were') + (to ? ' locked more than ' + kit.plural(to, 'day') + ' ago. With ' + kit.plural(to, 'day') + ', ' : ' locked. With 0 days, ') + (one ? 'this account is' : 'these accounts are') + ' deleted within a minute, with watch history and favourites.', 'This cannot be undone.'] });
     }
     if (to === 0) return kit.confirm({ title: 'Delete accounts right at the end?', icon: 'auto_delete', tone: 'warn', ok: 'Use 0 days', okIcon: 'check',
         body: 'Guests are then deleted within a minute of the end, with watch history and favourites, and an ended pass can no longer be opened again for them.' });
@@ -2277,7 +2289,10 @@ $('#gpName').addEventListener('keydown', function (e) { if (e.key === 'Enter') c
 function libsMsg(text) {
     var m = $('#gpLibsMsg'), box = $('#gpLibs');
     box.classList.toggle('is-bad', !!text);
-    $$('input', box).forEach(function (c) { if (text) c.setAttribute('aria-describedby', 'gpLibsMsg gpLibsHint'); else c.removeAttribute('aria-describedby'); });
+    $$('input', box).forEach(function (c) {
+        if (text) { c.setAttribute('aria-describedby', 'gpLibsMsg gpLibsHint'); c.setAttribute('aria-invalid', 'true'); }
+        else { c.removeAttribute('aria-describedby'); c.removeAttribute('aria-invalid'); }
+    });
     if (!text) { m.textContent = ''; m.className = 'mk-msg'; return; }
     fill(m, [ic('error'), el('span', null, text)]); m.className = 'mk-msg mk-msg--bad';
 }
@@ -2371,13 +2386,16 @@ function share(r, isNew) {
 
 /* ---------- pass and guest actions ---------- */
 function newLink(p) {
-    kit.confirm({ title: 'New link for ' + quote(p.Name) + '?', icon: 'link', tone: 'warn', ok: 'Make a new link', okIcon: 'link',
+    oneAtATime(p.Id, function () { return newLinkNow(p); });
+}
+function newLinkNow(p) {
+    return kit.confirm({ title: 'New link for ' + quote(p.Name) + '?', icon: 'link', tone: 'warn', ok: 'Make a new link', okIcon: 'link',
         body: 'The current link' + (p.HasCode ? ' and code stop' : ' stops') + ' working at once, also for anyone you already sent ' + (p.HasCode ? 'them' : 'it') + ' to. Guests who joined are not affected.' })
         .then(function (ok) {
             if (!ok) return;
             return working(p.Id, kit.api('POST', 'MkiGuestPass/Passes/' + p.Id + '/NewLink')).then(function (r) {
                 kit.logAction('New link: ' + p.Name); refresh(); return share(r, false).then(function () { focusAfter('pl:' + p.Id); });
-            }, function (e) { return failed(e, 'No new link was made. The pass is unchanged.'); });
+            }, function (e) { return failed(e, 'No new link was made. The pass is unchanged.', 'pl:' + p.Id, p.Id); });
         });
 }
 /* the pass as the server has it now: a question about a pass shown minutes ago could be about something else */
@@ -2389,7 +2407,7 @@ function fresh(p) {
     });
 }
 function extend(p0) {
-    fresh(p0).then(function (p) { if (p) extendNow(p); });
+    oneAtATime(p0.Id, function () { return fresh(p0).then(function (p) { if (p) return extendNow(p); }); });
 }
 function extendNow(p) {
     var box = el('div', 'gp-dlg'), seg = el('div', 'mk-seg'), custom = el('input', 'mk-input'), out = el('p', 'gp-endtext'), save = null;
@@ -2419,7 +2437,7 @@ function extendNow(p) {
         if (save) save.disabled = !!bad;
     }
     calc();
-    kit.dialog({ title: (open ? 'Change the end of ' : 'Open ') + quote(p.Name) + (open ? '' : ' again'), node: box, icon: 'more_time', tone: 'accent',
+    return kit.dialog({ title: (open ? 'Change the end of ' : 'Open ') + quote(p.Name) + (open ? '' : ' again'), node: box, icon: 'more_time', tone: 'accent',
         buttons: [{ value: false, text: 'Cancel' }, { value: true, text: open ? 'Save new end' : 'Open again', kind: 'primary', icon: open ? 'check' : 'lock_open' }], focus: true, cancelValue: false,
         onOpen: function (dlg) { save = dlg.querySelector('.mk-btn--primary'); calc(); } })
         .then(function (ok) {
@@ -2432,11 +2450,14 @@ function extendNow(p) {
                 kit.toast(quote(p.Name) + (open ? ' now ends ' : ' is open again until ') + kit.day(to) + ', ' + kit.hhmm(to) + '.',
                     open ? {} : { action: 'New link', onAction: function () { var q = passOf(p.Id); if (q) newLink(q); } });
                 return refresh().then(function () { focusAfter('px:' + p.Id); });
-            }, function (e) { return failed(e, 'The end was not changed.'); });
+            }, function (e) { return failed(e, 'The end was not changed.', 'px:' + p.Id, p.Id); });
         });
 }
 function endPass(p0) {
-    fresh(p0).then(function (p) {
+    oneAtATime(p0.Id, function () { return endPassNow(p0); });
+}
+function endPassNow(p0) {
+    return fresh(p0).then(function (p) {
         if (!p) return;
         if (!p.Open) { kit.toast(quote(p.Name) + ' has already ended.'); return; }
         var g = activeGuests(p);
@@ -2448,12 +2469,15 @@ function endPass(p0) {
                 return working(p.Id, kit.api('POST', 'MkiGuestPass/Passes/' + p.Id + '/End')).then(function () {
                     kit.logAction('Pass ended: ' + p.Name); kit.toast(quote(p.Name) + ' has ended.', { icon: 'block' });
                     return refresh().then(function () { focusAfter('px:' + p.Id, p.Id); });
-                }, function (e) { return failed(e, 'The pass was not ended.'); });
+                }, function (e) { return failed(e, 'The pass was not ended.', 'pe:' + p.Id, p.Id); });
             });
     });
 }
 function deletePass(p0) {
-    fresh(p0).then(function (p) {
+    oneAtATime(p0.Id, function () { return deletePassNow(p0); });
+}
+function deletePassNow(p0) {
+    return fresh(p0).then(function (p) {
         if (!p) return;
         var n = guestsOf(p).length;
         return kit.confirm({ title: 'Delete ' + quote(p.Name) + '?', icon: 'delete', tone: 'bad', danger: true, ok: n ? 'Delete pass and accounts' : 'Delete pass', okIcon: 'delete',
@@ -2465,30 +2489,45 @@ function deletePass(p0) {
                 return working(p.Id, kit.api('DELETE', 'MkiGuestPass/Passes/' + p.Id + '?guests=' + n)).then(function () {
                     kit.logAction('Pass deleted: ' + p.Name); kit.toast(quote(p.Name) + ' was deleted.', { icon: 'delete' });
                     return refresh().then(function () { focusAfter(null, next); });
-                }, function (e) { return failed(e, 'The pass was not deleted.'); });
+                }, function (e) { return failed(e, 'The pass was not deleted.', 'pd:' + p.Id, p.Id); });
             });
     });
 }
 function endGuest(p, g) {
-    kit.confirm({ title: 'End access for ' + g.Name + '?', icon: 'block', tone: 'bad', danger: true, ok: 'End access', okIcon: 'block',
-        body: g.Name + ' is signed out on every device and locked now, also if ' + quote(p.Name) + ' is extended later. ' + (deleteDays() ? 'The account is deleted ' + kit.plural(deleteDays(), 'day') + ' later.' : 'The account is deleted within a minute, with watch history and favourites. This cannot be undone.') + ' The place on the pass stays used.' })
-        .then(function (ok) {
-            if (!ok) return;
+    oneAtATime(p.Id, function () { return endGuestNow(p, g); });
+}
+function endGuestNow(p, g) {
+    /* while places are left, the same person can join again with the link they have: offer a new link in one go */
+    var again = p.Open && p.Used < p.MaxGuests, buttons = [{ value: false, text: 'Cancel' }, { value: 'end', text: 'End access', kind: again ? '' : 'danger', icon: 'block' }];
+    if (again) buttons.push({ value: 'link', text: 'End and make a new link', kind: 'danger', icon: 'link' });
+    return kit.dialog({ title: 'End access for ' + g.Name + '?', icon: 'block', tone: 'bad', buttons: buttons, focus: false, cancelValue: false,
+        body: [g.Name + ' is signed out on every device and locked now, also if ' + quote(p.Name) + ' is extended later. ' + (deleteDays() ? 'The account is deleted ' + kit.plural(deleteDays(), 'day') + ' later.' : 'The account is deleted within a minute, with watch history and favourites. This cannot be undone.') + ' The place on the pass stays used.']
+            .concat(again ? ['The link still has ' + kit.plural(p.MaxGuests - p.Used, 'place') + ' left, so ' + g.Name + ' could join again with it as a new guest. A new link stops that; guests who joined keep watching.'] : []) })
+        .then(function (choice) {
+            if (!choice) return;
             return working(p.Id, kit.api('POST', 'MkiGuestPass/Guests/' + g.UserId + '/End')).then(function () {
                 kit.logAction('Guest ended: ' + g.Name); kit.toast('Access for ' + g.Name + ' has ended.', { icon: 'block' });
+                if (choice === 'link') {
+                    return working(p.Id, kit.api('POST', 'MkiGuestPass/Passes/' + p.Id + '/NewLink')).then(function (r) {
+                        kit.logAction('New link: ' + p.Name); refresh(); return share(r, false).then(function () { focusAfter('pl:' + p.Id); });
+                    }, function (e) { return failed(e, 'Access for ' + g.Name + ' has ended, but no new link was made.', 'pl:' + p.Id, p.Id); });
+                }
                 return refresh().then(function () { focusAfter('gd:' + g.UserId, p.Id); });
-            }, function (e) { return failed(e, 'Access for ' + g.Name + ' was not ended.'); });
+            }, function (e) { return failed(e, 'Access for ' + g.Name + ' was not ended.', 'ge:' + g.UserId, p.Id); });
         });
 }
 function deleteGuest(p, g) {
-    kit.confirm({ title: 'Delete ' + g.Name + '’s guest account?', icon: 'person_remove', tone: 'bad', danger: true, ok: 'Delete account', okIcon: 'delete',
+    oneAtATime(p.Id, function () { return deleteGuestNow(p, g); });
+}
+function deleteGuestNow(p, g) {
+    return kit.confirm({ title: 'Delete ' + g.Name + '’s guest account?', icon: 'person_remove', tone: 'bad', danger: true, ok: 'Delete account', okIcon: 'delete',
         body: g.Name + ' is signed out everywhere and the account is deleted now, with watch history and favourites. The place on the pass stays used. This cannot be undone.' })
         .then(function (ok) {
             if (!ok) return;
             return working(p.Id, kit.api('DELETE', 'MkiGuestPass/Guests/' + g.UserId)).then(function () {
                 kit.logAction('Guest deleted: ' + g.Name); kit.toast(g.Name + '’s account was deleted.', { icon: 'delete' });
                 return refresh().then(function () { focusAfter(null, p.Id); });
-            }, function (e) { return failed(e, g.Name + '’s account was not deleted.'); });
+            }, function (e) { return failed(e, g.Name + '’s account was not deleted.', 'gd:' + g.UserId, p.Id); });
         });
 }
 
@@ -2523,7 +2562,7 @@ function lifeline(p, soon) {
     wrap.appendChild(c1);
     if (days) {
         var c2 = el('p', 'gp-life__cap gp-life__cap--end'); c2.setAttribute('aria-hidden', 'true');
-        c2.appendChild(el('span', null, (gone <= now ? 'Deleted within a minute' : 'Deleted ' + kit.day(new Date(gone)))));
+        c2.appendChild(el('span', null, (gone <= now ? 'Deleted within a minute' : 'Deletion ' + kit.day(new Date(gone)))));
         wrap.appendChild(c2);
     }
     return wrap;
@@ -2604,7 +2643,7 @@ function passCard(p) {
         body.appendChild(facts);
     } else {
         /* what the pass allowed no longer matters once it has ended */
-        body.appendChild(el('p', 'gp-summary', 'Ended ' + when(p.EndUtc) + ' · ' + p.Used + ' of ' + kit.plural(p.MaxGuests, 'place') + ' used'));
+        body.appendChild(el('p', 'gp-summary', p.Used + ' of ' + kit.plural(p.MaxGuests, 'place') + ' used'));
     }
     if (open || gs.length) body.appendChild(lifeline(p, soon));
     if (gs.length) {
@@ -2671,6 +2710,7 @@ function renderAttn() {
     if (!ov.QuickConnect && ov.Passes.some(function (p) { return p.Open; })) box.appendChild(note(null, 'tv', [el('b', null, 'Quick Connect is off, '), 'so guests cannot sign in TVs. Turn it on under Dashboard → General if they should.']));
     if (ov.UnknownProxy) box.appendChild(note('warn', 'alt_route', [el('b', null, 'Requests come through a reverse proxy Jellyfin does not know. '),
         'Jellyfin then sees the proxy, not the visitor, and takes everyone for someone at home, also for its own checks. Guest Pass refuses passes for the home network only through it. Add the proxy under Dashboard → Networking → Known proxies, then restart Jellyfin.']));
+    if (ov.DlnaInstalled && ov.Passes.some(function (p) { return p.Open; })) box.appendChild(note('warn', 'cast', [el('b', null, 'The DLNA plugin is installed. '), 'It shows every library to any device on your home network without signing in, also to a guest’s phone there. Uninstall it under Dashboard → Plugins if guests should see only their pass.']));
     if (!kit.saved('StreamsNeedSignIn')) box.appendChild(note('warn', 'lock_open', [el('b', null, 'Streams play without a sign-in. '), 'Anyone with the address of a title can play it, also guests whose pass ended. Turn on “Streams need a sign-in” under Settings unless a player needs it off.']));
     box.hidden = !box.firstChild;
 }
@@ -2690,7 +2730,7 @@ function renderFlow() {
     step('play_circle', 'Pass open');
     step('arrow_forward', 'end', 'gp-flow__to');
     step('lock', 'Signed out, locked');
-    step('arrow_forward', d ? kit.plural(d, 'day') + ' to extend' : 'right away', 'gp-flow__to');
+    step('arrow_forward', d ? kit.plural(d, 'day') + ' to open again' : 'right away', 'gp-flow__to');
     step('delete', 'Deleted');
     fill($('#gpFlow'), parts);
 }

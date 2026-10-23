@@ -1,10 +1,11 @@
 /* MKI Guest Pass for the Jellyfin web client. Only loaded while guests exist or a pass with a code is open.
    - On the sign-in page: "Have a guest code?", leading to the join page (only while a pass with a code is open), and
-     for a guest who was just signed out, a line saying their access ended.
+     for a guest who was just signed out in this window, that their pass ended, or a way back in and a way to make
+     this browser forget them.
    - For a signed-in guest: a small badge with the end of the guest access. It opens a panel with "Sign in a TV"
      (Jellyfin's Quick Connect) and the server address for TV apps.
-   - A guest who signs out forgets this browser's way back in (the join page's rejoin key), so the next person at a
-     shared computer cannot continue as them.
+   - A guest who joined as on a shared computer: Jellyfin's "remember me" is turned off once they are signed in, so
+     Jellyfin asks for a sign-in after this window closes.
    The script holds no data: it asks the server whether the signed-in user is a guest. Server text only ever reaches
    the page through textContent. */
 (function () {
@@ -20,11 +21,23 @@
     var EN = 'en-GB';
     var KEYS = 'mkiGuestPass';
     var SEEN = 'mkiGuestPass:seen';
-    var me = null, meFor = '', asking = false, badge = null, panel = null, timer = 0;
+    var SHARED = 'mkiGuestPass:shared';
+    var me = null, meFor = '', asked = 0, asking = false, badge = null, panel = null, timer = 0;
 
     function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
     function seen(v) { try { if (v === undefined) return JSON.parse(sessionStorage.getItem(SEEN) || 'null'); if (v === null) sessionStorage.removeItem(SEEN); else sessionStorage.setItem(SEEN, JSON.stringify(v)); } catch (e) { return null; } return null; }
-    function forgetKeys() { try { localStorage.removeItem(KEYS); } catch (e) { } }
+    function store(session) { try { return session ? window.sessionStorage : window.localStorage; } catch (e) { return null; } }
+    /* the join page's way back in: rejoin keys kept in this browser, or in this window only on a shared computer */
+    function keys() {
+        var out = [];
+        [true, false].forEach(function (session) {
+            try { (JSON.parse(store(session).getItem(KEYS) || '[]') || []).forEach(function (g) { if (g && g.key && g.name && !g.ended && new Date(g.end).getTime() > Date.now()) out.push(g); }); } catch (e) { }
+        });
+        return out;
+    }
+    function forgetKeys() {
+        [true, false].forEach(function (session) { try { store(session).removeItem(KEYS); } catch (e) { } });
+    }
 
     function addCss() {
         if (document.getElementById('mkigp-css')) return;
@@ -36,6 +49,10 @@
             '.mkigp-code a:focus-visible{background:rgba(61,200,255,.16);outline:3px solid #3DC8FF;outline-offset:3px}',
             '.mkigp-code a::before{content:"";width:.65em;height:.65em;border-radius:50%;background:linear-gradient(135deg,#FF3D71,#3DC8FF)}',
             '.mkigp-ended{margin:1.2em auto 0;max-width:28em;padding:.8em 1em;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);text-align:center;line-height:1.45}',
+            '.mkigp-ended p{margin:0}',
+            '.mkigp-again{display:flex;flex-wrap:wrap;justify-content:center;gap:.5em 1.2em;margin-top:.6em!important}',
+            '.mkigp-again a,.mkigp-again button{padding:.2em 0;border:0;background:none;color:#3DC8FF;font:inherit;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer}',
+            '.mkigp-again a:focus-visible,.mkigp-again button:focus-visible{outline:3px solid #3DC8FF;outline-offset:3px;border-radius:4px}',
             '.mkigp-badge{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:999;display:inline-flex;align-items:center;gap:.55em;max-width:calc(100vw - 24px);padding:.5em .85em .5em .95em;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(20,20,28,.92);color:#fff;font-family:inherit;font-size:.86rem;font-weight:600;line-height:1.3;cursor:pointer;box-shadow:0 10px 30px -12px rgba(0,0,0,.8);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}',
             '.mkigp-badge::before{content:"";flex:none;width:.6em;height:.6em;border-radius:50%;background:linear-gradient(135deg,#FF3D71,#3DC8FF)}',
             '.mkigp-badge::after{content:"";flex:none;width:.4em;height:.4em;margin-left:.1em;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);opacity:.7}',
@@ -64,6 +81,8 @@
             '.mkigp-btn{flex:none;padding:.7em 1.1em;border:0;border-radius:10px;font:inherit;font-weight:700;cursor:pointer;color:#0b0b0b;background:linear-gradient(90deg,#FF3D71,#3DC8FF)}',
             '.mkigp-btn[disabled]{opacity:.6;cursor:progress}',
             '.mkigp-copy{flex:none;padding:.35em .8em;border-radius:8px;border:1px solid rgba(255,255,255,.22);background:none;color:#fff;font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}',
+            '.mkigp-foot{display:flex;gap:10px;margin:16px 0 0}',
+            '.mkigp-foot .mkigp-plain{flex:1;margin:0}',
             '.mkigp-plain{display:block;width:100%;margin:16px 0 0;padding:.75em;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:none;color:#fff;font:inherit;font-weight:600;cursor:pointer}',
             '.mkigp-btn:focus-visible,.mkigp-plain:focus-visible,.mkigp-copy:focus-visible{outline:3px solid #3DC8FF;outline-offset:2px}',
             '.mkigp-say{margin:.6em 0 0;font-size:.9rem}',
@@ -80,16 +99,36 @@
         var anchor = page.querySelector('.readOnlyContent') || page.querySelector('form');
         if (!anchor || !anchor.parentNode) return;
         var was = seen();
-        if (was) {
-            /* signed out: the way back in stays only while the pass lasts and nobody chose to leave */
-            if (new Date(was.end).getTime() <= Date.now()) forgetKeys();
-            if (!page.querySelector('.mkigp-ended')) {
-                addCss();
-                var over = new Date(was.end).getTime() <= Date.now();
-                var n = el('p', 'mkigp-ended', over ? 'Your guest pass ended ' + when(was.end) + '. Thanks for watching!' : 'Your guest access is signed out on this browser. While your pass runs, your guest link brings you back.');
-                n.setAttribute('role', 'status');
-                anchor.parentNode.insertBefore(n, anchor.nextSibling);
+        /* Jellyfin keeps earlier sign-in pages hidden in the page: a note there would be stale */
+        Array.prototype.forEach.call(document.querySelectorAll('.mkigp-ended'), function (x) { if (!page.contains(x)) x.parentNode.removeChild(x); });
+        var old = page.querySelector('.mkigp-ended'), sig = was ? JSON.stringify([was.end, was.cut || 0, keys().map(function (g) { return g.key; })]) : '';
+        if (old && old.getAttribute('data-sig') !== sig) { old.parentNode.removeChild(old); old = null; }
+        if (was && !old) {
+            addCss();
+            var n = el('div', 'mkigp-ended');
+            n.setAttribute('role', 'status');
+            n.setAttribute('data-sig', sig);
+            if (new Date(was.end).getTime() <= Date.now()) {
+                n.appendChild(el('p', null, 'Your guest pass ended ' + when(was.end) + '. Thanks for watching!'));
+            } else {
+                /* a way back only where the join page still knows this guest; the join page says so if the pass or the
+                   guest was ended in the meantime */
+                var back = keys();
+                n.appendChild(el('p', null, was.cut ? 'Your guest access on this browser has ended.' : 'You are signed out of your guest access.'));
+                if (back.length) {
+                    var row = el('p', 'mkigp-again'), go = el('a', null, back.length === 1 ? 'Continue as ' + back[0].name : 'Continue as a guest');
+                    go.href = BASE + '/MkiGuestPass/Join';
+                    var no = el('button', null, back.length === 1 ? 'Forget ' + back[0].name + ' on this browser' : 'Forget guests on this browser'); no.type = 'button';
+                    no.addEventListener('click', function () {
+                        forgetKeys();
+                        n.textContent = '';
+                        n.appendChild(el('p', null, 'Done: this browser does not know your guest access any more.'));
+                        n.setAttribute('data-sig', JSON.stringify([was.end, was.cut || 0, []]));
+                    });
+                    row.appendChild(go); row.appendChild(no); n.appendChild(row);
+                }
             }
+            anchor.parentNode.insertBefore(n, anchor.nextSibling);
         }
         if (!CODE_LINK || page.querySelector('.mkigp-code')) return;
         addCss();
@@ -103,13 +142,11 @@
     /* ---------- the guest badge ---------- */
     function api() { var a = window.ApiClient; return a && a.accessToken && a.accessToken() && a.getCurrentUserId && a.getCurrentUserId() ? a : null; }
 
-    /* signing out on purpose also forgets the rejoin key of this browser */
-    function hookLogout() {
-        var a = window.ApiClient;
-        if (!a || a.mkigpHooked || typeof a.logout !== 'function') return;
-        var orig = a.logout;
-        a.logout = function () { if (me && me.Guest) forgetKeys(); return orig.apply(this, arguments); };
-        a.mkigpHooked = true;
+    /* joined as on a shared computer (in this window): from now on Jellyfin asks for a sign-in when it starts again */
+    function sharedComputer(userId) {
+        try {
+            if (sessionStorage.getItem(SHARED) === userId) localStorage.setItem('enableAutoLogin', 'false');
+        } catch (e) { }
     }
 
     function call(method, path) {
@@ -134,7 +171,7 @@
         var time = d.toLocaleTimeString(EN, { hour: '2-digit', minute: '2-digit' });
         if (d.toDateString() === today.toDateString()) return 'today ' + time;
         if (d.toDateString() === tomorrow.toDateString()) return 'tomorrow ' + time;
-        return d.toLocaleDateString(EN, { weekday: 'short', day: 'numeric', month: 'short' }) + ' ' + time;
+        return d.toLocaleDateString(EN, { weekday: 'short', day: 'numeric', month: 'short' }) + ', ' + time;
     }
     function left(iso) {
         var m = Math.round((new Date(iso).getTime() - Date.now()) / 60000);
@@ -178,22 +215,30 @@
         if (badge.style.bottom !== bottom) badge.style.bottom = bottom;
     }
 
-    function ask() {
-        hookLogout();
+    /* the web client's own sign-out, which also takes the user to the sign-in page */
+    function signOut() {
+        try { if (window.Dashboard && typeof window.Dashboard.logout === 'function') window.Dashboard.logout(); } catch (e) { }
+    }
+
+    /* a guest is asked about again after a minute at the next page change, so an ended guest is not left waiting */
+    function ask(force) {
         var a = api();
         var who = a ? (a.serverId && a.serverId()) + '|' + a.getCurrentUserId() : '';
         if (!who) { me = null; meFor = ''; render(); return; }
-        if (asking || who === meFor && me) { render(); return; }
-        asking = true;
+        var stale = !!(me && me.Guest && Date.now() - asked > 60000);
+        if (asking || who === meFor && me && !stale && !force) { render(); return; }
+        asking = true; asked = Date.now();
         call('GET', 'MkiGuestPass/Me').then(function (d) {
             asking = false; me = d && typeof d === 'object' ? d : null; meFor = who;
             /* remembered in this tab, so the sign-in page can say why the guest landed there */
             seen(me && me.Guest ? { end: me.EndUtc } : null);
+            if (me && me.Guest) sharedComputer(a.getCurrentUserId());
             render();
         }, function (e) {
             /* asked again at the next page change, never in a loop */
             asking = false; me = null; meFor = who; render();
-            if (e && e.status === 401 && seen()) loginExtras();
+            /* a guest whose access ended or was ended: Jellyfin itself would only show a spinner */
+            if (e && e.status === 401 && seen()) { var was = seen(); was.cut = Date.now(); seen(was); signOut(); }
         });
     }
 
@@ -300,9 +345,13 @@
         }
         inner.appendChild(tv);
 
+        var foot = el('div', 'mkigp-foot');
+        var out = el('button', 'mkigp-plain', 'Sign out'); out.type = 'button';
+        out.addEventListener('click', function () { closePanel(); signOut(); });
         var close = el('button', 'mkigp-plain', 'Close'); close.type = 'button';
         close.addEventListener('click', closePanel);
-        inner.appendChild(close);
+        foot.appendChild(out); foot.appendChild(close);
+        inner.appendChild(foot);
         box.appendChild(inner);
         /* a click on the dimmed page around the panel closes it */
         box.addEventListener('click', function (e) { if (e.target === box) closePanel(); });
@@ -325,7 +374,8 @@
     window.addEventListener('resize', function () { if (badge) render(); });
     document.addEventListener('visibilitychange', function () { if (!document.hidden) { meFor = ''; later(); } });
     setInterval(function () { render(); }, 30000);
-    setInterval(function () { meFor = ''; ask(); }, 10 * 60000);
+    setInterval(function () { if (me && me.Guest) ask(true); }, 60000);
+    setInterval(function () { ask(true); }, 10 * 60000);
     if (window.MutationObserver) {
         /* the sign-in page, the player and the now-playing bar come and go without a viewshow in some versions */
         var pending = 0;

@@ -54,7 +54,9 @@ main { width: 100%; max-width: 440px; }
 .kicker { margin: 0 0 6px; font-size: .74rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--a1-ink); }
 h1 { margin: 0; font-size: 1.6rem; line-height: 1.2; font-weight: 750; letter-spacing: -.01em; overflow-wrap: anywhere; }
 .lede { margin: 8px 0 0; color: var(--dim); overflow-wrap: anywhere; }
-.facts { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 8px; }
+.facts { list-style: none; margin: 18px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.facts li { grid-column: 1 / -1; }
+.facts li.half { grid-column: auto; grid-template-columns: 20px 1fr; gap: 8px; padding: 9px 10px; }
 .facts li { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; padding: 10px 12px; border-radius: 12px; background: var(--field); border: 1px solid var(--line); }
 .facts svg { margin-top: 2px; color: var(--a2-ink); }
 .facts small { display: block; font-size: .74rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
@@ -72,6 +74,7 @@ input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px rgba(var(--bad-rgb), .4
 .check { display: flex; gap: 10px; align-items: center; margin: 14px 0 0; font-size: .88rem; font-weight: 500; color: var(--dim); cursor: pointer; }
 .check input { flex: none; width: 20px; height: 20px; margin: 0; padding: 0; border-radius: 5px; -webkit-appearance: auto; appearance: auto; accent-color: var(--a2-ink); }
 .check input:focus-visible { outline: 2px solid var(--a2-ink); outline-offset: 2px; box-shadow: none; }
+.check-hint { margin: 4px 0 0 30px; }
 h1:focus { outline: none; }
 input.code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .18em; text-transform: uppercase; text-align: center; font-size: 1.3rem; }
 .hint { margin: 6px 0 0; font-size: .82rem; color: var(--dim); }

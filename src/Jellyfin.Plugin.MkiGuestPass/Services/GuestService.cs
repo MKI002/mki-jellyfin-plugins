@@ -701,7 +701,7 @@ public class GuestService
 			}
 			if (guest.State == GuestState.Ended)
 			{
-				throw new GuestError(410, "The person who invited you ended your guest access.", "ended");
+				throw new GuestError(410, "The person who invited you ended your guest access.", "removed");
 			}
 			if (guest.State != GuestState.Active || pass.HasEnded(now))
 			{

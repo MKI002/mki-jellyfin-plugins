@@ -9,6 +9,7 @@
 
     var STORE = 'mkiGuestPass';
     var TAB = 'mkiGuestPass:link';
+    var SHARED = 'mkiGuestPass:shared';
     var EN = 'en-GB';
     var view = document.getElementById('view');
     var path = location.pathname;
@@ -59,8 +60,10 @@
         if (h < 48) return 'in ' + h + (h === 1 ? ' hour' : ' hours');
         return 'in ' + Math.round(h / 24) + ' days';
     }
-    function read(key) { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { return null; } }
-    function write(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (e) { return false; } }
+    /* session: this window only (a shared computer), otherwise this browser */
+    function store(session) { try { return session ? window.sessionStorage : window.localStorage; } catch (e) { return null; } }
+    function read(key, session) { try { return JSON.parse(store(session).getItem(key) || 'null'); } catch (e) { return null; } }
+    function write(key, value, session) { try { store(session).setItem(key, JSON.stringify(value)); return true; } catch (e) { return false; } }
     function tab(value) { try { if (value === undefined) return sessionStorage.getItem(TAB); if (value === null) sessionStorage.removeItem(TAB); else sessionStorage.setItem(TAB, value); } catch (e) { return null; } return null; }
 
     function post(name, body) {
@@ -101,19 +104,38 @@
         return n;
     }
 
-    /* ---------- guests who joined in this browser before (only their rejoin key, name and end) ---------- */
-    function kept() {
-        var list = read(STORE);
+    /* ---------- guests who joined in this browser before (only their rejoin key, name and end) ----------
+       Kept in the browser, or on a shared computer only in this window (session), gone once it closes. */
+    /* A pass that ended can be opened again until its accounts are deleted (up to 30 days), so a key stays that long;
+       it is only offered while its pass is known to run, or when the link of that pass shows it running again. */
+    function keptIn(session) {
+        var list = read(STORE, session), now = Date.now();
         if (!list || !list.length) return [];
-        var now = Date.now();
-        return list.filter(function (g) { return g && g.key && g.name && new Date(g.end).getTime() > now - 864e5; }).slice(0, 5);
+        return list.filter(function (g) { return g && g.key && g.name && new Date(g.end).getTime() > now - 30 * 864e5; })
+            .map(function (g) { g.session = session; return g; }).slice(0, 5);
     }
-    function keep(g) {
-        var list = kept().filter(function (x) { return x.key !== g.key; });
+    function plain(g) { return { key: g.key, name: g.name, pass: g.pass, title: g.title, end: g.end, ended: g.ended || undefined }; }
+    function all() { return keptIn(true).concat(keptIn(false)); }
+    function kept() { var now = Date.now(); return all().filter(function (g) { return !g.ended && new Date(g.end).getTime() > now; }).slice(0, 5); }
+    function keep(g, session) {
+        forget([g.key]);
+        var list = keptIn(session);
         list.unshift(g);
-        write(STORE, list.slice(0, 5));
+        write(STORE, list.slice(0, 5).map(plain), session);
     }
-    function forget(key) { write(STORE, kept().filter(function (x) { return x.key !== key; })); }
+    function forget(keys) { change(function (x) { return keys.indexOf(x.key) >= 0 ? null : x; }); }
+    /* fn(entry) gives the entry to keep, changed or not, or null to drop it */
+    function change(fn) {
+        [true, false].forEach(function (session) {
+            var list = keptIn(session), out = [], touched = false;
+            list.forEach(function (x) { var y = fn(x); if (y !== x) touched = true; if (y) out.push(y); });
+            if (touched) write(STORE, out.map(plain), session);
+        });
+    }
+    /* what the server said about a pass: its end, and whether it runs */
+    function passNews(passId, end, ended) {
+        change(function (x) { if (x.pass !== passId) return x; var y = plain(x); y.end = end || x.end; y.ended = ended || undefined; return y; });
+    }
 
     /* ---------- the hand-off to the web client ---------- */
     function signedIn(r) {
@@ -133,8 +155,12 @@
         });
         creds.Servers = servers;
         var ok = write('jellyfin_credentials', creds);
+        /* the web client signs in from the stored credentials only with this on; on a shared computer client.js turns
+           it off again once signed in, so Jellyfin asks for a sign-in after this window closes */
         try { localStorage.setItem('enableAutoLogin', 'true'); } catch (e) { ok = false; }
-        if (r.RejoinKey && !r.shared) keep({ key: r.RejoinKey, name: r.Name, pass: r.PassId, title: r.Pass, end: r.EndUtc });
+        try { if (r.shared) sessionStorage.setItem(SHARED, r.UserId); else sessionStorage.removeItem(SHARED); } catch (e) { ok = ok && !r.shared; }
+        if (r.RejoinKey) keep({ key: r.RejoinKey, name: r.Name, pass: r.PassId, title: r.Pass, end: r.EndUtc }, !!r.shared);
+        if (r.PassId) passNews(r.PassId, r.EndUtc, false);
         tab(null);
         if (!ok) { problem('Your browser does not allow this page to store your sign-in (private mode or blocked storage). Allow it for this site, or open the link in another browser.', null); return; }
         clear();
@@ -172,6 +198,7 @@
         m.appendChild(icon('error', 18)); m.appendChild(el('span', null, text));
         return m;
     }
+    function half(li) { li.className = 'half'; return li; }
     function fact(name, label, value, sub) {
         var li = el('li');
         li.appendChild(icon(name, 20));
@@ -199,8 +226,8 @@
     function heading(text) { var h = el('h1', null, text); h.tabIndex = -1; return h; }
     function focusHeading() { var h = view.querySelector('h1'); if (h) { try { h.focus({ preventScroll: true }); } catch (e) { h.focus(); } } }
 
-    /* reason: "ended" and "full" are a normal end of a pass, not a failure, and get their own words */
-    var PROBLEMS = { ended: ['clock', 'This guest pass has ended'], full: ['people', 'This pass is full'], home: ['home', 'Only on the home network'] };
+    /* reason: "ended", "removed" and "full" are a normal end, not a failure, and get their own words */
+    var PROBLEMS = { ended: ['clock', 'This guest pass has ended'], removed: ['clock', 'Your guest access has ended'], full: ['people', 'This pass is full'], home: ['home', 'Only on the home network'] };
     function problem(text, after, reason) {
         var kind = PROBLEMS[reason] || ['alert', 'This did not work'];
         /* this pass is over or full: its link is no use in this tab any more, code entry is */
@@ -274,9 +301,10 @@
         facts.appendChild(fact('clock', 'Access until', cap(when(p.EndUtc)), left(p.EndUtc) === 'ended' ? null : 'Ends ' + left(p.EndUtc) + ', on its own'));
         facts.appendChild(fact('film', 'Libraries', (p.Libraries || []).join(', ') || 'None'));
         if (p.Rating) facts.appendChild(fact('shield', 'Rating', 'Up to ' + p.Rating, 'Titles without a rating are hidden'));
-        if (p.HomeOnly) facts.appendChild(fact('home', 'Where', 'Home network only', p.CanJoinHere ? null : 'You are not on the home network right now'));
-        if (p.DevicesPerGuest) facts.appendChild(fact('tv', 'Devices', p.DevicesPerGuest === 1 ? 'One device at a time' : 'Up to ' + p.DevicesPerGuest + ' devices at once', 'A TV counts as one'));
-        if (p.MaxGuests > 1) facts.appendChild(fact('people', 'Places', p.PlacesLeft + ' of ' + p.MaxGuests + ' left'));
+        /* the smaller facts side by side, so "Start watching" stays in view on a phone */
+        if (p.HomeOnly) facts.appendChild(half(fact('home', 'Where', 'Home network', p.CanJoinHere ? null : 'You are not on it right now')));
+        if (p.DevicesPerGuest) facts.appendChild(half(fact('tv', 'Devices', p.DevicesPerGuest === 1 ? 'One at a time' : p.DevicesPerGuest + ' at once', 'A TV counts as one')));
+        if (p.MaxGuests > 1) facts.appendChild(half(fact('people', 'Places', p.PlacesLeft + ' of ' + p.MaxGuests + ' left')));
         view.appendChild(facts);
         if (p.HomeOnly && !p.CanJoinHere) {
             view.appendChild(error('This pass works only on the home network. Connect to its Wi-Fi and open the link again.'));
@@ -291,11 +319,13 @@
         lab.htmlFor = 'gpName'; inp.id = 'gpName'; inp.type = 'text'; inp.maxLength = 20; inp.autocomplete = 'given-name'; inp.setAttribute('autocapitalize', 'words'); inp.setAttribute('enterkeyhint', 'go');
         var hint = el('p', 'hint', 'Shown as “Guest …” on this server. Letters, numbers, spaces, - ’ and . only.'); hint.id = 'gpNameHint'; inp.setAttribute('aria-describedby', 'gpNameHint');
         f.appendChild(lab); f.appendChild(inp); f.appendChild(hint); view.appendChild(f);
-        /* a shared or public computer keeps no way back in for the next person at it */
+        /* a shared or public computer: Jellyfin forgets the guest once this window closes, and so does this page */
         var sh = el('label', 'check'), shc = el('input');
-        shc.type = 'checkbox'; shc.id = 'gpShared';
-        sh.appendChild(shc); sh.appendChild(el('span', null, 'Shared or public computer: don’t remember me here'));
+        shc.type = 'checkbox'; shc.id = 'gpShared'; shc.setAttribute('aria-describedby', 'gpSharedHint');
+        sh.appendChild(shc); sh.appendChild(el('span', null, 'Shared or public computer'));
         view.appendChild(sh);
+        var shh = el('p', 'hint check-hint', 'Jellyfin does not keep you signed in here: once this window is closed, the next person starts at the sign-in page.'); shh.id = 'gpSharedHint';
+        view.appendChild(shh);
         var msg = el('div'); view.appendChild(msg);
         var b = el('button', 'btn'); b.type = 'button'; busy(b, false, 'Start watching'); view.appendChild(b);
         view.appendChild(tvHint());
@@ -341,11 +371,13 @@
                 buttons.forEach(function (x) { x.disabled = true; });
                 busy(b, true, 'Signing you in…');
                 post('Rejoin', { RejoinKey: g.key, DeviceId: deviceId(), DeviceName: deviceName() }).then(function (r) {
-                    r.RejoinKey = g.key; signedIn(r);
+                    r.RejoinKey = g.key; r.shared = g.session; signedIn(r);
                 }, function (e) {
                     buttons.forEach(function (x) { x.disabled = false; });
                     busy(b, false, label);
-                    if (e.status === 404 || e.status === 410) forget(g.key);
+                    /* a pass that ended can be opened again: its key stays, only not offered until then */
+                    if (e.status === 410 && e.reason === 'ended') passNews(g.pass, null, true);
+                    else if (e.status === 404 || e.status === 410) forget([g.key]);
                     if (e.status === 410 && list.length === 1) { problem(e.message, null, e.reason || 'ended'); return; }
                     msg.textContent = ''; msg.appendChild(error(e.message));
                 });
@@ -367,8 +399,7 @@
         }
         var f = el('button', 'link', list.length === 1 ? 'Forget ' + list[0].name + ' on this device' : 'Forget these on this device'); f.type = 'button';
         f.addEventListener('click', function () {
-            var gone = list.map(function (g) { return g.key; });
-            write(STORE, kept().filter(function (g) { return gone.indexOf(g.key) < 0; }));
+            forget(list.map(function (g) { return g.key; }));
             if (passId && peek) inviteScreen(); else codeScreen();
         });
         links.appendChild(f);
@@ -380,6 +411,7 @@
     function opened(p) {
         peek = p;
         document.getElementById('server').textContent = p.ServerName ? ' · ' + p.ServerName : '';
+        passNews(p.Id, p.EndUtc, !!p.Ended);
         var mine = kept().filter(function (g) { return g.pass === p.Id; });
         if (mine.length && !p.Ended) backScreen(p.Id); else inviteScreen();
     }
