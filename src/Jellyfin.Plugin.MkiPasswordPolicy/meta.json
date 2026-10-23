@@ -6,6 +6,6 @@
   "owner": "MKI",
   "category": "Authentication",
   "targetAbi": "12.0.0.0",
-  "version": "1.1.0.0",
-  "changelog": "New settings page in the shared MKI design, with tabs for Users, Require a new password, Profiles and More settings. The header shows who the rules apply to, the state of everyone's password, open requests and the time left to set a new one. The Users tab lists everyone with search and filters, and flags accounts without a password with a Temporary password button. Before any change that could lock someone out, the page names the accounts and asks; your own account can never be locked from here. A request for everyone shows who gets one and who was already asked, with the notice period chosen in the same dialog. A temporary password is shown once, in a dialog that stays open until you confirm you copied it. Profiles can be compared side by side and tried with a test password, checked in the browser only. Settings save as soon as you change them, with undo. Works on phones and in light and dark themes."
+  "version": "1.1.1.0",
+  "changelog": "Leaves guest accounts of MKI Guest Pass alone: they have no password by design, so they are never locked for having none, never asked for a new password, cannot get a temporary password and are left out of the user list and of requests for everyone. Nothing else changes."
 }

@@ -26,13 +26,17 @@ public class UserEvents : IEventConsumer<UserPasswordChangedEventArgs>, IEventCo
 	// only the user setting their own password through the change dialog does that.
 	public Task OnEvent(UserPasswordChangedEventArgs eventArgs)
 	{
+		var user = _users.GetUserById(eventArgs.Argument.Id);
+		if (user != null && Policy.IsGuest(user))
+		{
+			return Task.CompletedTask;
+		}
 		// Nothing is recorded until the admin has switched something on.
 		if (Policy.Configured(Plugin.Config))
 		{
 			_store.MarkChanged(eventArgs.Argument.Id);
 		}
 		// A reset to no password blocks a user with rules or an open request right away.
-		var user = _users.GetUserById(eventArgs.Argument.Id);
 		if (user != null)
 		{
 			if (!Policy.HasNoPassword(user))
@@ -46,6 +50,12 @@ public class UserEvents : IEventConsumer<UserPasswordChangedEventArgs>, IEventCo
 
 	public Task OnEvent(UserCreatedEventArgs eventArgs)
 	{
+		// A guest account of MKI Guest Pass: it never has a password, so "new users must change" cannot apply.
+		var neu = _users.GetUserById(eventArgs.Argument.Id);
+		if (Policy.IsGuest(neu ?? eventArgs.Argument))
+		{
+			return Task.CompletedTask;
+		}
 		if (Policy.Configured(Plugin.Config))
 		{
 			_store.MarkChanged(eventArgs.Argument.Id);
@@ -72,6 +82,12 @@ public class UserEvents : IEventConsumer<UserPasswordChangedEventArgs>, IEventCo
 	public async Task OnEvent(AuthenticationResultEventArgs eventArgs)
 	{
 		var id = eventArgs.User?.Id ?? Guid.Empty;
+		if (id != Guid.Empty && _users.GetUserById(id) is { } user && Policy.IsGuest(user))
+		{
+			// Guests are none of this plugin's business; a state left from before they became guests goes.
+			_enforcer.ForgetGuest(id);
+			return;
+		}
 		if (id != Guid.Empty && (_store.AnyMustChange() || Policy.Configured(Plugin.Config)))
 		{
 			await _enforcer.UndoSignIn(id, eventArgs.SessionInfo?.DeviceId).ConfigureAwait(false);

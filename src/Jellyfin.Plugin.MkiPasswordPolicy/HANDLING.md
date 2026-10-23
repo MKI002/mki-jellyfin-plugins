@@ -84,3 +84,4 @@ Version 1.0.6.0. Rows marked ✓ were tested end to end on Jellyfin 12.2 (sign-i
 - TV apps cannot show the change dialog. Once a user is blocked they only show "sign-in failed", so use a notice period or the **Copy message for users** button to reach those users first.
 - While the plugin is disabled or uninstalled nothing is enforced. Reinstalling brings open requests back.
 - Accounts of other sign-in providers (LDAP and the like) have no local password and are never treated as *no password*.
+- Guest accounts of [MKI Guest Pass](../Jellyfin.Plugin.MkiGuestPass) are left out of everything: no profile, no request, no lock for having no password, no temporary password and no entry in the user list. They have no password by design, cannot sign in with one, and end by themselves. This holds from version 1.1.1.0, also for the moment such an account is being created.
