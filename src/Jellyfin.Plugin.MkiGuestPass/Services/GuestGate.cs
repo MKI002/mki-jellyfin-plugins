@@ -25,6 +25,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
 namespace Jellyfin.Plugin.MkiGuestPass.Services;
@@ -54,6 +55,8 @@ public class GuestGate : IStartupFilter
 	public const string OriginKey = "MkiGuestPass.Origin";
 
 	private static readonly string[] ForwardingHeaders = { "X-Forwarded-For", "Forwarded", "X-Real-IP" };
+
+	private static readonly Regex Logout = new(@"/Sessions/Logout/?$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
 	private static readonly Regex UserList = new(@"/Users/?$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
@@ -105,12 +108,16 @@ public class GuestGate : IStartupFilter
 
 	private readonly ForwardedHeadersOptions _forwarding;
 
+	// Jellyfin's own X-Forwarded-For handling, run on a copy of the request to learn the address Jellyfin will use.
+	private readonly ForwardedHeadersMiddleware _forwarder;
+
 	private readonly ILogger<GuestGate> _logger;
 
 	public GuestGate(GuestService guests, IUserManager users, IDeviceManager devices, IServerConfigurationManager config, ISystemManager system, ILibraryManager library, IAuthenticationManager apiKeys, INetworkManager network, IOptions<ForwardedHeadersOptions> forwarding, ILogger<GuestGate> logger)
 	{
 		_network = network;
 		_forwarding = forwarding.Value;
+		_forwarder = new ForwardedHeadersMiddleware(_ => Task.CompletedTask, NullLoggerFactory.Instance, forwarding);
 		_guests = guests;
 		_users = users;
 		_devices = devices;
@@ -122,8 +129,10 @@ public class GuestGate : IStartupFilter
 	}
 
 	// ViaUnknownProxy: a home address passed the request on for someone else, and Jellyfin will not take the visitor's
-	// address from it, or a known proxy did with headers that disagree. Visitor: the address that proxy named, if any.
-	public sealed record Seen(bool ViaUnknownProxy, IPAddress? Visitor);
+	// address from it, or a known proxy passed it on without saying for whom or with headers that disagree. Visitor:
+	// the address that proxy named, if any. Address: the address Jellyfin will take the request for (null: none).
+	// Quiet: not worth the warning on the settings page by itself (a known proxy's own requests, like health checks).
+	public sealed record Seen(bool ViaUnknownProxy, IPAddress? Visitor, IPAddress? Address = null, bool Quiet = false);
 
 	private enum Kind
 	{
@@ -148,16 +157,18 @@ public class GuestGate : IStartupFilter
 				try
 				{
 					var seen = Look(context);
-					if (seen.ViaUnknownProxy)
+					bool ours = (context.Request.Path.Value ?? string.Empty).Contains("/MkiGuestPass/", StringComparison.OrdinalIgnoreCase);
+					if (seen.ViaUnknownProxy && (ours || !seen.Quiet))
 					{
 						_guests.NoteUnknownProxy();
 					}
-					if ((context.Request.Path.Value ?? string.Empty).Contains("/MkiGuestPass/", StringComparison.OrdinalIgnoreCase))
+					if (ours)
 					{
 						context.Items[OriginKey] = seen;
 					}
-					done = (seen.ViaUnknownProxy && await HomeOnlyGuestAway(context).ConfigureAwait(false))
-						|| await Handle(context).ConfigureAwait(false);
+					bool away = seen.ViaUnknownProxy || (seen.Address != null && !_network.IsInLocalNetwork(seen.Address));
+					done = (away && await HomeOnlyGuestAway(context).ConfigureAwait(false))
+						|| await Handle(context, seen).ConfigureAwait(false);
 				}
 				catch (Exception ex) when (!context.Response.HasStarted)
 				{
@@ -178,7 +189,7 @@ public class GuestGate : IStartupFilter
 		};
 	}
 
-	private async Task<bool> Handle(HttpContext context)
+	private async Task<bool> Handle(HttpContext context, Seen seen)
 	{
 		var request = context.Request;
 		string path = request.Path.Value ?? string.Empty;
@@ -191,7 +202,7 @@ public class GuestGate : IStartupFilter
 		bool read = HttpMethods.IsGet(request.Method) || HttpMethods.IsHead(request.Method);
 		if (read && (stream = Stream.Match(path)).Success && Guid.TryParse(stream.Groups["id"].Value, out item))
 		{
-			return await Streaming(context, item).ConfigureAwait(false);
+			return await Streaming(context, item, seen).ConfigureAwait(false);
 		}
 		if ((media = Media.Match(path)).Success && !string.Equals(media.Groups["id"].Value, "ActiveEncodings", StringComparison.OrdinalIgnoreCase))
 		{
@@ -297,7 +308,7 @@ public class GuestGate : IStartupFilter
 				return true;
 
 			case Kind.Media:
-				return await GuestMedia(context, id, item).ConfigureAwait(false);
+				return await GuestMedia(context, id, item, seen).ConfigureAwait(false);
 
 			case Kind.QuickConnect:
 			{
@@ -378,39 +389,72 @@ public class GuestGate : IStartupFilter
 	private Seen Look(HttpContext context)
 	{
 		var request = context.Request;
-		if (!HasForwarding(request))
-		{
-			return new Seen(false, null);
-		}
+		bool forwarding = HasForwarding(request);
 		var raw = context.Connection.RemoteIpAddress;
 		if (raw == null)
 		{
-			return new Seen(false, null);
+			// No address (a Unix socket): Jellyfin takes it for one at home, so a forwarded one cannot be told apart.
+			return new Seen(forwarding, forwarding ? Named(request) : null);
 		}
 		if (raw.IsIPv4MappedToIPv6)
 		{
 			raw = raw.MapToIPv4();
 		}
-		bool xff = request.Headers.ContainsKey("X-Forwarded-For");
-		bool known = _forwarding.ForwardedHeaders.HasFlag(ForwardedHeaders.XForwardedFor)
-			&& (_forwarding.KnownProxies.Any(p => (p.IsIPv4MappedToIPv6 ? p.MapToIPv4() : p).Equals(raw)) || _forwarding.KnownIPNetworks.Any(n => n.Contains(raw)));
-		if (known && xff)
+		bool on = _forwarding.ForwardedHeaders.HasFlag(ForwardedHeaders.XForwardedFor);
+		bool proxy = on && _forwarding.KnownProxies.Any(p => (p.IsIPv4MappedToIPv6 ? p.MapToIPv4() : p).Equals(raw));
+		bool known = proxy || (on && _forwarding.KnownIPNetworks.Any(n => n.Contains(raw)));
+		// A known network (Known proxies as a range) often holds ordinary home devices too: without forwarding headers
+		// those are what they seem. A proxy listed by its own address passes on visitors, so it must say whom.
+		if (known && (forwarding || proxy))
 		{
-			// A known proxy that sets X-Real-IP but passes on the visitor's own X-Forwarded-For: Jellyfin takes the
-			// address the visitor made up. The two disagree then, and the request is not trusted to come from home.
+			// Trusted only when Jellyfin really takes a visitor's address from X-Forwarded-For, and an X-Real-IP the proxy
+			// sets says the same. Otherwise the proxy passed on what the visitor sent (or nothing), and the visitor could
+			// pass for someone at home.
+			var applied = Applied(context, raw);
+			var said = request.Headers["X-Real-IP"];
 			var real = RealIp(request);
-			return real != null && !real.Equals(Named(request)) ? new Seen(true, Named(request)) : new Seen(false, null);
+			if (applied != null && (said.Count == 0 || (said.Count == 1 && real != null && real.Equals(applied))))
+			{
+				return new Seen(false, null, applied);
+			}
+			return new Seen(true, real ?? applied ?? Named(request), raw, Quiet: !forwarding);
 		}
-		if (!_network.IsInLocalNetwork(raw))
+		if (!forwarding || !_network.IsInLocalNetwork(raw))
 		{
-			return new Seen(false, null);
+			return new Seen(false, null, raw);
 		}
-		return new Seen(true, Named(request));
+		return new Seen(true, Named(request), raw);
 	}
 
+	// The visitor's address Jellyfin takes from the forwarding headers of a known proxy, or null when it takes none.
+	private IPAddress? Applied(HttpContext context, IPAddress raw)
+	{
+		var copy = new DefaultHttpContext();
+		copy.Connection.RemoteIpAddress = raw;
+		copy.Connection.RemotePort = context.Connection.RemotePort;
+		copy.Request.Scheme = context.Request.Scheme;
+		copy.Request.Host = context.Request.Host;
+		foreach (var h in context.Request.Headers)
+		{
+			if (h.Key.StartsWith("X-Forwarded-", StringComparison.OrdinalIgnoreCase))
+			{
+				copy.Request.Headers[h.Key] = h.Value;
+			}
+		}
+		_forwarder.ApplyForwarders(copy);
+		var ip = copy.Connection.RemoteIpAddress;
+		if (ip == null || !copy.Request.Headers.ContainsKey(_forwarding.OriginalForHeaderName))
+		{
+			return null;
+		}
+		return ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4() : ip;
+	}
+
+	// X-Real-IP as a single address; null when missing, unreadable or given more than once.
 	private static IPAddress? RealIp(HttpRequest request)
 	{
-		string value = request.Headers["X-Real-IP"].ToString().Trim();
+		var said = request.Headers["X-Real-IP"];
+		string value = said.Count == 1 ? (said[0] ?? string.Empty).Trim() : string.Empty;
 		if (value.Length == 0 || !(IPAddress.TryParse(value, out var ip) || (IPEndPoint.TryParse(value, out var ep) && (ip = ep.Address) != null)))
 		{
 			return null;
@@ -434,10 +478,12 @@ public class GuestGate : IStartupFilter
 		return null;
 	}
 
-	// Jellyfin sees only the proxy, so it takes every guest of a pass for the home network only as one at home.
+	// A guest of a pass for the home network only, away from it: refused on every request. Jellyfin checks this only
+	// where it sees the visitor (not behind a proxy it does not know) and only where a sign-in is needed (not on
+	// stream addresses). Signing out is the exception: it works from anywhere, so no sign-in is left behind.
 	private async Task<bool> HomeOnlyGuestAway(HttpContext context)
 	{
-		if (!_guests.AnyGuests())
+		if (!_guests.AnyHomeOnlyGuests())
 		{
 			return false;
 		}
@@ -449,13 +495,26 @@ public class GuestGate : IStartupFilter
 			return false;
 		}
 		context.Response.Headers.CacheControl = "private, no-store";
+		if (HttpMethods.IsPost(context.Request.Method) && Logout.IsMatch(context.Request.Path.Value ?? string.Empty))
+		{
+			foreach (var token in tokens)
+			{
+				var device = _devices.GetDevices(new DeviceQuery { AccessToken = token, Limit = 1 }).Items.FirstOrDefault();
+				if (device != null && device.UserId == guest!.Value)
+				{
+					await _guests.SignOutDevice(device).ConfigureAwait(false);
+				}
+			}
+			context.Response.StatusCode = StatusCodes.Status204NoContent;
+			return true;
+		}
 		await Refuse(context, "This guest pass works only on the home network.").ConfigureAwait(false);
 		return true;
 	}
 
 	// Jellyfin streams files and subtitles without a sign-in (no [Authorize] on those routes). A guest gets only what
 	// their pass shows; with StreamsNeedSignIn nobody gets anything without a valid sign-in or API key.
-	private async Task<bool> Streaming(HttpContext context, Guid itemId)
+	private async Task<bool> Streaming(HttpContext context, Guid itemId, Seen seen)
 	{
 		bool needSignIn = Plugin.Config.StreamsNeedSignIn;
 		if (!needSignIn && !_guests.AnyGuests())
@@ -471,7 +530,7 @@ public class GuestGate : IStartupFilter
 		var guest = GuestCaller(tokens);
 		if (guest != null)
 		{
-			return await GuestMedia(context, guest.Value, itemId).ConfigureAwait(false);
+			return await GuestMedia(context, guest.Value, itemId, seen).ConfigureAwait(false);
 		}
 		if (!needSignIn || await SignedIn(tokens).ConfigureAwait(false))
 		{
@@ -482,8 +541,9 @@ public class GuestGate : IStartupFilter
 		return true;
 	}
 
-	// A guest plays only while their pass lasts, and only what their account may see.
-	private Task<bool> GuestMedia(HttpContext context, Guid guestId, Guid itemId)
+	// A guest plays only while their pass lasts, only what their account may see, and with a pass for the home network
+	// only, only at home: Jellyfin does not check where a stream comes from, as its stream addresses need no sign-in.
+	private async Task<bool> GuestMedia(HttpContext context, Guid guestId, Guid itemId, Seen seen)
 	{
 		context.Response.Headers.CacheControl = "private, no-store";
 		var found = _guests.Find(guestId);
@@ -492,15 +552,20 @@ public class GuestGate : IStartupFilter
 			|| user.HasPermission(PermissionKind.IsDisabled))
 		{
 			context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-			return Task.FromResult(true);
+			return true;
+		}
+		if (!found.Value.Pass.RemoteAccess && (seen.ViaUnknownProxy || (seen.Address != null && !_network.IsInLocalNetwork(seen.Address))))
+		{
+			await Refuse(context, "This guest pass works only on the home network.").ConfigureAwait(false);
+			return true;
 		}
 		var item = itemId == Guid.Empty ? null : _library.GetItemById(itemId);
 		if (item == null || !item.IsVisibleStandalone(user))
 		{
 			context.Response.StatusCode = StatusCodes.Status404NotFound;
-			return Task.FromResult(true);
+			return true;
 		}
-		return Task.FromResult(false);
+		return false;
 	}
 
 	// Whether any token of the request is a sign-in of an enabled account or an API key.

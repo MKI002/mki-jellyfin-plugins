@@ -86,7 +86,6 @@
   MkiDemo.route('POST', /^MkiGuestPass\/Passes\/([\w-]+)\/Where$/, function (r) {
     var p = find(r.match[1]), b = r.body || {};
     if (!p) throw MkiDemo.fail(404, 'That pass does not exist any more.');
-    if (!p.Open) throw MkiDemo.fail(409, 'This pass has ended in the meantime. Nothing was changed.');
     if (p.RemoteAccess !== !!b.From) throw MkiDemo.fail(409, 'Where this pass works was changed in the meantime. Nothing was changed; look again.');
     p.RemoteAccess = !!b.RemoteAccess;
     return { Done: true };

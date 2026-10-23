@@ -2505,13 +2505,16 @@ function endPassNow(p0) {
     });
 }
 /* where the guests of a pass may join and watch: widened for guests who are away, narrowed back to home */
+function whereFact(p) {
+    return fact(p.RemoteAccess ? 'public' : 'home', 'Where', p.RemoteAccess ? 'Home and away' : 'Home network only', p.Open ? null : 'Also after Open again',
+        { text: 'Change', focus: 'pw:' + p.Id, run: function () { setWhere(p); } });
+}
 function setWhere(p0) {
     oneAtATime(p0.Id, function () { return setWhereNow(p0); });
 }
 function setWhereNow(p0) {
     return fresh(p0).then(function (p) {
         if (!p) return;
-        if (!p.Open) { kit.toast(quote(p.Name) + ' has ended. Open it again first.'); return; }
         var widen = !p.RemoteAccess, g = activeGuests(p);
         return kit.confirm(widen
             ? { title: 'Allow ' + quote(p.Name) + ' from anywhere?', icon: 'public', tone: 'accent', ok: 'Allow from anywhere', okIcon: 'public',
@@ -2702,13 +2705,13 @@ function passCard(p) {
         facts.appendChild(fact('group', 'Places', p.Used + ' of ' + p.MaxGuests + ' used', p.MaxGuests - p.Used > 0 ? kit.plural(p.MaxGuests - p.Used, 'place') + ' left' : 'Nobody else can join'));
         facts.appendChild(fact('devices', 'Each guest', kit.plural(p.DevicesPerGuest, 'device'), kit.plural(p.StreamsPerGuest, 'stream') + ' at once'));
         facts.appendChild(fact('shield', 'Rating', p.Rating ? 'Up to ' + p.Rating : 'Any', p.Rating ? 'Unrated titles hidden' : null));
-        facts.appendChild(fact(p.RemoteAccess ? 'public' : 'home', 'Where', p.RemoteAccess ? 'Home and away' : 'Home network only', null,
-            { text: 'Change', focus: 'pw:' + p.Id, run: function () { setWhere(p); } }));
+        facts.appendChild(whereFact(p));
         facts.appendChild(fact('key', 'Join with', p.HasCode ? 'Link or code' : 'Link'));
         body.appendChild(facts);
     } else {
-        /* what the pass allowed no longer matters once it has ended */
+        /* once it has ended, only where it works matters: Open again brings that back as it is */
         body.appendChild(el('p', 'gp-summary', p.Used + ' of ' + kit.plural(p.MaxGuests, 'place') + ' used'));
+        var wf = el('div', 'gp-facts'); wf.appendChild(whereFact(p)); body.appendChild(wf);
     }
     if (open || gs.length) body.appendChild(lifeline(p, soon));
     if (gs.length) {

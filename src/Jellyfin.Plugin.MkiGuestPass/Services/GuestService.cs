@@ -444,8 +444,9 @@ public class GuestService
 		}
 	}
 
-	// Where the guests of an open pass may join and watch. Limited to the home network, the guests' devices that are
-	// away right now are signed out; Jellyfin refuses their other devices outside the home network by itself.
+	// Where the guests of a pass may join and watch, also of an ended one (before it is opened again). Limited to the
+	// home network, the guests' devices that are away right now are signed out; Jellyfin and the gate refuse their
+	// other devices outside the home network.
 	public async Task SetWhere(Guid passId, bool remote, bool from, User admin)
 	{
 		await _gate.WaitAsync().ConfigureAwait(false);
@@ -454,10 +455,6 @@ public class GuestService
 			var (name, guests) = _store.Change(d =>
 			{
 				var p = d.Pass(passId) ?? throw new GuestError(404, "That pass does not exist any more.");
-				if (p.HasEnded(DateTime.UtcNow))
-				{
-					throw new GuestError(409, "This pass has ended in the meantime. Nothing was changed.");
-				}
 				if (p.RemoteAccess != from)
 				{
 					throw new GuestError(409, "Where this pass works was changed in the meantime. Nothing was changed; look again.");
@@ -465,12 +462,26 @@ public class GuestService
 				p.RemoteAccess = remote;
 				return (p.Name, p.Guests.Select(g => g.UserId).ToList());
 			});
+			var failed = new List<Guid>();
 			foreach (var id in guests)
 			{
-				await SetRemote(id, remote).ConfigureAwait(false);
+				try
+				{
+					await SetRemote(id, remote).ConfigureAwait(false);
+				}
+				catch (Exception ex)
+				{
+					_logger.LogError(ex, "Could not change where guest account {User} works; the next check tries again", id);
+					failed.Add(id);
+				}
 			}
 			if (!remote)
 			{
+				// A guest whose account still allows remote access keeps no sign-in meanwhile.
+				foreach (var id in failed)
+				{
+					await RevokeQuietly(id).ConfigureAwait(false);
+				}
 				await SignOutAway(guests).ConfigureAwait(false);
 			}
 			string where = remote ? "home and away" : "the home network only";
@@ -811,6 +822,8 @@ public class GuestService
 
 	public bool AnyGuests() => _store.Read(d => d.Passes.Any(p => p.Guests.Count > 0)) || CreatingNow() != null;
 
+	public bool AnyHomeOnlyGuests() => _store.Read(d => d.Passes.Any(p => !p.RemoteAccess && p.Guests.Count > 0)) || CreatingNow() != null;
+
 	public (PassRecord Pass, GuestRecord Guest)? Find(Guid userId) => _store.Read(d => d.Guest(userId));
 
 	public static string? CreatingNow()
@@ -893,6 +906,14 @@ public class GuestService
 			}
 			await Warn().ConfigureAwait(false);
 			await LockEnded(thorough).ConfigureAwait(false);
+			try
+			{
+				await MatchWhere().ConfigureAwait(false);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Could not check where guest accounts work; trying again shortly");
+			}
 			await DeleteDue().ConfigureAwait(false);
 			if (thorough)
 			{
@@ -1693,16 +1714,86 @@ public class GuestService
 		await _users.UpdatePolicyAsync(userId, policy).ConfigureAwait(false);
 	}
 
-	// Devices of these guests with a session from outside the home network (or an address that cannot be read).
+	// Devices of these guests with a session from outside the home network (or an address that cannot be read):
+	// playback stops and the device is signed out.
 	private async Task SignOutAway(List<Guid> userIds)
 	{
-		var away = _sessions.Sessions.Where(s => userIds.Contains(s.UserId) && !AtHome(s.RemoteEndPoint)).Select(s => (s.UserId, s.DeviceId)).Distinct().ToList();
-		foreach (var (userId, deviceId) in away)
+		var away = _sessions.Sessions.Where(s => userIds.Contains(s.UserId) && !AtHome(s.RemoteEndPoint)).ToList();
+		foreach (var s in away)
 		{
-			foreach (var device in _devices.GetDevices(new DeviceQuery { UserId = userId, DeviceId = deviceId }).Items.ToList())
+			var user = _users.GetUserById(s.UserId);
+			if (user == null || !UsesGuestSignIn(user))
+			{
+				continue;
+			}
+			try
+			{
+				if (s.NowPlayingItem != null)
+				{
+					await _sessions.SendPlaystateCommand(null!, s.Id, new PlaystateRequest { Command = PlaystateCommand.Stop }, CancellationToken.None).ConfigureAwait(false);
+				}
+			}
+			catch (Exception ex)
+			{
+				_logger.LogDebug(ex, "Could not stop playback on an away device of a guest");
+			}
+			foreach (var device in _devices.GetDevices(new DeviceQuery { UserId = s.UserId, DeviceId = s.DeviceId }).Items.ToList())
 			{
 				await SignOutDevice(device).ConfigureAwait(false);
 			}
+		}
+	}
+
+	private async Task RevokeQuietly(Guid userId)
+	{
+		try
+		{
+			var user = _users.GetUserById(userId);
+			if (user != null && UsesGuestSignIn(user))
+			{
+				await _sessions.RevokeUserTokens(userId, null!).ConfigureAwait(false);
+			}
+		}
+		catch (Exception ex)
+		{
+			_logger.LogError(ex, "Could not sign out guest account {User}", userId);
+		}
+	}
+
+	// Each guest account allows remote access exactly when its pass does: repairs a change that failed or that
+	// Jellyfin's own write-back of an older copy of the account undid.
+	private async Task MatchWhere()
+	{
+		var want = _store.Read(d => d.AllGuests().Select(x => (x.Guest.UserId, x.Pass.RemoteAccess)).ToList());
+		var narrowed = new List<Guid>();
+		foreach (var (id, remote) in want)
+		{
+			var user = _users.GetUserById(id);
+			if (user == null || !UsesGuestSignIn(user) || user.HasPermission(PermissionKind.EnableRemoteAccess) == remote)
+			{
+				continue;
+			}
+			try
+			{
+				await SetRemote(id, remote).ConfigureAwait(false);
+				_logger.LogInformation("{User}: remote access set back to match its pass", user.Username);
+				if (!remote)
+				{
+					narrowed.Add(id);
+				}
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "Could not set where guest {User} works; trying again shortly", user.Username);
+				if (!remote)
+				{
+					await RevokeQuietly(id).ConfigureAwait(false);
+				}
+			}
+		}
+		if (narrowed.Count > 0)
+		{
+			await SignOutAway(narrowed).ConfigureAwait(false);
 		}
 	}
 

@@ -55,7 +55,7 @@ public class GuestPassController : ControllerBase
 		}
 		// The secret lives in the part after #, which browsers never send: not to this server, not as a referrer.
 		// The page still allows no foreign code, no framing and no referrer, and nothing of it is stored.
-		Response.Headers["Content-Security-Policy"] = "default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
+		Response.Headers["Content-Security-Policy"] = "default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
 		Response.Headers["X-Frame-Options"] = "DENY";
 		Response.Headers["Referrer-Policy"] = "no-referrer";
 		Response.Headers["X-Content-Type-Options"] = "nosniff";
