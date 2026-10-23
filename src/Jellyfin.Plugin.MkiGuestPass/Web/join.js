@@ -166,7 +166,9 @@
         clear();
         view.appendChild(big('ok', true));
         view.appendChild(el('h1', null, 'You’re in, ' + r.Name + '!'));
-        view.appendChild(el('p', 'lede', 'Opening Jellyfin…'));
+        view.appendChild(el('p', 'lede', 'Opening Jellyfin, signed in as Guest ' + r.Name + '…'));
+        var go = el('a', 'link', 'Not opening? Open Jellyfin'); go.href = base + '/web/index.html';
+        view.appendChild(go);
         setTimeout(function () { location.replace(base + '/web/index.html'); }, 600);
     }
 
@@ -227,15 +229,58 @@
     function focusHeading() { var h = view.querySelector('h1'); if (h) { try { h.focus({ preventScroll: true }); } catch (e) { h.focus(); } } }
 
     /* reason: "ended", "removed" and "full" are a normal end, not a failure, and get their own words */
-    var PROBLEMS = { ended: ['clock', 'This guest pass has ended'], removed: ['clock', 'Your guest access has ended'], full: ['people', 'This pass is full'], paused: ['clock', 'Guest access is paused'], home: ['home', 'Only on the home network'] };
-    function problem(text, after, reason) {
+    var PROBLEMS = { ended: ['clock', 'This guest pass has ended'], removed: ['clock', 'Your guest access has ended'], full: ['people', 'This pass is full'], paused: ['clock', 'Guest access is paused'], home: ['home', 'Only on the home network'], update: ['alert', 'Guests cannot join right now'] };
+    function host() { return peek && peek.From ? peek.From : 'the person who invited you'; }
+    /* what the guest can do next, so nobody is left on a page without a way on */
+    function nextStep(reason, status) {
+        if (reason === 'ended') return 'Ask ' + host() + ' to open it again: this link then works again.';
+        if (reason === 'removed') return 'If you still need access, ask ' + host() + ' for a new invitation.';
+        if (reason === 'full') return 'Ask ' + host() + ' for a new pass with a free place.';
+        if (reason === 'paused') return 'Jellyfin is starting up, or guest access was paused on the server. Try again in a minute.';
+        if (reason === 'update') return 'Let ' + host() + ' know: the Guest Pass settings in the Jellyfin dashboard say what to update. Afterwards tap Try again; the link stays the same.';
+        if (status === 404) return token ? 'Check that you opened the whole link from your message. If it still does not work, ask ' + host() + ' for a new one.' : 'Ask ' + host() + ' for a new link or code.';
+        return null;
+    }
+    /* worth another go without a new link: the network, a pause, a wait, the home network */
+    function retryable(reason, status) { return reason === 'paused' || reason === 'home' || reason === 'update' || (!reason && (status === 0 || status === 429 || status >= 500)); }
+    /* asks the server again for the link or code in use; without one, back to the guests kept here or code entry */
+    function tryAgain(b) {
+        if (b) { if (b.disabled) return; busy(b, true, 'Checking…'); }
+        if (!token && !code) { if (kept().length) backScreen(null); else codeScreen(); return; }
+        post('Peek', token ? { Token: token } : { Code: code }).then(opened, function (e) {
+            if (e.status === 404 && token) tab(null);
+            problem(e.message, null, e.reason, e.status);
+        });
+    }
+    function retryButton() { var b = el('button', 'btn'); b.type = 'button'; busy(b, false, 'Try again'); b.addEventListener('click', function () { tryAgain(b); }); return b; }
+    /* a pass for the home network only, opened from elsewhere: the two ways in */
+    function homeHelp(titled) {
+        var box = el('div', 'next'), h = el('p', 'h'), whose = peek && peek.From ? peek.From + '’s' : 'your host’s';
+        h.appendChild(icon('home', 18)); h.appendChild(el('span', null, 'This pass works on the home network only'));
+        if (titled) box.appendChild(h);
+        box.appendChild(el('p', null, 'Jellyfin does not see this device on ' + whose + ' home network right now.'));
+        var ul = el('ul'), a = el('li'), b = el('li');
+        a.appendChild(el('b', null, 'At ' + whose + ' home? ')); a.appendChild(document.createTextNode('Connect this device to the Wi-Fi there, not mobile data, then tap Try again.'));
+        b.appendChild(el('b', null, 'Somewhere else? ')); b.appendChild(document.createTextNode('Ask ' + host() + ' to allow this pass from anywhere, then tap Try again. The link stays the same.'));
+        ul.appendChild(a); ul.appendChild(b); box.appendChild(ul);
+        box.appendChild(retryButton());
+        return box;
+    }
+    function problem(text, after, reason, status) {
         var kind = PROBLEMS[reason] || ['alert', 'This did not work'];
         /* this pass is over or full: its link is no use in this tab any more, code entry is */
         if (reason === 'ended' || reason === 'full') tab(null);
         clear();
         view.appendChild(big(kind[0]));
         view.appendChild(heading(kind[1]));
-        view.appendChild(el('p', 'lede', text));
+        /* the home network box says it all, in the guest's words */
+        if (reason !== 'home') view.appendChild(el('p', 'lede', text));
+        var next = nextStep(reason, status);
+        if (reason === 'home') view.appendChild(homeHelp(false));
+        else {
+            if (next) view.appendChild(el('p', 'lede', next));
+            if (retryable(reason, status)) view.appendChild(retryButton());
+        }
         var links = el('div', 'links');
         if (after !== 'nocode') {
             var c = el('button', 'link', 'Enter a guest code'); c.type = 'button';
@@ -294,23 +339,27 @@
         clear();
         view.appendChild(el('p', 'kicker', 'Guest pass'));
         view.appendChild(heading(p.From ? p.From + ' invited you' : 'You’re invited'));
-        view.appendChild(el('p', 'lede', '“' + p.Name + '”' + (p.ServerName ? ' on ' + p.ServerName : '') + '.'));
-        if (p.Ended) { problem('“' + p.Name + '” ended ' + when(p.EndUtc) + '. Ask ' + (p.From || 'the person who invited you') + ' for a new one.', null, 'ended'); return; }
-        if (p.PlacesLeft <= 0) { problem(p.MaxGuests === 1 ? 'This guest pass has already been used. Ask for a new one.' : 'All ' + p.MaxGuests + ' places on this guest pass are taken. Ask for a new one.', null, 'full'); return; }
+        var blocked = p.HomeOnly && !p.CanJoinHere;
+        view.appendChild(el('p', 'lede', '“' + p.Name + '”' + (p.ServerName ? ' on ' + p.ServerName : '') + '.' +
+            (blocked || p.Ended || p.PlacesLeft <= 0 ? '' : ' Type your first name below and Jellyfin opens right here, already signed in. No password, nothing to install.')));
+        if (p.Ended) { problem('“' + p.Name + '” ended ' + when(p.EndUtc) + '.', null, 'ended'); return; }
+        if (p.PlacesLeft <= 0) { problem(p.MaxGuests === 1 ? 'This guest pass has already been used.' : 'All ' + p.MaxGuests + ' places on this guest pass are taken.', null, 'full'); return; }
+        if (p.NeedsUpdate) { problem('A plugin on this server needs an update before guests can join.', null, 'update'); return; }
         var facts = el('ul', 'facts');
         facts.appendChild(fact('clock', 'Access until', cap(when(p.EndUtc)), left(p.EndUtc) === 'ended' ? null : 'Ends ' + left(p.EndUtc) + ', on its own'));
         facts.appendChild(fact('film', 'Libraries', (p.Libraries || []).join(', ') || 'None'));
         if (p.Rating) facts.appendChild(fact('shield', 'Rating', 'Up to ' + p.Rating, 'Titles without a rating are hidden'));
         /* the smaller facts side by side, so "Start watching" stays in view on a phone */
-        if (p.HomeOnly) facts.appendChild(half(fact('home', 'Where', 'Home network only', p.CanJoinHere ? null : 'You are not on it right now')));
+        if (p.HomeOnly) facts.appendChild(half(fact('home', 'Where', 'Home network only', p.CanJoinHere ? 'You are on it now' : null)));
         if (p.DevicesPerGuest) facts.appendChild(half(fact('tv', 'Devices', p.DevicesPerGuest === 1 ? 'One at a time' : p.DevicesPerGuest + ' at once', 'A TV counts as one')));
         if (p.MaxGuests > 1) facts.appendChild(half(fact('people', 'Places', p.PlacesLeft + ' of ' + p.MaxGuests + ' left')));
         /* an odd one out gets the whole row */
         var halves = facts.querySelectorAll('li.half');
         if (halves.length % 2) halves[halves.length - 1].className = '';
         view.appendChild(facts);
-        if (p.HomeOnly && !p.CanJoinHere) {
-            view.appendChild(error('This pass works only on the home network. Connect to its Wi-Fi and open the link again.'));
+        if (blocked) {
+            view.appendChild(homeHelp(true));
+            focusHeading();
             return;
         }
         if (me) {
@@ -342,7 +391,7 @@
             if (token) body.Token = token; else body.Code = code;
             post('Redeem', body).then(function (r) { r.shared = shc.checked; signedIn(r); }, function (e) {
                 inp.disabled = false; shc.disabled = false; busy(b, false, 'Start watching');
-                if (e.reason === 'ended' || e.reason === 'full' || e.status === 410) { problem(e.message, null, e.reason || 'ended'); return; }
+                if (e.reason === 'ended' || e.reason === 'full' || e.reason === 'home' || e.reason === 'update' || e.status === 410) { problem(e.message, null, e.reason || 'ended', e.status); return; }
                 msg.textContent = ''; msg.appendChild(error(e.message));
                 if (e.status === 400) { inp.setAttribute('aria-invalid', 'true'); inp.focus(); }
             });
@@ -381,7 +430,7 @@
                     /* a pass that ended can be opened again: its key stays, only not offered until then */
                     if (e.status === 410 && e.reason === 'ended') passNews(g.pass, null, true);
                     else if (e.status === 404 || e.status === 410 && e.reason !== 'paused') forget([g.key]);
-                    if (e.status === 410 && list.length === 1) { problem(e.message, null, e.reason || 'ended'); return; }
+                    if (e.reason === 'update' || (e.status === 410 || e.reason === 'home') && list.length === 1) { problem(e.message, null, e.reason || 'ended', e.status); return; }
                     msg.textContent = ''; msg.appendChild(error(e.message));
                 });
             });
@@ -413,13 +462,19 @@
     /* A pass this browser joined before: continue instead of using another place. */
     function opened(p) {
         peek = p;
-        document.getElementById('server').textContent = p.ServerName ? ' · ' + p.ServerName : '';
+        document.getElementById('server').textContent = p.ServerName && p.ServerName.trim().toLowerCase() !== 'jellyfin' ? ' · ' + p.ServerName : '';
         passNews(p.Id, p.EndUtc, !!p.Ended);
         var mine = kept().filter(function (g) { return g.pass === p.Id; });
         if (mine.length && !p.Ended) backScreen(p.Id); else inviteScreen();
     }
 
     /* ---------- start ---------- */
+    /* the logo comes from this Jellyfin server itself (its web client's app icon); without it the name stays */
+    var logo = document.getElementById('jfLogo');
+    if (logo) {
+        if (logo.complete && !logo.naturalWidth) logo.hidden = true;
+        logo.addEventListener('error', function () { logo.hidden = true; });
+    }
     var hash = (location.hash || '').replace(/^#/, '');
     if (hash) {
         if (/^[A-Za-z0-9_-]{43}$/.test(hash)) tab(hash);
@@ -431,10 +486,7 @@
     whoIsHere().then(function (name) {
         me = name;
         if (token) {
-            post('Peek', { Token: token }).then(opened, function (e) {
-                if (e.status === 404) tab(null);
-                problem(e.message, null, e.reason);
-            });
+            tryAgain(null);
         } else if (hash) {
             problem('This guest link is incomplete. Open it again from the message you got, or enter the code.', null);
         } else if (kept().length) {

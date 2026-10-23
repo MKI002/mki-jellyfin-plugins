@@ -111,7 +111,7 @@
         var was = seen();
         /* Jellyfin keeps earlier sign-in pages hidden in the page: a note there would be stale */
         Array.prototype.forEach.call(document.querySelectorAll('.mkigp-ended'), function (x) { if (!page.contains(x)) x.parentNode.removeChild(x); });
-        var old = page.querySelector('.mkigp-ended'), sig = was ? JSON.stringify([was.end, was.cut || 0, keys().map(function (g) { return g.key; })]) : '';
+        var old = page.querySelector('.mkigp-ended'), sig = was ? JSON.stringify([was.end, was.cut || 0, was.away || 0, keys().map(function (g) { return g.key; })]) : '';
         if (old && old.getAttribute('data-sig') !== sig) { old.parentNode.removeChild(old); old = null; }
         if (was && !old) {
             addCss();
@@ -127,6 +127,7 @@
                 var shared = false;
                 try { shared = !!sessionStorage.getItem(SHARED); } catch (e) { }
                 n.appendChild(el('p', null, was.cut ? 'You were signed out of your guest access on this browser.'
+                    : was.away ? 'Your guest pass works on the home network only, and Jellyfin does not see this device there right now. At home? Connect to the Wi-Fi there, not mobile data, then continue.'
                     : shared ? 'This is a shared computer, so Jellyfin asks again after a reload.' : 'You are signed out of your guest access.'));
                 if (back.length) {
                     var row = el('p', 'mkigp-again'), go = el('a', null, back.length === 1 ? 'Continue as ' + back[0].name : 'Continue as a guest');
@@ -138,7 +139,7 @@
                         var done = el('p', null, 'Done: this browser does not know your guest access any more.');
                         done.tabIndex = -1; done.setAttribute('role', 'status');
                         n.appendChild(done);
-                        n.setAttribute('data-sig', JSON.stringify([was.end, was.cut || 0, []]));
+                        n.setAttribute('data-sig', JSON.stringify([was.end, was.cut || 0, was.away || 0, []]));
                         try { done.focus(); } catch (e) { }
                     });
                     row.appendChild(go); row.appendChild(no); n.appendChild(row);
@@ -271,6 +272,8 @@
             asking = false; me = null; meFor = who; render();
             /* a guest whose access ended or was ended: Jellyfin itself would only show a spinner */
             if (e && e.status === 401 && seen()) { var was = seen(); was.cut = Date.now(); seen(was); endKeys(was.pass); signOut(); }
+            /* refused, not ended: a pass for the home network only, used from elsewhere. The way back stays */
+            else if (e && e.status === 403 && seen()) { var w = seen(); w.away = Date.now(); seen(w); signOut(); }
         });
     }
 

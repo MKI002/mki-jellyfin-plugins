@@ -122,7 +122,7 @@ public class GuestGate : IStartupFilter
 	}
 
 	// ViaUnknownProxy: a home address passed the request on for someone else, and Jellyfin will not take the visitor's
-	// address from it. Visitor: the address that proxy named, if any.
+	// address from it, or a known proxy did with headers that disagree. Visitor: the address that proxy named, if any.
 	public sealed record Seen(bool ViaUnknownProxy, IPAddress? Visitor);
 
 	private enum Kind
@@ -394,11 +394,28 @@ public class GuestGate : IStartupFilter
 		bool xff = request.Headers.ContainsKey("X-Forwarded-For");
 		bool known = _forwarding.ForwardedHeaders.HasFlag(ForwardedHeaders.XForwardedFor)
 			&& (_forwarding.KnownProxies.Any(p => (p.IsIPv4MappedToIPv6 ? p.MapToIPv4() : p).Equals(raw)) || _forwarding.KnownIPNetworks.Any(n => n.Contains(raw)));
-		if ((known && xff) || !_network.IsInLocalNetwork(raw))
+		if (known && xff)
+		{
+			// A known proxy that sets X-Real-IP but passes on the visitor's own X-Forwarded-For: Jellyfin takes the
+			// address the visitor made up. The two disagree then, and the request is not trusted to come from home.
+			var real = RealIp(request);
+			return real != null && !real.Equals(Named(request)) ? new Seen(true, Named(request)) : new Seen(false, null);
+		}
+		if (!_network.IsInLocalNetwork(raw))
 		{
 			return new Seen(false, null);
 		}
 		return new Seen(true, Named(request));
+	}
+
+	private static IPAddress? RealIp(HttpRequest request)
+	{
+		string value = request.Headers["X-Real-IP"].ToString().Trim();
+		if (value.Length == 0 || !(IPAddress.TryParse(value, out var ip) || (IPEndPoint.TryParse(value, out var ep) && (ip = ep.Address) != null)))
+		{
+			return null;
+		}
+		return ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4() : ip;
 	}
 
 	// The visitor's address as the proxy named it: the last X-Forwarded-For entry (the one the proxy added), else

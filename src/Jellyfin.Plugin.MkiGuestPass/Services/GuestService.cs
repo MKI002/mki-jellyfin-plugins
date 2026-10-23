@@ -41,7 +41,7 @@ public sealed class GuestError : Exception
 
 	public int Status { get; }
 
-	// For the join page, which picks its screen by it: "ended", "full", "home".
+	// For the join page, which picks its screen by it: "ended", "removed", "full", "paused", "home", "update".
 	public string? Reason { get; }
 }
 
@@ -196,9 +196,12 @@ public class GuestService
 
 	// ---------- for the settings page ----------
 
-	public object Overview()
+	// origin: the administrator's own request, to tell them whether a link for the home network only opens where
+	// they are right now.
+	public object Overview(JoinOrigin origin)
 	{
 		var now = DateTime.UtcNow;
+		bool youAreHome = IsLocal(origin);
 		var data = _store.Snapshot();
 		var libraries = Libraries();
 		var names = libraries.ToDictionary(l => l.Id, l => l.Name);
@@ -265,6 +268,7 @@ public class GuestService
 			PasswordPolicyOutdated = PasswordPolicyOutdated(),
 			WebClientProblem = WebPatcher.Problem,
 			UnknownProxy = now - _unknownProxyUtc < TimeSpan.FromDays(7),
+			YouAreHome = youAreHome,
 			DlnaInstalled = DlnaInstalled()
 		};
 	}
@@ -440,6 +444,45 @@ public class GuestService
 		}
 	}
 
+	// Where the guests of an open pass may join and watch. Limited to the home network, the guests' devices that are
+	// away right now are signed out; Jellyfin refuses their other devices outside the home network by itself.
+	public async Task SetWhere(Guid passId, bool remote, bool from, User admin)
+	{
+		await _gate.WaitAsync().ConfigureAwait(false);
+		try
+		{
+			var (name, guests) = _store.Change(d =>
+			{
+				var p = d.Pass(passId) ?? throw new GuestError(404, "That pass does not exist any more.");
+				if (p.HasEnded(DateTime.UtcNow))
+				{
+					throw new GuestError(409, "This pass has ended in the meantime. Nothing was changed.");
+				}
+				if (p.RemoteAccess != from)
+				{
+					throw new GuestError(409, "Where this pass works was changed in the meantime. Nothing was changed; look again.");
+				}
+				p.RemoteAccess = remote;
+				return (p.Name, p.Guests.Select(g => g.UserId).ToList());
+			});
+			foreach (var id in guests)
+			{
+				await SetRemote(id, remote).ConfigureAwait(false);
+			}
+			if (!remote)
+			{
+				await SignOutAway(guests).ConfigureAwait(false);
+			}
+			string where = remote ? "home and away" : "the home network only";
+			_logger.LogInformation("Guest pass {Pass} now works for {Where} (changed by {Admin})", name, where, admin.Username);
+			await Log("Guest pass \"" + name + "\" now works for " + where, "MkiGuestPassChanged", admin.Id, null).ConfigureAwait(false);
+		}
+		finally
+		{
+			_gate.Release();
+		}
+	}
+
 	public async Task EndPass(Guid passId, User admin)
 	{
 		await _gate.WaitAsync().ConfigureAwait(false);
@@ -560,7 +603,8 @@ public class GuestService
 			Rating = pass.RatingName,
 			pass.DevicesPerGuest,
 			HomeOnly = !pass.RemoteAccess,
-			CanJoinHere = pass.RemoteAccess || local
+			CanJoinHere = pass.RemoteAccess || local,
+			NeedsUpdate = PasswordPolicyOutdated()
 		};
 	}
 
@@ -707,9 +751,13 @@ public class GuestService
 			{
 				throw new GuestError(410, "This guest pass has ended. Thanks for watching!", "ended");
 			}
+			if (PasswordPolicyOutdated())
+			{
+				throw NeedsUpdate();
+			}
 			if (!pass.RemoteAccess && !local)
 			{
-				throw new GuestError(403, "This guest pass works only on the home network.");
+				throw new GuestError(403, "This guest pass works only on the home network.", "home");
 			}
 			var user = _users.GetUserById(guest.UserId);
 			if (user == null || !UsesGuestSignIn(user) || user.HasPermission(PermissionKind.IsDisabled))
@@ -1394,6 +1442,7 @@ public class GuestService
 		p.EndUtc,
 		p.MaxGuests,
 		p.Used,
+		p.RemoteAccess,
 		From = p.CreatedByName,
 		Token = token,
 		Code = code == null ? null : Secrets.ShowCode(code)
@@ -1454,11 +1503,19 @@ public class GuestService
 		{
 			throw new GuestError(409, pass.MaxGuests == 1 ? "This guest pass has already been used." : "All " + pass.MaxGuests + " places on this guest pass are taken.", "full");
 		}
+		if (PasswordPolicyOutdated())
+		{
+			throw NeedsUpdate();
+		}
 		if (!pass.RemoteAccess && !local)
 		{
 			throw new GuestError(403, "This guest pass works only on the home network.", "home");
 		}
 	}
+
+	// MKI Password Policy before 1.1.1.0 does not know guest accounts and signs them out right after they join, so
+	// nobody joins (and uses a place) until it is updated.
+	private static GuestError NeedsUpdate() => new(409, "A plugin on this server needs an update before guests can join.", "update");
 
 	private static void CheckEnd(DateTime end, DateTime now)
 	{
@@ -1623,6 +1680,49 @@ public class GuestService
 		await _users.UpdatePolicyAsync(userId, policy).ConfigureAwait(false);
 	}
 
+	// Only the remote access switch changes, like SetDisabled.
+	private async Task SetRemote(Guid userId, bool remote)
+	{
+		var user = _users.GetUserById(userId);
+		if (user == null || !UsesGuestSignIn(user) || user.HasPermission(PermissionKind.EnableRemoteAccess) == remote)
+		{
+			return;
+		}
+		var policy = _users.GetUserDto(user).Policy;
+		policy.EnableRemoteAccess = remote;
+		await _users.UpdatePolicyAsync(userId, policy).ConfigureAwait(false);
+	}
+
+	// Devices of these guests with a session from outside the home network (or an address that cannot be read).
+	private async Task SignOutAway(List<Guid> userIds)
+	{
+		var away = _sessions.Sessions.Where(s => userIds.Contains(s.UserId) && !AtHome(s.RemoteEndPoint)).Select(s => (s.UserId, s.DeviceId)).Distinct().ToList();
+		foreach (var (userId, deviceId) in away)
+		{
+			foreach (var device in _devices.GetDevices(new DeviceQuery { UserId = userId, DeviceId = deviceId }).Items.ToList())
+			{
+				await SignOutDevice(device).ConfigureAwait(false);
+			}
+		}
+	}
+
+	private bool AtHome(string? endPoint)
+	{
+		if (string.IsNullOrEmpty(endPoint))
+		{
+			return false;
+		}
+		if (!IPAddress.TryParse(endPoint, out var ip))
+		{
+			if (!IPEndPoint.TryParse(endPoint, out var ep))
+			{
+				return false;
+			}
+			ip = ep.Address;
+		}
+		return _network.IsInLocalNetwork(ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4() : ip);
+	}
+
 	private async Task DeleteAccount(Guid userId, string why)
 	{
 		var user = _users.GetUserById(userId);
@@ -1741,7 +1841,7 @@ public class GuestService
 		return levels;
 	}
 
-	private static GuestError Invalid() => new(404, "This guest link is not valid. Ask for a new one.");
+	private static GuestError Invalid() => new(404, "This guest link is not valid.");
 
 	private static GuestError TooMany() => new(429, "Too many tries from this network. Please wait 15 minutes and try again.");
 

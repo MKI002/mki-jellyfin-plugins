@@ -11,8 +11,8 @@ namespace Jellyfin.Plugin.MkiGuestPass.Services;
 public class Secrets
 {
 	// Without look-alikes (0/O, 1/I/L, 5/S, 8/B, 2/Z): 25 characters, 8 of them make about 37 bits. The server-wide
-	// limit on wrong codes (see Throttle) allows under 2,000 tries a day, so even with 20 passes open, guessing one of
-	// their codes takes thousands of years on average.
+	// limit on wrong codes (see Throttle) allows about 4,800 tries a day (100, then a 15-minute pause), so even with
+	// 20 passes open, guessing one of their codes takes about two thousand years on average.
 	public const string CodeAlphabet = "ACDEFGHJKMNPQRTUVWXY34679";
 
 	public const int CodeLength = 8;

@@ -710,6 +710,12 @@
 #MkiGuestPassConfigPage .gp-fact small .mk-ic { font-size: 15px; color: var(--mk-a2-ink); }
 #MkiGuestPassConfigPage .gp-fact b { display: block; margin-top: 2px; font-weight: 700; overflow-wrap: anywhere; }
 #MkiGuestPassConfigPage .gp-fact span { display: block; font-size: .8rem; color: var(--mk-dim); overflow-wrap: anywhere; }
+#MkiGuestPassConfigPage .gp-fact--do { font: inherit; color: inherit; text-align: left; cursor: pointer; position: relative; }
+#MkiGuestPassConfigPage .gp-fact--do:hover { border-color: var(--mk-a2-ink); }
+#MkiGuestPassConfigPage .gp-fact--do:focus-visible { outline: 3px solid var(--mk-a2-ink); outline-offset: 2px; }
+#MkiGuestPassConfigPage .gp-fact__do { display: inline-flex; align-items: center; gap: 4px; margin-top: 3px; font-style: normal; font-size: .8rem; font-weight: 700; color: var(--mk-a2-ink); }
+#MkiGuestPassConfigPage .gp-fact__do .mk-ic { font-size: 15px; }
+#MkiGuestPassConfigPage .gp-fact__do em { font-style: normal; }
 /* the life of a pass: open (filled up to now), then locked until its accounts are deleted (hatched) */
 #MkiGuestPassConfigPage .gp-life { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 3fr); column-gap: 4px; row-gap: 5px; margin: 14px 0 0; }
 #MkiGuestPassConfigPage .gp-life.is-nodelete { grid-template-columns: minmax(0, 1fr); }
@@ -808,6 +814,7 @@
   #MkiGuestPassConfigPage .gp-fact { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 9px; border-radius: 999px; }
   #MkiGuestPassConfigPage .gp-fact small { font-size: .64rem; }
   #MkiGuestPassConfigPage .gp-fact small .mk-ic { display: none; }
+  #MkiGuestPassConfigPage .gp-fact__do { margin-top: 0; font-size: .74rem; }
   #MkiGuestPassConfigPage .gp-fact b { margin: 0; font-size: .82rem; }
   #MkiGuestPassConfigPage .gp-fact > span { display: none; }
   /* the timeline captions: one line each, under the bar */
@@ -936,9 +943,11 @@
           <span class="mk-field__hint" id="gpRatingHint">With a limit, titles without a rating are hidden too.</span>
         </div>
         <div class="mk-row">
-          <div class="mk-row__text"><label class="mk-row__label" for="gpRemote">Allow from outside the home network</label><span class="mk-row__desc">Off: joining and watching work only at home, on your network. Turn it on for guests who watch from elsewhere.</span></div>
+          <div class="mk-row__text"><label class="mk-row__label" for="gpRemote">Allow from outside the home network</label><span class="mk-row__desc">Off: joining and watching work only at home, on your network. Turn it on for guests who watch from elsewhere. You can change it on the pass later.</span></div>
           <div class="mk-row__control"><input type="checkbox" class="mk-switch" role="switch" id="gpRemote"></div>
         </div>
+        <p class="mk-note mk-note--warn" id="gpRemoteNote" hidden></p>
+        <p class="mk-note" id="gpProxyNote" hidden></p>
         <div class="mk-row">
           <div class="mk-row__text"><label class="mk-row__label" for="gpWithCode">Also make a code to type in</label><span class="mk-row__desc">8 characters, for reading out or for a browser where a link is hard to open. Shorter than the link, so easier to guess, and it shows “Have a guest code?” on the sign-in page. The link works without it.</span></div>
           <div class="mk-row__control"><input type="checkbox" class="mk-switch" role="switch" id="gpWithCode"></div>
@@ -2280,6 +2289,21 @@ function renderRatings() {
     sel.value = was;
     sel.setAttribute('data-filled', '1');
 }
+/* a pass for the home network only, made from a browser Jellyfin counts as away: its link would not open here */
+function renderWhereNote() {
+    var homeOnly = !$('#gpRemote').checked, n = $('#gpRemoteNote'), away = !!ov && ov.YouAreHome === false && homeOnly;
+    n.hidden = !away;
+    if (away) fill(n, [ic('wifi_off'), fill(el('span'), [el('b', null, 'Jellyfin counts this browser as away right now'),
+        ov.UnknownProxy ? ' (it comes through a reverse proxy Jellyfin does not know, see the note at the top). ' : '. ',
+        'A link for the home network only would not open here. Fine for guests who come to your home; for guests elsewhere, turn this on.'])]);
+    /* links on an outside address usually come through a reverse proxy, and "home only" is only as good as what it tells Jellyfin */
+    var base = linkBase(), proxied = homeOnly && !homeAddress(base + '/'), p = $('#gpProxyNote');
+    p.hidden = !proxied;
+    if (proxied) fill(p, [ic('alt_route'), fill(el('span'), [el('b', null, 'Through a reverse proxy? '),
+        'Home network only relies on Jellyfin seeing each visitor’s own address. If links on ', el('b', null, base.replace(/^https?:\/\//i, '')),
+        ' go through a reverse proxy, add it under Dashboard → Networking → Known proxies and let it add the visitor’s address to X-Forwarded-For. A proxy that passes nothing on makes visitors from the internet look as if they were at home.'])]);
+}
+$('#gpRemote').addEventListener('change', function () { renderWhereNote(); });
 function resetForm() {
     $('#gpName').value = '';
     $('#gpPeople').value = '1'; $('#gpDevices').value = '2'; syncStreams(); $('#gpStreams').value = '1';
@@ -2350,6 +2374,12 @@ function share(r, isNew) {
         n.appendChild(el('span', null, 'This link uses a home-network address, so it opens only at home. To share it with someone elsewhere, set the address guests reach Jellyfin at under Settings, then make a new link.'));
         box.appendChild(n);
     }
+    if (!r.RemoteAccess) {
+        var hn = el('p', 'mk-note'); hn.appendChild(ic('home'));
+        hn.appendChild(fill(el('span'), [el('b', null, 'Home network only. '), 'Guests open the link while on your Wi-Fi. Anywhere else, the join page tells them to connect to it or to ask you; Where on the pass allows it from anywhere.' +
+            (ov && ov.YouAreHome === false ? ' Jellyfin counts this browser as away right now, so the link would not open here.' : '')]));
+        box.appendChild(hn);
+    }
     var grid = el('div', 'gp-share'), qr = el('div', 'gp-qr'), svg = qrSvg(link, 'QR code of the guest link');
     if (svg) qr.appendChild(svg); else qr.appendChild(el('span', null, 'The link is too long for a QR code.'));
     grid.appendChild(qr);
@@ -2361,8 +2391,8 @@ function share(r, isNew) {
     grid.appendChild(right);
     box.appendChild(grid);
     var from = r.From || String(kit.saved('InviterName') || '').trim(), server = (ov && ov.ServerName) || 'Jellyfin';
-    var invite = (from ? from + ' invited you' : 'You’re invited') + ' to ' + quote(r.Name) + ' on ' + server + ', until ' + ends + '. Open this link on your phone or computer: ' + link +
-        (r.Code ? '\nOr open ' + joinUrl() + ' and enter the code ' + r.Code + '.' : '') + '\nNo password needed. Access ends by itself.';
+    var invite = (from ? from + ' invited you' : 'You’re invited') + ' to ' + quote(r.Name) + ' on ' + server + ', until ' + ends + '. Open this link on your phone or computer and type your first name; Jellyfin then opens, signed in: ' + link +
+        (r.Code ? '\nOr open ' + joinUrl() + ' and enter the code ' + r.Code + '.' : '') + (r.RemoteAccess ? '' : '\nIt works on my home Wi-Fi only.') + '\nNo password needed. Access ends by itself.';
     var row = el('div', 'mk-dialog__copy'), b1 = kit.btn('Copy link', '', 'link'), b3 = kit.btn('Copy invitation', '', 'chat');
     b1.addEventListener('click', function () { copyIn(b1, link, 'Link'); });
     b3.addEventListener('click', function () { copyIn(b3, invite, 'Invitation'); });
@@ -2474,6 +2504,32 @@ function endPassNow(p0) {
             });
     });
 }
+/* where the guests of a pass may join and watch: widened for guests who are away, narrowed back to home */
+function setWhere(p0) {
+    oneAtATime(p0.Id, function () { return setWhereNow(p0); });
+}
+function setWhereNow(p0) {
+    return fresh(p0).then(function (p) {
+        if (!p) return;
+        if (!p.Open) { kit.toast(quote(p.Name) + ' has ended. Open it again first.'); return; }
+        var widen = !p.RemoteAccess, g = activeGuests(p);
+        return kit.confirm(widen
+            ? { title: 'Allow ' + quote(p.Name) + ' from anywhere?', icon: 'public', tone: 'accent', ok: 'Allow from anywhere', okIcon: 'public',
+                body: ['Guests can then join and watch wherever your server is reachable, also over the internet. The link' + (p.HasCode ? ' and code stay' : ' stays') + ' the same; a guest who was refused only has to tap Try again.',
+                    'You can limit it to the home network again at any time.'] }
+            : { title: 'Limit ' + quote(p.Name) + ' to the home network?', icon: 'home', tone: 'warn', ok: 'Home network only', okIcon: 'home',
+                body: (g.length ? 'Guests who are away right now are signed out there; ' + names(g.map(function (x) { return x.Name; })) + ' can keep watching at home. ' : '') +
+                    'Nobody can join or watch from outside until you allow it again.' })
+            .then(function (ok) {
+                if (!ok) return;
+                return working(p.Id, kit.api('POST', 'MkiGuestPass/Passes/' + p.Id + '/Where', { RemoteAccess: widen, From: !!p.RemoteAccess })).then(function () {
+                    kit.logAction((widen ? 'Pass allowed from anywhere: ' : 'Pass limited to the home network: ') + p.Name);
+                    kit.toast(quote(p.Name) + (widen ? ' now works from anywhere.' : ' now works on the home network only.'), { icon: widen ? 'public' : 'home' });
+                    return refresh().then(function () { focusAfter('pw:' + p.Id, p.Id); });
+                }, function (e) { return failed(e, 'Nothing was changed.', 'pw:' + p.Id, p.Id); });
+            });
+    });
+}
 function deletePass(p0) {
     oneAtATime(p0.Id, function () { return deletePassNow(p0); });
 }
@@ -2533,11 +2589,18 @@ function deleteGuestNow(p, g) {
 }
 
 /* ---------- drawing ---------- */
-function fact(icon, label, value, sub) {
-    var f = el('div', 'gp-fact'), s = el('small');
+function fact(icon, label, value, sub, action) {
+    var f = el(action ? 'button' : 'div', 'gp-fact' + (action ? ' gp-fact--do' : '')), s = el('small');
     s.appendChild(ic(icon)); s.appendChild(el('span', null, label));
     f.appendChild(s); f.appendChild(el('b', null, value));
     if (sub) f.appendChild(el('span', null, sub));
+    if (action) {
+        /* the whole chip is the button; its last word says what it does */
+        f.type = 'button'; f.setAttribute('data-focus', action.focus);
+        f.setAttribute('aria-label', label + ': ' + value + '. ' + action.text);
+        var d = el('i', 'gp-fact__do'); d.appendChild(ic('edit')); d.appendChild(el('em', null, action.text)); f.appendChild(d);
+        f.addEventListener('click', action.run);
+    }
     return f;
 }
 /* created → now → end (signed out, locked) → deleted: the whole life of a pass on one line */
@@ -2639,7 +2702,8 @@ function passCard(p) {
         facts.appendChild(fact('group', 'Places', p.Used + ' of ' + p.MaxGuests + ' used', p.MaxGuests - p.Used > 0 ? kit.plural(p.MaxGuests - p.Used, 'place') + ' left' : 'Nobody else can join'));
         facts.appendChild(fact('devices', 'Each guest', kit.plural(p.DevicesPerGuest, 'device'), kit.plural(p.StreamsPerGuest, 'stream') + ' at once'));
         facts.appendChild(fact('shield', 'Rating', p.Rating ? 'Up to ' + p.Rating : 'Any', p.Rating ? 'Unrated titles hidden' : null));
-        facts.appendChild(fact(p.RemoteAccess ? 'public' : 'home', 'Where', p.RemoteAccess ? 'Home and away' : 'Home network only'));
+        facts.appendChild(fact(p.RemoteAccess ? 'public' : 'home', 'Where', p.RemoteAccess ? 'Home and away' : 'Home network only', null,
+            { text: 'Change', focus: 'pw:' + p.Id, run: function () { setWhere(p); } }));
         facts.appendChild(fact('key', 'Join with', p.HasCode ? 'Link or code' : 'Link'));
         body.appendChild(facts);
     } else {
@@ -2704,13 +2768,13 @@ function webProblem() { return ov && ov.WebClientProblem && (kit.saved('ShowGues
 function renderAttn() {
     var box = $('#gpAttn'); box.textContent = '';
     if (!ov) { box.hidden = true; return; }
-    if (ov.PasswordPolicyOutdated) box.appendChild(note('warn', 'warning', [el('b', null, 'Update MKI Password Policy. '), 'Versions before 1.1.1.0 do not know guest accounts and could lock them or ask them for a password. Guests can still join, but update it under Dashboard → Plugins.']));
+    if (ov.PasswordPolicyOutdated) box.appendChild(note('bad', 'block', [el('b', null, 'Guests cannot join: update MKI Password Policy. '), 'Versions before 1.1.1.0 do not know guest accounts and sign them out right after they join, so Guest Pass lets nobody join until then. Update it under Dashboard → Plugins → Catalog, then restart Jellyfin. Links and codes stay the same.']));
     var paused = ov.CodesPausedUntil && new Date(ov.CodesPausedUntil).getTime() > Date.now();
     if (paused) box.appendChild(note('warn', 'pin', [el('b', null, 'Code entry is paused until ' + kit.hhmm(new Date(ov.CodesPausedUntil)) + '. '), 'Too many wrong codes were typed on this server. Links keep working.']));
     if (webProblem()) box.appendChild(note('warn', 'web', [el('b', null, 'The badge and the code link are missing. '), String(webProblem()) + ' Guests can still join and watch.']));
     if (!ov.QuickConnect && ov.Passes.some(function (p) { return p.Open; })) box.appendChild(note(null, 'tv', [el('b', null, 'Quick Connect is off, '), 'so guests cannot sign in TVs. Turn it on under Dashboard → General if they should.']));
-    if (ov.UnknownProxy) box.appendChild(note('warn', 'alt_route', [el('b', null, 'Requests come through a reverse proxy Jellyfin does not know. '),
-        'Jellyfin then sees the proxy, not the visitor, and takes everyone for someone at home, also for its own checks. Guest Pass refuses passes for the home network only through it. Add the proxy under Dashboard → Networking → Known proxies, then restart Jellyfin.']));
+    if (ov.UnknownProxy) box.appendChild(note('warn', 'alt_route', [el('b', null, 'Requests come through a reverse proxy Jellyfin does not know or cannot trust. '),
+        'Jellyfin then sees the proxy, or an address the visitor made up, and can take everyone for someone at home, also for its own checks. Guest Pass refuses passes for the home network only through it. Add the proxy under Dashboard → Networking → Known proxies and let it add the visitor’s address to X-Forwarded-For (its X-Real-IP, if it sets one, must match), then restart Jellyfin.']));
     if (ov.DlnaInstalled && ov.Passes.some(function (p) { return p.Open; })) box.appendChild(note('warn', 'cast', [el('b', null, 'The DLNA plugin is installed. '), 'It shows every library to any device on your home network without signing in, also to a guest’s phone there. Uninstall it under Dashboard → Plugins if guests should see only their pass.']));
     if (!kit.saved('StreamsNeedSignIn')) box.appendChild(note('warn', 'lock_open', [el('b', null, 'Streams play without a sign-in. '), 'Anyone with the address of a title can play it, also guests whose pass ended. Turn on “Streams need a sign-in” under Settings unless a player needs it off.']));
     box.hidden = !box.firstChild;
@@ -2743,7 +2807,7 @@ function renderStreams() {
 }
 function render() {
     if (!kit.loaded()) return;
-    renderLibraries(); renderRatings(); renderEnd(); renderPasses(); renderAttn(); renderUrlHint(); renderFlow(); renderStreams();
+    renderLibraries(); renderRatings(); renderEnd(); renderPasses(); renderAttn(); renderUrlHint(); renderFlow(); renderStreams(); renderWhereNote();
     var wp = webProblem();
     $('#gpWebNote').hidden = !wp; fill($('#gpWebNoteT'), wp ? String(wp) + ' Guests can still join and watch.' : '');
     var tOpen = $('#gpTileOpen'), tOpenS = $('#gpTileOpenSub'), tG = $('#gpTileGuests'), tGS = $('#gpTileGuestsSub'), tE = $('#gpTileEnd'), tES = $('#gpTileEndSub'), tT = $('#gpTileTv'), tTS = $('#gpTileTvSub');

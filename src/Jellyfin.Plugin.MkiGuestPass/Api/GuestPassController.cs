@@ -120,7 +120,7 @@ public class GuestPassController : ControllerBase
 	public ActionResult Overview()
 	{
 		NoStore();
-		return new JsonResult(_guests.Overview());
+		return new JsonResult(_guests.Overview(Origin()));
 	}
 
 	[HttpPost("Passes")]
@@ -140,6 +140,16 @@ public class GuestPassController : ControllerBase
 	public Task<ActionResult> Extend([FromRoute] Guid id, [FromBody] EndRequest request) => Admin(async admin =>
 	{
 		await _guests.Extend(id, request.EndUtc, request.Reopen, admin).ConfigureAwait(false);
+		return new { Done = true };
+	});
+
+	[HttpPost("Passes/{id}/Where")]
+	[Authorize(Policy = "RequiresElevation")]
+	[Consumes("application/json")]
+	[RequestSizeLimit(MaxBody)]
+	public Task<ActionResult> Where([FromRoute] Guid id, [FromBody] WhereRequest request) => Admin(async admin =>
+	{
+		await _guests.SetWhere(id, request.RemoteAccess, request.From, admin).ConfigureAwait(false);
 		return new { Done = true };
 	});
 
@@ -174,6 +184,14 @@ public class GuestPassController : ControllerBase
 		await _guests.DeleteGuest(id, admin).ConfigureAwait(false);
 		return new { Done = true };
 	});
+
+	// From: where the pass worked when the page last looked, so a change made meanwhile is not overwritten.
+	public class WhereRequest
+	{
+		public bool RemoteAccess { get; set; }
+
+		public bool From { get; set; }
+	}
 
 	public class EndRequest
 	{
