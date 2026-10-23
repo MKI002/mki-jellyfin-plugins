@@ -2540,7 +2540,8 @@ function setWhereNow(p0) {
                     .concat(['You can limit it to the home network again at any time.']) }
             : { title: 'Limit ' + quote(p.Name) + ' to the home network?', icon: 'home', tone: 'warn', ok: 'Home network only', okIcon: 'home',
                 body: (g.length ? 'Playback stops on devices that are away right now; ' + names(g.map(function (x) { return x.Name; })) + ' can keep watching at home. ' : '') +
-                    'Nobody can join or watch from outside until you allow it again.' })
+                    'Nobody can join or watch from outside until you allow it again.' +
+                    (kit.saved('StreamsNeedSignIn') ? '' : ' While “Streams need a sign-in” is off, anyone who has the stream address of a title can still play it, from anywhere.') })
             .then(function (ok) {
                 if (!ok) { focusAfter('pw:' + p.Id, p.Id); return; }
                 return working(p.Id, kit.api('POST', 'MkiGuestPass/Passes/' + p.Id + '/Where', { RemoteAccess: widen, From: !!p.RemoteAccess })).then(function () {

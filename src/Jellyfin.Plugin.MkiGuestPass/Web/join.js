@@ -329,6 +329,11 @@
         focusHeading();
     }
 
+    function signedInNote(doing) {
+        var n = el('p', 'note'); n.appendChild(icon('alert', 18));
+        n.appendChild(el('span', null, 'This browser is signed in to Jellyfin as ' + me + '. ' + doing + ' signs ' + me + ' out here, on this browser only.'));
+        return n;
+    }
     function foot(on) { var f = document.getElementById('foot'); if (f) f.hidden = !on; }
     function codeScreen(message) {
         foot(true);
@@ -404,11 +409,7 @@
             focusHeading();
             return;
         }
-        if (me) {
-            var n = el('p', 'note'); n.appendChild(icon('alert', 18));
-            n.appendChild(el('span', null, 'This browser is signed in to Jellyfin as ' + me + '. Joining signs ' + me + ' out here, on this browser only.'));
-            view.appendChild(n);
-        }
+        if (me) view.appendChild(signedInNote('Joining'));
         var f = el('div', 'field'), lab = el('label', null, 'Your first name'), inp = el('input');
         lab.htmlFor = 'gpName'; inp.id = 'gpName'; inp.type = 'text'; inp.maxLength = 20; inp.autocomplete = 'given-name'; inp.setAttribute('autocapitalize', 'words'); inp.setAttribute('enterkeyhint', 'go');
         var hint = el('p', 'hint', 'Shown as “Guest …” on this server. Letters, numbers, spaces, - ’ and . only.'); hint.id = 'gpNameHint'; inp.setAttribute('aria-describedby', 'gpNameHint');
@@ -466,6 +467,7 @@
         view.appendChild(el('p', 'kicker', 'Guest pass'));
         view.appendChild(heading(list.length === 1 ? 'Welcome back, ' + list[0].name : 'Welcome back'));
         view.appendChild(el('p', 'lede', list.length === 1 ? '“' + (list[0].title || 'Guest pass') + '”, until ' + when(list[0].end) + '.' : 'Who is watching?'));
+        if (me) view.appendChild(signedInNote('Continuing'));
         var msg = el('div');
         var who = el('div', 'who'), buttons = [];
         list.forEach(function (g, i) {
@@ -519,13 +521,14 @@
         peek = p; again = null;
         serverName(p.ServerName);
         /* a guest whose access on this browser ended, back on the link of a pass that runs: straight on, so they are
-           either signed in again or told why not, without a "Welcome back" first */
+           either signed in again or told why not, without a "Welcome back" first. Only while nobody is signed in here
+           and nobody else could join this pass anyway, so no choice and no sign-in is taken from anyone */
         var cut = all().filter(function (g) { return g.pass === p.Id && g.ended; }).length > 0;
         passNews(p.Id, p.EndUtc, !!p.Ended);
         var mine = kept().filter(function (g) { return g.pass === p.Id; });
         if (mine.length && !p.Ended) {
             backScreen(p.Id);
-            var first = cut && mine.length === 1 ? view.querySelector('.who .btn') : null;
+            var first = cut && mine.length === 1 && !me && p.PlacesLeft <= 0 ? view.querySelector('.who .btn') : null;
             if (first) first.click();
         } else inviteScreen();
     }

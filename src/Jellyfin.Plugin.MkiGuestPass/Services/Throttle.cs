@@ -14,9 +14,10 @@ namespace Jellyfin.Plugin.MkiGuestPass.Services;
 //   At that pace even a large botnet needs thousands of years to guess one 8-character code.
 // - Links and rejoin keys are 256-bit random values that cannot be guessed; their limit only keeps junk traffic cheap.
 // - Every address gets at most 60 join requests in 15 minutes, right or wrong.
-// A key can name two addresses (separated by a space) when it is unclear which one is the visitor's: every limit then
-// holds for each of them, so changing one escapes nothing. Such requests are counted apart from ordinary ones, so
-// naming someone else's address never uses up that address's own limits, and nothing is counted once a part is over.
+// Behind a proxy that cannot be trusted, a key names every address the proxy's headers give (separated by spaces,
+// marked "~"): every limit holds for each of them, so changing one escapes nothing. They are counted apart from ordinary
+// requests, so naming someone else's address never uses up that address's own limits, and nothing is counted once a
+// part is over.
 public class Throttle
 {
 	public const int CodeFailuresPerAddress = 5;
@@ -57,11 +58,16 @@ public class Throttle
 		}
 	}
 
-	public static string Key(IPAddress? ip, IPAddress? also)
+	public const int MaxNamed = 6;
+
+	public static string Apart(IEnumerable<IPAddress>? named, IPAddress? fallback)
 	{
-		string one = Key(ip);
-		string two = also == null ? one : Key(also);
-		return two == one ? one : one + " " + two;
+		var parts = (named ?? Enumerable.Empty<IPAddress>()).Select(ip => Key(ip)).Distinct().Take(MaxNamed).ToList();
+		if (parts.Count == 0)
+		{
+			parts.Add(Key(fallback));
+		}
+		return string.Join(' ', parts.Select(k => "~" + k));
 	}
 
 	public static string Key(IPAddress? ip)
@@ -141,7 +147,7 @@ public class Throttle
 		}
 	}
 
-	private static string[] Parts(string key) => key.Contains(' ', StringComparison.Ordinal) ? key.Split(' ').Select(k => "2:" + k).ToArray() : new[] { key };
+	private static string[] Parts(string key) => key.Split(' ');
 
 	private static int Count(ConcurrentDictionary<string, Queue<DateTime>> map, string key)
 	{

@@ -134,7 +134,7 @@ public class GuestGate : IStartupFilter
 	// address from it, or a known proxy passed it on without saying for whom or with headers that disagree. Visitor:
 	// the address that proxy named, if any. Address: the address Jellyfin will take the request for (null: none).
 	// Quiet: not worth the warning on the settings page by itself (a known proxy's own requests, like health checks).
-	public sealed record Seen(bool ViaUnknownProxy, IPAddress? Visitor, IPAddress? Address = null, bool Quiet = false, IPAddress? AlsoVisitor = null);
+	public sealed record Seen(bool ViaUnknownProxy, IReadOnlyList<IPAddress> Named, IPAddress? Address = null, bool Quiet = false);
 
 	private enum Kind
 	{
@@ -396,7 +396,7 @@ public class GuestGate : IStartupFilter
 		if (raw == null)
 		{
 			// No address (a Unix socket): Jellyfin takes it for one at home, so a forwarded one cannot be told apart.
-			return new Seen(forwarding, forwarding ? Named(request) : null);
+			return new Seen(forwarding, forwarding ? Named(request, null) : Array.Empty<IPAddress>());
 		}
 		if (raw.IsIPv4MappedToIPv6)
 		{
@@ -417,21 +417,21 @@ public class GuestGate : IStartupFilter
 			var real = RealIp(request);
 			if (applied != null && (said.Count == 0 || (said.Count == 1 && real != null && real.Equals(applied))))
 			{
-				return new Seen(false, null, applied);
+				return new Seen(false, Array.Empty<IPAddress>(), applied);
 			}
-			// The join limits hold for both addresses: one of them may be the visitor's own choice.
-			return new Seen(true, real ?? applied ?? Named(request), raw, Quiet: !forwarding, AlsoVisitor: real != null ? applied : null);
+			return new Seen(true, Named(request, applied), raw, Quiet: !forwarding);
 		}
 		if (!forwarding || !_network.IsInLocalNetwork(raw))
 		{
-			return new Seen(false, null, raw);
+			return new Seen(false, Array.Empty<IPAddress>(), raw);
 		}
-		return new Seen(true, Named(request), raw);
+		return new Seen(true, Named(request, null), raw);
 	}
 
 	// Away from the home network as Jellyfin will see it, or through a proxy that cannot be trusted. No address at all
-	// (a Unix socket) means some relay passes visitors on, so that counts as away too.
-	private bool Away(Seen seen) => seen.ViaUnknownProxy || seen.Address == null || !_network.IsInLocalNetwork(seen.Address);
+	// (a Unix socket) or the Jellyfin machine itself (loopback) means some relay or tunnel there passes visitors on, so
+	// that counts as away too.
+	private bool Away(Seen seen) => seen.ViaUnknownProxy || seen.Address == null || IPAddress.IsLoopback(seen.Address) || !_network.IsInLocalNetwork(seen.Address);
 
 	// The visitor's address Jellyfin takes from the X-Forwarded-For of a known proxy, or null when it takes none. A
 	// changed scheme or host alone also leaves X-Original-For, and a proxy that names itself, loopback or another
@@ -479,20 +479,27 @@ public class GuestGate : IStartupFilter
 		return ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4() : ip;
 	}
 
-	// The visitor's address as the proxy named it: the last X-Forwarded-For entry (the one the proxy added), else
-	// X-Real-IP. Used only to keep visitors apart for the join limits, never to decide who is at home.
-	private static IPAddress? Named(HttpRequest request)
+	// Every address a proxy that cannot be trusted names for the visitor: the one Jellyfin takes, each X-Real-IP value
+	// and the last X-Forwarded-For entry (the one a proxy adds). One of them is the visitor's own if any is; the join
+	// limits hold for each (Throttle.Apart). Never used to decide who is at home.
+	private static IReadOnlyList<IPAddress> Named(HttpRequest request, IPAddress? applied)
 	{
-		string? value = request.Headers["X-Forwarded-For"].ToString().Split(',').Select(x => x.Trim()).LastOrDefault(x => x.Length > 0);
-		if (string.IsNullOrEmpty(value))
+		var said = request.Headers["X-Real-IP"].SelectMany(v => (v ?? string.Empty).Split(','))
+			.Append(request.Headers["X-Forwarded-For"].ToString().Split(',').Select(x => x.Trim()).LastOrDefault(x => x.Length > 0));
+		var named = new List<IPAddress>();
+		if (applied != null)
 		{
-			value = request.Headers["X-Real-IP"].ToString().Trim();
+			named.Add(applied);
 		}
-		if (IPAddress.TryParse(value, out var ip) || (IPEndPoint.TryParse(value, out var ep) && (ip = ep.Address) != null))
+		foreach (var raw in said)
 		{
-			return ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4() : ip;
+			string value = (raw ?? string.Empty).Trim();
+			if (IPAddress.TryParse(value, out var ip) || (IPEndPoint.TryParse(value, out var ep) && (ip = ep.Address) != null))
+			{
+				named.Add(ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4() : ip);
+			}
 		}
-		return null;
+		return named.Distinct().Take(Throttle.MaxNamed).ToList();
 	}
 
 	// A guest of a pass for the home network only, away from it: refused on every request. Jellyfin checks this only

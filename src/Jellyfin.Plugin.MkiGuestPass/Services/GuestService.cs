@@ -69,10 +69,13 @@ public class NewPass
 }
 
 // Where a join request came from. ViaUnknownProxy: a home address passed on a request for someone else, through a
-// reverse proxy Jellyfin does not know (Networking -> Known proxies), so the real visitor is unknown. ThrottleAddress
-// is then the address that proxy named, so one visitor cannot use up the limits of everyone behind it. ThrottleAlso: a
-// second address the limits hold for, when the proxy's headers disagree and either may be the visitor's own choice.
-public sealed record JoinOrigin(IPAddress? Address, bool ViaUnknownProxy, IPAddress? ThrottleAddress, IPAddress? ThrottleAlso = null);
+// reverse proxy Jellyfin does not know (Networking -> Known proxies) or cannot trust, so the real visitor is unknown.
+// Named: the addresses that proxy named; the join limits hold for each of them, counted apart from ordinary requests,
+// so one visitor cannot use up the limits of everyone behind it, nor of an address they name.
+public sealed record JoinOrigin(IPAddress? Address, bool ViaUnknownProxy, IReadOnlyList<IPAddress>? Named)
+{
+	public string ThrottleKey => ViaUnknownProxy ? Throttle.Apart(Named, Address) : Throttle.Key(Address);
+}
 
 public class JoinRequest
 {
@@ -606,7 +609,7 @@ public class GuestService
 	// What the join page shows before the guest types a name. Only for a valid link or code.
 	public object Peek(JoinRequest r, JoinOrigin origin)
 	{
-		string key = Throttle.Key(origin.ThrottleAddress ?? origin.Address, origin.ThrottleAlso);
+		string key = origin.ThrottleKey;
 		if (!_throttle.Request(key))
 		{
 			throw TooMany();
@@ -639,7 +642,7 @@ public class GuestService
 	public async Task<object> Redeem(JoinRequest r, JoinOrigin origin)
 	{
 		var ip = origin.Address;
-		string key = Throttle.Key(origin.ThrottleAddress ?? ip, origin.ThrottleAlso);
+		string key = origin.ThrottleKey;
 		if (!_throttle.Request(key))
 		{
 			throw TooMany();
@@ -738,7 +741,7 @@ public class GuestService
 	public async Task<object> Rejoin(JoinRequest r, JoinOrigin origin)
 	{
 		var ip = origin.Address;
-		string key = Throttle.Key(origin.ThrottleAddress ?? ip, origin.ThrottleAlso);
+		string key = origin.ThrottleKey;
 		if (!_throttle.Request(key))
 		{
 			throw TooMany();
@@ -1669,7 +1672,8 @@ public class GuestService
 	// (Networking -> Known proxies): Jellyfin then sees the proxy, not the guest, so the guest is treated as away.
 	private bool IsLocal(JoinOrigin origin)
 	{
-		if (origin.Address == null || !_network.IsInLocalNetwork(origin.Address))
+		// The Jellyfin machine itself (loopback) is a relay or tunnel there, as in GuestGate.Away.
+		if (origin.Address == null || IPAddress.IsLoopback(origin.Address) || !_network.IsInLocalNetwork(origin.Address))
 		{
 			return false;
 		}
@@ -1839,7 +1843,8 @@ public class GuestService
 			}
 			ip = ep.Address;
 		}
-		return _network.IsInLocalNetwork(ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4() : ip);
+		ip = ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4() : ip;
+		return !IPAddress.IsLoopback(ip) && _network.IsInLocalNetwork(ip);
 	}
 
 	private async Task DeleteAccount(Guid userId, string why)
