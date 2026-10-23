@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>Jellyfin.Plugin.MkiLoginShowcase</AssemblyName>
+    <RootNamespace>Jellyfin.Plugin.MkiLoginShowcase</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Jellyfin.Controller" Version="12.2.0" ExcludeAssets="runtime" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Configuration/configPage.html" LogicalName="Jellyfin.Plugin.MkiLoginShowcase.Configuration.configPage.html" />
+    <EmbeddedResource Include="Web/login.js" LogicalName="Jellyfin.Plugin.MkiLoginShowcase.Web.login.js" />
+  </ItemGroup>
+</Project>

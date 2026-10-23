@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jellyfin.Plugin.MkiContinue
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jellyfin.Plugin.MkiScreenFit", "src\Jellyfin.Plugin.MkiScreenFit\Jellyfin.Plugin.MkiScreenFit.csproj", "{93CD4E8C-2481-4A48-92AE-F9C5CF615F67}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jellyfin.Plugin.MkiLoginShowcase", "src\Jellyfin.Plugin.MkiLoginShowcase\Jellyfin.Plugin.MkiLoginShowcase.csproj", "{396B250D-BEF2-4020-B282-7ACD2E948C91}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -99,6 +101,18 @@ Global
 		{93CD4E8C-2481-4A48-92AE-F9C5CF615F67}.Release|x64.Build.0 = Release|Any CPU
 		{93CD4E8C-2481-4A48-92AE-F9C5CF615F67}.Release|x86.ActiveCfg = Release|Any CPU
 		{93CD4E8C-2481-4A48-92AE-F9C5CF615F67}.Release|x86.Build.0 = Release|Any CPU
+		{396B250D-BEF2-4020-B282-7ACD2E948C91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{396B250D-BEF2-4020-B282-7ACD2E948C91}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{396B250D-BEF2-4020-B282-7ACD2E948C91}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{396B250D-BEF2-4020-B282-7ACD2E948C91}.Debug|x64.Build.0 = Debug|Any CPU
+		{396B250D-BEF2-4020-B282-7ACD2E948C91}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{396B250D-BEF2-4020-B282-7ACD2E948C91}.Debug|x86.Build.0 = Debug|Any CPU
+		{396B250D-BEF2-4020-B282-7ACD2E948C91}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{396B250D-BEF2-4020-B282-7ACD2E948C91}.Release|Any CPU.Build.0 = Release|Any CPU
+		{396B250D-BEF2-4020-B282-7ACD2E948C91}.Release|x64.ActiveCfg = Release|Any CPU
+		{396B250D-BEF2-4020-B282-7ACD2E948C91}.Release|x64.Build.0 = Release|Any CPU
+		{396B250D-BEF2-4020-B282-7ACD2E948C91}.Release|x86.ActiveCfg = Release|Any CPU
+		{396B250D-BEF2-4020-B282-7ACD2E948C91}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -110,5 +124,6 @@ Global
 		{FC0FCE5D-5C22-436B-B1FE-E1D2BBD588D6} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{1B385D7D-1CFD-46E7-A9C0-6CCC6A2A03C9} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{93CD4E8C-2481-4A48-92AE-F9C5CF615F67} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{396B250D-BEF2-4020-B282-7ACD2E948C91} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal
