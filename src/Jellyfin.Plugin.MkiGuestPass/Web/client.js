@@ -127,7 +127,7 @@
                 var shared = false;
                 try { shared = !!sessionStorage.getItem(SHARED); } catch (e) { }
                 n.appendChild(el('p', null, was.cut ? 'You were signed out of your guest access on this browser.'
-                    : was.away ? 'Your guest pass works on the home network only, and Jellyfin does not see this device there right now. At home? Connect to the Wi-Fi there, not mobile data, then continue.'
+                    : was.away ? 'Your guest pass works on the home network only, and Jellyfin does not see this device there right now. At home? Connect to the Wi-Fi there, not mobile data, then continue. Somewhere else? Ask the person who invited you to allow the pass from anywhere.'
                     : shared ? 'This is a shared computer, so Jellyfin asks again after a reload.' : 'You are signed out of your guest access.'));
                 if (back.length) {
                     var row = el('p', 'mkigp-again'), go = el('a', null, back.length === 1 ? 'Continue as ' + back[0].name : 'Continue as a guest');

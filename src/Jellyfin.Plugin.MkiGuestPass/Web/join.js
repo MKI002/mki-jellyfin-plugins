@@ -17,6 +17,8 @@
     var base = cut >= 0 ? path.substring(0, cut) : '';
     var serverAddress = location.protocol + '//' + location.host + base;
     var token = null, code = null, peek = null, me = null;
+    /* the kept guest whose Continue was just refused: Try again asks for them again */
+    var again = null;
 
     /* ---------- small helpers ---------- */
     function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
@@ -114,7 +116,7 @@
         return list.filter(function (g) { return g && g.key && g.name && new Date(g.end).getTime() > now - 30 * 864e5; })
             .map(function (g) { g.session = session; return g; }).slice(0, 5);
     }
-    function plain(g) { return { key: g.key, name: g.name, pass: g.pass, title: g.title, end: g.end, ended: g.ended || undefined }; }
+    function plain(g) { return { key: g.key, name: g.name, pass: g.pass, title: g.title, end: g.end, from: g.from || undefined, ended: g.ended || undefined }; }
     function all() { return keptIn(true).concat(keptIn(false)); }
     function kept() { var now = Date.now(); return all().filter(function (g) { return !g.ended && new Date(g.end).getTime() > now; }).slice(0, 5); }
     function keep(g, session) {
@@ -159,7 +161,7 @@
            it off again once signed in, so Jellyfin asks for a sign-in after this window closes */
         try { localStorage.setItem('enableAutoLogin', 'true'); } catch (e) { ok = false; }
         try { if (r.shared) sessionStorage.setItem(SHARED, r.UserId); else sessionStorage.removeItem(SHARED); } catch (e) { ok = ok && !r.shared; }
-        if (r.RejoinKey) keep({ key: r.RejoinKey, name: r.Name, pass: r.PassId, title: r.Pass, end: r.EndUtc }, !!r.shared);
+        if (r.RejoinKey) keep({ key: r.RejoinKey, name: r.Name, pass: r.PassId, title: r.Pass, end: r.EndUtc, from: r.From }, !!r.shared);
         if (r.PassId) passNews(r.PassId, r.EndUtc, false);
         tab(null);
         if (!ok) { problem('Your browser does not allow this page to store your sign-in (private mode or blocked storage). Allow it for this site, or open the link in another browser.', null); return; }
@@ -231,7 +233,7 @@
 
     /* reason: "ended", "removed" and "full" are a normal end, not a failure, and get their own words */
     var PROBLEMS = { ended: ['clock', 'This guest pass has ended'], removed: ['clock', 'Your guest access has ended'], full: ['people', 'This pass is full'], paused: ['clock', 'Guest access is paused'], home: ['home', 'Only on the home network'], update: ['alert', 'Guests cannot join right now'] };
-    function host() { return peek && peek.From ? peek.From : 'the person who invited you'; }
+    function host() { return peek && peek.From ? peek.From : again && again.from ? again.from : 'the person who invited you'; }
     /* what the guest can do next, so nobody is left on a page without a way on */
     function nextStep(reason, status) {
         if (reason === 'ended') return 'Ask ' + host() + ' to open it again: this link then works again.';
@@ -243,11 +245,15 @@
         return null;
     }
     /* worth another go without a new link: the network, a pause, a wait, the home network */
-    function retryable(reason, status) { return reason === 'paused' || reason === 'home' || reason === 'update' || (!reason && (status === 0 || status === 429 || status >= 500)); }
+    function retryable(reason, status) { return reason === 'paused' || reason === 'home' || reason === 'update' || (reason === 'ended' && !!(token || code || again)) || (!reason && (status === 0 || status === 429 || status >= 500)); }
     /* asks the server again for the link or code in use; without one, back to the guests kept here or code entry */
     function tryAgain(b) {
         if (b) { if (b.disabled) return; busy(b, true, 'Checking…'); }
-        if (!token && !code) { if (kept().length) backScreen(null); else codeScreen(); return; }
+        if (!token && !code) {
+            if (again) { rejoin(again).then(null, function (e) { if (!retryable(e.reason, e.status)) again = null; problem(e.message, null, e.reason || 'ended', e.status); }); return; }
+            if (kept().length) backScreen(null); else codeScreen();
+            return;
+        }
         post('Peek', token ? { Token: token } : { Code: code }).then(opened, function (e) {
             if (e.status === 404 && token) tab(null);
             problem(e.message, null, e.reason, e.status);
@@ -256,7 +262,7 @@
     function retryButton() { var b = el('button', 'btn'); b.type = 'button'; busy(b, false, 'Try again'); b.addEventListener('click', function () { tryAgain(b); }); return b; }
     /* a pass for the home network only, opened from elsewhere: the two ways in */
     function homeHelp(titled) {
-        var box = el('div', 'next'), h = el('p', 'h'), whose = peek && peek.From ? peek.From + '’s' : 'your host’s';
+        var box = el('div', 'next'), h = el('p', 'h'), who = peek && peek.From ? peek.From : again && again.from, whose = who ? who + '’s' : 'your host’s';
         h.appendChild(icon('home', 18)); h.appendChild(el('span', null, 'This pass works on the home network only'));
         if (titled) box.appendChild(h);
         box.appendChild(el('p', null, 'Jellyfin does not see this device on ' + whose + ' home network right now.'));
@@ -268,9 +274,13 @@
         return box;
     }
     function problem(text, after, reason, status) {
-        var kind = PROBLEMS[reason] || ['alert', 'This did not work'];
-        /* this pass is over or full: its link is no use in this tab any more, code entry is */
-        if (reason === 'ended' || reason === 'full') tab(null);
+        var kind = PROBLEMS[reason] || (status === 404 && token ? ['alert', 'This link does not work'] : status === 404 && code ? ['alert', 'This code does not work'] : ['alert', 'This did not work']);
+        /* a full pass stays full: its link is no use in this tab any more, code entry is. An ended one can be opened
+           again, so its link stays for Try again and a reload */
+        if (reason === 'full') tab(null);
+        /* codes are refused just the same while a plugin needs an update */
+        if (reason === 'update') after = 'nocode';
+        foot(false);
         clear();
         view.appendChild(big(kind[0]));
         view.appendChild(heading(kind[1]));
@@ -289,7 +299,7 @@
             links.appendChild(c);
         }
         /* guests of an ended pass cannot continue; of a full one they still can */
-        var others = kept().filter(function (g) { return !(reason === 'ended' && peek && g.pass === peek.Id); });
+        var others = kept().filter(function (g) { return !(reason === 'ended' && peek && g.pass === peek.Id) && !(again && g.key === again.key); });
         if (others.length) {
             var k = el('button', 'link', 'Joined before? Continue'); k.type = 'button';
             k.addEventListener('click', function () { backScreen(null, reason === 'ended' && peek ? peek.Id : null); });
@@ -299,7 +309,9 @@
         focusHeading();
     }
 
+    function foot(on) { var f = document.getElementById('foot'); if (f) f.hidden = !on; }
     function codeScreen(message) {
+        foot(true);
         clear();
         view.appendChild(big('ticket'));
         view.appendChild(el('p', 'kicker', 'Guest pass'));
@@ -312,6 +324,7 @@
         var msg = el('div'); view.appendChild(msg);
         if (message) msg.appendChild(error(message));
         var b = el('button', 'btn'); b.type = 'button'; busy(b, false, 'Continue'); view.appendChild(b);
+        view.appendChild(el('p', 'hint', 'Got a link or QR code instead? Open it again from your message: no code needed then.'));
         if (kept().length) {
             var k = el('button', 'link', 'Joined before? Continue as ' + kept()[0].name); k.type = 'button';
             k.addEventListener('click', function () { backScreen(); });
@@ -337,6 +350,7 @@
 
     function inviteScreen() {
         var p = peek;
+        foot(true);
         clear();
         view.appendChild(el('p', 'kicker', 'Guest pass'));
         view.appendChild(heading(p.From ? p.From + ' invited you' : 'You’re invited'));
@@ -346,6 +360,8 @@
         if (p.Ended) { problem('“' + p.Name + '” ended ' + when(p.EndUtc) + '.', null, 'ended'); return; }
         if (p.PlacesLeft <= 0) { problem(p.MaxGuests === 1 ? 'This guest pass has already been used.' : 'All ' + p.MaxGuests + ' places on this guest pass are taken.', null, 'full'); return; }
         if (p.NeedsUpdate) { problem('A plugin on this server needs an update before guests can join.', null, 'update'); return; }
+        /* what to do comes first, in view on a phone; the facts below say what the pass is */
+        if (blocked) view.appendChild(homeHelp(true));
         var facts = el('ul', 'facts');
         facts.appendChild(fact('clock', 'Access until', cap(when(p.EndUtc)), left(p.EndUtc) === 'ended' ? null : 'Ends ' + left(p.EndUtc) + ', on its own'));
         facts.appendChild(fact('film', 'Libraries', (p.Libraries || []).join(', ') || 'None'));
@@ -359,7 +375,6 @@
         if (halves.length % 2) halves[halves.length - 1].className = '';
         view.appendChild(facts);
         if (blocked) {
-            view.appendChild(homeHelp(true));
             focusHeading();
             return;
         }
@@ -403,6 +418,17 @@
         inp.focus();
     }
 
+    /* signs a kept guest in again. A pass that ended can be opened again: its key stays, only not offered until then */
+    function rejoin(g) {
+        return post('Rejoin', { RejoinKey: g.key, DeviceId: deviceId(), DeviceName: deviceName() }).then(function (r) {
+            again = null; r.RejoinKey = g.key; r.shared = g.session; signedIn(r);
+        }, function (e) {
+            if (e.status === 410 && e.reason === 'ended') passNews(g.pass, null, true);
+            else if (e.status === 404 || e.status === 410 && e.reason !== 'paused') { forget([g.key]); again = null; }
+            throw e;
+        });
+    }
+
     /* passId: only the guests of that pass (the link or code just used), with a way to join as someone new.
        without: every guest kept here except those of the pass "without". */
     function backScreen(passId, without) {
@@ -423,15 +449,14 @@
                 if (buttons.some(function (x) { return x.disabled; })) return;
                 buttons.forEach(function (x) { x.disabled = true; });
                 busy(b, true, 'Signing you in…');
-                post('Rejoin', { RejoinKey: g.key, DeviceId: deviceId(), DeviceName: deviceName() }).then(function (r) {
-                    r.RejoinKey = g.key; r.shared = g.session; signedIn(r);
-                }, function (e) {
+                rejoin(g).then(null, function (e) {
                     buttons.forEach(function (x) { x.disabled = false; });
                     busy(b, false, label);
-                    /* a pass that ended can be opened again: its key stays, only not offered until then */
-                    if (e.status === 410 && e.reason === 'ended') passNews(g.pass, null, true);
-                    else if (e.status === 404 || e.status === 410 && e.reason !== 'paused') forget([g.key]);
-                    if (e.reason === 'update' || (e.status === 410 || e.reason === 'home') && list.length === 1) { problem(e.message, null, e.reason || 'ended', e.status); return; }
+                    if (e.reason === 'update' || (e.status === 410 || e.reason === 'home') && list.length === 1) {
+                        again = e.reason === 'ended' || retryable(e.reason, 0) ? g : null;
+                        problem(e.message, null, e.reason || 'ended', e.status);
+                        return;
+                    }
                     msg.textContent = ''; msg.appendChild(error(e.message));
                 });
             });
@@ -462,7 +487,7 @@
 
     /* A pass this browser joined before: continue instead of using another place. */
     function opened(p) {
-        peek = p;
+        peek = p; again = null;
         document.getElementById('server').textContent = p.ServerName && p.ServerName.trim().toLowerCase() !== 'jellyfin' ? ' · ' + p.ServerName : '';
         passNews(p.Id, p.EndUtc, !!p.Ended);
         var mine = kept().filter(function (g) { return g.pass === p.Id; });

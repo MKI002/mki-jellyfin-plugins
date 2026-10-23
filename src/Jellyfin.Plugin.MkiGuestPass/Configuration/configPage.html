@@ -952,6 +952,7 @@
           <div class="mk-row__text"><label class="mk-row__label" for="gpWithCode">Also make a code to type in</label><span class="mk-row__desc">8 characters, for reading out or for a browser where a link is hard to open. Shorter than the link, so easier to guess, and it shows “Have a guest code?” on the sign-in page. The link works without it.</span></div>
           <div class="mk-row__control"><input type="checkbox" class="mk-switch" role="switch" id="gpWithCode"></div>
         </div>
+        <p class="mk-note mk-note--bad" id="gpUpdateNote" hidden></p>
         <div class="gp-create">
           <button type="button" class="mk-btn mk-btn--primary" id="gpCreate"><span class="material-icons mk-ic" aria-hidden="true">confirmation_number</span><span>Create pass</span></button>
           <span class="mk-msg" id="gpFormMsg" aria-live="polite"></span>
@@ -2290,18 +2291,22 @@ function renderRatings() {
     sel.setAttribute('data-filled', '1');
 }
 /* a pass for the home network only, made from a browser Jellyfin counts as away: its link would not open here */
+/* a pass made while Password Policy is outdated cannot be used: said where it is made and where it is shared */
+function updateNote(n) {
+    return fill(n, [ic('block'), fill(el('span'), [el('b', null, 'Guests cannot join yet. '), 'Update MKI Password Policy to 1.1.1.0 or later first (Dashboard → Plugins → Catalog, then restart Jellyfin). Links and codes keep working afterwards.'])]);
+}
 function renderWhereNote() {
+    var un = $('#gpUpdateNote'); un.hidden = !(ov && ov.PasswordPolicyOutdated); if (!un.hidden) updateNote(un);
     var homeOnly = !$('#gpRemote').checked, n = $('#gpRemoteNote'), away = !!ov && ov.YouAreHome === false && homeOnly;
     n.hidden = !away;
     if (away) fill(n, [ic('wifi_off'), fill(el('span'), [el('b', null, 'Jellyfin counts this browser as away right now'),
-        ov.UnknownProxy ? ' (it comes through a reverse proxy Jellyfin does not know, see the note at the top). ' : '. ',
+        ov.UnknownProxy ? ' (it comes through a reverse proxy Jellyfin does not know or cannot trust; see the note on the Passes tab). ' : '. ',
         'A link for the home network only would not open here. Fine for guests who come to your home; for guests elsewhere, turn this on.'])]);
     /* links on an outside address usually come through a reverse proxy, and "home only" is only as good as what it tells Jellyfin */
     var base = linkBase(), proxied = homeOnly && !homeAddress(base + '/'), p = $('#gpProxyNote');
     p.hidden = !proxied;
     if (proxied) fill(p, [ic('alt_route'), fill(el('span'), [el('b', null, 'Through a reverse proxy? '),
-        'Home network only relies on Jellyfin seeing each visitor’s own address. If links on ', el('b', null, base.replace(/^https?:\/\//i, '')),
-        ' go through a reverse proxy, add it under Dashboard → Networking → Known proxies and let it add the visitor’s address to X-Forwarded-For. A proxy that passes nothing on makes visitors from the internet look as if they were at home.'])]);
+        'It must be listed under Dashboard → Networking → Known proxies and pass each visitor’s address on in X-Forwarded-For, or Home network only lets everyone in.'])]);
 }
 $('#gpRemote').addEventListener('change', function () { renderWhereNote(); });
 function resetForm() {
@@ -2368,7 +2373,8 @@ function copyIn(b, text, what) {
 function share(r, isNew) {
     var link = passLink(r.Token), box = el('div', 'gp-dlg'), end = new Date(r.EndUtc);
     var ends = kit.day(end) + ', ' + kit.hhmm(end);
-    box.appendChild(el('p', null, (isNew ? 'Send the link, show the QR code' : (r.Code ? 'The old link and code no longer work' : 'The old link no longer works') + '. Send the new link, show the QR code') + (r.Code ? ' or read out the code.' : '.') + ' Shown only now: the plugin keeps a fingerprint of them, not the link itself.'));
+    box.appendChild(el('p', null, (isNew ? 'Send the link, show the QR code' : (r.Code ? 'The old link and code no longer work' : 'The old link no longer works') + '. Send the new link, show the QR code') + (r.Code ? ' or read out the code.' : '.') + ' Shown only now: the plugin keeps a fingerprint of ' + (r.Code ? 'them' : 'it') + ', not the link itself.'));
+    if (ov && ov.PasswordPolicyOutdated) box.appendChild(updateNote(el('p', 'mk-note mk-note--bad')));
     if (homeAddress(link)) {
         var n = el('p', 'mk-note mk-note--warn'); n.appendChild(ic('wifi_off'));
         n.appendChild(el('span', null, 'This link uses a home-network address, so it opens only at home. To share it with someone elsewhere, set the address guests reach Jellyfin at under Settings, then make a new link.'));
@@ -2472,7 +2478,7 @@ function extendNow(p) {
         buttons: [{ value: false, text: 'Cancel' }, { value: true, text: open ? 'Save new end' : 'Open again', kind: 'primary', icon: open ? 'check' : 'lock_open' }], focus: true, cancelValue: false,
         onOpen: function (dlg) { save = dlg.querySelector('.mk-btn--primary'); calc(); } })
         .then(function (ok) {
-            if (!ok || endProblem(chosen)) return;
+            if (!ok || endProblem(chosen)) { focusAfter('px:' + p.Id, p.Id); return; }
             var to = chosen;
             /* Reopen says what the admin saw: a pass that ended meanwhile is not opened again by a plain change of the end */
             return working(p.Id, kit.api('POST', 'MkiGuestPass/Passes/' + p.Id + '/Extend', { EndUtc: to.toISOString(), Reopen: !open })).then(function () {
@@ -2496,7 +2502,7 @@ function endPassNow(p0) {
             body: (g.length ? names(g.map(function (x) { return x.Name; })) + (g.length === 1 ? ' is' : ' are') + ' signed out on every device and locked at once. ' : '') +
                 'The link' + (p.HasCode ? ' and code stop' : ' stops') + ' working. ' + (guestsOf(p).length ? afterEnd(guestsOf(p).length) : '') })
             .then(function (ok) {
-                if (!ok) return;
+                if (!ok) { focusAfter('pe:' + p.Id, p.Id); return; }
                 return working(p.Id, kit.api('POST', 'MkiGuestPass/Passes/' + p.Id + '/End')).then(function () {
                     kit.logAction('Pass ended: ' + p.Name); kit.toast(quote(p.Name) + ' has ended.', { icon: 'block' });
                     return refresh().then(function () { focusAfter('px:' + p.Id, p.Id); });
@@ -2518,13 +2524,14 @@ function setWhereNow(p0) {
         var widen = !p.RemoteAccess, g = activeGuests(p);
         return kit.confirm(widen
             ? { title: 'Allow ' + quote(p.Name) + ' from anywhere?', icon: 'public', tone: 'accent', ok: 'Allow from anywhere', okIcon: 'public',
-                body: ['Guests can then join and watch wherever your server is reachable, also over the internet. The link' + (p.HasCode ? ' and code stay' : ' stays') + ' the same; a guest who was refused only has to tap Try again.',
-                    'You can limit it to the home network again at any time.'] }
+                body: ['Guests can then join and watch wherever your server is reachable, also over the internet. The link' + (p.HasCode ? ' and code stay' : ' stays') + ' the same; a guest who was refused only has to tap Try again.']
+                    .concat(homeAddress(linkBase() + '/') ? ['Your links use a home-network address, so guests elsewhere still cannot open them. Set the address guests reach Jellyfin at under Settings, then make a new link.'] : [])
+                    .concat(['You can limit it to the home network again at any time.']) }
             : { title: 'Limit ' + quote(p.Name) + ' to the home network?', icon: 'home', tone: 'warn', ok: 'Home network only', okIcon: 'home',
-                body: (g.length ? 'Guests who are away right now are signed out there; ' + names(g.map(function (x) { return x.Name; })) + ' can keep watching at home. ' : '') +
+                body: (g.length ? 'Playback stops on devices that are away right now; ' + names(g.map(function (x) { return x.Name; })) + ' can keep watching at home. ' : '') +
                     'Nobody can join or watch from outside until you allow it again.' })
             .then(function (ok) {
-                if (!ok) return;
+                if (!ok) { focusAfter('pw:' + p.Id, p.Id); return; }
                 return working(p.Id, kit.api('POST', 'MkiGuestPass/Passes/' + p.Id + '/Where', { RemoteAccess: widen, From: !!p.RemoteAccess })).then(function () {
                     kit.logAction((widen ? 'Pass allowed from anywhere: ' : 'Pass limited to the home network: ') + p.Name);
                     kit.toast(quote(p.Name) + (widen ? ' now works from anywhere.' : ' now works on the home network only.'), { icon: widen ? 'public' : 'home' });
@@ -2543,7 +2550,7 @@ function deletePassNow(p0) {
         return kit.confirm({ title: 'Delete ' + quote(p.Name) + '?', icon: 'delete', tone: 'bad', danger: true, ok: n ? 'Delete pass and accounts' : 'Delete pass', okIcon: 'delete',
             body: n ? 'Its ' + kit.plural(n, 'guest account') + ' (' + names(guestsOf(p).map(function (x) { return x.Name; })) + ') ' + (n === 1 ? 'is' : 'are') + ' deleted now, with watch history and favourites. This cannot be undone.' : 'The link' + (p.HasCode ? ' and code stop' : ' stops') + ' working. This cannot be undone.' })
             .then(function (ok) {
-                if (!ok) return;
+                if (!ok) { focusAfter('pd:' + p.Id, p.Id); return; }
                 var next = nextPassId(p.Id);
                 /* the number of guests the admin was told about: someone who joined since is not deleted unasked */
                 return working(p.Id, kit.api('DELETE', 'MkiGuestPass/Passes/' + p.Id + '?guests=' + n)).then(function () {

@@ -445,8 +445,9 @@ public class GuestService
 	}
 
 	// Where the guests of a pass may join and watch, also of an ended one (before it is opened again). Limited to the
-	// home network, the guests' devices that are away right now are signed out; Jellyfin and the gate refuse their
-	// other devices outside the home network.
+	// home network, playback stops on the guests' devices that are away right now, and from then on the gate refuses
+	// every request of theirs from outside the home network: their web client signs out with a note and a way back,
+	// and the same sign-in works again at home.
 	public async Task SetWhere(Guid passId, bool remote, bool from, User admin)
 	{
 		await _gate.WaitAsync().ConfigureAwait(false);
@@ -482,7 +483,7 @@ public class GuestService
 				{
 					await RevokeQuietly(id).ConfigureAwait(false);
 				}
-				await SignOutAway(guests).ConfigureAwait(false);
+				await StopAway(guests).ConfigureAwait(false);
 			}
 			string where = remote ? "home and away" : "the home network only";
 			_logger.LogInformation("Guest pass {Pass} now works for {Where} (changed by {Admin})", name, where, admin.Username);
@@ -1449,6 +1450,7 @@ public class GuestService
 		PassId = pass.Id.ToString("N", CultureInfo.InvariantCulture),
 		Pass = pass.Name,
 		Name = name,
+		From = pass.CreatedByName,
 		pass.EndUtc,
 		RejoinKey = rejoin
 	};
@@ -1715,10 +1717,12 @@ public class GuestService
 	}
 
 	// Devices of these guests with a session from outside the home network (or an address that cannot be read):
-	// playback stops and the device is signed out.
-	private async Task SignOutAway(List<Guid> userIds)
+	// playback stops. They stay signed in, refused away from home by the gate. Behind a reverse proxy Jellyfin does
+	// not know, every session seems at home, so playback stops on all of them.
+	private async Task StopAway(List<Guid> userIds)
 	{
-		var away = _sessions.Sessions.Where(s => userIds.Contains(s.UserId) && !AtHome(s.RemoteEndPoint)).ToList();
+		bool proxied = DateTime.UtcNow - _unknownProxyUtc < TimeSpan.FromDays(7);
+		var away = _sessions.Sessions.Where(s => userIds.Contains(s.UserId) && (proxied || !AtHome(s.RemoteEndPoint))).ToList();
 		foreach (var s in away)
 		{
 			var user = _users.GetUserById(s.UserId);
@@ -1736,10 +1740,6 @@ public class GuestService
 			catch (Exception ex)
 			{
 				_logger.LogDebug(ex, "Could not stop playback on an away device of a guest");
-			}
-			foreach (var device in _devices.GetDevices(new DeviceQuery { UserId = s.UserId, DeviceId = s.DeviceId }).Items.ToList())
-			{
-				await SignOutDevice(device).ConfigureAwait(false);
 			}
 		}
 	}
@@ -1793,7 +1793,7 @@ public class GuestService
 		}
 		if (narrowed.Count > 0)
 		{
-			await SignOutAway(narrowed).ConfigureAwait(false);
+			await StopAway(narrowed).ConfigureAwait(false);
 		}
 	}
 
