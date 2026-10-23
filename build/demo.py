@@ -50,6 +50,9 @@ STATIC = {
     "Jellyfin.Plugin.MkiPasswordPolicy": [
         ("Web/client.js", "MkiPasswordPolicy/client.js", None),
     ],
+    "Jellyfin.Plugin.MkiLoginShowcase": [
+        ("Web/login.js", "MkiLoginShowcase/login.js", None),
+    ],
 }
 
 BODY_RE = re.compile(r"<body>\s*(.*?)\s*</body>", re.S)
