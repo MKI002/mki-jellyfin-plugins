@@ -15,7 +15,8 @@ namespace Jellyfin.Plugin.MkiGuestPass.Services;
 // - Links and rejoin keys are 256-bit random values that cannot be guessed; their limit only keeps junk traffic cheap.
 // - Every address gets at most 60 join requests in 15 minutes, right or wrong.
 // A key can name two addresses (separated by a space) when it is unclear which one is the visitor's: every limit then
-// holds for each of them, so changing one escapes nothing.
+// holds for each of them, so changing one escapes nothing. Such requests are counted apart from ordinary ones, so
+// naming someone else's address never uses up that address's own limits, and nothing is counted once a part is over.
 public class Throttle
 {
 	public const int CodeFailuresPerAddress = 5;
@@ -88,12 +89,20 @@ public class Throttle
 	// Counts the request; false when the address has used up its requests for now.
 	public bool Request(string key)
 	{
-		bool ok = true;
-		foreach (var one in Parts(key))
+		var parts = Parts(key);
+		if (parts.Length == 1)
 		{
-			ok = Add(_requests, one, RequestsPerAddress) && ok;
+			return Add(_requests, parts[0], RequestsPerAddress);
 		}
-		return ok;
+		if (parts.Any(k => Count(_requests, k) >= RequestsPerAddress))
+		{
+			return false;
+		}
+		foreach (var one in parts)
+		{
+			Add(_requests, one, int.MaxValue);
+		}
+		return true;
 	}
 
 	public bool CodeBlocked(string key) => CodesPausedUntil != null || Parts(key).Any(k => Count(_codeFailures, k) >= CodeFailuresPerAddress);
@@ -132,7 +141,7 @@ public class Throttle
 		}
 	}
 
-	private static string[] Parts(string key) => key.Split(' ');
+	private static string[] Parts(string key) => key.Contains(' ', StringComparison.Ordinal) ? key.Split(' ').Select(k => "2:" + k).ToArray() : new[] { key };
 
 	private static int Count(ConcurrentDictionary<string, Queue<DateTime>> map, string key)
 	{

@@ -27,6 +27,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 
 namespace Jellyfin.Plugin.MkiGuestPass.Services;
 
@@ -451,9 +452,13 @@ public class GuestGate : IStartupFilter
 		}
 		_forwarder.ApplyForwarders(copy);
 		var ip = copy.Connection.RemoteIpAddress;
+		// ASP.NET cuts the entries it used off X-Forwarded-For and writes the rest back one value each (unquoted); a
+		// header it left alone stays as it was.
 		string forFrom = _forwarding.ForwardedForHeaderName;
-		if (ip == null || !copy.Request.Headers.ContainsKey(_forwarding.OriginalForHeaderName)
-			|| copy.Request.Headers.GetCommaSeparatedValues(forFrom).Length >= context.Request.Headers.GetCommaSeparatedValues(forFrom).Length)
+		var before = context.Request.Headers[forFrom];
+		var after = copy.Request.Headers[forFrom];
+		bool used = !StringValues.Equals(before, after) && context.Request.Headers.GetCommaSeparatedValues(forFrom).Length > after.Count;
+		if (ip == null || !used || !copy.Request.Headers.ContainsKey(_forwarding.OriginalForHeaderName))
 		{
 			return null;
 		}
