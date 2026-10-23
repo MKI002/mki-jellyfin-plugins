@@ -731,7 +731,7 @@
 #MkiLoginShowcaseConfigPage .ls-art--spot > i { right: 7%; top: 23%; }
 #MkiLoginShowcaseConfigPage .ls-art--hz::before { left: 0; right: 0; top: 10%; height: 24%; background: repeating-linear-gradient(90deg, rgba(var(--ls-a2-rgb),.7) 0 9px, transparent 9px 13px, rgba(var(--ls-a1-rgb),.6) 13px 22px, transparent 22px 26px); }
 #MkiLoginShowcaseConfigPage .ls-art--hz::after { left: -30%; right: -30%; top: 34%; bottom: -30%; transform: perspective(40px) rotateX(55deg); transform-origin: 50% 0;
-  border-top: 2px solid #FF3D9E; background: linear-gradient(rgba(var(--ls-a1-rgb),.75) 1px, transparent 1px) 0 0 / 10px 8px, linear-gradient(90deg, rgba(var(--ls-a2-rgb),.7) 1px, transparent 1px) 0 0 / 10px 8px; }
+  border-top: 2px solid rgb(var(--ls-a2-rgb)); background: linear-gradient(rgba(var(--ls-a1-rgb),.75) 1px, transparent 1px) 0 0 / 10px 8px, linear-gradient(90deg, rgba(var(--ls-a2-rgb),.7) 1px, transparent 1px) 0 0 / 10px 8px; }
 #MkiLoginShowcaseConfigPage .ls-art--hz > i { left: 37%; top: 40%; height: 50%; }
 #MkiLoginShowcaseConfigPage .ls-art--mo::before { top: 3px; right: 3px; bottom: 3px; left: 3px; background: linear-gradient(0deg, #070814 0 3px, transparent 3px) 0 0 / 100% 22px, repeating-linear-gradient(90deg, rgba(var(--ls-a1-rgb),.5) 0 13px, transparent 13px 16px, rgba(var(--ls-a2-rgb),.55) 16px 29px, transparent 29px 32px); }
 #MkiLoginShowcaseConfigPage .ls-art--mo::after { top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, rgba(5,6,11,.97), rgba(5,6,11,.9) 38%, rgba(5,6,11,.15) 62%); }
@@ -755,7 +755,7 @@
 #MkiLoginShowcaseConfigPage .ls-empty { display: flex; gap: 10px; align-items: flex-start; margin: 0; padding: 12px 14px; border-radius: 11px; border: 1px dashed var(--mk-line-2); color: var(--mk-dim); font-size: .88rem; line-height: 1.45; }
 #MkiLoginShowcaseConfigPage .ls-empty .mk-ic { color: var(--mk-faint); }
 #MkiLoginShowcaseConfigPage .mk-row.is-idle .mk-row__label { opacity: .75; }
-#MkiLoginShowcaseConfigPage .mk-row.is-idle .mk-switch { opacity: .5; }
+#MkiLoginShowcaseConfigPage .mk-row.is-idle .mk-switch { opacity: .65; }
 /* the two setting cards end at the same height */
 #MkiLoginShowcaseConfigPage #lsLookCard, #MkiLoginShowcaseConfigPage #lsSeeCard { align-self: stretch; }
 
@@ -887,7 +887,7 @@
       </div>
     </div>
     <div class="mk-row">
-      <div class="mk-row__text"><label class="mk-row__label" for="lsCard">Neon sign-in card</label><span class="mk-row__desc">Puts Jellyfin's sign-in form on a glass card in the chosen colours, placed beside the artwork on large screens. Off: the form stays as Jellyfin draws it, in the middle.</span></div>
+      <div class="mk-row__text"><label class="mk-row__label" for="lsCard">Neon sign-in card</label><span class="mk-row__desc">Puts Jellyfin's sign-in form on a glass card in the chosen colours, placed beside the artwork on large screens. Off: Jellyfin's own form on a dark panel in the middle, and no title names.</span></div>
       <div class="mk-row__control"><input type="checkbox" class="mk-switch" role="switch" id="lsCard" data-key="NeonCard" data-label="Neon sign-in card"></div>
     </div>
   </div>
@@ -1809,7 +1809,7 @@ var kit = MkiKit(page, {
     onShow: function () { var st = kit.state(); if (st.loaded && (st.pending || st.invalid || st.failed)) refresh(); preview(); },
     confirm: {
         Enabled: confirmEnabled, LibraryIds: confirmLibs, MaxRating: confirmRating, IncludeUnrated: confirmUnrated,
-        Style: confirmPublic('Style'), ShowTitles: confirmPublic('ShowTitles'), ShowCounts: confirmPublic('ShowCounts')
+        Style: confirmPublic('Style'), ShowTitles: confirmPublic('ShowTitles'), ShowCounts: confirmPublic('ShowCounts'), NeonCard: confirmPublic('NeonCard')
     },
     quiet: {
         Enabled: function (to) { return to === false; },
@@ -1818,7 +1818,8 @@ var kit = MkiKit(page, {
         IncludeUnrated: function (to) { return to === false; },
         Style: function (to) { return !newlyPublic('Style', to); },
         ShowTitles: function (to) { return !newlyPublic('ShowTitles', to); },
-        ShowCounts: function (to) { return !newlyPublic('ShowCounts', to); }
+        ShowCounts: function (to) { return !newlyPublic('ShowCounts', to); },
+        NeonCard: function (to) { return !newlyPublic('NeonCard', to); }
     },
     show: function (k, v) {
         if (k === 'LibraryIds') return v && v.length ? libNames(v) : 'none';
@@ -1895,7 +1896,8 @@ function renderLibs() {
         var nm = el('span', 'ls-lib__name');
         nm.appendChild(el('b', null, l.Name));
         var kind = l.Type === 'movies' ? 'Movies' : l.Type === 'tvshows' ? 'Shows' : 'Mixed';
-        nm.appendChild(el('small', null, kind + ' · ' + l.Shown + ' of ' + kit.plural(l.Titles, 'title') + ' within the rating limit, with artwork' +
+        var unr = saved('IncludeUnrated') === true && kind !== 'Mixed';
+        nm.appendChild(el('small', null, kind + ' · ' + l.Shown + ' of ' + kit.plural(l.Titles, 'title') + (unr ? ' within the rating limit or without a rating' : ' within the rating limit') + ', with artwork' +
             (kind === 'Mixed' ? '. Never titles without a rating: home videos land here as movies.' : '')));
         row.appendChild(cb); row.appendChild(nm);
         if (l.Looks === 'adult') row.appendChild(chip('bad', 'no_adult_content', 'Looks like adult content'));
@@ -1935,7 +1937,7 @@ function confirmEnabled(to) {
     }
     var c = { LibraryIds: ids, MaxRating: kit.value('MaxRating'), IncludeUnrated: kit.value('IncludeUnrated') };
     var extra = [];
-    if (kit.value('ShowTitles') && kit.value('Style') === 'Spotlight') extra.push('title names');
+    if (kit.value('ShowTitles') && kit.value('Style') === 'Spotlight' && kit.value('NeonCard')) extra.push('title names');
     if (kit.value('ShowCounts') && kit.value('Style') === 'Mosaic') extra.push('how many movies and shows it may show');
     return kit.confirm({ title: 'Show the showcase on the sign-in page?', icon: 'login', ok: 'Turn on', okIcon: 'check',
         body: ['Everyone who opens your Jellyfin address sees it, before signing in.', summary(c) + (extra.length ? ' Also ' + andList(extra) + '.' : ' Pictures only, no titles.')] });
@@ -1945,23 +1947,27 @@ function confirmLibs(to, from) {
     if (!add.length) return true;
     var adult = add.filter(function (l) { return l.Looks === 'adult'; }).length > 0;
     var names = add.map(function (l) { return l.Name; });
+    /* mixed libraries never give titles without a rating */
+    var unrated = kit.value('IncludeUnrated') ? add.filter(function (l) { return l.Type === 'movies' || l.Type === 'tvshows'; }).map(function (l) { return l.Name; }) : [];
+    if (!unrated.length) unrated = null;
     return kit.confirm({ title: 'Show artwork from ' + andList(names) + '?', icon: adult ? 'no_adult_content' : 'child_care', tone: adult ? 'bad' : 'warn', danger: adult,
         ok: 'Show it', okIcon: 'check',
         body: [(names.length === 1 ? 'Its name suggests ' : 'Their names suggest ') + (adult ? 'adult content.' : 'a kids library, for example family videos.') +
-            ' Anyone who opens the sign-in page would see ' + (names.length === 1 ? 'its' : 'their') + ' artwork, within the age rating limit (' + ratingText(kit.value('MaxRating')) + ').'] });
+            ' Anyone who opens the sign-in page would see ' + (names.length === 1 ? 'its' : 'their') + ' artwork, within the age rating limit (' + ratingText(kit.value('MaxRating')) + ').' +
+            (unrated ? ' Titles without a rating are included, so every one of them in ' + andList(unrated) + ' would appear too, whatever its content.' : '')] });
 }
 function confirmRating(to, from) {
     if (to <= from || to <= SAFE_RATING) return true;
     return kit.confirm({ title: 'Allow titles rated up to ' + to + '?', icon: 'escalator_warning', tone: 'warn', ok: 'Allow up to ' + to,
         body: ['Anyone can open the sign-in page, children included. Posters of titles rated up to ' + to + ' would appear there.'] });
 }
-/* title names and counts go public only after a question: when the showcase is on and a change of the style or of
-   the two switches starts sending them */
-function sendsNames(c) { return c.Enabled === true && c.ShowTitles === true && c.Style === 'Spotlight'; }
+/* title names and counts go public only after a question: when the showcase is on and a change of the style, the
+   card or the two switches starts sending them (names need the neon card: without it the page shows none) */
+function sendsNames(c) { return c.Enabled === true && c.ShowTitles === true && c.Style === 'Spotlight' && c.NeonCard === true; }
 function sendsCounts(c) { return c.Enabled === true && c.ShowCounts === true && c.Style === 'Mosaic'; }
 function newlyPublic(key, to) {
     var before = {}, after = {};
-    ['Enabled', 'Style', 'ShowTitles', 'ShowCounts'].forEach(function (k) { before[k] = saved(k); after[k] = kit.value(k); });
+    ['Enabled', 'Style', 'ShowTitles', 'ShowCounts', 'NeonCard'].forEach(function (k) { before[k] = saved(k); after[k] = kit.value(k); });
     after[key] = to;
     return sendsNames(after) && !sendsNames(before) ? 'names' : sendsCounts(after) && !sendsCounts(before) ? 'counts' : null;
 }
@@ -1971,8 +1977,8 @@ function confirmPublic(key) {
         if (!what) return true;
         var names = what === 'names', sw = names ? 'ShowTitles' : 'ShowCounts';
         var buttons = [{ value: false, text: 'Cancel' }];
-        /* a new style can also go ahead with the switch turned off */
-        if (key === 'Style') buttons.push({ value: 'without', text: names ? 'Use it without names' : 'Use it without counts' });
+        /* a new style or the card can also go ahead with the switch turned off */
+        if (key !== sw) buttons.push({ value: 'without', text: (key === 'Style' ? 'Use ' + (STYLES[to] || to) : 'Turn on the card') + ' without ' + (names ? 'names' : 'counts') });
         buttons.push({ value: true, text: names ? 'Show names' : 'Show counts', kind: 'primary', icon: 'check' });
         return kit.dialog({ title: names ? 'Show title names on the sign-in page?' : 'Show how many titles there are?', icon: names ? 'title' : 'numbers', tone: 'warn',
             buttons: buttons, cancelValue: false,
@@ -2061,9 +2067,15 @@ function drawPreview() {
     ensureClient().then(function (ok) {
         if (!visible) return;
         if (!ok) { stopPreview(); message('error_outline', 'Could not load the drawing code from the server. Reload the page.'); return; }
-        var style = kit.value('Style'), titles = kit.value('ShowTitles') && style === 'Spotlight', counts = kit.value('ShowCounts') && style === 'Mosaic';
-        /* the style was just changed: the server makes a pick with the other kind of picture */
-        if (data.Style && data.Style !== style) { stopPreview(); message('hourglass_empty', 'Picking ' + (style === 'Spotlight' ? 'backdrops' : 'posters') + ' for ' + (STYLES[style] || style) + '…'); return; }
+        var style = kit.value('Style'), titles = kit.value('ShowTitles') && style === 'Spotlight' && kit.value('NeonCard'), counts = kit.value('ShowCounts') && style === 'Mosaic';
+        /* the style was just changed to one with the other kind of picture: the server makes a new pick once it is saved */
+        if (data.Style && (data.Style === 'Spotlight') !== (style === 'Spotlight')) {
+            stopPreview();
+            var name = STYLES[style] || style;
+            message('hourglass_empty', 'Picking ' + (style === 'Spotlight' ? 'backdrops' : 'posters') + ' for ' + name + '…');
+            kit.whenSaved().then(function (ok) { if (!ok && kit.value('Style') === style) message('cloud_off', 'Not saved yet: the preview follows once ' + name + ' is saved.'); });
+            return;
+        }
         var items = data.Items, d = {
             Style: style, Accent: kit.value('Accent'), Motion: kit.value('Motion'), Card: kit.value('NeonCard'),
             Items: items.map(function (it) { return { P: !!it.PosterTag, B: !!it.BackdropTag, T: titles ? it.Name : null }; }),
@@ -2111,10 +2123,11 @@ function renderLook() {
     var pair = ACCENT_RGB[kit.value('Accent')] || ACCENT_RGB.Mki, look = $('#lsLookCard');
     look.style.setProperty('--ls-a1-rgb', pair[0]); look.style.setProperty('--ls-a2-rgb', pair[1]);
     fill($('#lsStyleDesc'), STYLE_DESC[style] || '');
-    var titles = style === 'Spotlight', counts = style === 'Mosaic';
+    var card = kit.value('NeonCard') === true, titles = style === 'Spotlight' && card, counts = style === 'Mosaic';
     $('#lsTitlesRow').classList.toggle('is-idle', !titles);
     $('#lsCountsRow').classList.toggle('is-idle', !counts);
-    fill($('#lsTitlesDesc'), 'Backdrop Spotlight names each title on screen.' + (titles ? ' Off: pictures only.' : ' The chosen style shows no names, so none are sent either way.'));
+    fill($('#lsTitlesDesc'), 'Backdrop Spotlight names each title on screen, on the neon sign-in card.' + (titles ? ' Off: pictures only.'
+        : style !== 'Spotlight' ? ' The chosen style shows no names, so none are sent either way.' : ' The card is off, so no names are shown or sent either way.'));
     fill($('#lsCountsDesc'), 'Flip Mosaic shows how many movies and shows of the ticked libraries the sign-in page may show.' + (counts ? '' : ' The chosen style shows no counts, so none are sent either way.'));
 }
 function webProblem() {
@@ -2139,7 +2152,7 @@ function sends() {
     item(ids.length ? 'ok' : 'warn', 'video_library', ids.length ? 'Artwork from ' + libNames(ids) + ' only.' : 'Nothing yet: no library is ticked.');
     item('ok', 'escalator_warning', 'Rated ' + ratingText(saved('MaxRating')) + '.', saved('IncludeUnrated') ? null : 'Titles without a rating are left out.');
     if (saved('IncludeUnrated')) item('warn', 'help_outline', 'Titles without a rating are included.', 'The limit cannot check them. Mixed libraries never show titles without a rating.');
-    if (saved('ShowTitles') && style === 'Spotlight') item('warn', 'title', 'Title names of the backdrops shown.');
+    if (saved('ShowTitles') && style === 'Spotlight' && saved('NeonCard')) item('warn', 'title', 'Title names of the backdrops shown.');
     else item('ok', 'title', 'No title names.');
     if (saved('ShowCounts') && style === 'Mosaic') item('warn', 'numbers', 'How many movies and shows the sign-in page may show.');
     else item('ok', 'numbers', 'No counts.');

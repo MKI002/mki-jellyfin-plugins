@@ -24,7 +24,7 @@ public class PluginConfiguration : BasePluginConfiguration
 
 	public ShowcasePick Pick { get; set; } = ShowcasePick.Random;
 
-	// Names the title under the artwork (Backdrop Spotlight). Posters show their own artwork either way.
+	// Names the title under the artwork (Backdrop Spotlight with the neon card). Posters show their own artwork either way.
 	public bool ShowTitles { get; set; }
 
 	// Shows how many movies and shows of the chosen libraries the sign-in page may show (Flip Mosaic).

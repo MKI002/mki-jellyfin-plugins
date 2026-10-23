@@ -52,7 +52,7 @@
         '.mkls.is-still .mkls-bd.is-on{-webkit-transform:scale(1.06);transform:scale(1.06)}',
         '@-webkit-keyframes mkls-kb{from{-webkit-transform:scale(1.04)}to{-webkit-transform:scale(1.16)}}',
         '@keyframes mkls-kb{from{transform:scale(1.04)}to{transform:scale(1.16)}}',
-        '.mkls-cap{position:absolute;z-index:4;max-width:60%}',
+        '.mkls-cap{position:absolute;z-index:4;max-width:60%;word-wrap:break-word;overflow-wrap:break-word}',
         '.mkls-cap__k{display:block;text-transform:uppercase;letter-spacing:.16em;opacity:.7}',
         '.mkls-cap__t{display:block;font-weight:700;line-height:1.1;letter-spacing:-.01em;margin-top:.25em;text-shadow:0 0 1.2em rgba(0,0,0,.8);',
         'transition:opacity .6s ease,-webkit-transform .6s ease;transition:opacity .6s ease,transform .6s ease}',
@@ -89,7 +89,7 @@
         '.mkls-card__qc{text-align:center;opacity:.6}',
         '.mkls-card__btn.is-raised{color:rgba(238,241,255,.78);background:rgba(255,255,255,.08)}',
         '.mkls-card.is-bare .mkls-card__btn.is-raised{background:rgba(26,28,40,.92)}',
-        '.mkls-card__users{display:flex;justify-content:center}',
+        '.mkls-card__users{display:flex;flex-wrap:wrap;justify-content:center}',
         '.mkls-card__user{display:block;flex:none;background:linear-gradient(160deg,#00A4DC,#0b6f99)}',
 
         /* ---------- the real sign-in page while the showcase runs ---------- */
@@ -107,7 +107,7 @@
         'html.mkils-card #loginPage .manualLoginForm,html.mkils-card #loginPage .readOnlyContent{width:auto;max-width:none}',
         'html.mkils-card #loginPage .sectionTitle,html.mkils-card #loginPage .visualLoginForm h1{font-weight:700;letter-spacing:-.01em}',
         'html.mkils-card #loginPage .emby-input{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px}',
-        'html.mkils-card #loginPage .emby-input:focus{border-color:var(--mkils-a1)}',
+        'html.mkils-card #loginPage .emby-input:focus{border-color:var(--mkils-a1);box-shadow:0 0 0 1px var(--mkils-a1)}',
         'html.mkils-card #loginPage .button-submit{background:linear-gradient(90deg,var(--mkils-a1),var(--mkils-a2));color:#05060B;border-radius:8px;',
         'font-weight:700;box-shadow:0 0 22px var(--mkils-glow)}',
         'html.mkils-card #loginPage .readOnlyContent .raised,html.mkils-card #loginPage .btnCancel{background:rgba(255,255,255,.08);border-radius:8px}',
@@ -135,9 +135,14 @@
         '@media (max-height:760px){',
         'html.mkils-card #loginPage>div{padding-top:1.1em!important;padding-bottom:1em!important}',
         'html.mkils-card #loginPage .inputContainer,html.mkils-card #loginPage .checkboxContainer{margin-bottom:1em}',
-        'html.mkils-card #loginPage .sectionTitle,html.mkils-card #loginPage h1{margin-top:0;margin-bottom:.6em}}',
+        'html.mkils-card #loginPage .sectionTitle,html.mkils-card #loginPage h1{margin-top:0;margin-bottom:.6em}',
+        /* TV layout draws everything a size larger: slimmer buttons and gaps there */
+        'html.mkils-card.layout-tv #loginPage .emby-button{padding-top:.6em;padding-bottom:.6em}',
+        'html.mkils-card.layout-tv #loginPage .inputContainer,html.mkils-card.layout-tv #loginPage .checkboxContainer{margin-bottom:.7em}}',
         '@media (min-width:60em) and (min-aspect-ratio:5/4) and (max-height:819px){',
-        'html.mkils-card.mkils-horizon #loginPage>div{margin-top:max(.5em,calc(26vh - 100px))}}',
+        'html.mkils-card.mkils-horizon #loginPage>div{margin-top:max(.5em,calc(26vh - 100px))}',
+        /* TV layout draws the form larger: the short-screen horizon there (horizon() matches) */
+        'html.mkils-card.layout-tv.mkils-horizon #loginPage>div{margin-top:.5em}}',
         '@media (min-width:60em) and (min-aspect-ratio:5/4) and (max-height:699px){',
         'html.mkils-card.mkils-horizon #loginPage>div{margin-top:.5em}}',
         /* keyboard and remote focus: Jellyfin fills the focused button, the card does the same in its colours (after
@@ -146,7 +151,6 @@
         'background:rgba(var(--mkils-a1-rgb),.26);color:#fff;box-shadow:0 0 0 2px var(--mkils-a1),0 0 18px var(--mkils-glow)}',
         'html.mkils-card #loginPage .button-submit:focus{color:#05060B;box-shadow:0 0 0 2px #05060B,0 0 0 4px #fff,0 0 22px var(--mkils-glow)}',
         'html.mkils-card #loginPage .emby-button.show-focus:focus{-webkit-transform:scale(1.04);transform:scale(1.04)}',
-        'html.mkils-card #loginPage .inputLabelFocused{color:var(--mkils-a1)}',
         'html.mkils-card #loginPage .emby-checkbox:checked+span+.checkboxOutline{background-color:var(--mkils-a1);border-color:var(--mkils-a1)}',
         'html.mkils-card #loginPage .emby-checkbox:checked+span+.checkboxOutline .checkboxIcon{color:#05060B}',
         'html.mkils-card #loginPage .emby-checkbox:focus+span+.checkboxOutline{border-color:#fff;box-shadow:0 0 0 2px var(--mkils-glow)}',
@@ -156,11 +160,19 @@
         'html.mkils-on #loginPage .sectionTitle,html.mkils-on #loginPage h1,html.mkils-on #loginPage .checkboxLabel,html.mkils-on #loginPage .cardText,',
         'html.mkils-on #loginPage .loginDisclaimer{color:#EEF1FF}',
         'html.mkils-on #loginPage .inputLabel,html.mkils-on #loginPage .inputLabelUnfocused,html.mkils-on #loginPage .fieldDescription{color:rgba(238,241,255,.78)}',
+        /* the focused field's label in the card's colour, or in Jellyfin blue without the card */
+        'html.mkils-card #loginPage .inputLabel.inputLabelFocused{color:var(--mkils-a1)}',
+        'html.mkils-plain #loginPage .inputLabel.inputLabelFocused{color:#00A4DC}',
         'html.mkils-card #loginPage .emby-input{color:#EEF1FF}',
         'html.mkils-card #loginPage .readOnlyContent .raised,html.mkils-card #loginPage .btnCancel{color:rgba(238,241,255,.9)}',
         'html.mkils-plain #loginPage .readOnlyContent .raised,html.mkils-plain #loginPage .btnCancel{background:rgba(255,255,255,.1);color:#EEF1FF}',
         'html.mkils-plain #loginPage .emby-input{background:rgba(255,255,255,.08);color:#EEF1FF;border:1px solid rgba(255,255,255,.18)}',
         'html.mkils-plain #loginPage .readOnlyContent .raised:focus,html.mkils-plain #loginPage .btnCancel:focus{background:#00A4DC;color:#fff}',
+        'html.mkils-plain #loginPage .emby-input:focus{border-color:#00A4DC;box-shadow:0 0 0 1px #00A4DC}',
+        'html.mkils-plain #loginPage .button-submit:focus{box-shadow:0 0 0 2px #05060B,0 0 0 4px #fff}',
+        /* a focused user tile shows it (Jellyfin marks it only in TV layout) */
+        'html.mkils-card #loginPage .card:focus .cardScalable{box-shadow:0 0 0 2px var(--mkils-a1),0 0 14px var(--mkils-glow)}',
+        'html.mkils-plain #loginPage .card:focus .cardScalable{box-shadow:0 0 0 2px #00A4DC}',
         /* TV browsers: no blur over moving pictures, a solid card instead */
         'html.mkils-card.layout-tv #loginPage>div{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(8,9,16,.92)}',
         /* without the card: Jellyfin's own form, on a dark panel so it stays readable over bright artwork */
@@ -187,6 +199,14 @@
     function cssUrl(u) { return 'url("' + String(u).replace(/["\\\n\r]/g, '') + '")'; }
     function num(n) { try { return Number(n).toLocaleString('en-GB'); } catch (e) { return String(n); } }
     function count(n) { return typeof n === 'number' && isFinite(n) && n >= 0; }
+    /* a very long name is cut, so it cannot run under the card or off the screen */
+    function shortTitle(t) {
+        t = t == null ? '' : String(t);
+        if (t.length <= 80) return t;
+        var n = 78, c = t.charCodeAt(n - 1);
+        if (c >= 0xD800 && c <= 0xDBFF) n--;
+        return t.slice(0, n) + '\u2026';
+    }
     function reducedMotion() { try { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) { return false; } }
 
     /* ---------- the drawing: render(host, data, opts) -> { stop() } ----------
@@ -272,9 +292,14 @@
                 ? 'linear-gradient(rgba(5,6,11,.3),rgba(5,6,11,.55) 50%,rgba(5,6,11,.9))'
                 : 'linear-gradient(90deg,rgba(5,6,11,.15),rgba(5,6,11,.35) 45%,rgba(5,6,11,.9) 80%),linear-gradient(transparent 55%,rgba(5,6,11,.85))');
             var cap = null, capT = null, unit = Math.min(W, H * 1.78) / 100;
-            if (data.Caption || items.some(function (it) { return it && it.T; })) {
+            /* the title sits bottom left, clear of the card on the right. Without the card Jellyfin's form fills the
+               middle, so there are no names then (the server sends none either), nor on screens too short for both. */
+            var capMax = portrait ? W - unit * 10 : W * 0.6, cardAt = opts.mockCard ? (data.Card !== false && !portrait ? W - unit * 6 - Math.max(150, unit * 27) : 0)
+                : opts.cardLeft ? opts.cardLeft(W) : 0;
+            if (cardAt > 0) capMax = Math.min(capMax, cardAt - unit * 8);
+            if (data.Card !== false && H >= 500 && capMax >= 120 && (data.Caption || items.some(function (it) { return it && it.T; }))) {
                 cap = el('div', 'mkls-cap');
-                cap.style.left = px(unit * 5); cap.style.bottom = px(unit * 5);
+                cap.style.left = px(unit * 5); cap.style.bottom = px(unit * 5); cap.style.maxWidth = px(capMax);
                 var k = el('span', 'mkls-cap__k', data.Caption || '');
                 k.style.fontSize = px(Math.max(10, unit * 1));
                 capT = el('span', 'mkls-cap__t');
@@ -297,7 +322,7 @@
                     other.classList.remove('is-on');
                     if (capT) {
                         capT.classList.add('is-out');
-                        later(function () { capT.textContent = (items[i] && items[i].T) || ''; capT.classList.remove('is-out'); }, still ? 0 : 450);
+                        later(function () { capT.textContent = shortTitle(items[i] && items[i].T); capT.classList.remove('is-out'); }, still ? 0 : 450);
                     }
                     shown++;
                     ready();
@@ -318,11 +343,15 @@
             var portrait = H > W * 1.1, unit = Math.min(W, H * 1.78) / 100;
             /* on the real page the form sits below the horizon: short screens (a laptop at 1366x768) get a higher
                horizon and smaller posters, so the whole form fits without scrolling (the sign-in page CSS matches) */
-            var room = opts.mockCard || portrait ? 2 : H < 700 ? 0 : H < 820 ? 1 : 2;
-            var hz = portrait ? 0.9 : room === 0 ? Math.min(0.3, 118 / H) : room === 1 ? 0.26 : 0.34;
+            var tv = document.documentElement.classList.contains('layout-tv');
+            var room = opts.mockCard || portrait ? 2 : H < 700 || (tv && H < 820) ? 0 : H < 820 ? 1 : 2;
+            var hz = portrait ? (W < 600 ? 0.9 : 0.75) : room === 0 ? Math.min(0.3, 118 / H) : room === 1 ? 0.26 : 0.34;
             stage.style.background = 'linear-gradient(#070814 0%,#14072a ' + (hz * 100) + '%,#05060B ' + (hz * 100 + 0.2) + '%)';
-            var sun = el('div', 'mkls-sun'), d = unit * 34;
-            sun.style.width = px(d); sun.style.height = px(d); sun.style.left = px(W / 2 - d / 2); sun.style.top = px(H * hz - d * 0.62);
+            var pw = portrait ? W * 0.19 : unit * [5.5, 7, 9][room];
+            /* the sun rises behind the posters; on portrait screens above them, where the picture has room */
+            var sun = el('div', 'mkls-sun'), d = unit * (room === 0 ? 26 : 34);
+            sun.style.width = px(d); sun.style.height = px(d); sun.style.left = px(W / 2 - d / 2);
+            sun.style.top = px(portrait ? H * hz - pw * 1.5 - d * 0.6 : H * hz - d * (room === 0 ? 0.5 : 0.62));
             sun.style.background = 'radial-gradient(circle,rgba(' + r2 + ',.45),transparent 65%)';
             stage.appendChild(sun);
             var floor = el('div', 'mkls-floor'), grid = el('div', 'mkls-grid'), cell = Math.max(18, unit * 4);
@@ -342,8 +371,7 @@
             line.style.top = px(H * hz - 1);
             line.style.background = 'linear-gradient(90deg,transparent,' + a1 + ',' + a2 + ',transparent)';
             line.style.boxShadow = '0 0 ' + px(unit * 1.5) + ' ' + a2;
-            var pw = portrait ? W * 0.19 : unit * [5.5, 7, 9][room], gap = unit * 1.4, belt = el('div', 'mkls-belt');
-            var tv = document.documentElement.classList.contains('layout-tv');
+            var gap = unit * 1.4, belt = el('div', 'mkls-belt');
             var n = Math.ceil(W / (pw + gap)) + 2, set = pickPosters(n, 0);
             belt.style.top = px(H * hz); belt.style.paddingBottom = px(unit * 1.2);
             belt.style.animationDuration = belt.style.webkitAnimationDuration = (50 * slow * Math.max(1, n / 13)) + 's';
@@ -419,11 +447,12 @@
            draws it (data.Card false, always in the middle) */
         function card(where) {
             if (!opts.mockCard) return;
-            var plain = data.Card === false, portrait = H > W * 1.1, unit = Math.min(W, H * 1.78) / 100;
-            if (portrait || plain) where = portrait ? 'top' : 'center';
+            /* on a phone Jellyfin's form fills the width, so the stand-in is measured against the width there */
+            var plain = data.Card === false, portrait = H > W * 1.1, unit = portrait ? W / 26 : Math.min(W, H * 1.78) / 100;
+            if (portrait || plain) where = 'top';
             var top = where === 'below';
             var c = el('div', 'mkls-card' + (plain || where === 'left' ? ' is-bare' : ''));
-            var w = plain && !portrait ? Math.min(W * 0.66, Math.max(150, unit * 54)) : portrait ? W * 0.8 : Math.max(150, unit * 27);
+            var w = plain && !portrait ? Math.min(W * 0.66, Math.max(150, unit * 54)) : portrait ? W * 0.92 : Math.max(150, unit * 27);
             c.style.width = px(w); c.style.padding = px(unit * (top ? 1.6 : 2.2)) + ' ' + px(unit * 2.2);
             c.style.borderRadius = px(unit * 1.2);
             if (plain) c.style.background = 'rgba(5,6,11,.8)';
@@ -445,29 +474,33 @@
                 else { b.style.background = 'linear-gradient(90deg,' + a1 + ',' + a2 + ')'; b.style.boxShadow = '0 0 ' + px(unit * 2) + ' rgba(' + r1 + ',.4)'; }
                 return c.appendChild(b);
             }
+            var field = function (label, text) {
+                var l = el('div', 'mkls-card__lbl', label); l.style.fontSize = px(Math.max(7, unit * 0.85)); l.style.marginTop = px(gapv); c.appendChild(l);
+                var f = el('div', 'mkls-card__field', text);
+                f.style.height = px(line); f.style.marginTop = px(unit * 0.4); f.style.borderRadius = px(unit * 0.6);
+                f.style.paddingLeft = px(unit * 1); f.style.fontSize = px(Math.max(8, unit * 1.1));
+                c.appendChild(f);
+            };
             var users = Math.min(3, Math.max(0, +opts.users || 0));
             if (users) {
                 /* the server shows its users on the sign-in page: tiles and buttons, as Jellyfin draws them */
-                var row = el('div', 'mkls-card__users'), size = Math.min(unit * 7, (w - unit * 4.4) / 3.6);
-                row.style.marginTop = px(gapv * 1.4); row.style.gap = px(unit * 1.2);
-                for (var u = 0; u < users; u++) { var t = el('i', 'mkls-card__user'); t.style.width = t.style.height = px(size); t.style.borderRadius = px(unit * 0.4); row.appendChild(t); }
+                /* two large tiles a row on a phone, as Jellyfin draws them there */
+                var row = el('div', 'mkls-card__users'), size = portrait ? (w - unit * 8) / 2 : Math.min(unit * 7, (w - unit * 4.4) / 3.6);
+                row.style.marginTop = px(gapv * 1.4);
+                for (var u = 0; u < users; u++) {
+                    var t = el('i', 'mkls-card__user'); t.style.width = t.style.height = px(size); t.style.borderRadius = px(unit * 0.4);
+                    t.style.margin = px(unit * 0.6); row.appendChild(t);
+                }
                 c.appendChild(row);
                 var gapTop = el('div'); gapTop.style.height = px(gapv); c.appendChild(gapTop);
                 button('Manual Login'); button('Use Quick Connect'); button('Forgot Password');
             } else {
-                function field(label, text) {
-                    var l = el('div', 'mkls-card__lbl', label); l.style.fontSize = px(Math.max(7, unit * 0.85)); l.style.marginTop = px(gapv); c.appendChild(l);
-                    var f = el('div', 'mkls-card__field', text);
-                    f.style.height = px(line); f.style.marginTop = px(unit * 0.4); f.style.borderRadius = px(unit * 0.6);
-                    f.style.paddingLeft = px(unit * 1); f.style.fontSize = px(Math.max(8, unit * 1.1));
-                    c.appendChild(f);
-                }
                 field('User', 'Name');
                 field('Password', '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022');
                 button('Sign In', true);
                 var q = el('div', 'mkls-card__qc', 'Use Quick Connect'); q.style.fontSize = px(Math.max(7, unit * 1)); q.style.marginTop = px(gapv); c.appendChild(q);
             }
-            if (where === 'top') { c.style.left = px((W - w) / 2); c.style.top = px(Math.max(unit * 4, H * 0.1)); }
+            if (where === 'top') { c.style.left = px((W - w) / 2); c.style.top = px(portrait ? Math.max(unit * 4, H * 0.1) : Math.max(unit * 4, H * 0.107)); }
             else if (where === 'center') { c.style.left = px((W - w) / 2); c.style.top = '50%'; c.style.transform = 'translateY(-50%)'; }
             else if (where === 'right') { c.style.right = px(unit * 6); c.style.top = '50%'; c.style.transform = 'translateY(-50%)'; }
             else if (where === 'left') { c.style.left = px(unit * 5); c.style.top = '50%'; c.style.transform = 'translateY(-50%)'; }
@@ -595,7 +628,13 @@
             ctrl = render(layer, data, {
                 image: function (i, kind) { return BASE + 'MkiLoginShowcase/Image/' + set + '/' + i + '/' + kind; },
                 /* the server made a new pick (or the showcase was turned off): ask again, at most once a minute */
-                missing: function () { if (Date.now() - state.missAt > 60000) { state.missAt = Date.now(); recheck(); } }
+                missing: function () { if (Date.now() - state.missAt > 60000) { state.missAt = Date.now(); recheck(); } },
+                /* where the card's left edge is when it sits on the right (the CSS below: 27em wide, 6vw from the edge) */
+                cardLeft: function (W) {
+                    if (data.Card === false || !window.matchMedia || !window.matchMedia('(min-width:60em) and (min-aspect-ratio:5/4)').matches) return 0;
+                    var p = loginPage(), fs = p && window.getComputedStyle ? parseFloat(getComputedStyle(p).fontSize) || 16 : 16;
+                    return W * 0.94 - Math.min(27 * fs, W - 2 * fs);
+                }
             });
         } catch (e) {
             ctrl = null;

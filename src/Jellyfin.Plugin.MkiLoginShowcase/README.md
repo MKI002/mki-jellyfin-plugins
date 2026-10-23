@@ -7,7 +7,7 @@ The Jellyfin sign-in page is the first thing family and friends see, and by defa
 ## Features
 
 - **Four styles.** *Poster Wall*: tilted columns of posters drifting up and down. *Backdrop Spotlight*: one backdrop at a time, slowly zooming and fading to the next. *Neon Horizon*: posters gliding along a neon horizon above a moving grid floor. *Flip Mosaic*: a wall of posters where single tiles flip to new titles.
-- **Neon sign-in card.** Jellyfin's own sign-in form on a glass card in the chosen colours, placed beside the artwork on large screens. It can be turned off to keep the form as Jellyfin draws it.
+- **Neon sign-in card.** Jellyfin's own sign-in form on a glass card in the chosen colours, placed beside the artwork on large screens. Turned off, Jellyfin's own form sits on a dark panel in the middle, so it stays readable over the artwork.
 - **Four colour pairs**: MKI neon, Jellyfin, Sunset and Lime.
 - **Calm and still motion.** Calm runs at half speed; Still shows a single frame, good for TVs left on the sign-in page. Devices set to reduce motion always get Still, and the animation pauses while the tab is in the background.
 - **Live preview.** The settings page draws the current pick with the same code as the sign-in page, on a computer or a phone screen.
@@ -25,7 +25,7 @@ The sign-in page is shown before anyone signs in, so everything it gets is publi
 | Pictures | Only the kind the chosen style draws (backdrops for Backdrop Spotlight, posters for the others), stored on your server and redrawn by Jellyfin at screen size. The showcase never sends original files, so no file details, camera or location data reach the sign-in page, and artwork Jellyfin cannot redraw (GIF, SVG) is skipped. |
 | Item ids, paths, library names | Never. The sign-in page asks for pictures by their place in the current pick, which changes every hour. Pictures of an earlier pick stop working as soon as the settings change. |
 | Changes in the library | The pick is checked again every 30 seconds. A title that was re-rated, deleted or moved out of the ticked libraries, or a library removed in the dashboard, leaves the sign-in page then, and an open sign-in page follows within minutes. |
-| Title names | Only when you turn them on, and only for Backdrop Spotlight, the one style that shows them, for the backdrops it shows. Turning them on while the showcase is live asks first. |
+| Title names | Only when you turn them on, and only for Backdrop Spotlight with the neon sign-in card, the one look that shows them, for the backdrops it shows. Turning them on while the showcase is live asks first. |
 | Library size | Only when you turn it on, and only for Flip Mosaic, the one style that shows it. It counts only the titles the sign-in page may show. |
 
 Signing in itself is not touched: the form, Quick Connect, Forgot Password, visible user tiles and other plugins on the sign-in page (such as [MKI Password Policy](../Jellyfin.Plugin.MkiPasswordPolicy)'s password change dialog) work as before. The showcase sits behind the page and takes no clicks.

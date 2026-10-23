@@ -87,8 +87,9 @@ public class LoginShowcaseController : ControllerBase
 			return new JsonResult(new { On = false });
 		}
 		// Titles and counts only when turned on, and only for the style that shows them. The pick already holds only the
-		// pictures that style draws, so no title is named that is not on screen.
-		bool titles = config.ShowTitles && set.Style == ShowcaseStyle.Spotlight && set.Backdrops;
+		// pictures that style draws, so no title is named that is not on screen. Names need the neon card: without it,
+		// Jellyfin's form fills the middle of the page and the sign-in page shows no names.
+		bool titles = config.ShowTitles && config.NeonCard && set.Style == ShowcaseStyle.Spotlight && set.Backdrops;
 		bool counts = config.ShowCounts && set.Style == ShowcaseStyle.Mosaic && !set.Backdrops;
 		return new JsonResult(new
 		{
