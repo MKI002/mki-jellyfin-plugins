@@ -43,7 +43,11 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 	{
 		try
 		{
-			Services.WebPatcher.RemoveScript(ApplicationPaths);
+			// An older copy that a newer one replaced leaves the script tag to the newer copy.
+			if (!DuplicateGuard.IsSuperseded)
+			{
+				Services.WebPatcher.RemoveScript(ApplicationPaths);
+			}
 		}
 		catch (Exception)
 		{

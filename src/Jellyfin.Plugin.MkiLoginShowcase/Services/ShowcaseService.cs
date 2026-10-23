@@ -31,6 +31,10 @@ public sealed class ShowcaseService
 	// A new pick every hour, and at once after the settings change.
 	private static readonly TimeSpan Lifetime = TimeSpan.FromHours(1);
 
+	// How often the pick is checked again: a title re-rated, deleted or moved out of the ticked libraries, or a library
+	// removed in the dashboard, leaves the sign-in page within this time (the pick is made again).
+	private static readonly TimeSpan Recheck = TimeSpan.FromSeconds(30);
+
 	// Library names that suggest content not meant for everyone. Nothing is chosen by default anyway; the settings page
 	// flags these so they are not ticked by mistake.
 	private static readonly Regex KidsName = new(@"\b(kids?|child|children|family|cartoons?|junior|kinder|enfants?|bambini)\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
@@ -49,6 +53,8 @@ public sealed class ShowcaseService
 
 	private int _generation;
 
+	private DateTime _checkedUtc;
+
 	public ShowcaseService(ILibraryManager library, ILogger<ShowcaseService> logger)
 	{
 		_library = library;
@@ -61,6 +67,7 @@ public sealed class ShowcaseService
 	{
 		lock (_lock)
 		{
+			CheckAgain(Plugin.Config);
 			if (_current != null && _current.Generation == _generation && DateTime.UtcNow - _current.BuiltUtc < Lifetime)
 			{
 				return _current;
@@ -69,6 +76,7 @@ public sealed class ShowcaseService
 			// The page that loaded the last pick may still ask for its pictures for a while.
 			_previous = _current;
 			_current = next;
+			_checkedUtc = DateTime.UtcNow;
 			return next;
 		}
 	}
@@ -78,6 +86,7 @@ public sealed class ShowcaseService
 	{
 		lock (_lock)
 		{
+			CheckAgain(Plugin.Config);
 			if (_current != null && _current.Generation == _generation && string.Equals(_current.Id, id, StringComparison.Ordinal))
 			{
 				return _current;
@@ -102,6 +111,56 @@ public sealed class ShowcaseService
 		}
 	}
 
+	// Every 30 seconds the current pick (and the one before it) is checked against the library as it is now. A pick
+	// with a title that may no longer be shown is dropped as a whole, so its pictures stop at once and the next request
+	// makes a new pick. Called under the lock.
+	private void CheckAgain(PluginConfiguration config)
+	{
+		if (_current == null || DateTime.UtcNow - _checkedUtc < Recheck)
+		{
+			return;
+		}
+		_checkedUtc = DateTime.UtcNow;
+		try
+		{
+			var libs = ChosenLibraries(config);
+			if (_previous != null && !StillShown(_previous, config, libs))
+			{
+				_previous = null;
+			}
+			if (!StillShown(_current, config, libs))
+			{
+				_logger.LogDebug("MKI Login Showcase makes a new pick: a picked title may no longer be shown");
+				_generation++;
+				_current = null;
+				_previous = null;
+			}
+		}
+		catch (Exception ex)
+		{
+			// When the check cannot run, the pick is not trusted either.
+			_logger.LogWarning(ex, "MKI Login Showcase could not check the current pick again");
+			_generation++;
+			_current = null;
+			_previous = null;
+		}
+	}
+
+	private bool StillShown(ShowcaseSet set, PluginConfiguration config, IReadOnlyDictionary<Guid, bool> libs)
+	{
+		foreach (var entry in set.Items)
+		{
+			var item = _library.GetItemById(entry.ItemId);
+			if (item == null || !Shown(item, config, libs)
+				|| (entry.Poster && !LocalImage(item, ImageType.Primary))
+				|| (entry.Backdrop && !LocalImage(item, ImageType.Backdrop)))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
 	// The libraries the settings page offers: movies, shows and mixed libraries only (never home videos, photos,
 	// music or books), with what they hold.
 	public IReadOnlyList<LibraryInfo> Libraries(PluginConfiguration config)
@@ -115,15 +174,16 @@ public sealed class ShowcaseService
 				continue;
 			}
 			var one = new[] { id };
+			bool mixed = IsMixed(folder);
 			list.Add(new LibraryInfo
 			{
 				Id = id.ToString("N"),
 				Name = folder.Name ?? string.Empty,
-				Type = folder.CollectionType?.ToString() ?? "mixed",
+				Type = mixed ? "mixed" : folder.CollectionType!.Value.ToString(),
 				Selected = chosen.Contains(id),
 				Looks = AdultName.IsMatch(folder.Name ?? string.Empty) ? "adult" : KidsName.IsMatch(folder.Name ?? string.Empty) ? "kids" : null,
 				Titles = Count(one, null, false, false, 0),
-				Shown = Count(one, null, true, config.IncludeUnrated, config.MaxRating)
+				Shown = Count(one, null, true, config.IncludeUnrated && !mixed, config.MaxRating)
 			});
 		}
 		return list.OrderBy(l => l.Name, StringComparer.OrdinalIgnoreCase).ToList();
@@ -140,7 +200,8 @@ public sealed class ShowcaseService
 		};
 		try
 		{
-			var roots = ChosenRoots(config);
+			var libs = ChosenLibraries(config);
+			var roots = libs.Keys.ToArray();
 			if (roots.Length == 0)
 			{
 				return set;
@@ -162,7 +223,7 @@ public sealed class ShowcaseService
 				}
 				// The database filter above is checked again here: what is shown before sign-in must never depend on
 				// one filter alone.
-				if (!Allowed(item, config))
+				if (!Shown(item, config, libs))
 				{
 					continue;
 				}
@@ -183,10 +244,13 @@ public sealed class ShowcaseService
 					Backdrop = backdrop
 				});
 			}
+			KeepWhatIsDrawn(set, config.Style);
 			if (config.ShowCounts)
 			{
-				set.Movies = Count(roots, BaseItemKind.Movie, false, false, 0);
-				set.Series = Count(roots, BaseItemKind.Series, false, false, 0);
+				// Only titles the sign-in page may show are counted: the number must not reveal how much in the ticked
+				// libraries is above the age rating limit or unrated.
+				set.Movies = CountShown(libs, BaseItemKind.Movie, config);
+				set.Series = CountShown(libs, BaseItemKind.Series, config);
 			}
 		}
 		catch (Exception ex)
@@ -196,6 +260,20 @@ public sealed class ShowcaseService
 			set.Items.Clear();
 		}
 		return set;
+	}
+
+	// Only what the chosen style draws leaves the server: backdrops for Backdrop Spotlight, posters for the other
+	// three. When there is none of that kind, the sign-in page falls back to a style that draws the other kind.
+	private static void KeepWhatIsDrawn(ShowcaseSet set, ShowcaseStyle style)
+	{
+		bool backdrops = style == ShowcaseStyle.Spotlight ? set.Items.Any(e => e.Backdrop) : !set.Items.Any(e => e.Poster);
+		set.Items.RemoveAll(e => backdrops ? !e.Backdrop : !e.Poster);
+		foreach (var e in set.Items)
+		{
+			e.Poster = !backdrops;
+			e.Backdrop = backdrops;
+		}
+		set.Backdrops = backdrops;
 	}
 
 	// Whether an item may appear before sign-in: a movie or show, real (not a missing episode placeholder), and within
@@ -218,6 +296,26 @@ public sealed class ShowcaseService
 		return score.Value < config.MaxRating || (score.Value == config.MaxRating && (item.InheritedParentalRatingSubValue ?? 0) <= 0);
 	}
 
+	// Allowed, and in a ticked library as the library is now. A title without a rating never comes from a mixed library:
+	// Jellyfin files a home video there as a movie, with a frame of the video as its poster.
+	private bool Shown(BaseItem item, PluginConfiguration config, IReadOnlyDictionary<Guid, bool> libs)
+	{
+		if (!Allowed(item, config))
+		{
+			return false;
+		}
+		bool inChosen = false, inMixed = false;
+		foreach (var folder in _library.GetCollectionFolders(item))
+		{
+			if (libs.TryGetValue(folder.Id, out var mixed))
+			{
+				inChosen = true;
+				inMixed |= mixed;
+			}
+		}
+		return inChosen && !(inMixed && item.InheritedParentalRatingValue == null);
+	}
+
 	// Only artwork stored on the server: serving a picture never makes the server fetch anything from elsewhere. GIFs
 	// are left out because Jellyfin never redraws them, and only redrawn pictures are served.
 	public static bool LocalImage(BaseItem item, ImageType type)
@@ -227,19 +325,23 @@ public sealed class ShowcaseService
 			&& !info.Path.EndsWith(".gif", StringComparison.OrdinalIgnoreCase);
 	}
 
-	private Guid[] ChosenRoots(PluginConfiguration config)
+	// The ticked libraries that still exist and still hold movies or shows, and whether each is a mixed library.
+	private Dictionary<Guid, bool> ChosenLibraries(PluginConfiguration config)
 	{
+		var libs = new Dictionary<Guid, bool>();
 		var chosen = ChosenIds(config);
 		if (chosen.Count == 0)
 		{
-			return Array.Empty<Guid>();
+			return libs;
 		}
-		// Only libraries that still exist and still hold movies or shows.
-		return _library.GetVirtualFolders()
-			.Where(Eligible)
-			.Select(f => Guid.TryParse(f.ItemId, out var id) ? id : Guid.Empty)
-			.Where(id => id != Guid.Empty && chosen.Contains(id))
-			.ToArray();
+		foreach (var folder in _library.GetVirtualFolders())
+		{
+			if (Eligible(folder) && Guid.TryParse(folder.ItemId, out var id) && chosen.Contains(id))
+			{
+				libs[id] = IsMixed(folder);
+			}
+		}
+		return libs;
 	}
 
 	private static HashSet<Guid> ChosenIds(PluginConfiguration config)
@@ -259,6 +361,8 @@ public sealed class ShowcaseService
 	{
 		return folder.CollectionType is null or CollectionTypeOptions.movies or CollectionTypeOptions.tvshows or CollectionTypeOptions.mixed;
 	}
+
+	private static bool IsMixed(VirtualFolderInfo folder) => folder.CollectionType is null or CollectionTypeOptions.mixed;
 
 	private static InternalItemsQuery Query(Guid[] roots, BaseItemKind? kind, bool rated, bool includeUnrated, int maxRating)
 	{
@@ -281,6 +385,15 @@ public sealed class ShowcaseService
 			}
 		}
 		return query;
+	}
+
+	// Titles the sign-in page may show, of one kind: titles without a rating only from libraries that are not mixed.
+	private int CountShown(IReadOnlyDictionary<Guid, bool> libs, BaseItemKind kind, PluginConfiguration config)
+	{
+		var plain = libs.Where(l => !l.Value).Select(l => l.Key).ToArray();
+		var mixed = libs.Where(l => l.Value).Select(l => l.Key).ToArray();
+		return (plain.Length > 0 ? Count(plain, kind, true, config.IncludeUnrated, config.MaxRating) : 0)
+			+ (mixed.Length > 0 ? Count(mixed, kind, true, false, config.MaxRating) : 0);
 	}
 
 	private int Count(Guid[] roots, BaseItemKind? kind, bool rated, bool includeUnrated, int maxRating)
@@ -306,6 +419,9 @@ public sealed class ShowcaseSet
 	public int Generation { get; set; }
 
 	public ShowcasePick Pick { get; set; }
+
+	// True when the pick holds backdrops (Backdrop Spotlight), false when it holds posters.
+	public bool Backdrops { get; set; }
 
 	public List<ShowcaseEntry> Items { get; } = new();
 

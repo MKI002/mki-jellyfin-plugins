@@ -925,7 +925,7 @@
       <div class="mk-row__control"><input type="checkbox" class="mk-switch" role="switch" id="lsTitles" data-key="ShowTitles" data-label="Show title names"></div>
     </div>
     <div class="mk-row" id="lsCountsRow">
-      <div class="mk-row__text"><label class="mk-row__label" for="lsCounts">Show library size</label><span class="mk-row__desc" id="lsCountsDesc">Flip Mosaic shows how many movies and shows the ticked libraries hold.</span></div>
+      <div class="mk-row__text"><label class="mk-row__label" for="lsCounts">Show library size</label><span class="mk-row__desc" id="lsCountsDesc">Flip Mosaic shows how many movies and shows of the ticked libraries the sign-in page may show.</span></div>
       <div class="mk-row__control"><input type="checkbox" class="mk-switch" role="switch" id="lsCounts" data-key="ShowCounts" data-label="Show library size"></div>
     </div>
   </div>
@@ -1795,12 +1795,18 @@ var kit = MkiKit(page, {
     onLoad: function () { renderLibs(); render(); refresh(); },
     onSaved: function () { render(); later(); },
     onShow: function () { var st = kit.state(); if (st.loaded && (st.pending || st.invalid || st.failed)) refresh(); preview(); },
-    confirm: { Enabled: confirmEnabled, LibraryIds: confirmLibs, MaxRating: confirmRating, IncludeUnrated: confirmUnrated },
+    confirm: {
+        Enabled: confirmEnabled, LibraryIds: confirmLibs, MaxRating: confirmRating, IncludeUnrated: confirmUnrated,
+        Style: confirmPublic('Style'), ShowTitles: confirmPublic('ShowTitles'), ShowCounts: confirmPublic('ShowCounts')
+    },
     quiet: {
         Enabled: function (to) { return to === false; },
         LibraryIds: function (to, from) { return !flaggedAdded(to, from).length; },
         MaxRating: function (to, from) { return to <= from || to <= SAFE_RATING; },
-        IncludeUnrated: function (to) { return to === false; }
+        IncludeUnrated: function (to) { return to === false; },
+        Style: function (to) { return !newlyPublic('Style', to); },
+        ShowTitles: function (to) { return !newlyPublic('ShowTitles', to); },
+        ShowCounts: function (to) { return !newlyPublic('ShowCounts', to); }
     },
     show: function (k, v) {
         if (k === 'LibraryIds') return v && v.length ? libNames(v) : 'none';
@@ -1826,11 +1832,13 @@ function ratingOptions(list) {
         var names = by[s] || (by[s] = []), key = r.Name.replace(/[^a-z0-9]/gi, '').toLowerCase();
         if (!names.some(function (n) { return n.key === key; })) names.push({ key: key, name: r.Name });
     });
-    var scores = Object.keys(by).map(Number).sort(function (a, b) { return a - b; });
+    var scores = Object.keys(by).map(Number);
     if (!scores.length) return;
     var sel = $('#lsRating');
     sel.textContent = '';
-    if (scores.indexOf(0) < 0) scores.unshift(0);
+    /* all ages and the limit after installing are always offered, in their place */
+    [0, SAFE_RATING].forEach(function (s) { if (scores.indexOf(s) < 0) scores.push(s); });
+    scores.sort(function (a, b) { return a - b; });
     scores.forEach(function (s) {
         var names = (by[s] || []).slice(0, 3).map(function (n) { return n.name; });
         var o = el('option', null, (s === 0 ? 'All ages only' : 'Up to ' + s) + (names.length ? ' · ' + names.join(', ') : ''));
@@ -1876,7 +1884,8 @@ function renderLibs() {
         var nm = el('span', 'ls-lib__name');
         nm.appendChild(el('b', null, l.Name));
         var kind = l.Type === 'movies' ? 'Movies' : l.Type === 'tvshows' ? 'Shows' : 'Mixed';
-        nm.appendChild(el('small', null, kind + ' · ' + l.Shown + ' of ' + kit.plural(l.Titles, 'title') + ' within the rating limit, with artwork'));
+        nm.appendChild(el('small', null, kind + ' · ' + l.Shown + ' of ' + kit.plural(l.Titles, 'title') + ' within the rating limit, with artwork' +
+            (kind === 'Mixed' ? '. Never titles without a rating: home videos land here as movies.' : '')));
         row.appendChild(cb); row.appendChild(nm);
         if (l.Looks === 'adult') row.appendChild(chip('bad', 'no_adult_content', 'Looks like adult content'));
         else if (l.Looks === 'kids') row.appendChild(chip('warn', 'child_care', 'Looks like a kids library'));
@@ -1916,7 +1925,7 @@ function confirmEnabled(to) {
     var c = { LibraryIds: ids, MaxRating: kit.value('MaxRating'), IncludeUnrated: kit.value('IncludeUnrated') };
     var extra = [];
     if (kit.value('ShowTitles') && kit.value('Style') === 'Spotlight') extra.push('title names');
-    if (kit.value('ShowCounts') && kit.value('Style') === 'Mosaic') extra.push('how many movies and shows the libraries hold');
+    if (kit.value('ShowCounts') && kit.value('Style') === 'Mosaic') extra.push('how many movies and shows it may show');
     return kit.confirm({ title: 'Show the showcase on the sign-in page?', icon: 'login', ok: 'Turn on', okIcon: 'check',
         body: ['Everyone who opens your Jellyfin address sees it, before signing in.', summary(c) + (extra.length ? ' Also ' + andList(extra) + '.' : ' Pictures only, no titles.')] });
 }
@@ -1934,6 +1943,27 @@ function confirmRating(to, from) {
     if (to <= from || to <= SAFE_RATING) return true;
     return kit.confirm({ title: 'Allow titles rated up to ' + to + '?', icon: 'escalator_warning', tone: 'warn', ok: 'Allow up to ' + to,
         body: ['Anyone can open the sign-in page, children included. Posters of titles rated up to ' + to + ' would appear there.'] });
+}
+/* title names and counts go public only after a question: when the showcase is on and a change of the style or of
+   the two switches starts sending them */
+function sendsNames(c) { return c.Enabled === true && c.ShowTitles === true && c.Style === 'Spotlight'; }
+function sendsCounts(c) { return c.Enabled === true && c.ShowCounts === true && c.Style === 'Mosaic'; }
+function newlyPublic(key, to) {
+    var before = {}, after = {};
+    ['Enabled', 'Style', 'ShowTitles', 'ShowCounts'].forEach(function (k) { before[k] = saved(k); after[k] = kit.value(k); });
+    after[key] = to;
+    return sendsNames(after) && !sendsNames(before) ? 'names' : sendsCounts(after) && !sendsCounts(before) ? 'counts' : null;
+}
+function confirmPublic(key) {
+    return function (to) {
+        var what = newlyPublic(key, to);
+        if (!what) return true;
+        var names = what === 'names';
+        return kit.confirm({ title: names ? 'Show title names on the sign-in page?' : 'Show how many titles there are?', icon: names ? 'title' : 'numbers', tone: 'warn',
+            ok: names ? 'Show names' : 'Show counts', okIcon: 'check',
+            body: [(names ? 'Backdrop Spotlight would name each title it shows.' : 'Flip Mosaic would show how many movies and shows the sign-in page may show.') +
+                ' Anyone who opens your Jellyfin address can read ' + (names ? 'them' : 'the numbers') + ', before signing in.'] });
+    };
 }
 function confirmUnrated(to) {
     if (to !== true) return true;
@@ -2041,7 +2071,7 @@ function renderLook() {
     $('#lsTitlesRow').classList.toggle('is-idle', !titles);
     $('#lsCountsRow').classList.toggle('is-idle', !counts);
     fill($('#lsTitlesDesc'), 'Backdrop Spotlight names each title on screen.' + (titles ? ' Off: pictures only.' : ' The chosen style shows no names, so none are sent either way.'));
-    fill($('#lsCountsDesc'), 'Flip Mosaic shows how many movies and shows the ticked libraries hold.' + (counts ? '' : ' The chosen style shows no counts, so none are sent either way.'));
+    fill($('#lsCountsDesc'), 'Flip Mosaic shows how many movies and shows of the ticked libraries the sign-in page may show.' + (counts ? '' : ' The chosen style shows no counts, so none are sent either way.'));
 }
 function webProblem() {
     var s = data && data.WebClient;
@@ -2059,15 +2089,15 @@ function sends() {
         li.appendChild(t); list.appendChild(li);
     }
     if (!on) { item('ok', 'check_circle', 'Nothing. The showcase is off and the web client is left exactly as Jellyfin ships it.'); return; }
-    item('ok', 'image', 'Pictures only: posters and backdrops redrawn by Jellyfin at screen size.', 'Never the original files, so no file details, camera or location data. Only artwork stored on your server.');
+    item('ok', 'image', 'Pictures only: ' + (style === 'Spotlight' ? 'the backdrops' : 'the posters') + ' the chosen style draws, redrawn by Jellyfin at screen size.', 'The showcase never sends original files, so no file details, camera or location data. Only artwork stored on your server.');
     item('ok', 'link_off', 'No item ids, file paths or library names.', 'Pictures are asked for by their place in the current pick, which changes every hour.');
     var ids = saved('LibraryIds') || [];
     item(ids.length ? 'ok' : 'warn', 'video_library', ids.length ? 'Artwork from ' + libNames(ids) + ' only.' : 'Nothing yet: no library is ticked.');
     item('ok', 'escalator_warning', 'Rated ' + ratingText(saved('MaxRating')) + '.', saved('IncludeUnrated') ? null : 'Titles without a rating are left out.');
-    if (saved('IncludeUnrated')) item('warn', 'help_outline', 'Titles without a rating are included.', 'The limit cannot check them.');
+    if (saved('IncludeUnrated')) item('warn', 'help_outline', 'Titles without a rating are included.', 'The limit cannot check them. Mixed libraries never show titles without a rating.');
     if (saved('ShowTitles') && style === 'Spotlight') item('warn', 'title', 'Title names of the backdrops shown.');
     else item('ok', 'title', 'No title names.');
-    if (saved('ShowCounts') && style === 'Mosaic') item('warn', 'numbers', 'How many movies and shows the ticked libraries hold.');
+    if (saved('ShowCounts') && style === 'Mosaic') item('warn', 'numbers', 'How many movies and shows the sign-in page may show.');
     else item('ok', 'numbers', 'No counts.');
     item('ok', 'lock', 'Signing in works exactly as before.', 'The form, Quick Connect, Forgot Password and other plugins on the sign-in page are left alone.');
 }
@@ -2095,7 +2125,7 @@ function render() {
     else if (data && !items.length) bits.push('no title in ' + libNames(ids) + ' is rated ' + ratingText(saved('MaxRating')) + ' with artwork stored on the server. Tick another library or change the limit.');
     else if (!on) bits.push('check the preview, then turn the showcase on at the top. Until then visitors see Jellyfin\'s own sign-in page.');
     else if (problem) bits.push(problem + ' Let Jellyfin write to its web folder, then turn the showcase off and on again.');
-    else bits.push('nothing. Visitors see the ' + (STYLES[style] || style) + ' with ' + PICKS[saved('Pick')] + ' from ' + libNames(ids) + '. Use New titles now for a different pick.');
+    else bits.push('a new pick of ' + PICKS[saved('Pick')] + ' from ' + libNames(ids) + (data && data.NextPick ? ' at ' + kit.hhmm(new Date(data.NextPick)) : ' within the hour') + '. Until then visitors see the ' + (STYLES[style] || style) + ' with the titles in the preview below; New titles now picks again right away.');
     fill($('#lsNext'), bits);
 
     var note = $('#lsWebNote');

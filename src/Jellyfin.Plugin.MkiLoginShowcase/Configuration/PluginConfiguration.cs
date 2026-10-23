@@ -12,7 +12,8 @@ public class PluginConfiguration : BasePluginConfiguration
 
 	public ShowcaseStyle Style { get; set; } = ShowcaseStyle.PosterWall;
 
-	// The only libraries whose artwork may appear (library ids). Movies, shows and mixed libraries only.
+	// The only libraries whose artwork may appear (library ids). Movies, shows and mixed libraries only; a mixed library
+	// never shows titles without a rating.
 	public string[] LibraryIds { get; set; } = Array.Empty<string>();
 
 	// Highest age rating that may appear (Jellyfin's rating score, roughly the age).
@@ -26,7 +27,7 @@ public class PluginConfiguration : BasePluginConfiguration
 	// Names the title under the artwork (Backdrop Spotlight). Posters show their own artwork either way.
 	public bool ShowTitles { get; set; }
 
-	// Shows how many movies and shows the chosen libraries hold (Flip Mosaic).
+	// Shows how many movies and shows of the chosen libraries the sign-in page may show (Flip Mosaic).
 	public bool ShowCounts { get; set; }
 
 	public ShowcaseAccent Accent { get; set; } = ShowcaseAccent.Mki;

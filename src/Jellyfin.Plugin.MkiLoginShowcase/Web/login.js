@@ -21,6 +21,7 @@
         Lime: ['#B6FF3B', '#22D3EE']
     };
     var STYLES = { PosterWall: 1, Spotlight: 1, Horizon: 1, Mosaic: 1 };
+    function own(o, k) { return typeof k === 'string' && Object.prototype.hasOwnProperty.call(o, k); }
 
     var CSS = [
         /* ---------- the drawing (also used by the settings page preview) ---------- */
@@ -143,16 +144,18 @@
     function rgb(hex) { var h = parseInt(hex.slice(1), 16); return ((h >> 16) & 255) + ',' + ((h >> 8) & 255) + ',' + (h & 255); }
     function cssUrl(u) { return 'url("' + String(u).replace(/["\\\n\r]/g, '') + '")'; }
     function num(n) { try { return Number(n).toLocaleString('en-GB'); } catch (e) { return String(n); } }
+    function count(n) { return typeof n === 'number' && isFinite(n) && n >= 0; }
     function reducedMotion() { try { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) { return false; } }
 
     /* ---------- the drawing: render(host, data, opts) -> { stop() } ----------
        data: { Style, Accent, Motion, Items: [{ P, B, T }], Caption, Movies, Series }
-       opts: { image(index, 'p'|'b') -> url, mockCard: true to draw a sign-in card (preview) } */
+       opts: { image(index, 'p'|'b') -> url, mockCard: true to draw a sign-in card (preview),
+               missing() called when a picture could not be loaded } */
     function render(host, data, opts) {
         injectCss();
         opts = opts || {};
-        var style = STYLES[data.Style] ? data.Style : 'PosterWall';
-        var accent = ACCENTS[data.Accent] || ACCENTS.Mki;
+        var style = own(STYLES, data.Style) ? data.Style : 'PosterWall';
+        var accent = own(ACCENTS, data.Accent) ? ACCENTS[data.Accent] : ACCENTS.Mki;
         var a1 = accent[0], a2 = accent[1], r1 = rgb(a1), r2 = rgb(a2);
         var still = data.Motion === 'Still' || reducedMotion();
         var slow = data.Motion === 'Calm' ? 2 : 1;
@@ -179,7 +182,13 @@
             p.style.backgroundImage = cssUrl(opts.image(i, 'p')) + ',' + placeholder(i);
             return p;
         }
-        function want(url) { if (preload.length < 10) { var im = new Image(); im.src = url; preload.push(im); } }
+        function missing() { if (opts.missing && !stopped) opts.missing(); }
+        function want(url) {
+            if (preload.length >= 10) return;
+            var im = new Image();
+            im.addEventListener('error', missing);
+            im.src = url; preload.push(im);
+        }
         function later(fn, ms) { var t = setTimeout(fn, ms); timers.push(t); return t; }
         function pickPosters(n, offset) { var out = []; for (var k = 0; k < n; k++) out.push(posters[(offset + k) % posters.length]); return out; }
 
@@ -244,7 +253,7 @@
                     shown++;
                     ready();
                 }
-                im.onload = go; im.onerror = go; im.src = url;
+                im.onload = go; im.onerror = function () { go(); missing(); }; im.src = url;
                 later(go, 2500);
             }
             showAt(at);
@@ -317,13 +326,13 @@
             vignette(portrait
                 ? 'linear-gradient(rgba(5,6,11,.5),rgba(5,6,11,.62) 50%,rgba(5,6,11,.9))'
                 : 'linear-gradient(90deg,rgba(5,6,11,.96) 0,rgba(5,6,11,.9) 38%,rgba(5,6,11,.2) 62%)');
-            if (data.Movies != null || data.Series != null) {
+            if (count(data.Movies) || count(data.Series)) {
                 var unit = Math.min(W, H * 1.78) / 100, s = el('div', 'mkls-stat');
                 s.style.right = px(unit * 3); s.style.bottom = px(unit * 3); s.style.fontSize = px(Math.max(10, unit * 1));
                 s.style.padding = px(unit * 0.6) + ' ' + px(unit * 1); s.style.borderRadius = px(unit * 0.5);
                 var parts = [];
-                if (data.Movies != null) parts.push([num(data.Movies), data.Movies === 1 ? ' movie' : ' movies']);
-                if (data.Series != null) parts.push([num(data.Series), data.Series === 1 ? ' show' : ' shows']);
+                if (count(data.Movies)) parts.push([num(data.Movies), data.Movies === 1 ? ' movie' : ' movies']);
+                if (count(data.Series)) parts.push([num(data.Series), data.Series === 1 ? ' show' : ' shows']);
                 parts.forEach(function (p, k) {
                     if (k) s.appendChild(document.createTextNode(' · '));
                     var em = el('em', null, p[0]); em.style.fontStyle = 'normal'; em.style.color = a1;
@@ -453,23 +462,38 @@
     }
 
     /* ---------- the sign-in page ---------- */
-    var state = { data: null, at: 0, loading: null, ctrl: null, layer: null, refresh: 0, seq: 0 };
+    /* a sign-in page left open (a TV in the living room) asks again this often: for new titles, and to take the
+       showcase away when it was turned off */
+    var REFRESH = 5 * 60000;
+    var state = { data: null, at: 0, loading: null, ctrl: null, layer: null, refresh: 0, seq: 0, shown: null, skip: null, missAt: 0 };
+
+    function sig(d) { try { return JSON.stringify(d); } catch (e) { return String(Math.random()); } }
 
     function sameServer() {
-        /* the web client can sign in to another server; only this server's sign-in page gets its showcase */
+        /* the web client can sign in to another server; only this server's own sign-in page gets its showcase, and
+           when that cannot be told, nothing is shown */
         var a = window.ApiClient;
-        if (!a || !a.serverAddress || !BASE) return true;
+        if (!a || !a.serverAddress || !BASE) return false;
         try {
             var mine = new URL(BASE, location.href), theirs = new URL(String(a.serverAddress() || '') + '/', location.href);
-            return mine.origin === theirs.origin && mine.pathname.replace(/\/+$/, '') === theirs.pathname.replace(/\/+$/, '');
+            if (mine.origin !== theirs.origin || mine.pathname.replace(/\/+$/, '') !== theirs.pathname.replace(/\/+$/, '')) return false;
+            /* the sign-in page names the server it signs in to */
+            var m = /[?&]serverid=([^&]*)/i.exec(location.hash || '');
+            if (!m) return true;
+            var id = a.serverId ? a.serverId() : null;
+            return !!id && decodeURIComponent(m[1]).toLowerCase() === String(id).toLowerCase();
         } catch (e) {
-            return true;
+            return false;
         }
     }
 
     function loginPage() {
-        var p = document.getElementById('loginPage');
-        return p && !p.classList.contains('hide') && p.offsetWidth > 0 ? p : null;
+        /* the web client keeps earlier views in the page, hidden: only the visible sign-in view counts */
+        var all = document.querySelectorAll('[id="loginPage"]');
+        for (var i = 0; i < all.length; i++) {
+            if (!all[i].classList.contains('hide') && all[i].offsetWidth > 0) return all[i];
+        }
+        return null;
     }
 
     function load(force) {
@@ -493,26 +517,56 @@
         layer.id = 'mkiLoginShowcase';
         layer.setAttribute('aria-hidden', 'true');
         document.body.insertBefore(layer, document.body.firstChild);
-        var set = encodeURIComponent(String(data.Set || ''));
-        var ctrl = render(layer, data, { image: function (i, kind) { return BASE + 'MkiLoginShowcase/Image/' + set + '/' + i + '/' + kind; } });
-        if (!ctrl.style) { ctrl.stop(); layer.parentNode.removeChild(layer); return; }
-        var accent = ACCENTS[data.Accent] || ACCENTS.Mki;
+        var set = encodeURIComponent(String(data.Set || '')), ctrl = null;
+        try {
+            ctrl = render(layer, data, {
+                image: function (i, kind) { return BASE + 'MkiLoginShowcase/Image/' + set + '/' + i + '/' + kind; },
+                /* the server made a new pick (or the showcase was turned off): ask again, at most once a minute */
+                missing: function () { if (Date.now() - state.missAt > 60000) { state.missAt = Date.now(); recheck(); } }
+            });
+        } catch (e) {
+            ctrl = null;
+        }
+        if (!ctrl || !ctrl.style) {
+            /* nothing to draw: the page stays as Jellyfin ships it, and this answer is not tried again */
+            if (ctrl) ctrl.stop();
+            if (layer.parentNode) layer.parentNode.removeChild(layer);
+            state.skip = sig(data);
+            return;
+        }
+        var accent = own(ACCENTS, data.Accent) ? ACCENTS[data.Accent] : ACCENTS.Mki;
         root.style.setProperty('--mkils-a1', accent[0]);
         root.style.setProperty('--mkils-a2', accent[1]);
         root.style.setProperty('--mkils-glow', 'rgba(' + rgb(accent[0]) + ',.4)');
         root.classList.add('mkils-on', 'mkils-' + ctrl.style.toLowerCase());
         if (data.Card !== false) root.classList.add('mkils-card');
-        state.ctrl = ctrl; state.layer = layer;
-        /* a sign-in page left open (a TV in the living room) picks up the hourly new titles */
+        state.ctrl = ctrl; state.layer = layer; state.shown = sig(data);
+        schedule();
+    }
+
+    function schedule() {
         clearTimeout(state.refresh);
-        state.refresh = setTimeout(function () { if (loginPage()) load(true).then(function (d) { if (loginPage() && d && d.On) show(d); }); }, 30 * 60000);
+        state.refresh = setTimeout(recheck, REFRESH);
+    }
+
+    /* ask the server again while the showcase is on screen: draw again when the answer changed, take it away when the
+       showcase was turned off or nothing is left to show */
+    function recheck() {
+        if (!state.ctrl) return;
+        var seq = state.seq;
+        load(true).then(function (d) {
+            if (seq !== state.seq || !state.ctrl) return;
+            if (!loginPage() || !sameServer() || !(d && d.On && d.Items && d.Items.length)) { state.seq++; hide(); return; }
+            if (sig(d) !== state.shown) show(d);
+            else schedule();
+        });
     }
 
     function hide() {
         clearTimeout(state.refresh);
         if (state.ctrl) state.ctrl.stop();
         if (state.layer && state.layer.parentNode) state.layer.parentNode.removeChild(state.layer);
-        state.ctrl = null; state.layer = null;
+        state.ctrl = null; state.layer = null; state.shown = null;
         var root = document.documentElement;
         ['mkils-on', 'mkils-card', 'mkils-posterwall', 'mkils-spotlight', 'mkils-horizon', 'mkils-mosaic'].forEach(function (c) { root.classList.remove(c); });
         ['--mkils-a1', '--mkils-a2', '--mkils-glow'].forEach(function (p) { root.style.removeProperty(p); });
@@ -524,9 +578,12 @@
             var seq = ++state.seq;
             if (!sameServer()) return;
             load(false).then(function (d) {
-                if (seq !== state.seq || state.ctrl || !loginPage()) return;
-                if (d && d.On && d.Items && d.Items.length) show(d);
+                if (seq !== state.seq || state.ctrl || !loginPage() || !sameServer()) return;
+                if (d && d.On && d.Items && d.Items.length && sig(d) !== state.skip) show(d);
             });
+        } else if (page && state.ctrl && !sameServer()) {
+            state.seq++;
+            hide();
         } else if (!page && state.ctrl) {
             state.seq++;
             hide();

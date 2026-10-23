@@ -17,7 +17,8 @@ public class WebPatcher : IHostedService
 
 	private static readonly Regex Injected = new("\\s*<script[^>]*mki-login-showcase-injected[^>]*></script>", RegexOptions.IgnoreCase);
 
-	private readonly object _lock = new();
+	// One lock for every change this plugin makes to index.html, also the one on uninstall.
+	private static readonly object Lock = new();
 
 	private readonly IApplicationPaths _paths;
 
@@ -50,7 +51,7 @@ public class WebPatcher : IHostedService
 	{
 		try
 		{
-			lock (_lock)
+			lock (Lock)
 			{
 				Write(Plugin.Config.Enabled);
 			}
@@ -104,12 +105,15 @@ public class WebPatcher : IHostedService
 		{
 			return;
 		}
-		string file = Path.Combine(root, "index.html");
-		string old = File.ReadAllText(file);
-		string updated = Injected.Replace(old, string.Empty);
-		if (updated != old)
+		lock (Lock)
 		{
-			WriteFile(file, updated);
+			string file = Path.Combine(root, "index.html");
+			string old = File.ReadAllText(file);
+			string updated = Injected.Replace(old, string.Empty);
+			if (updated != old)
+			{
+				WriteFile(file, updated);
+			}
 		}
 	}
 
@@ -154,7 +158,7 @@ public class WebPatcher : IHostedService
 	// allows no new files, the file is written in place.
 	private static void WriteFile(string file, string content)
 	{
-		string tmp = file + ".mki-loginshowcase.tmp";
+		string tmp = file + ".mki-loginshowcase-" + Guid.NewGuid().ToString("N") + ".tmp";
 		try
 		{
 			File.WriteAllText(tmp, content);

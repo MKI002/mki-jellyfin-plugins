@@ -86,9 +86,10 @@ public class LoginShowcaseController : ControllerBase
 		{
 			return new JsonResult(new { On = false });
 		}
-		// Titles and counts only when turned on, and only for the style that shows them.
-		bool titles = config.ShowTitles && config.Style == ShowcaseStyle.Spotlight;
-		bool counts = config.ShowCounts && config.Style == ShowcaseStyle.Mosaic;
+		// Titles and counts only when turned on, and only for the style that shows them. The pick already holds only the
+		// pictures that style draws, so no title is named that is not on screen.
+		bool titles = config.ShowTitles && config.Style == ShowcaseStyle.Spotlight && set.Backdrops;
+		bool counts = config.ShowCounts && config.Style == ShowcaseStyle.Mosaic && !set.Backdrops;
 		return new JsonResult(new
 		{
 			On = true,
@@ -165,11 +166,12 @@ public class LoginShowcaseController : ControllerBase
 				return NotFound();
 			}
 			// A pick's pictures never change (a new pick has a new id), but browsers only, not shared caches: a library
-			// that was just taken out must not stay reachable through a proxy.
-			Response.Headers.CacheControl = "private, max-age=3600";
+			// that was just taken out must not stay reachable through a proxy. Sent without Last-Modified or ETag, which
+			// would tell when someone last had the sign-in page open.
+			Response.Headers.CacheControl = "private, max-age=600";
 			Response.Headers.Vary = HeaderNames.Accept;
 			Response.Headers.XContentTypeOptions = "nosniff";
-			return PhysicalFile(path, mime);
+			return File(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, FileOptions.Asynchronous), mime);
 		}
 		catch (Exception ex)
 		{

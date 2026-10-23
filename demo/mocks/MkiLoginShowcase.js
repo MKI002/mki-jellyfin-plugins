@@ -54,20 +54,23 @@
     if (it.Score == null) return !!cfg.IncludeUnrated;
     return it.Score <= cfg.MaxRating;
   }
+  /* the page saves ids without dashes, as the server does */
+  function norm(s) { return String(s || '').replace(/-/g, '').toLowerCase(); }
+  function chosenIds(cfg) { return (cfg.LibraryIds || []).map(norm); }
   function picked(cfg) {
-    var ids = (cfg.LibraryIds || []).map(function (s) { return String(s).toLowerCase(); });
-    var list = order.filter(function (it) { return ids.indexOf(it.Lib) >= 0 && allowed(it, cfg); });
+    var ids = chosenIds(cfg);
+    var list = order.filter(function (it) { return ids.indexOf(norm(it.Lib)) >= 0 && allowed(it, cfg); });
     if (cfg.Pick === 'Recent') list = list.slice().sort(function (a, b) { return b.Year - a.Year; });
     return list;
   }
   function overview() {
-    var cfg = MkiDemo.config(ID), ids = (cfg.LibraryIds || []).map(function (s) { return String(s).toLowerCase(); });
+    var cfg = MkiDemo.config(ID), ids = chosenIds(cfg);
     var items = picked(cfg);
-    var chosen = ITEMS.filter(function (it) { return ids.indexOf(it.Lib) >= 0; });
+    var chosen = ITEMS.filter(function (it) { return ids.indexOf(norm(it.Lib)) >= 0; });
     return {
       Libraries: LIBS.map(function (l) {
         var mine = ITEMS.filter(function (it) { return it.Lib === l.Id; });
-        return { Id: l.Id, Name: l.Name, Type: l.Type, Selected: ids.indexOf(l.Id) >= 0, Looks: l.Looks || null, Titles: mine.length, Shown: mine.filter(function (it) { return allowed(it, cfg); }).length };
+        return { Id: l.Id, Name: l.Name, Type: l.Type, Selected: ids.indexOf(norm(l.Id)) >= 0, Looks: l.Looks || null, Titles: mine.length, Shown: mine.filter(function (it) { return allowed(it, cfg); }).length };
       }),
       Set: set, Built: new Date(built).toISOString(), NextPick: new Date(built + 36e5).toISOString(), MaxPosters: 48, MaxBackdrops: 12,
       Items: items.map(function (it) { return { Id: it.Id, Name: it.Name, Year: it.Year, PosterTag: 'p' + it.Id.slice(-4), BackdropTag: it.Backdrop ? 'b' + it.Id.slice(-4) : null }; }),
