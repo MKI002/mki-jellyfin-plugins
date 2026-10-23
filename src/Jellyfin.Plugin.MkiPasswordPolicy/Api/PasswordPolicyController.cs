@@ -210,7 +210,8 @@ public class PasswordPolicyController : ControllerBase
 	public ActionResult GetUsers()
 	{
 		var c = Plugin.Config;
-		var liste = _users.GetUsers().OrderBy(u => u.Username, StringComparer.OrdinalIgnoreCase).Select(u =>
+		// Guest accounts of MKI Guest Pass have no password and are not listed.
+		var liste = _users.GetUsers().Where(u => !Policy.IsGuest(u)).OrderBy(u => u.Username, StringComparer.OrdinalIgnoreCase).Select(u =>
 		{
 			var s = _store.Get(u.Id);
 			return new
@@ -267,7 +268,7 @@ public class PasswordPolicyController : ControllerBase
 		Response.Headers.CacheControl = "no-store";
 		var id = anfrage.UserIds?.Count == 1 ? anfrage.UserIds[0] : Guid.Empty;
 		var user = _users.GetUserById(id);
-		if (user == null || id == NutzerId())
+		if (user == null || id == NutzerId() || Policy.IsGuest(user))
 		{
 			return BadRequest();
 		}

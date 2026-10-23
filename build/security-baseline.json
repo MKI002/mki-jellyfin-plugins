@@ -1,9 +1,15 @@
 {
-  "_comment": "Every endpoint anyone can call without signing in, every request middleware (IStartupFilter) and every MVC filter or convention that wraps Jellyfin's own API actions, and every place that adds one to MVC. build/checks.py fails when one is added or removed without updating this list. Add an entry only after the security review in RELEASING.md step 3. All entries below were reviewed in the October 2026 audit (PR #15).",
+  "_comment": "Every endpoint anyone can call without signing in, every request middleware (IStartupFilter) and every MVC filter or convention that wraps Jellyfin's own API actions, and every place that adds one to MVC. build/checks.py fails when one is added or removed without updating this list. Add an entry only after the security review in RELEASING.md step 3. All entries below were reviewed in the October 2026 audit (PR #15). The MKI Guest Pass entries (join page, its scripts, Peek, Redeem, Rejoin and the GuestGate middleware) were reviewed by two independent security reviews before its first release (October 2026).",
   "anonymousEndpoints": [
     "src/Jellyfin.Plugin.MediaHero/Api/MediaHeroController.cs::GetScript",
     "src/Jellyfin.Plugin.MediaHero/Api/MediaHeroController.cs::GetStyle",
     "src/Jellyfin.Plugin.MkiContinueWatching/Api/ContinueWatchingController.cs::GetScript",
+    "src/Jellyfin.Plugin.MkiGuestPass/Api/GuestPassController.cs::ClientScript",
+    "src/Jellyfin.Plugin.MkiGuestPass/Api/GuestPassController.cs::JoinPage",
+    "src/Jellyfin.Plugin.MkiGuestPass/Api/GuestPassController.cs::JoinScript",
+    "src/Jellyfin.Plugin.MkiGuestPass/Api/GuestPassController.cs::Peek",
+    "src/Jellyfin.Plugin.MkiGuestPass/Api/GuestPassController.cs::Redeem",
+    "src/Jellyfin.Plugin.MkiGuestPass/Api/GuestPassController.cs::Rejoin",
     "src/Jellyfin.Plugin.MkiLoginShowcase/Api/LoginShowcaseController.cs::GetImage",
     "src/Jellyfin.Plugin.MkiLoginShowcase/Api/LoginShowcaseController.cs::GetScript",
     "src/Jellyfin.Plugin.MkiLoginShowcase/Api/LoginShowcaseController.cs::GetShowcase",
@@ -19,6 +25,7 @@
     "src/Jellyfin.Plugin.SeerrBridge/Api/SeerrBridgeController.cs::RepositoryPaket"
   ],
   "requestMiddleware": [
+    "src/Jellyfin.Plugin.MkiGuestPass/Services/GuestGate.cs::GuestGate",
     "src/Jellyfin.Plugin.MkiPasswordPolicy/Services/LoginGate.cs::LoginGate",
     "src/Jellyfin.Plugin.SeerrBridge/Services/LegacyAuthHeader.cs::LegacyAuthHeader",
     "src/Jellyfin.Plugin.SeerrBridge/Services/SsoBruecke.cs::SsoBruecke"

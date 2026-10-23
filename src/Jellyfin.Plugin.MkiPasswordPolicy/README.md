@@ -42,6 +42,7 @@ A second request can only bring a deadline forward, never push it back. Bulk req
 - Passwords set before a profile applied cannot be judged, and the plugin does not try: the review shows them as *unknown*. Require a new password if you want certainty.
 - Jellyfin's own **Reset password** button on a user's Password tab removes the password completely. With a profile or an open request the account is then locked until you give it a password; without, Jellyfin lets anyone sign in to it without a password, and the review shows *no password*.
 - Temporary passwords are generated on the server, shown to the administrator once and never kept by the plugin.
+- Guest accounts of [MKI Guest Pass](../Jellyfin.Plugin.MkiGuestPass) are left alone: they have no password by design, cannot sign in with one and end by themselves, so they get no profile, no request and no lock, and do not appear in the plugin's user list.
 
 ## Security notes
 

@@ -57,7 +57,8 @@ public class Enforcer
 	// grace time; with one the users keep access until the deadline and every app they open is reminded.
 	public int Require(IEnumerable<Guid> userIds, string reason, string changeUrl, int noticeDays = 0)
 	{
-		var ids = userIds.Distinct().Where(id => _users.GetUserById(id) != null).ToList();
+		// Guest accounts of MKI Guest Pass have no password to change.
+		var ids = userIds.Distinct().Where(id => _users.GetUserById(id) is { } u && !Policy.IsGuest(u)).ToList();
 		if (ids.Count == 0)
 		{
 			return 0;
@@ -116,6 +117,10 @@ public class Enforcer
 	// by the user at the next sign-in. Their devices are signed out right away.
 	public void RequireOwnPassword(User user, string reason)
 	{
+		if (Policy.IsGuest(user))
+		{
+			return;
+		}
 		_store.RequireNow(user.Id, reason);
 		_patcher.Sync();
 		_logger.LogInformation("{User} must replace a password set by someone else ({Reason})", user.Username, reason);
@@ -125,6 +130,10 @@ public class Enforcer
 	// Sets a random temporary password that meets the user's rules and returns it once. Only Jellyfin keeps it, as a hash.
 	public async Task<string> SetTemporaryPassword(User user)
 	{
+		if (Policy.IsGuest(user))
+		{
+			throw new InvalidOperationException("Guest accounts of MKI Guest Pass have no password");
+		}
 		var regeln = Policy.RulesFor(user);
 		string passwort;
 		int versuch = 0;
@@ -205,6 +214,11 @@ public class Enforcer
 	{
 		foreach (var id in _store.OpenUsers())
 		{
+			if (_users.GetUserById(id) is { } gast && Policy.IsGuest(gast))
+			{
+				ForgetGuest(id);
+				continue;
+			}
 			if (_store.SessionsBlocked(id) && _devices.GetDevices(new DeviceQuery { UserId = id }).TotalRecordCount > 0)
 			{
 				_logger.LogInformation("Signing out {User}: their deadline for a new password has passed", _users.GetUserById(id)?.Username ?? id.ToString());
@@ -219,7 +233,7 @@ public class Enforcer
 	public async Task UndoSignIn(Guid userId, string? deviceId)
 	{
 		var user = _users.GetUserById(userId);
-		if (user == null)
+		if (user == null || Policy.IsGuest(user))
 		{
 			return;
 		}
@@ -243,6 +257,18 @@ public class Enforcer
 			{
 				_logger.LogWarning(ex, "Signing out a device of {User} failed", user.Username);
 			}
+		}
+	}
+
+	// A guest account with a state from before (it was a normal account, or an older version of this plugin acted on it
+	// while MKI Guest Pass was creating it): the state goes, so the gate never blocks a guest.
+	public void ForgetGuest(Guid userId)
+	{
+		if (_store.MustChange(userId))
+		{
+			_store.Remove(userId);
+			_patcher.Sync();
+			_logger.LogInformation("{User} is a guest account of MKI Guest Pass: open password request dropped", _users.GetUserById(userId)?.Username ?? userId.ToString());
 		}
 	}
 

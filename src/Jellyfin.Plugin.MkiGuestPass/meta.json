@@ -1,0 +1,11 @@
+{
+  "guid": "3ae42f4f-a017-405f-ab3d-02c3d876c5a2",
+  "name": "MKI Guest Pass",
+  "overview": "Temporary guest accounts from a link, QR code or code: only the libraries you pick, locked and deleted when the pass ends.",
+  "description": "Create a pass on the settings page, pick the libraries, how long it lasts, how many people can use it, how many devices and streams each of them gets and the highest rating, then send the link, show the QR code or read out the code. A guest opens it, types a first name and is watching a minute later: the plugin creates a hidden guest account with no password and signs it in on that browser. TVs are signed in with Quick Connect from the guest's phone. When the pass ends, playback stops, every device is signed out and the account is locked, then deleted a few days later. Links hold 256 random bits and are stored only as a keyed fingerprint, codes and joins are rate-limited, and guests are never administrators: they cannot see other users, download, delete, change settings, use Seerr or start library scans. Turning the plugin off locks every guest; uninstalling deletes them.",
+  "owner": "MKI",
+  "category": "Authentication",
+  "targetAbi": "12.0.0.0",
+  "version": "1.0.0.0",
+  "changelog": "First release. Passes with a link, a QR code and an optional 8-character code, for up to 10 people each, with their own libraries, end time, devices and streams per guest, highest rating and home-only option. Guests join on a small page of their own, come back on the same browser without using another place, and sign in TVs with Quick Connect. A badge in the web client shows guests when their access ends. Passes can get a new link, a new end, be ended early or deleted, guests can be ended or deleted one by one. Works together with MKI Password Policy 1.1.1.0 or later, which leaves guest accounts alone."
+}

@@ -228,6 +228,12 @@ public class LoginGate : IStartupFilter
 			throw new InvalidDataException("Sign-in response without user");
 		}
 		var benutzer = _users.GetUserById(id) ?? throw new InvalidDataException("Unknown user in sign-in response");
+		if (Policy.IsGuest(benutzer))
+		{
+			// Guest accounts of MKI Guest Pass have no password; their access is that plugin's business.
+			_enforcer.ForgetGuest(id);
+			return null;
+		}
 
 		string? grund = null;
 		_enforcer.EnforceNoPassword(benutzer);

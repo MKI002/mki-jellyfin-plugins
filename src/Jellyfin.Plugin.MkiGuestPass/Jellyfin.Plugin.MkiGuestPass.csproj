@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>Jellyfin.Plugin.MkiGuestPass</AssemblyName>
+    <RootNamespace>Jellyfin.Plugin.MkiGuestPass</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Jellyfin.Controller" Version="12.2.0" ExcludeAssets="runtime" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Configuration/configPage.html" LogicalName="Jellyfin.Plugin.MkiGuestPass.Configuration.configPage.html" />
+    <EmbeddedResource Include="Web/join.html" LogicalName="Jellyfin.Plugin.MkiGuestPass.Web.join.html" />
+    <EmbeddedResource Include="Web/join.js" LogicalName="Jellyfin.Plugin.MkiGuestPass.Web.join.js" />
+    <EmbeddedResource Include="Web/client.js" LogicalName="Jellyfin.Plugin.MkiGuestPass.Web.client.js" />
+  </ItemGroup>
+</Project>
