@@ -165,10 +165,11 @@
         if (!ok) { problem('Your browser does not allow this page to store your sign-in (private mode or blocked storage). Allow it for this site, or open the link in another browser.', null); return; }
         clear();
         view.appendChild(big('ok', true));
-        view.appendChild(el('h1', null, 'You’re in, ' + r.Name + '!'));
+        view.appendChild(heading('You’re in, ' + r.Name + '!'));
         view.appendChild(el('p', 'lede', 'Opening Jellyfin, signed in as Guest ' + r.Name + '…'));
         var go = el('a', 'link', 'Not opening? Open Jellyfin'); go.href = base + '/web/index.html';
         view.appendChild(go);
+        focusHeading();
         setTimeout(function () { location.replace(base + '/web/index.html'); }, 600);
     }
 
