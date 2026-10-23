@@ -54,7 +54,8 @@ public class GuestGate : IStartupFilter
 	// What the gate saw of a join request's connection, before Jellyfin applied a known proxy's headers.
 	public const string OriginKey = "MkiGuestPass.Origin";
 
-	private static readonly string[] ForwardingHeaders = { "X-Forwarded-For", "Forwarded", "X-Real-IP" };
+	// Any of these says a proxy passed the request on: home devices send none of them.
+	private static readonly string[] ForwardingHeaders = { "X-Forwarded-For", "Forwarded", "X-Real-IP", "X-Forwarded-Proto", "X-Forwarded-Host" };
 
 	private static readonly Regex Logout = new(@"/Sessions/Logout/?$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
@@ -132,7 +133,7 @@ public class GuestGate : IStartupFilter
 	// address from it, or a known proxy passed it on without saying for whom or with headers that disagree. Visitor:
 	// the address that proxy named, if any. Address: the address Jellyfin will take the request for (null: none).
 	// Quiet: not worth the warning on the settings page by itself (a known proxy's own requests, like health checks).
-	public sealed record Seen(bool ViaUnknownProxy, IPAddress? Visitor, IPAddress? Address = null, bool Quiet = false);
+	public sealed record Seen(bool ViaUnknownProxy, IPAddress? Visitor, IPAddress? Address = null, bool Quiet = false, IPAddress? AlsoVisitor = null);
 
 	private enum Kind
 	{
@@ -166,7 +167,7 @@ public class GuestGate : IStartupFilter
 					{
 						context.Items[OriginKey] = seen;
 					}
-					bool away = seen.ViaUnknownProxy || (seen.Address != null && !_network.IsInLocalNetwork(seen.Address));
+					bool away = Away(seen);
 					done = (away && await HomeOnlyGuestAway(context).ConfigureAwait(false))
 						|| await Handle(context, seen).ConfigureAwait(false);
 				}
@@ -417,7 +418,8 @@ public class GuestGate : IStartupFilter
 			{
 				return new Seen(false, null, applied);
 			}
-			return new Seen(true, real ?? applied ?? Named(request), raw, Quiet: !forwarding);
+			// The join limits hold for both addresses: one of them may be the visitor's own choice.
+			return new Seen(true, real ?? applied ?? Named(request), raw, Quiet: !forwarding, AlsoVisitor: real != null ? applied : null);
 		}
 		if (!forwarding || !_network.IsInLocalNetwork(raw))
 		{
@@ -426,7 +428,13 @@ public class GuestGate : IStartupFilter
 		return new Seen(true, Named(request), raw);
 	}
 
-	// The visitor's address Jellyfin takes from the forwarding headers of a known proxy, or null when it takes none.
+	// Away from the home network as Jellyfin will see it, or through a proxy that cannot be trusted. No address at all
+	// (a Unix socket) means some relay passes visitors on, so that counts as away too.
+	private bool Away(Seen seen) => seen.ViaUnknownProxy || seen.Address == null || !_network.IsInLocalNetwork(seen.Address);
+
+	// The visitor's address Jellyfin takes from the X-Forwarded-For of a known proxy, or null when it takes none. A
+	// changed scheme or host alone also leaves X-Original-For, and a proxy that names itself, loopback or another
+	// proxy names no visitor: null as well.
 	private IPAddress? Applied(HttpContext context, IPAddress raw)
 	{
 		var copy = new DefaultHttpContext();
@@ -443,11 +451,15 @@ public class GuestGate : IStartupFilter
 		}
 		_forwarder.ApplyForwarders(copy);
 		var ip = copy.Connection.RemoteIpAddress;
-		if (ip == null || !copy.Request.Headers.ContainsKey(_forwarding.OriginalForHeaderName))
+		string forFrom = _forwarding.ForwardedForHeaderName;
+		if (ip == null || !copy.Request.Headers.ContainsKey(_forwarding.OriginalForHeaderName)
+			|| copy.Request.Headers.GetCommaSeparatedValues(forFrom).Length >= context.Request.Headers.GetCommaSeparatedValues(forFrom).Length)
 		{
 			return null;
 		}
-		return ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4() : ip;
+		ip = ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4() : ip;
+		bool proxyItself = ip.Equals(raw) || IPAddress.IsLoopback(ip) || _forwarding.KnownProxies.Any(p => (p.IsIPv4MappedToIPv6 ? p.MapToIPv4() : p).Equals(ip));
+		return proxyItself ? null : ip;
 	}
 
 	// X-Real-IP as a single address; null when missing, unreadable or given more than once.
@@ -488,7 +500,13 @@ public class GuestGate : IStartupFilter
 			return false;
 		}
 		var tokens = Tokens(context.Request, MaxTokens);
-		var guest = tokens.Count > MaxTokens ? null : GuestCaller(tokens);
+		if (tokens.Count > MaxTokens)
+		{
+			// As in Handle: a pile of junk must not hide a guest's token.
+			context.Response.StatusCode = StatusCodes.Status400BadRequest;
+			return true;
+		}
+		var guest = GuestCaller(tokens);
 		var found = guest == null ? null : _guests.Find(guest.Value);
 		if (found == null || found.Value.Pass.RemoteAccess)
 		{
@@ -554,7 +572,7 @@ public class GuestGate : IStartupFilter
 			context.Response.StatusCode = StatusCodes.Status401Unauthorized;
 			return true;
 		}
-		if (!found.Value.Pass.RemoteAccess && (seen.ViaUnknownProxy || (seen.Address != null && !_network.IsInLocalNetwork(seen.Address))))
+		if (!found.Value.Pass.RemoteAccess && Away(seen))
 		{
 			await Refuse(context, "This guest pass works only on the home network.").ConfigureAwait(false);
 			return true;

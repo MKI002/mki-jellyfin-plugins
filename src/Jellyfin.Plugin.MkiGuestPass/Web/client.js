@@ -126,8 +126,9 @@
                 var back = keys();
                 var shared = false;
                 try { shared = !!sessionStorage.getItem(SHARED); } catch (e) { }
-                n.appendChild(el('p', null, was.cut ? 'Your guest access on this browser has ended. If the pass is opened again, your guest link brings you back.'
-                    : was.away ? 'Your guest pass works on the home network only, and Jellyfin does not see this device there right now. At your host’s home? Connect to the Wi-Fi there, not mobile data, then continue. Somewhere else? Ask the person who invited you to allow the pass from anywhere.'
+                var from = back.length === 1 && back[0].from ? back[0].from : '';
+                n.appendChild(el('p', null, was.cut ? 'Your guest access on this browser has ended. Open your guest link again: it brings you back if it can, or says why not.'
+                    : was.away ? 'Your guest pass works on the home network only, and Jellyfin does not see this device there right now. At ' + (from ? from + '’s' : 'your host’s') + ' home? Connect to the Wi-Fi there, not mobile data, then continue. Somewhere else? Ask ' + (from || 'the person who invited you') + ' to allow the pass from anywhere.'
                     : shared ? 'This is a shared computer, so Jellyfin asks again after a reload.' : 'You are signed out of your guest access.'));
                 if (back.length) {
                     var row = el('p', 'mkigp-again'), go = el('a', null, back.length === 1 ? 'Continue as ' + back[0].name : 'Continue as a guest');

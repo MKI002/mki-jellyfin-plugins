@@ -70,8 +70,9 @@ public class NewPass
 
 // Where a join request came from. ViaUnknownProxy: a home address passed on a request for someone else, through a
 // reverse proxy Jellyfin does not know (Networking -> Known proxies), so the real visitor is unknown. ThrottleAddress
-// is then the address that proxy named, so one visitor cannot use up the limits of everyone behind it.
-public sealed record JoinOrigin(IPAddress? Address, bool ViaUnknownProxy, IPAddress? ThrottleAddress);
+// is then the address that proxy named, so one visitor cannot use up the limits of everyone behind it. ThrottleAlso: a
+// second address the limits hold for, when the proxy's headers disagree and either may be the visitor's own choice.
+public sealed record JoinOrigin(IPAddress? Address, bool ViaUnknownProxy, IPAddress? ThrottleAddress, IPAddress? ThrottleAlso = null);
 
 public class JoinRequest
 {
@@ -124,6 +125,12 @@ public class GuestService
 	private readonly SemaphoreSlim _gate = new(1, 1);
 
 	private DateTime _unknownProxyUtc = DateTime.MinValue;
+
+	// Guests whose remote access was just turned on by Where, until when the sweep repeats it (see MatchWhere). Used
+	// under the lock only.
+	private readonly Dictionary<Guid, DateTime> _widen = new();
+
+	private static readonly TimeSpan WidenFor = TimeSpan.FromMinutes(10);
 
 	private readonly PassStore _store;
 
@@ -466,6 +473,14 @@ public class GuestService
 			var failed = new List<Guid>();
 			foreach (var id in guests)
 			{
+				if (remote)
+				{
+					_widen[id] = DateTime.UtcNow + WidenFor;
+				}
+				else
+				{
+					_widen.Remove(id);
+				}
 				try
 				{
 					await SetRemote(id, remote).ConfigureAwait(false);
@@ -591,7 +606,7 @@ public class GuestService
 	// What the join page shows before the guest types a name. Only for a valid link or code.
 	public object Peek(JoinRequest r, JoinOrigin origin)
 	{
-		string key = Throttle.Key(origin.ThrottleAddress ?? origin.Address);
+		string key = Throttle.Key(origin.ThrottleAddress ?? origin.Address, origin.ThrottleAlso);
 		if (!_throttle.Request(key))
 		{
 			throw TooMany();
@@ -624,7 +639,7 @@ public class GuestService
 	public async Task<object> Redeem(JoinRequest r, JoinOrigin origin)
 	{
 		var ip = origin.Address;
-		string key = Throttle.Key(origin.ThrottleAddress ?? ip);
+		string key = Throttle.Key(origin.ThrottleAddress ?? ip, origin.ThrottleAlso);
 		if (!_throttle.Request(key))
 		{
 			throw TooMany();
@@ -723,7 +738,7 @@ public class GuestService
 	public async Task<object> Rejoin(JoinRequest r, JoinOrigin origin)
 	{
 		var ip = origin.Address;
-		string key = Throttle.Key(origin.ThrottleAddress ?? ip);
+		string key = Throttle.Key(origin.ThrottleAddress ?? ip, origin.ThrottleAlso);
 		if (!_throttle.Request(key))
 		{
 			throw TooMany();
@@ -1761,16 +1776,24 @@ public class GuestService
 		}
 	}
 
-	// Each guest account allows remote access exactly when its pass does: repairs a change that failed or that
-	// Jellyfin's own write-back of an older copy of the account undid.
+	// No guest of a pass for the home network only has remote access: repairs a change that failed or that Jellyfin's
+	// own write-back of an older copy of the account undid. Turning it on is repeated only for a while after Where
+	// allowed a pass from anywhere (and while it fails), so a stricter setting an administrator then makes for one
+	// guest in Jellyfin's user editor stays.
 	private async Task MatchWhere()
 	{
+		var now = DateTime.UtcNow;
+		foreach (var done in _widen.Where(w => w.Value <= now).Select(w => w.Key).ToList())
+		{
+			_widen.Remove(done);
+		}
 		var want = _store.Read(d => d.AllGuests().Select(x => (x.Guest.UserId, x.Pass.RemoteAccess)).ToList());
 		var narrowed = new List<Guid>();
 		foreach (var (id, remote) in want)
 		{
 			var user = _users.GetUserById(id);
-			if (user == null || !UsesGuestSignIn(user) || user.HasPermission(PermissionKind.EnableRemoteAccess) == remote)
+			if (user == null || !UsesGuestSignIn(user) || user.HasPermission(PermissionKind.EnableRemoteAccess) == remote
+				|| (remote && !_widen.ContainsKey(id)))
 			{
 				continue;
 			}
@@ -1789,6 +1812,10 @@ public class GuestService
 				if (!remote)
 				{
 					await RevokeQuietly(id).ConfigureAwait(false);
+				}
+				else
+				{
+					_widen[id] = DateTime.UtcNow + WidenFor;
 				}
 			}
 		}

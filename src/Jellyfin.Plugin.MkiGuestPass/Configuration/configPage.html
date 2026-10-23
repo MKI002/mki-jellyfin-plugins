@@ -705,6 +705,7 @@
 #MkiGuestPassConfigPage .gp-pass .mk-card__title { overflow-wrap: anywhere; }
 #MkiGuestPassConfigPage .gp-pass .mk-card__desc { overflow-wrap: anywhere; }
 #MkiGuestPassConfigPage .gp-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin: 0; }
+#MkiGuestPassConfigPage .gp-facts--one { grid-template-columns: minmax(0, 260px); }
 #MkiGuestPassConfigPage .gp-fact { min-width: 0; padding: 9px 12px; border-radius: 10px; background: var(--mk-field); border: 1px solid var(--mk-line); }
 #MkiGuestPassConfigPage .gp-fact small { display: flex; align-items: center; gap: 5px; font-size: .7rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--mk-dim); }
 #MkiGuestPassConfigPage .gp-fact small .mk-ic { font-size: 15px; color: var(--mk-a2-ink); }
@@ -814,7 +815,8 @@
   #MkiGuestPassConfigPage .gp-fact { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 9px; border-radius: 999px; }
   #MkiGuestPassConfigPage .gp-fact small { font-size: .64rem; }
   #MkiGuestPassConfigPage .gp-fact small .mk-ic { display: none; }
-  #MkiGuestPassConfigPage .gp-fact__do { margin-top: 0; font-size: .74rem; }
+  #MkiGuestPassConfigPage .gp-fact__do { margin-top: 0; font-size: .74rem; align-items: baseline; }
+  #MkiGuestPassConfigPage .gp-fact__do .mk-ic { align-self: center; }
   #MkiGuestPassConfigPage .gp-fact b { margin: 0; font-size: .82rem; }
   #MkiGuestPassConfigPage .gp-fact > span { display: none; }
   /* the timeline captions: one line each, under the bar */
@@ -2727,7 +2729,7 @@ function passCard(p) {
     } else {
         /* once it has ended, only where it works matters: Open again brings that back as it is */
         body.appendChild(el('p', 'gp-summary', p.Used + ' of ' + kit.plural(p.MaxGuests, 'place') + ' used'));
-        var wf = el('div', 'gp-facts'); wf.appendChild(whereFact(p)); body.appendChild(wf);
+        var wf = el('div', 'gp-facts gp-facts--one'); wf.appendChild(whereFact(p)); body.appendChild(wf);
     }
     if (open || gs.length) body.appendChild(lifeline(p, soon));
     if (gs.length) {

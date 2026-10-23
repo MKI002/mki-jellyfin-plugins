@@ -216,7 +216,7 @@ public class GuestPassController : ControllerBase
 		var ip = Address();
 		if (HttpContext.Items[GuestGate.OriginKey] is GuestGate.Seen seen)
 		{
-			return new JoinOrigin(ip, seen.ViaUnknownProxy, seen.ViaUnknownProxy ? seen.Visitor : null);
+			return seen.ViaUnknownProxy ? new JoinOrigin(ip, true, seen.Visitor, seen.AlsoVisitor) : new JoinOrigin(ip, false, null);
 		}
 		return new JoinOrigin(ip, GuestGate.HasForwarding(Request), null);
 	}

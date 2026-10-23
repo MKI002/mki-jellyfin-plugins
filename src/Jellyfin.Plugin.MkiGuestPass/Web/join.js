@@ -119,7 +119,7 @@
         return list.filter(function (g) { return g && g.key && g.name && new Date(g.end).getTime() > now - 30 * 864e5; })
             .map(function (g) { g.session = session; return g; }).slice(0, 5);
     }
-    function plain(g) { return { key: g.key, name: g.name, pass: g.pass, title: g.title, end: g.end, from: g.from || undefined, ended: g.ended || undefined }; }
+    function plain(g) { return { key: g.key, name: g.name, pass: g.pass, title: g.title, end: g.end, from: g.from || undefined, server: g.server || undefined, ended: g.ended || undefined }; }
     function all() { return keptIn(true).concat(keptIn(false)); }
     function kept() { var now = Date.now(); return all().filter(function (g) { return !g.ended && new Date(g.end).getTime() > now; }).slice(0, 5); }
     function keep(g, session) {
@@ -164,7 +164,7 @@
            it off again once signed in, so Jellyfin asks for a sign-in after this window closes */
         try { localStorage.setItem('enableAutoLogin', 'true'); } catch (e) { ok = false; }
         try { if (r.shared) sessionStorage.setItem(SHARED, r.UserId); else sessionStorage.removeItem(SHARED); } catch (e) { ok = ok && !r.shared; }
-        if (r.RejoinKey) keep({ key: r.RejoinKey, name: r.Name, pass: r.PassId, title: r.Pass, end: r.EndUtc, from: r.From }, !!r.shared);
+        if (r.RejoinKey) keep({ key: r.RejoinKey, name: r.Name, pass: r.PassId, title: r.Pass, end: r.EndUtc, from: r.From, server: r.ServerName }, !!r.shared);
         if (r.PassId) passNews(r.PassId, r.EndUtc, false);
         tab(null);
         if (!ok) { problem('Your browser does not allow this page to store your sign-in (private mode or blocked storage). Allow it for this site, or open the link in another browser.', null); return; }
@@ -252,7 +252,7 @@
     function tryAgain(b) {
         if (b) { if (b.disabled) return; busy(b, true, 'Checking…'); retried = view.getAttribute('data-screen'); }
         if (!token && !code) {
-            if (again) { rejoin(again).then(null, function (e) { if (!retryable(e.reason, e.status)) again = null; problem(e.message, null, e.reason || 'ended', e.status); }); return; }
+            if (again) { rejoin(again).then(null, function (e) { if (!retryable(e.reason, e.status)) again = null; problem(e.message, 'nocode', e.reason || 'ended', e.status); }); return; }
             if (kept().length) backScreen(null); else codeScreen();
             return;
         }
@@ -269,11 +269,9 @@
         if (titled) box.appendChild(h);
         box.appendChild(el('p', null, 'Jellyfin does not see this device on ' + whose + ' home network right now.'));
         var ul = el('ul'), a = el('li'), b = el('li');
-        a.appendChild(el('b', null, 'At ' + whose + ' home? ')); a.appendChild(document.createTextNode('Connect this device to the Wi-Fi there, not mobile data, then tap Try again.'));
+        a.appendChild(el('b', null, 'At ' + whose + ' home? ')); a.appendChild(document.createTextNode('Connect this device to the Wi-Fi there, not mobile data, then tap Try again. Still refused on that Wi-Fi? Then Jellyfin does not count it as home, so ask as below.'));
         b.appendChild(el('b', null, 'Somewhere else? ')); b.appendChild(document.createTextNode('Ask ' + host() + ' to allow this pass from anywhere, then tap Try again. The link stays the same.'));
-        var c = el('li');
-        c.appendChild(el('b', null, 'On that Wi-Fi and still refused? ')); c.appendChild(document.createTextNode('Then Jellyfin does not count it as home: ask ' + host() + ' to allow this pass from anywhere.'));
-        ul.appendChild(a); ul.appendChild(b); ul.appendChild(c); box.appendChild(ul);
+        ul.appendChild(a); ul.appendChild(b); box.appendChild(ul);
         box.appendChild(retryButton());
         return box;
     }
@@ -283,11 +281,11 @@
         if (qc) {
             var a = el('li');
             a.appendChild(el('b', null, 'Joined already on another device? ')); a.appendChild(document.createTextNode('Open Jellyfin here and choose Use Quick Connect. Then, on the other device, tap the Guest badge, choose Sign in a TV or another device and type the code.'));
+            var go = el('a', 'btn btn--plain', 'Open Jellyfin'); go.href = base + '/web/index.html'; a.appendChild(go);
             ul.appendChild(a);
         }
         var b = el('li'); b.appendChild(el('b', null, qc ? 'New here? ' : '')); b.appendChild(document.createTextNode('Ask ' + host() + ' for a new invitation with a free place.'));
         ul.appendChild(b); box.appendChild(ul);
-        if (qc) { var go = el('a', 'btn', 'Open Jellyfin'); go.href = base + '/web/index.html'; box.appendChild(go); }
         return box;
     }
     function problem(text, after, reason, status) {
@@ -295,8 +293,8 @@
         /* a full pass stays full: its link is no use in this tab any more, code entry is. An ended one can be opened
            again, so its link stays for Try again and a reload */
         if (reason === 'full') tab(null);
-        /* codes are refused just the same while a plugin needs an update */
-        if (reason === 'update' || reason === 'full') after = 'nocode';
+        /* codes are refused just the same while a plugin needs an update; a guest who was ended has no use for one */
+        if (reason === 'update' || reason === 'full' || reason === 'removed') after = 'nocode';
         foot(false);
         var screen = (reason || 'error') + ':' + (status || 0), same = retried === screen;
         retried = null;
@@ -420,7 +418,7 @@
         shc.type = 'checkbox'; shc.id = 'gpShared'; shc.setAttribute('aria-describedby', 'gpSharedHint');
         sh.appendChild(shc); sh.appendChild(el('span', null, 'Shared or public computer'));
         view.appendChild(sh);
-        var shh = el('p', 'hint check-hint', 'Jellyfin does not keep you signed in here: a reload asks you to continue, and once this window is closed the next person starts at the sign-in page.'); shh.id = 'gpSharedHint';
+        var shh = el('p', 'hint check-hint', 'Jellyfin forgets you here once this window is closed.'); shh.id = 'gpSharedHint';
         view.appendChild(shh);
         var msg = el('div'); view.appendChild(msg);
         var b = el('button', 'btn'); b.type = 'button'; busy(b, false, 'Start watching'); view.appendChild(b);
@@ -463,6 +461,7 @@
     function backScreen(passId, without) {
         var list = kept().filter(function (g) { return (!passId || g.pass === passId) && (!without || g.pass !== without); });
         if (!list.length) { codeScreen(); return; }
+        if (!peek && list[0].server) serverName(list[0].server);
         clear();
         view.appendChild(el('p', 'kicker', 'Guest pass'));
         view.appendChild(heading(list.length === 1 ? 'Welcome back, ' + list[0].name : 'Welcome back'));
@@ -483,7 +482,7 @@
                     busy(b, false, label);
                     if (e.reason === 'update' || (e.status === 410 || e.reason === 'home') && list.length === 1) {
                         again = e.reason === 'ended' || retryable(e.reason, 0) ? g : null;
-                        problem(e.message, null, e.reason || 'ended', e.status);
+                        problem(e.message, 'nocode', e.reason || 'ended', e.status);
                         return;
                     }
                     msg.textContent = ''; msg.appendChild(error(e.message));
@@ -515,12 +514,20 @@
     }
 
     /* A pass this browser joined before: continue instead of using another place. */
+    function serverName(name) { document.getElementById('server').textContent = name && name.trim().toLowerCase() !== 'jellyfin' ? ' · ' + name : ''; }
     function opened(p) {
         peek = p; again = null;
-        document.getElementById('server').textContent = p.ServerName && p.ServerName.trim().toLowerCase() !== 'jellyfin' ? ' · ' + p.ServerName : '';
+        serverName(p.ServerName);
+        /* a guest whose access on this browser ended, back on the link of a pass that runs: straight on, so they are
+           either signed in again or told why not, without a "Welcome back" first */
+        var cut = all().filter(function (g) { return g.pass === p.Id && g.ended; }).length > 0;
         passNews(p.Id, p.EndUtc, !!p.Ended);
         var mine = kept().filter(function (g) { return g.pass === p.Id; });
-        if (mine.length && !p.Ended) backScreen(p.Id); else inviteScreen();
+        if (mine.length && !p.Ended) {
+            backScreen(p.Id);
+            var first = cut && mine.length === 1 ? view.querySelector('.who .btn') : null;
+            if (first) first.click();
+        } else inviteScreen();
     }
 
     /* ---------- start ---------- */

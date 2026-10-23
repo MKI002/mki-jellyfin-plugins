@@ -14,6 +14,8 @@ namespace Jellyfin.Plugin.MkiGuestPass.Services;
 //   At that pace even a large botnet needs thousands of years to guess one 8-character code.
 // - Links and rejoin keys are 256-bit random values that cannot be guessed; their limit only keeps junk traffic cheap.
 // - Every address gets at most 60 join requests in 15 minutes, right or wrong.
+// A key can name two addresses (separated by a space) when it is unclear which one is the visitor's: every limit then
+// holds for each of them, so changing one escapes nothing.
 public class Throttle
 {
 	public const int CodeFailuresPerAddress = 5;
@@ -54,6 +56,13 @@ public class Throttle
 		}
 	}
 
+	public static string Key(IPAddress? ip, IPAddress? also)
+	{
+		string one = Key(ip);
+		string two = also == null ? one : Key(also);
+		return two == one ? one : one + " " + two;
+	}
+
 	public static string Key(IPAddress? ip)
 	{
 		if (ip == null)
@@ -77,15 +86,26 @@ public class Throttle
 	}
 
 	// Counts the request; false when the address has used up its requests for now.
-	public bool Request(string key) => Add(_requests, key, RequestsPerAddress);
+	public bool Request(string key)
+	{
+		bool ok = true;
+		foreach (var one in Parts(key))
+		{
+			ok = Add(_requests, one, RequestsPerAddress) && ok;
+		}
+		return ok;
+	}
 
-	public bool CodeBlocked(string key) => CodesPausedUntil != null || Count(_codeFailures, key) >= CodeFailuresPerAddress;
+	public bool CodeBlocked(string key) => CodesPausedUntil != null || Parts(key).Any(k => Count(_codeFailures, k) >= CodeFailuresPerAddress);
 
-	public bool SecretBlocked(string key) => Count(_secretFailures, key) >= SecretFailuresPerAddress;
+	public bool SecretBlocked(string key) => Parts(key).Any(k => Count(_secretFailures, k) >= SecretFailuresPerAddress);
 
 	public void CodeFailed(string key)
 	{
-		Add(_codeFailures, key, int.MaxValue);
+		foreach (var one in Parts(key))
+		{
+			Add(_codeFailures, one, int.MaxValue);
+		}
 		bool paused = false;
 		lock (_allCodeFailures)
 		{
@@ -104,7 +124,15 @@ public class Throttle
 		}
 	}
 
-	public void SecretFailed(string key) => Add(_secretFailures, key, int.MaxValue);
+	public void SecretFailed(string key)
+	{
+		foreach (var one in Parts(key))
+		{
+			Add(_secretFailures, one, int.MaxValue);
+		}
+	}
+
+	private static string[] Parts(string key) => key.Split(' ');
 
 	private static int Count(ConcurrentDictionary<string, Queue<DateTime>> map, string key)
 	{
