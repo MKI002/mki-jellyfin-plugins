@@ -87,6 +87,10 @@
         '.mkls-card__field{display:flex;align-items:center;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(238,241,255,.5)}',
         '.mkls-card__btn{display:flex;align-items:center;justify-content:center;font-weight:700;color:#05060B}',
         '.mkls-card__qc{text-align:center;opacity:.6}',
+        '.mkls-card__btn.is-raised{color:rgba(238,241,255,.78);background:rgba(255,255,255,.08)}',
+        '.mkls-card.is-bare .mkls-card__btn.is-raised{background:rgba(26,28,40,.92)}',
+        '.mkls-card__users{display:flex;justify-content:center}',
+        '.mkls-card__user{display:block;flex:none;background:linear-gradient(160deg,#00A4DC,#0b6f99)}',
 
         /* ---------- the real sign-in page while the showcase runs ---------- */
         '#mkiLoginShowcase{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none}',
@@ -106,8 +110,8 @@
         'html.mkils-card #loginPage .emby-input:focus{border-color:var(--mkils-a1)}',
         'html.mkils-card #loginPage .button-submit{background:linear-gradient(90deg,var(--mkils-a1),var(--mkils-a2));color:#05060B;border-radius:8px;',
         'font-weight:700;box-shadow:0 0 22px var(--mkils-glow)}',
-        'html.mkils-card #loginPage .button-submit:focus-visible,html.mkils-card #loginPage .button-submit.show-focus{outline:2px solid #fff;outline-offset:2px}',
         'html.mkils-card #loginPage .readOnlyContent .raised,html.mkils-card #loginPage .btnCancel{background:rgba(255,255,255,.08);border-radius:8px}',
+        'html.mkils-card #loginPage .readOnlyContent .raised:hover,html.mkils-card #loginPage .btnCancel:hover{background:rgba(255,255,255,.14)}',
         'html.mkils-card #loginPage .readOnlyContent{margin-bottom:0!important}',
         'html.mkils-card #loginPage .loginDisclaimerContainer{margin-top:1em}',
         /* user tiles: Jellyfin sizes them for the whole screen width, which is far too small inside the card */
@@ -123,7 +127,45 @@
         '-webkit-backdrop-filter:none;backdrop-filter:none}',
         'html.mkils-card.mkils-mosaic #loginPage>div::after{display:none}',
         'html.mkils-card.mkils-mosaic #loginPage .emby-input{background:rgba(10,11,19,.92)}',
-        'html.mkils-card.mkils-mosaic #loginPage .readOnlyContent .raised,html.mkils-card.mkils-mosaic #loginPage .btnCancel{background:rgba(26,28,40,.92)}}'
+        'html.mkils-card.mkils-mosaic #loginPage .readOnlyContent .raised,html.mkils-card.mkils-mosaic #loginPage .btnCancel{background:rgba(26,28,40,.92)}',
+        /* the card in the middle of the height, except for Neon Horizon, where it sits below the horizon */
+        'html.mkils-card.mkils-posterwall #loginPage,html.mkils-card.mkils-spotlight #loginPage,html.mkils-card.mkils-mosaic #loginPage{display:flex;flex-direction:column}',
+        'html.mkils-card.mkils-posterwall #loginPage>div,html.mkils-card.mkils-spotlight #loginPage>div,html.mkils-card.mkils-mosaic #loginPage>div{margin-top:auto;margin-bottom:auto}}',
+        /* short screens (a laptop at 1366x768): the compact card, so the whole form fits without scrolling */
+        '@media (max-height:760px){',
+        'html.mkils-card #loginPage>div{padding-top:1.1em!important;padding-bottom:1em!important}',
+        'html.mkils-card #loginPage .inputContainer,html.mkils-card #loginPage .checkboxContainer{margin-bottom:1em}',
+        'html.mkils-card #loginPage .sectionTitle,html.mkils-card #loginPage h1{margin-top:0;margin-bottom:.6em}}',
+        '@media (min-width:60em) and (min-aspect-ratio:5/4) and (max-height:819px){',
+        'html.mkils-card.mkils-horizon #loginPage>div{margin-top:max(.5em,calc(26vh - 100px))}}',
+        '@media (min-width:60em) and (min-aspect-ratio:5/4) and (max-height:699px){',
+        'html.mkils-card.mkils-horizon #loginPage>div{margin-top:.5em}}',
+        /* keyboard and remote focus: Jellyfin fills the focused button, the card does the same in its colours (after
+           the Flip Mosaic rules, so it wins there too); a ring, because Jellyfin turns outlines off on buttons */
+        'html.mkils-card #loginPage .readOnlyContent .raised:focus,html.mkils-card #loginPage .btnCancel:focus{',
+        'background:rgba(var(--mkils-a1-rgb),.26);color:#fff;box-shadow:0 0 0 2px var(--mkils-a1),0 0 18px var(--mkils-glow)}',
+        'html.mkils-card #loginPage .button-submit:focus{color:#05060B;box-shadow:0 0 0 2px #05060B,0 0 0 4px #fff,0 0 22px var(--mkils-glow)}',
+        'html.mkils-card #loginPage .emby-button.show-focus:focus{-webkit-transform:scale(1.04);transform:scale(1.04)}',
+        'html.mkils-card #loginPage .inputLabelFocused{color:var(--mkils-a1)}',
+        'html.mkils-card #loginPage .emby-checkbox:checked+span+.checkboxOutline{background-color:var(--mkils-a1);border-color:var(--mkils-a1)}',
+        'html.mkils-card #loginPage .emby-checkbox:checked+span+.checkboxOutline .checkboxIcon{color:#05060B}',
+        'html.mkils-card #loginPage .emby-checkbox:focus+span+.checkboxOutline{border-color:#fff;box-shadow:0 0 0 2px var(--mkils-glow)}',
+        /* the form always sits on a dark card or panel, so its text is light whatever theme the web client uses (a light
+           theme would put dark text on it) */
+        'html.mkils-on #loginPage{color:#EEF1FF;--jf-palette-text-primary:#EEF1FF;--jf-palette-text-secondary:rgba(238,241,255,.78)}',
+        'html.mkils-on #loginPage .sectionTitle,html.mkils-on #loginPage h1,html.mkils-on #loginPage .checkboxLabel,html.mkils-on #loginPage .cardText,',
+        'html.mkils-on #loginPage .loginDisclaimer{color:#EEF1FF}',
+        'html.mkils-on #loginPage .inputLabel,html.mkils-on #loginPage .inputLabelUnfocused,html.mkils-on #loginPage .fieldDescription{color:rgba(238,241,255,.78)}',
+        'html.mkils-card #loginPage .emby-input{color:#EEF1FF}',
+        'html.mkils-card #loginPage .readOnlyContent .raised,html.mkils-card #loginPage .btnCancel{color:rgba(238,241,255,.9)}',
+        'html.mkils-plain #loginPage .readOnlyContent .raised,html.mkils-plain #loginPage .btnCancel{background:rgba(255,255,255,.1);color:#EEF1FF}',
+        'html.mkils-plain #loginPage .emby-input{background:rgba(255,255,255,.08);color:#EEF1FF;border:1px solid rgba(255,255,255,.18)}',
+        'html.mkils-plain #loginPage .readOnlyContent .raised:focus,html.mkils-plain #loginPage .btnCancel:focus{background:#00A4DC;color:#fff}',
+        /* TV browsers: no blur over moving pictures, a solid card instead */
+        'html.mkils-card.layout-tv #loginPage>div{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(8,9,16,.92)}',
+        /* without the card: Jellyfin's own form, on a dark panel so it stays readable over bright artwork */
+        'html.mkils-plain #loginPage>div{box-sizing:border-box;width:58em;max-width:calc(100% - 2em);margin-left:auto;margin-right:auto;',
+        'padding-top:1.2em!important;padding-bottom:1.4em!important;border-radius:16px;background:rgba(5,6,11,.82)}'
     ].join('');
 
     function injectCss() {
@@ -189,7 +231,10 @@
             im.addEventListener('error', missing);
             im.src = url; preload.push(im);
         }
-        function later(fn, ms) { var t = setTimeout(fn, ms); timers.push(t); return t; }
+        function later(fn, ms) {
+            var t = setTimeout(function () { var k = timers.indexOf(t); if (k >= 0) timers.splice(k, 1); fn(); }, ms);
+            timers.push(t); return t;
+        }
         function pickPosters(n, offset) { var out = []; for (var k = 0; k < n; k++) out.push(posters[(offset + k) % posters.length]); return out; }
 
         function measure() {
@@ -243,6 +288,10 @@
                 function go() {
                     if (done || stopped) return; done = true;
                     layer.style.backgroundImage = cssUrl(url) + ',' + placeholder(i);
+                    /* the outgoing backdrop keeps its zoom while it fades out, instead of jumping back */
+                    var t = window.getComputedStyle ? getComputedStyle(other).transform : '';
+                    other.style.transform = other.style.webkitTransform = t && t !== 'none' ? t : '';
+                    layer.style.transform = layer.style.webkitTransform = '';
                     layer.classList.remove('is-on'); void layer.offsetWidth; layer.classList.add('is-on');
                     layer.style.zIndex = '2'; other.style.zIndex = '1';
                     other.classList.remove('is-on');
@@ -257,15 +306,20 @@
                 later(go, 2500);
             }
             showAt(at);
-            if (!still && backdrops.length > 1) {
-                spotTimer = setInterval(function () { if (!document.hidden) showAt(++at); }, every);
+            /* Still shows another backdrop once a minute, without movement, so a TV is not left on one picture */
+            if (backdrops.length > 1) {
+                spotTimer = setInterval(function () { if (!document.hidden) showAt(++at); }, still ? 60000 : every);
             }
             card('right');
         }
 
         /* ---------- C: neon horizon: the MKI grid floor, posters gliding along the horizon ---------- */
         function horizon() {
-            var portrait = H > W * 1.1, hz = portrait ? 0.9 : 0.34, unit = Math.min(W, H * 1.78) / 100;
+            var portrait = H > W * 1.1, unit = Math.min(W, H * 1.78) / 100;
+            /* on the real page the form sits below the horizon: short screens (a laptop at 1366x768) get a higher
+               horizon and smaller posters, so the whole form fits without scrolling (the sign-in page CSS matches) */
+            var room = opts.mockCard || portrait ? 2 : H < 700 ? 0 : H < 820 ? 1 : 2;
+            var hz = portrait ? 0.9 : room === 0 ? Math.min(0.3, 118 / H) : room === 1 ? 0.26 : 0.34;
             stage.style.background = 'linear-gradient(#070814 0%,#14072a ' + (hz * 100) + '%,#05060B ' + (hz * 100 + 0.2) + '%)';
             var sun = el('div', 'mkls-sun'), d = unit * 34;
             sun.style.width = px(d); sun.style.height = px(d); sun.style.left = px(W / 2 - d / 2); sun.style.top = px(H * hz - d * 0.62);
@@ -288,14 +342,16 @@
             line.style.top = px(H * hz - 1);
             line.style.background = 'linear-gradient(90deg,transparent,' + a1 + ',' + a2 + ',transparent)';
             line.style.boxShadow = '0 0 ' + px(unit * 1.5) + ' ' + a2;
-            var pw = portrait ? W * 0.19 : unit * 9, gap = unit * 1.4, belt = el('div', 'mkls-belt');
+            var pw = portrait ? W * 0.19 : unit * [5.5, 7, 9][room], gap = unit * 1.4, belt = el('div', 'mkls-belt');
+            var tv = document.documentElement.classList.contains('layout-tv');
             var n = Math.ceil(W / (pw + gap)) + 2, set = pickPosters(n, 0);
             belt.style.top = px(H * hz); belt.style.paddingBottom = px(unit * 1.2);
             belt.style.animationDuration = belt.style.webkitAnimationDuration = (50 * slow * Math.max(1, n / 13)) + 's';
             set.concat(set).forEach(function (i) {
                 var p = poster(i, pw, pw * 1.5);
                 p.style.marginRight = px(gap);
-                p.style.webkitBoxReflect = 'below ' + px(unit * 1.2) + ' linear-gradient(transparent 55%,rgba(255,255,255,.25))';
+                /* the reflection costs too much on TV browsers */
+                if (!tv) p.style.webkitBoxReflect = 'below ' + px(unit * 1.2) + ' linear-gradient(transparent 55%,rgba(255,255,255,.25))';
                 belt.appendChild(p);
             });
             set.slice(0, 6).forEach(function (i) { want(opts.image(i, 'p')); });
@@ -364,13 +420,14 @@
         function card(where) {
             if (!opts.mockCard) return;
             var plain = data.Card === false, portrait = H > W * 1.1, unit = Math.min(W, H * 1.78) / 100;
-            if (portrait || plain) where = 'center';
+            if (portrait || plain) where = portrait ? 'top' : 'center';
             var top = where === 'below';
             var c = el('div', 'mkls-card' + (plain || where === 'left' ? ' is-bare' : ''));
-            var w = portrait ? W * 0.8 : Math.max(150, unit * 27);
+            var w = plain && !portrait ? Math.min(W * 0.66, Math.max(150, unit * 54)) : portrait ? W * 0.8 : Math.max(150, unit * 27);
             c.style.width = px(w); c.style.padding = px(unit * (top ? 1.6 : 2.2)) + ' ' + px(unit * 2.2);
             c.style.borderRadius = px(unit * 1.2);
-            if (!plain && where !== 'left') {
+            if (plain) c.style.background = 'rgba(5,6,11,.8)';
+            else if (where !== 'left') {
                 c.style.border = '1px solid transparent';
                 c.style.background = 'linear-gradient(rgba(8,9,16,.8),rgba(8,9,16,.8)) padding-box,linear-gradient(135deg,' + a1 + ',rgba(255,255,255,.08) 40%,rgba(255,255,255,.08) 60%,' + a2 + ') border-box';
             }
@@ -379,23 +436,39 @@
             var title = el('div', 'mkls-card__brand', 'Please sign in');
             title.style.fontSize = px(Math.max(11, unit * 1.9)); title.style.justifyContent = 'center';
             c.appendChild(title);
-            function field(label, text) {
-                var l = el('div', 'mkls-card__lbl', label); l.style.fontSize = px(Math.max(7, unit * 0.85)); l.style.marginTop = px(gapv); c.appendChild(l);
-                var f = el('div', 'mkls-card__field', text);
-                f.style.height = px(line); f.style.marginTop = px(unit * 0.4); f.style.borderRadius = px(unit * 0.6);
-                f.style.paddingLeft = px(unit * 1); f.style.fontSize = px(Math.max(8, unit * 1.1));
-                c.appendChild(f);
+            function button(text, main) {
+                var b = el('div', 'mkls-card__btn' + (main ? '' : ' is-raised'), text);
+                b.style.height = px(line * 1.1); b.style.marginTop = px(main ? gapv * 1.5 : unit * 0.5); b.style.borderRadius = px(unit * 0.6);
+                b.style.fontSize = px(Math.max(8, unit * (main ? 1.2 : 1.05)));
+                if (!main) return c.appendChild(b);
+                if (plain) { b.style.background = '#00A4DC'; b.style.color = '#fff'; }
+                else { b.style.background = 'linear-gradient(90deg,' + a1 + ',' + a2 + ')'; b.style.boxShadow = '0 0 ' + px(unit * 2) + ' rgba(' + r1 + ',.4)'; }
+                return c.appendChild(b);
             }
-            field('User', 'Name');
-            field('Password', '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022');
-            var b = el('div', 'mkls-card__btn', 'Sign In');
-            b.style.height = px(line * 1.1); b.style.marginTop = px(gapv * 1.5); b.style.borderRadius = px(unit * 0.6);
-            b.style.fontSize = px(Math.max(8, unit * 1.2));
-            if (plain) { b.style.background = '#00A4DC'; b.style.color = '#fff'; }
-            else { b.style.background = 'linear-gradient(90deg,' + a1 + ',' + a2 + ')'; b.style.boxShadow = '0 0 ' + px(unit * 2) + ' rgba(' + r1 + ',.4)'; }
-            c.appendChild(b);
-            var q = el('div', 'mkls-card__qc', 'Use Quick Connect'); q.style.fontSize = px(Math.max(7, unit * 1)); q.style.marginTop = px(gapv); c.appendChild(q);
-            if (where === 'center') { c.style.left = px((W - w) / 2); c.style.top = '50%'; c.style.transform = 'translateY(-50%)'; }
+            var users = Math.min(3, Math.max(0, +opts.users || 0));
+            if (users) {
+                /* the server shows its users on the sign-in page: tiles and buttons, as Jellyfin draws them */
+                var row = el('div', 'mkls-card__users'), size = Math.min(unit * 7, (w - unit * 4.4) / 3.6);
+                row.style.marginTop = px(gapv * 1.4); row.style.gap = px(unit * 1.2);
+                for (var u = 0; u < users; u++) { var t = el('i', 'mkls-card__user'); t.style.width = t.style.height = px(size); t.style.borderRadius = px(unit * 0.4); row.appendChild(t); }
+                c.appendChild(row);
+                var gapTop = el('div'); gapTop.style.height = px(gapv); c.appendChild(gapTop);
+                button('Manual Login'); button('Use Quick Connect'); button('Forgot Password');
+            } else {
+                function field(label, text) {
+                    var l = el('div', 'mkls-card__lbl', label); l.style.fontSize = px(Math.max(7, unit * 0.85)); l.style.marginTop = px(gapv); c.appendChild(l);
+                    var f = el('div', 'mkls-card__field', text);
+                    f.style.height = px(line); f.style.marginTop = px(unit * 0.4); f.style.borderRadius = px(unit * 0.6);
+                    f.style.paddingLeft = px(unit * 1); f.style.fontSize = px(Math.max(8, unit * 1.1));
+                    c.appendChild(f);
+                }
+                field('User', 'Name');
+                field('Password', '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022');
+                button('Sign In', true);
+                var q = el('div', 'mkls-card__qc', 'Use Quick Connect'); q.style.fontSize = px(Math.max(7, unit * 1)); q.style.marginTop = px(gapv); c.appendChild(q);
+            }
+            if (where === 'top') { c.style.left = px((W - w) / 2); c.style.top = px(Math.max(unit * 4, H * 0.1)); }
+            else if (where === 'center') { c.style.left = px((W - w) / 2); c.style.top = '50%'; c.style.transform = 'translateY(-50%)'; }
             else if (where === 'right') { c.style.right = px(unit * 6); c.style.top = '50%'; c.style.transform = 'translateY(-50%)'; }
             else if (where === 'left') { c.style.left = px(unit * 5); c.style.top = '50%'; c.style.transform = 'translateY(-50%)'; }
             else { c.style.left = px((W - w) / 2); c.style.top = px(H * 0.34 + unit * 1.2); }
@@ -464,7 +537,7 @@
     /* ---------- the sign-in page ---------- */
     /* a sign-in page left open (a TV in the living room) asks again this often: for new titles, and to take the
        showcase away when it was turned off */
-    var REFRESH = 5 * 60000;
+    var REFRESH = 60000;
     var state = { data: null, at: 0, loading: null, ctrl: null, layer: null, refresh: 0, seq: 0, shown: null, skip: null, missAt: 0 };
 
     function sig(d) { try { return JSON.stringify(d); } catch (e) { return String(Math.random()); } }
@@ -538,8 +611,9 @@
         root.style.setProperty('--mkils-a1', accent[0]);
         root.style.setProperty('--mkils-a2', accent[1]);
         root.style.setProperty('--mkils-glow', 'rgba(' + rgb(accent[0]) + ',.4)');
+        root.style.setProperty('--mkils-a1-rgb', rgb(accent[0]));
         root.classList.add('mkils-on', 'mkils-' + ctrl.style.toLowerCase());
-        if (data.Card !== false) root.classList.add('mkils-card');
+        root.classList.add(data.Card !== false ? 'mkils-card' : 'mkils-plain');
         state.ctrl = ctrl; state.layer = layer; state.shown = sig(data);
         schedule();
     }
@@ -568,11 +642,13 @@
         if (state.layer && state.layer.parentNode) state.layer.parentNode.removeChild(state.layer);
         state.ctrl = null; state.layer = null; state.shown = null;
         var root = document.documentElement;
-        ['mkils-on', 'mkils-card', 'mkils-posterwall', 'mkils-spotlight', 'mkils-horizon', 'mkils-mosaic'].forEach(function (c) { root.classList.remove(c); });
-        ['--mkils-a1', '--mkils-a2', '--mkils-glow'].forEach(function (p) { root.style.removeProperty(p); });
+        ['mkils-on', 'mkils-card', 'mkils-plain', 'mkils-posterwall', 'mkils-spotlight', 'mkils-horizon', 'mkils-mosaic'].forEach(function (c) { root.classList.remove(c); });
+        ['--mkils-a1', '--mkils-a2', '--mkils-glow', '--mkils-a1-rgb'].forEach(function (p) { root.style.removeProperty(p); });
     }
 
     function check() {
+        /* signed in: the web client has no sign-in view, so this stays one lookup a second */
+        if (!state.ctrl && !document.getElementById('loginPage')) return;
         var page = loginPage();
         if (page && !state.ctrl) {
             var seq = ++state.seq;

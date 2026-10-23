@@ -705,28 +705,35 @@
 #MkiLoginShowcaseConfigPage .ls-host { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
 #MkiLoginShowcaseConfigPage .ls-msg { position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 9; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 18px; text-align: center; font-size: .9rem; line-height: 1.45; color: #EEF1FF; background: rgba(5,6,11,.82); }
 #MkiLoginShowcaseConfigPage .ls-msg .mk-ic { font-size: 28px; color: #FFE45C; }
-#MkiLoginShowcaseConfigPage .ls-ribbon { position: absolute; left: 10px; top: 10px; z-index: 8; display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px 3px 7px; border-radius: 999px; font-size: .74rem; font-weight: 700; color: #fff; background: rgba(0,0,0,.66); border: 1px solid rgba(255,255,255,.18); }
+#MkiLoginShowcaseConfigPage .ls-ribbon { position: absolute; left: 10px; top: 10px; z-index: 10; display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px 3px 7px; border-radius: 999px; font-size: .74rem; font-weight: 700; color: #fff; background: rgba(0,0,0,.66); border: 1px solid rgba(255,255,255,.18); }
 #MkiLoginShowcaseConfigPage .ls-ribbon .mk-ic { font-size: 15px; }
 #MkiLoginShowcaseConfigPage .ls-cap { margin: 10px 0 0; font-size: .8rem; color: var(--mk-dim); line-height: 1.45; }
+#MkiLoginShowcaseConfigPage .ls-titles { margin: 8px 0 0; font-size: .84rem; }
+#MkiLoginShowcaseConfigPage .ls-titles summary { cursor: pointer; color: var(--mk-a1-ink); font-weight: 600; width: max-content; max-width: 100%; border-radius: 4px; }
+#MkiLoginShowcaseConfigPage .ls-titles summary:focus-visible { outline: 2px solid var(--mk-a1-ink); outline-offset: 2px; }
+#MkiLoginShowcaseConfigPage .ls-titles ol { columns: 2 17em; column-gap: 24px; margin: 8px 0 0; padding-left: 1.6em; color: var(--mk-text); line-height: 1.6; }
+#MkiLoginShowcaseConfigPage .ls-titles li { break-inside: avoid; overflow-wrap: anywhere; }
+#MkiLoginShowcaseConfigPage .ls-titles li small { color: var(--mk-dim); }
 
 /* style pictures: small drawings of each layout, always dark like the sign-in page */
 #MkiLoginShowcaseConfigPage .ls-styles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#MkiLoginShowcaseConfigPage #lsLookCard { --ls-a1-rgb: 0,229,255; --ls-a2-rgb: 255,43,214; }
 #MkiLoginShowcaseConfigPage .ls-art { height: 70px; background: #070814; }
 #MkiLoginShowcaseConfigPage .ls-art::before, #MkiLoginShowcaseConfigPage .ls-art::after { content: ""; position: absolute; }
-#MkiLoginShowcaseConfigPage .ls-art > i { position: absolute; z-index: 2; width: 26%; height: 54%; border-radius: 3px; background: rgba(8,9,16,.86); border: 1px solid rgba(var(--mk-a1-rgb),.75); box-shadow: 0 0 6px rgba(var(--mk-a2-rgb),.5); }
-#MkiLoginShowcaseConfigPage .ls-art > i::after { content: ""; position: absolute; left: 14%; right: 14%; bottom: 14%; height: 14%; border-radius: 2px; background: linear-gradient(90deg, #FFE45C, #FF3D9E); }
+#MkiLoginShowcaseConfigPage .ls-art > i { position: absolute; z-index: 2; width: 26%; height: 54%; border-radius: 3px; background: rgba(8,9,16,.86); border: 1px solid rgba(var(--ls-a1-rgb),.75); box-shadow: 0 0 6px rgba(var(--ls-a2-rgb),.5); }
+#MkiLoginShowcaseConfigPage .ls-art > i::after { content: ""; position: absolute; left: 14%; right: 14%; bottom: 14%; height: 14%; border-radius: 2px; background: linear-gradient(90deg, rgb(var(--ls-a1-rgb)), rgb(var(--ls-a2-rgb))); }
 #MkiLoginShowcaseConfigPage .ls-art--wall::before { top: -40%; left: -20%; right: -20%; bottom: -40%; transform: rotate(-12deg);
-  background: linear-gradient(0deg, #070814 0 3px, transparent 3px) 0 0 / 100% 24px, repeating-linear-gradient(90deg, rgba(var(--mk-a2-rgb),.55) 0 15px, transparent 15px 19px, rgba(var(--mk-a1-rgb),.45) 19px 34px, transparent 34px 38px); }
+  background: linear-gradient(0deg, #070814 0 3px, transparent 3px) 0 0 / 100% 24px, repeating-linear-gradient(90deg, rgba(var(--ls-a2-rgb),.55) 0 15px, transparent 15px 19px, rgba(var(--ls-a1-rgb),.45) 19px 34px, transparent 34px 38px); }
 #MkiLoginShowcaseConfigPage .ls-art--wall::after { top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(ellipse at center, rgba(5,6,11,.55), rgba(5,6,11,.15) 60%, rgba(5,6,11,.7)); }
 #MkiLoginShowcaseConfigPage .ls-art--wall > i { left: 37%; top: 23%; }
-#MkiLoginShowcaseConfigPage .ls-art--spot::before { top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 28% 40%, rgba(var(--mk-a1-rgb),.55), transparent 45%), linear-gradient(120deg, rgba(var(--mk-a2-rgb),.55), rgba(var(--mk-a1-rgb),.2) 55%, #05060B 88%); }
+#MkiLoginShowcaseConfigPage .ls-art--spot::before { top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 28% 40%, rgba(var(--ls-a1-rgb),.55), transparent 45%), linear-gradient(120deg, rgba(var(--ls-a2-rgb),.55), rgba(var(--ls-a1-rgb),.2) 55%, #05060B 88%); }
 #MkiLoginShowcaseConfigPage .ls-art--spot::after { left: 8%; bottom: 14%; width: 34%; height: 5px; border-radius: 3px; background: rgba(255,255,255,.8); box-shadow: 0 -8px 0 -1px rgba(255,255,255,.35); }
 #MkiLoginShowcaseConfigPage .ls-art--spot > i { right: 7%; top: 23%; }
-#MkiLoginShowcaseConfigPage .ls-art--hz::before { left: 0; right: 0; top: 10%; height: 24%; background: repeating-linear-gradient(90deg, rgba(var(--mk-a2-rgb),.7) 0 9px, transparent 9px 13px, rgba(var(--mk-a1-rgb),.6) 13px 22px, transparent 22px 26px); }
+#MkiLoginShowcaseConfigPage .ls-art--hz::before { left: 0; right: 0; top: 10%; height: 24%; background: repeating-linear-gradient(90deg, rgba(var(--ls-a2-rgb),.7) 0 9px, transparent 9px 13px, rgba(var(--ls-a1-rgb),.6) 13px 22px, transparent 22px 26px); }
 #MkiLoginShowcaseConfigPage .ls-art--hz::after { left: -30%; right: -30%; top: 34%; bottom: -30%; transform: perspective(40px) rotateX(55deg); transform-origin: 50% 0;
-  border-top: 2px solid #FF3D9E; background: linear-gradient(rgba(var(--mk-a1-rgb),.75) 1px, transparent 1px) 0 0 / 10px 8px, linear-gradient(90deg, rgba(var(--mk-a2-rgb),.7) 1px, transparent 1px) 0 0 / 10px 8px; }
+  border-top: 2px solid #FF3D9E; background: linear-gradient(rgba(var(--ls-a1-rgb),.75) 1px, transparent 1px) 0 0 / 10px 8px, linear-gradient(90deg, rgba(var(--ls-a2-rgb),.7) 1px, transparent 1px) 0 0 / 10px 8px; }
 #MkiLoginShowcaseConfigPage .ls-art--hz > i { left: 37%; top: 40%; height: 50%; }
-#MkiLoginShowcaseConfigPage .ls-art--mo::before { top: 3px; right: 3px; bottom: 3px; left: 3px; background: linear-gradient(0deg, #070814 0 3px, transparent 3px) 0 0 / 100% 22px, repeating-linear-gradient(90deg, rgba(var(--mk-a1-rgb),.5) 0 13px, transparent 13px 16px, rgba(var(--mk-a2-rgb),.55) 16px 29px, transparent 29px 32px); }
+#MkiLoginShowcaseConfigPage .ls-art--mo::before { top: 3px; right: 3px; bottom: 3px; left: 3px; background: linear-gradient(0deg, #070814 0 3px, transparent 3px) 0 0 / 100% 22px, repeating-linear-gradient(90deg, rgba(var(--ls-a1-rgb),.5) 0 13px, transparent 13px 16px, rgba(var(--ls-a2-rgb),.55) 16px 29px, transparent 29px 32px); }
 #MkiLoginShowcaseConfigPage .ls-art--mo::after { top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, rgba(5,6,11,.97), rgba(5,6,11,.9) 38%, rgba(5,6,11,.15) 62%); }
 #MkiLoginShowcaseConfigPage .ls-art--mo > i { left: 8%; top: 23%; background: transparent; border-color: transparent; box-shadow: none; }
 
@@ -748,6 +755,9 @@
 #MkiLoginShowcaseConfigPage .ls-empty { display: flex; gap: 10px; align-items: flex-start; margin: 0; padding: 12px 14px; border-radius: 11px; border: 1px dashed var(--mk-line-2); color: var(--mk-dim); font-size: .88rem; line-height: 1.45; }
 #MkiLoginShowcaseConfigPage .ls-empty .mk-ic { color: var(--mk-faint); }
 #MkiLoginShowcaseConfigPage .mk-row.is-idle .mk-row__label { opacity: .75; }
+#MkiLoginShowcaseConfigPage .mk-row.is-idle .mk-switch { opacity: .5; }
+/* the two setting cards end at the same height */
+#MkiLoginShowcaseConfigPage #lsLookCard, #MkiLoginShowcaseConfigPage #lsSeeCard { align-self: stretch; }
 
 @media (max-width: 900px) {
   #MkiLoginShowcaseConfigPage .ls-grid { grid-template-columns: minmax(0, 1fr); }
@@ -757,6 +767,7 @@
   #MkiLoginShowcaseConfigPage .ls-barinfo::after { content: "Each change saves itself"; }
   #MkiLoginShowcaseConfigPage .ls-lib { grid-template-columns: auto minmax(0, 1fr); }
   #MkiLoginShowcaseConfigPage .ls-lib .mk-chip { grid-column: 2; justify-self: start; }
+  #MkiLoginShowcaseConfigPage .ls-accents { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
 }
 </style>
 
@@ -808,7 +819,7 @@
 </header>
 
 <div class="mk-bar">
-  <p class="ls-barinfo"><span class="material-icons mk-ic" aria-hidden="true">tune</span><span>Each change saves itself, with undo, and reaches the sign-in page within a minute</span></p>
+  <p class="ls-barinfo"><span class="material-icons mk-ic" aria-hidden="true">tune</span><span>Each change saves itself, with undo. Open sign-in pages follow within a minute; pages opened while the showcase was off need a reload</span></p>
 </div>
 
 <div class="mk-main ls-grid">
@@ -832,13 +843,14 @@
       <div class="ls-msg" id="lsMsg"><span class="material-icons mk-ic" aria-hidden="true">hourglass_empty</span><span id="lsMsgT">Loading the preview…</span></div>
     </div>
     <p class="ls-cap" id="lsCap"></p>
+    <details class="ls-titles" id="lsTitlesList" hidden><summary id="lsTitlesSum"></summary><ol id="lsTitlesOl"></ol></details>
   </div>
 </section>
 
 <section class="mk-card" id="lsLookCard" aria-labelledby="lsLookT" tabindex="-1">
   <div class="mk-card__head">
     <span class="mk-card__icon"><span class="material-icons mk-ic" aria-hidden="true">palette</span></span>
-    <div class="mk-card__titles"><h2 class="mk-card__title" id="lsLookT">Look</h2><p class="mk-card__desc">How the sign-in page looks. Nothing here changes what is shown.</p></div>
+    <div class="mk-card__titles"><h2 class="mk-card__title" id="lsLookT">Look</h2><p class="mk-card__desc">How the sign-in page looks. The style also decides whether posters or backdrops are sent.</p></div>
   </div>
   <div class="mk-card__body">
     <div class="mk-row mk-row--stack">
@@ -865,7 +877,7 @@
       </div>
     </div>
     <div class="mk-row">
-      <div class="mk-row__text"><span class="mk-row__label" id="lsMotionLabel">Motion</span><span class="mk-row__desc">Calm moves at half speed. Still shows one frame without movement, good for TVs left on the sign-in page. Devices set to reduce motion always get Still.</span></div>
+      <div class="mk-row__text"><span class="mk-row__label" id="lsMotionLabel">Motion</span><span class="mk-row__desc">Calm moves at half speed, good for TVs left on the sign-in page. Still shows the pictures without movement; Backdrop Spotlight then changes the picture once a minute. Devices set to reduce motion always get Still.</span></div>
       <div class="mk-row__control">
         <div class="mk-seg" role="radiogroup" aria-labelledby="lsMotionLabel">
           <input type="radio" name="lsMotion" id="lsMoNormal" value="Normal" data-key="Motion" data-label="Motion"><label for="lsMoNormal">Normal</label>
@@ -1857,7 +1869,6 @@ function libNames(ids) {
     return andList(n);
 }
 function chosen() { return ($('#lsLibIds').mkValue || []).map(norm); }
-function savedLibs() { return (saved('LibraryIds') || []).map(norm); }
 function flaggedAdded(to, from) {
     var was = (from || []).map(norm);
     return (to || []).map(norm).filter(function (id) { var l = libById(id); return was.indexOf(id) < 0 && l && l.Looks; }).map(libById);
@@ -1958,17 +1969,32 @@ function confirmPublic(key) {
     return function (to) {
         var what = newlyPublic(key, to);
         if (!what) return true;
-        var names = what === 'names';
-        return kit.confirm({ title: names ? 'Show title names on the sign-in page?' : 'Show how many titles there are?', icon: names ? 'title' : 'numbers', tone: 'warn',
-            ok: names ? 'Show names' : 'Show counts', okIcon: 'check',
+        var names = what === 'names', sw = names ? 'ShowTitles' : 'ShowCounts';
+        var buttons = [{ value: false, text: 'Cancel' }];
+        /* a new style can also go ahead with the switch turned off */
+        if (key === 'Style') buttons.push({ value: 'without', text: names ? 'Use it without names' : 'Use it without counts' });
+        buttons.push({ value: true, text: names ? 'Show names' : 'Show counts', kind: 'primary', icon: 'check' });
+        return kit.dialog({ title: names ? 'Show title names on the sign-in page?' : 'Show how many titles there are?', icon: names ? 'title' : 'numbers', tone: 'warn',
+            buttons: buttons, cancelValue: false,
             body: [(names ? 'Backdrop Spotlight would name each title it shows.' : 'Flip Mosaic would show how many movies and shows the sign-in page may show.') +
-                ' Anyone who opens your Jellyfin address can read ' + (names ? 'them' : 'the numbers') + ', before signing in.'] });
+                ' Anyone who opens your Jellyfin address can read ' + (names ? 'them' : 'the numbers') + ', before signing in.'] })
+            .then(function (v) {
+                if (v === 'without') {
+                    var x = $('[data-key="' + sw + '"]');
+                    x.checked = false;
+                    x.dispatchEvent(new Event('change', { bubbles: true }));
+                    return true;
+                }
+                return v === true;
+            });
     };
 }
 function confirmUnrated(to) {
     if (to !== true) return true;
-    return kit.confirm({ title: 'Include titles without a rating?', icon: 'help_outline', tone: 'warn', ok: 'Include them',
-        body: ['The age rating limit cannot check a title without a rating. Anything in the ticked libraries that has no rating would appear, for example home videos that were added as movies.'] });
+    var adult = (kit.value('LibraryIds') || []).map(libById).filter(function (l) { return l && l.Looks === 'adult'; }).map(function (l) { return l.Name; });
+    return kit.confirm({ title: 'Include titles without a rating?', icon: adult.length ? 'no_adult_content' : 'help_outline', tone: adult.length ? 'bad' : 'warn', danger: adult.length > 0, ok: 'Include them',
+        body: ['The age rating limit cannot check a title without a rating. Anything in the ticked libraries that has no rating would appear, for example home videos that were added as movies.' +
+            (adult.length ? ' ' + andList(adult) + (adult.length === 1 ? ' is ticked and its name suggests' : ' are ticked and their names suggest') + ' adult content, which often has no rating.' : '')] });
 }
 
 /* ---------- what the plugin has picked (the preview pictures) ---------- */
@@ -1993,13 +2019,16 @@ $('#lsShuffle').addEventListener('click', function () {
         if (!ok) { kit.toast('Save the waiting changes first.', { bad: true }); return; }
         return kit.api('POST', 'MkiLoginShowcase/Shuffle').then(function (o) {
             ++seq; data = o; failedLoad = false; renderLibs(); render();
-            kit.toast('New titles picked. The sign-in page shows them within a minute.', { icon: 'shuffle' });
+            kit.toast('New titles picked. Open sign-in pages show them within a minute.', { icon: 'shuffle' });
         }, function () { kit.toast('Could not pick new titles. Try again.', { bad: true }); });
     }));
 });
 
 /* ---------- the preview ---------- */
 var client = null, ctrl = null, drawn = null, previewTimer = null, visible = true;
+/* how many users the sign-in page shows as tiles (Jellyfin's own setting per user), for the stand-in form */
+var publicUsers = 0;
+kit.api('GET', 'Users/Public').then(function (list) { publicUsers = Array.isArray(list) ? list.length : 0; preview(); }, function () { });
 function ensureClient() {
     if (window.MkiLoginShowcase && window.MkiLoginShowcase.render) return Promise.resolve(true);
     if (client) return client;
@@ -2033,6 +2062,8 @@ function drawPreview() {
         if (!visible) return;
         if (!ok) { stopPreview(); message('error_outline', 'Could not load the drawing code from the server. Reload the page.'); return; }
         var style = kit.value('Style'), titles = kit.value('ShowTitles') && style === 'Spotlight', counts = kit.value('ShowCounts') && style === 'Mosaic';
+        /* the style was just changed: the server makes a pick with the other kind of picture */
+        if (data.Style && data.Style !== style) { stopPreview(); message('hourglass_empty', 'Picking ' + (style === 'Spotlight' ? 'backdrops' : 'posters') + ' for ' + (STYLES[style] || style) + '…'); return; }
         var items = data.Items, d = {
             Style: style, Accent: kit.value('Accent'), Motion: kit.value('Motion'), Card: kit.value('NeonCard'),
             Items: items.map(function (it) { return { P: !!it.PosterTag, B: !!it.BackdropTag, T: titles ? it.Name : null }; }),
@@ -2040,12 +2071,13 @@ function drawPreview() {
             Movies: counts ? data.Movies : null, Series: counts ? data.Series : null
         };
         /* the same picture again (a save of what is already on screen): keep it running instead of starting over */
-        var sig = JSON.stringify([phone, data.Set, d]);
+        var sig = JSON.stringify([phone, data.Set, d, publicUsers]);
         if (ctrl && sig === drawn) return;
         stopPreview(); message(null, null);
         drawn = sig;
         ctrl = window.MkiLoginShowcase.render($('#lsHost'), d, {
             mockCard: true,
+            users: publicUsers,
             image: function (i, kind) {
                 var it = items[i] || {}, p = kind === 'p';
                 return ApiClient.getScaledImageUrl(it.Id, { type: p ? 'Primary' : 'Backdrop', maxWidth: p ? 240 : 960, tag: p ? it.PosterTag : it.BackdropTag, quality: 80 });
@@ -2064,8 +2096,13 @@ page.addEventListener('viewbeforehide', function () { visible = false; clearTime
 page.addEventListener('pageshow', function () { visible = true; });
 
 /* ---------- settings-driven parts (deck from the saved values) ---------- */
+var ACCENT_RGB = { Mki: ['0,229,255', '255,43,214'], Jellyfin: ['170,92,195', '0,164,220'], Sunset: ['255,228,92', '255,61,158'], Lime: ['182,255,59', '34,211,238'] };
+function reducedMotion() { try { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) { return false; } }
 function renderLook() {
     var style = kit.value('Style');
+    /* the style pictures in the chosen colours */
+    var pair = ACCENT_RGB[kit.value('Accent')] || ACCENT_RGB.Mki, look = $('#lsLookCard');
+    look.style.setProperty('--ls-a1-rgb', pair[0]); look.style.setProperty('--ls-a2-rgb', pair[1]);
     fill($('#lsStyleDesc'), STYLE_DESC[style] || '');
     var titles = style === 'Spotlight', counts = style === 'Mosaic';
     $('#lsTitlesRow').classList.toggle('is-idle', !titles);
@@ -2100,6 +2137,7 @@ function sends() {
     if (saved('ShowCounts') && style === 'Mosaic') item('warn', 'numbers', 'How many movies and shows the sign-in page may show.');
     else item('ok', 'numbers', 'No counts.');
     item('ok', 'lock', 'Signing in works exactly as before.', 'The form, Quick Connect, Forgot Password and other plugins on the sign-in page are left alone.');
+    item('ok', 'devices', 'Shown in browsers and in apps built on Jellyfin\'s web client.', 'Apps with their own sign-in screen (for example Android TV, Swiftfin, Findroid or Roku) show that screen unchanged.');
 }
 function render() {
     if (!kit.loaded()) return;
@@ -2117,7 +2155,8 @@ function render() {
     var items = (data && data.Items) || [];
     var posters = items.filter(function (x) { return x.PosterTag; }).length, backdrops = items.filter(function (x) { return x.BackdropTag; }).length;
     fill($('#lsTilePick'), data ? kit.plural(items.length, 'title') : failedLoad ? '–' : '…');
-    fill($('#lsTilePickSub'), data ? posters + ' posters · ' + backdrops + ' backdrops' + (data.NextPick && items.length ? ' · new at ' + kit.hhmm(new Date(data.NextPick)) : '') : '');
+    var kinds = (posters ? kit.plural(posters, 'poster') : '') + (posters && backdrops ? ' · ' : '') + (backdrops ? kit.plural(backdrops, 'backdrop') : '');
+    fill($('#lsTilePickSub'), data ? (kinds || 'no pictures') + (data.NextPick && items.length ? ' · new at ' + kit.hhmm(new Date(data.NextPick)) : '') : '');
 
     var bits = [el('b', null, 'Next: ')];
     if (!data && !failedLoad) bits.push('loading…');
@@ -2132,8 +2171,19 @@ function render() {
     note.hidden = !problem;
     note.className = 'mk-note mk-note--warn';
     if (problem) fill($('#lsWebNoteT'), problem + ' Let Jellyfin write to its web folder, then turn the showcase off and on again.');
-    var cap = data && items.length ? 'Current pick: ' + kit.plural(items.length, 'title') + ' (' + posters + ' posters, ' + backdrops + ' backdrops), picked ' + kit.dayTime(new Date(data.Built)) + '.' : '';
+    var cap = data && items.length ? 'Current pick: ' + kit.plural(items.length, 'title') + ' (' + kinds + '), picked ' + kit.dayTime(new Date(data.Built)) + '.' : '';
+    if (cap && (saved('Motion') === 'Still' || reducedMotion())) cap += saved('Motion') === 'Still' ? ' Motion is set to Still.' : ' This device asks for reduced motion, so the preview stands still here.';
     fill($('#lsCap'), cap);
+    /* every title in the pick, with its rating, so it can be checked before anyone sees it */
+    var list = $('#lsTitlesList'), ol = $('#lsTitlesOl');
+    list.hidden = !(data && items.length);
+    fill($('#lsTitlesSum'), 'See the ' + kit.plural(items.length, 'title') + ' in the pick');
+    ol.textContent = '';
+    items.forEach(function (it) {
+        var li = el('li', null, it.Name || 'Untitled');
+        li.appendChild(el('small', null, (it.Year ? ' (' + it.Year + ')' : '') + ' · ' + (it.Rating || 'no rating')));
+        ol.appendChild(li);
+    });
     sends();
     preview();
 }

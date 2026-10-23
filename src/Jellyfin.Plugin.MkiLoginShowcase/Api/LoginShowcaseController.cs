@@ -88,12 +88,12 @@ public class LoginShowcaseController : ControllerBase
 		}
 		// Titles and counts only when turned on, and only for the style that shows them. The pick already holds only the
 		// pictures that style draws, so no title is named that is not on screen.
-		bool titles = config.ShowTitles && config.Style == ShowcaseStyle.Spotlight && set.Backdrops;
-		bool counts = config.ShowCounts && config.Style == ShowcaseStyle.Mosaic && !set.Backdrops;
+		bool titles = config.ShowTitles && set.Style == ShowcaseStyle.Spotlight && set.Backdrops;
+		bool counts = config.ShowCounts && set.Style == ShowcaseStyle.Mosaic && !set.Backdrops;
 		return new JsonResult(new
 		{
 			On = true,
-			Style = config.Style.ToString(),
+			Style = set.Style.ToString(),
 			Accent = config.Accent.ToString(),
 			Motion = config.Motion.ToString(),
 			Card = config.NeonCard,
@@ -206,6 +206,7 @@ public class LoginShowcaseController : ControllerBase
 		{
 			Libraries = _showcase.Libraries(config),
 			Set = set.Id,
+			Style = set.Style.ToString(),
 			Built = set.BuiltUtc,
 			NextPick = set.BuiltUtc.AddHours(1),
 			MaxPosters = ShowcaseService.MaxPosters,
@@ -215,6 +216,7 @@ public class LoginShowcaseController : ControllerBase
 				Id = e.ItemId.ToString("N"),
 				e.Name,
 				e.Year,
+				Rating = Rating(e.ItemId),
 				PosterTag = e.Poster ? Tag(e.ItemId, ImageType.Primary) : null,
 				BackdropTag = e.Backdrop ? Tag(e.ItemId, ImageType.Backdrop) : null
 			}).ToList(),
@@ -231,6 +233,21 @@ public class LoginShowcaseController : ControllerBase
 			var item = _library.GetItemById(id);
 			var info = item?.GetImageInfo(type, 0);
 			return item == null || info == null ? null : _images.GetImageCacheTag(item, info);
+		}
+		catch (Exception)
+		{
+			return null;
+		}
+	}
+
+	// The rating Jellyfin goes by (a custom rating wins over the official one), for the settings page's title list.
+	private string? Rating(Guid id)
+	{
+		try
+		{
+			var item = _library.GetItemById(id);
+			var rating = item?.CustomRating;
+			return string.IsNullOrEmpty(rating) ? item?.OfficialRating : rating;
 		}
 		catch (Exception)
 		{

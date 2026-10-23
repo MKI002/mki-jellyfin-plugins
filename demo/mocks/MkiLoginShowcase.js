@@ -14,6 +14,9 @@
     ShowTitles: false, ShowCounts: false, Accent: 'Mki', Motion: 'Normal', NeonCard: true
   });
 
+  /* two made-up users shown on the sign-in page, so the preview draws user tiles */
+  MkiDemo.route('GET', /^Users\/Public$/, function () { return [{ Name: 'Alex' }, { Name: 'Sam' }]; });
+
   MkiDemo.route('GET', /^Localization\/ParentalRatings$/, function () {
     var list = [{ Name: 'Unrated' }];
     [['G', 0], ['TV-Y', 0], ['TV-G', 0], ['PG', 10], ['TV-PG', 10], ['PG-13', 13], ['TV-14', 14], ['R', 17], ['TV-MA', 17], ['NC-17', 18]].forEach(function (r) {
@@ -63,19 +66,25 @@
     if (cfg.Pick === 'Recent') list = list.slice().sort(function (a, b) { return b.Year - a.Year; });
     return list;
   }
+  var RATING = { 0: 'G', 10: 'PG', 13: 'PG-13', 14: 'TV-14', 17: 'R', 1000: 'XXX' };
   function overview() {
     var cfg = MkiDemo.config(ID), ids = chosenIds(cfg);
-    var items = picked(cfg);
+    /* as on the server: Backdrop Spotlight gets backdrops, the other styles posters */
+    var spot = cfg.Style === 'Spotlight';
+    var items = picked(cfg).filter(function (it) { return !spot || it.Backdrop; }).slice(0, spot ? 12 : 48);
     var chosen = ITEMS.filter(function (it) { return ids.indexOf(norm(it.Lib)) >= 0; });
     return {
       Libraries: LIBS.map(function (l) {
         var mine = ITEMS.filter(function (it) { return it.Lib === l.Id; });
         return { Id: l.Id, Name: l.Name, Type: l.Type, Selected: ids.indexOf(norm(l.Id)) >= 0, Looks: l.Looks || null, Titles: mine.length, Shown: mine.filter(function (it) { return allowed(it, cfg); }).length };
       }),
-      Set: set, Built: new Date(built).toISOString(), NextPick: new Date(built + 36e5).toISOString(), MaxPosters: 48, MaxBackdrops: 12,
-      Items: items.map(function (it) { return { Id: it.Id, Name: it.Name, Year: it.Year, PosterTag: 'p' + it.Id.slice(-4), BackdropTag: it.Backdrop ? 'b' + it.Id.slice(-4) : null }; }),
-      Movies: cfg.ShowCounts ? chosen.filter(function (it) { return it.Kind === 'Movie'; }).length : null,
-      Series: cfg.ShowCounts ? chosen.filter(function (it) { return it.Kind === 'Series'; }).length : null,
+      Set: set, Style: cfg.Style, Built: new Date(built).toISOString(), NextPick: new Date(built + 36e5).toISOString(), MaxPosters: 48, MaxBackdrops: 12,
+      Items: items.map(function (it) {
+        return { Id: it.Id, Name: it.Name, Year: it.Year, Rating: it.Score == null ? null : RATING[it.Score] || null,
+          PosterTag: spot ? null : 'p' + it.Id.slice(-4), BackdropTag: spot ? 'b' + it.Id.slice(-4) : null };
+      }),
+      Movies: cfg.ShowCounts ? chosen.filter(function (it) { return it.Kind === 'Movie' && allowed(it, cfg); }).length : null,
+      Series: cfg.ShowCounts ? chosen.filter(function (it) { return it.Kind === 'Series' && allowed(it, cfg); }).length : null,
       WebClient: cfg.Enabled ? 'added' : 'off'
     };
   }

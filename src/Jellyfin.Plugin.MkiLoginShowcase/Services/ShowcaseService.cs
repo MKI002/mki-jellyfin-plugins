@@ -196,7 +196,8 @@ public sealed class ShowcaseService
 			Id = Convert.ToHexString(RandomNumberGenerator.GetBytes(5)).ToLowerInvariant(),
 			BuiltUtc = DateTime.UtcNow,
 			Generation = generation,
-			Pick = config.Pick
+			Pick = config.Pick,
+			Style = config.Style
 		};
 		try
 		{
@@ -419,6 +420,9 @@ public sealed class ShowcaseSet
 	public int Generation { get; set; }
 
 	public ShowcasePick Pick { get; set; }
+
+	// The style the pick was made for (it holds the pictures that style draws).
+	public ShowcaseStyle Style { get; set; }
 
 	// True when the pick holds backdrops (Backdrop Spotlight), false when it holds posters.
 	public bool Backdrops { get; set; }
