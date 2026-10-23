@@ -697,7 +697,7 @@ public class GuestService
 			var (pass, guest) = hit.Value;
 			if (guest.State == GuestState.Paused)
 			{
-				throw new GuestError(410, "Guest access is paused on this server at the moment.");
+				throw new GuestError(410, "Guest access is paused on this server at the moment.", "paused");
 			}
 			if (guest.State == GuestState.Ended)
 			{
@@ -749,6 +749,7 @@ public class GuestService
 		{
 			Guest = true,
 			guest.Name,
+			PassId = pass.Id.ToString("N", CultureInfo.InvariantCulture),
 			Pass = pass.Name,
 			pass.EndUtc,
 			Plugin.Config.WarnHours,

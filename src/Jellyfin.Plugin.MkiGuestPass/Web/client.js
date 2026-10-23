@@ -38,6 +38,16 @@
     function forgetKeys() {
         [true, false].forEach(function (session) { try { store(session).removeItem(KEYS); } catch (e) { } });
     }
+    /* access ended: the keys stay, but are not offered until the join page sees the pass open again */
+    function endKeys(passId) {
+        [true, false].forEach(function (session) {
+            try {
+                var s = store(session), list = JSON.parse(s.getItem(KEYS) || '[]') || [];
+                list.forEach(function (g) { if (g && (!passId || g.pass === passId)) g.ended = true; });
+                if (list.length) s.setItem(KEYS, JSON.stringify(list));
+            } catch (e) { }
+        });
+    }
 
     function addCss() {
         if (document.getElementById('mkigp-css')) return;
@@ -114,7 +124,10 @@
                 /* a way back only where the join page still knows this guest; the join page says so if the pass or the
                    guest was ended in the meantime */
                 var back = keys();
-                n.appendChild(el('p', null, was.cut ? 'Your guest access on this browser has ended.' : 'You are signed out of your guest access.'));
+                var shared = false;
+                try { shared = !!sessionStorage.getItem(SHARED); } catch (e) { }
+                n.appendChild(el('p', null, was.cut ? 'You were signed out of your guest access on this browser.'
+                    : shared ? 'This is a shared computer, so Jellyfin asks again after a reload.' : 'You are signed out of your guest access.'));
                 if (back.length) {
                     var row = el('p', 'mkigp-again'), go = el('a', null, back.length === 1 ? 'Continue as ' + back[0].name : 'Continue as a guest');
                     go.href = BASE + '/MkiGuestPass/Join';
@@ -122,8 +135,11 @@
                     no.addEventListener('click', function () {
                         forgetKeys();
                         n.textContent = '';
-                        n.appendChild(el('p', null, 'Done: this browser does not know your guest access any more.'));
+                        var done = el('p', null, 'Done: this browser does not know your guest access any more.');
+                        done.tabIndex = -1; done.setAttribute('role', 'status');
+                        n.appendChild(done);
                         n.setAttribute('data-sig', JSON.stringify([was.end, was.cut || 0, []]));
+                        try { done.focus(); } catch (e) { }
                     });
                     row.appendChild(go); row.appendChild(no); n.appendChild(row);
                 }
@@ -217,7 +233,23 @@
 
     /* the web client's own sign-out, which also takes the user to the sign-in page */
     function signOut() {
+        forgetShared();
         try { if (window.Dashboard && typeof window.Dashboard.logout === 'function') window.Dashboard.logout(); } catch (e) { }
+    }
+    /* on a shared computer nobody continues as this guest after a sign-out, also not in the same window */
+    function forgetShared() {
+        try {
+            var a = window.ApiClient, id = a && a.getCurrentUserId && a.getCurrentUserId();
+            if (id && sessionStorage.getItem(SHARED) === id) { sessionStorage.removeItem(KEYS); sessionStorage.removeItem(SHARED); }
+        } catch (e) { }
+    }
+    /* Jellyfin's own Sign Out goes through ApiClient.logout */
+    function hookLogout() {
+        var a = window.ApiClient;
+        if (!a || a.mkigpHooked || typeof a.logout !== 'function') return;
+        var orig = a.logout;
+        a.logout = function () { forgetShared(); return orig.apply(this, arguments); };
+        a.mkigpHooked = true;
     }
 
     /* a guest is asked about again after a minute at the next page change, so an ended guest is not left waiting */
@@ -231,14 +263,14 @@
         call('GET', 'MkiGuestPass/Me').then(function (d) {
             asking = false; me = d && typeof d === 'object' ? d : null; meFor = who;
             /* remembered in this tab, so the sign-in page can say why the guest landed there */
-            seen(me && me.Guest ? { end: me.EndUtc } : null);
-            if (me && me.Guest) sharedComputer(a.getCurrentUserId());
+            seen(me && me.Guest ? { end: me.EndUtc, pass: me.PassId } : null);
+            if (me && me.Guest) { sharedComputer(a.getCurrentUserId()); hookLogout(); }
             render();
         }, function (e) {
             /* asked again at the next page change, never in a loop */
             asking = false; me = null; meFor = who; render();
             /* a guest whose access ended or was ended: Jellyfin itself would only show a spinner */
-            if (e && e.status === 401 && seen()) { var was = seen(); was.cut = Date.now(); seen(was); signOut(); }
+            if (e && e.status === 401 && seen()) { var was = seen(); was.cut = Date.now(); seen(was); endKeys(was.pass); signOut(); }
         });
     }
 
@@ -323,9 +355,13 @@
                 if (!/^[A-Za-z0-9]{4,10}$/.test(c)) { say.className = 'mkigp-say is-bad'; say.textContent = 'Type the code exactly as the TV shows it.'; inp.focus(); return; }
                 go.disabled = true; say.className = 'mkigp-say'; say.textContent = 'Signing in the TV…';
                 call('POST', 'QuickConnect/Authorize?code=' + encodeURIComponent(c)).then(function () {
-                    go.disabled = false; inp.value = '';
-                    say.className = 'mkigp-say is-ok'; say.textContent = 'Done. The TV signs in within a few seconds.';
-                    count.textContent = '“' + g.Pass + '” · ' + devices(Math.min(g.DevicesPerGuest, g.Devices + 1), g.DevicesPerGuest) + '.';
+                    var n = Math.min(g.DevicesPerGuest, g.Devices + 1), last = n >= g.DevicesPerGuest;
+                    g.Devices = n; inp.value = '';
+                    /* the last free device: no code field that can only fail */
+                    go.disabled = last; inp.disabled = last;
+                    say.className = 'mkigp-say is-ok';
+                    say.textContent = 'Done. The TV signs in within a few seconds.' + (last ? ' That was the last device your pass allows: to sign in another one, sign out on a device first.' : '');
+                    count.textContent = '“' + g.Pass + '” · ' + devices(n, g.DevicesPerGuest) + '.';
                     meFor = ''; ask();
                 }, function (e) {
                     go.disabled = false;

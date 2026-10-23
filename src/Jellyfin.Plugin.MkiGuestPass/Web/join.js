@@ -227,7 +227,7 @@
     function focusHeading() { var h = view.querySelector('h1'); if (h) { try { h.focus({ preventScroll: true }); } catch (e) { h.focus(); } } }
 
     /* reason: "ended", "removed" and "full" are a normal end, not a failure, and get their own words */
-    var PROBLEMS = { ended: ['clock', 'This guest pass has ended'], removed: ['clock', 'Your guest access has ended'], full: ['people', 'This pass is full'], home: ['home', 'Only on the home network'] };
+    var PROBLEMS = { ended: ['clock', 'This guest pass has ended'], removed: ['clock', 'Your guest access has ended'], full: ['people', 'This pass is full'], paused: ['clock', 'Guest access is paused'], home: ['home', 'Only on the home network'] };
     function problem(text, after, reason) {
         var kind = PROBLEMS[reason] || ['alert', 'This did not work'];
         /* this pass is over or full: its link is no use in this tab any more, code entry is */
@@ -302,9 +302,12 @@
         facts.appendChild(fact('film', 'Libraries', (p.Libraries || []).join(', ') || 'None'));
         if (p.Rating) facts.appendChild(fact('shield', 'Rating', 'Up to ' + p.Rating, 'Titles without a rating are hidden'));
         /* the smaller facts side by side, so "Start watching" stays in view on a phone */
-        if (p.HomeOnly) facts.appendChild(half(fact('home', 'Where', 'Home network', p.CanJoinHere ? null : 'You are not on it right now')));
+        if (p.HomeOnly) facts.appendChild(half(fact('home', 'Where', 'Home network only', p.CanJoinHere ? null : 'You are not on it right now')));
         if (p.DevicesPerGuest) facts.appendChild(half(fact('tv', 'Devices', p.DevicesPerGuest === 1 ? 'One at a time' : p.DevicesPerGuest + ' at once', 'A TV counts as one')));
         if (p.MaxGuests > 1) facts.appendChild(half(fact('people', 'Places', p.PlacesLeft + ' of ' + p.MaxGuests + ' left')));
+        /* an odd one out gets the whole row */
+        var halves = facts.querySelectorAll('li.half');
+        if (halves.length % 2) halves[halves.length - 1].className = '';
         view.appendChild(facts);
         if (p.HomeOnly && !p.CanJoinHere) {
             view.appendChild(error('This pass works only on the home network. Connect to its Wi-Fi and open the link again.'));
@@ -324,7 +327,7 @@
         shc.type = 'checkbox'; shc.id = 'gpShared'; shc.setAttribute('aria-describedby', 'gpSharedHint');
         sh.appendChild(shc); sh.appendChild(el('span', null, 'Shared or public computer'));
         view.appendChild(sh);
-        var shh = el('p', 'hint check-hint', 'Jellyfin does not keep you signed in here: once this window is closed, the next person starts at the sign-in page.'); shh.id = 'gpSharedHint';
+        var shh = el('p', 'hint check-hint', 'Jellyfin does not keep you signed in here: a reload asks you to continue, and once this window is closed the next person starts at the sign-in page.'); shh.id = 'gpSharedHint';
         view.appendChild(shh);
         var msg = el('div'); view.appendChild(msg);
         var b = el('button', 'btn'); b.type = 'button'; busy(b, false, 'Start watching'); view.appendChild(b);
@@ -377,7 +380,7 @@
                     busy(b, false, label);
                     /* a pass that ended can be opened again: its key stays, only not offered until then */
                     if (e.status === 410 && e.reason === 'ended') passNews(g.pass, null, true);
-                    else if (e.status === 404 || e.status === 410) forget([g.key]);
+                    else if (e.status === 404 || e.status === 410 && e.reason !== 'paused') forget([g.key]);
                     if (e.status === 410 && list.length === 1) { problem(e.message, null, e.reason || 'ended'); return; }
                     msg.textContent = ''; msg.appendChild(error(e.message));
                 });
@@ -397,7 +400,7 @@
             other.addEventListener('click', function () { token = null; tab(null); codeScreen(); });
             links.appendChild(other);
         }
-        var f = el('button', 'link', list.length === 1 ? 'Forget ' + list[0].name + ' on this device' : 'Forget these on this device'); f.type = 'button';
+        var f = el('button', 'link', list.length === 1 ? 'Forget ' + list[0].name + ' on this browser' : 'Forget these on this browser'); f.type = 'button';
         f.addEventListener('click', function () {
             forget(list.map(function (g) { return g.key; }));
             if (passId && peek) inviteScreen(); else codeScreen();
@@ -423,6 +426,8 @@
         try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { }
     }
     token = tab();
+    /* another guest link opened while this page shows: only the hash changes, so start again with it */
+    window.addEventListener('hashchange', function () { location.reload(); });
     whoIsHere().then(function (name) {
         me = name;
         if (token) {

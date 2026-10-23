@@ -723,6 +723,7 @@
 #MkiGuestPassConfigPage .gp-life__cap b { color: var(--mk-text); font-weight: 700; }
 #MkiGuestPassConfigPage .gp-life__cap > span:last-child { text-align: right; }
 #MkiGuestPassConfigPage .gp-life__cap--end { justify-content: flex-end; }
+#MkiGuestPassConfigPage .gp-pass[aria-busy="true"] .mk-card__foot { opacity: .6; cursor: progress; }
 #MkiGuestPassConfigPage .gp-summary { margin: 0; font-size: .86rem; color: var(--mk-dim); overflow-wrap: anywhere; }
 /* the same life in the settings, as steps */
 #MkiGuestPassConfigPage .gp-flow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 6px; padding: 10px 12px; border-radius: 10px; background: var(--mk-field); border: 1px solid var(--mk-line); font-size: .82rem; }
@@ -2343,7 +2344,7 @@ function copyIn(b, text, what) {
 function share(r, isNew) {
     var link = passLink(r.Token), box = el('div', 'gp-dlg'), end = new Date(r.EndUtc);
     var ends = kit.day(end) + ', ' + kit.hhmm(end);
-    box.appendChild(el('p', null, (isNew ? 'Send the link, show the QR code' : 'The old link' + (r.Code ? ' and code' : '') + ' no longer work. Send the new link, show the QR code') + (r.Code ? ' or read out the code.' : '.') + ' Shown only now: the plugin keeps a fingerprint of them, not the link itself.'));
+    box.appendChild(el('p', null, (isNew ? 'Send the link, show the QR code' : (r.Code ? 'The old link and code no longer work' : 'The old link no longer works') + '. Send the new link, show the QR code') + (r.Code ? ' or read out the code.' : '.') + ' Shown only now: the plugin keeps a fingerprint of them, not the link itself.'));
     if (homeAddress(link)) {
         var n = el('p', 'mk-note mk-note--warn'); n.appendChild(ic('wifi_off'));
         n.appendChild(el('span', null, 'This link uses a home-network address, so it opens only at home. To share it with someone elsewhere, set the address guests reach Jellyfin at under Settings, then make a new link.'));
@@ -2400,7 +2401,7 @@ function newLinkNow(p) {
 }
 /* the pass as the server has it now: a question about a pass shown minutes ago could be about something else */
 function fresh(p) {
-    return refresh().then(function () {
+    return working(p.Id, refresh()).then(function () {
         var q = passOf(p.Id);
         if (!q) { kit.toast(quote(p.Name) + ' does not exist any more.', { bad: true }); focusAfter(null, null); }
         return q;
@@ -2502,7 +2503,7 @@ function endGuestNow(p, g) {
     if (again) buttons.push({ value: 'link', text: 'End and make a new link', kind: 'danger', icon: 'link' });
     return kit.dialog({ title: 'End access for ' + g.Name + '?', icon: 'block', tone: 'bad', buttons: buttons, focus: false, cancelValue: false,
         body: [g.Name + ' is signed out on every device and locked now, also if ' + quote(p.Name) + ' is extended later. ' + (deleteDays() ? 'The account is deleted ' + kit.plural(deleteDays(), 'day') + ' later.' : 'The account is deleted within a minute, with watch history and favourites. This cannot be undone.') + ' The place on the pass stays used.']
-            .concat(again ? ['The link still has ' + kit.plural(p.MaxGuests - p.Used, 'place') + ' left, so ' + g.Name + ' could join again with it as a new guest. A new link stops that; guests who joined keep watching.'] : []) })
+            .concat(again ? ['The link still has ' + kit.plural(p.MaxGuests - p.Used, 'place') + ' left, so ' + g.Name + ' could join again with it' + (p.HasCode ? ' or the code' : '') + ' as a new guest. A new link' + (p.HasCode ? ' and code stop' : ' stops') + ' that; guests who joined keep watching.'] : []) })
         .then(function (choice) {
             if (!choice) return;
             return working(p.Id, kit.api('POST', 'MkiGuestPass/Guests/' + g.UserId + '/End')).then(function () {
