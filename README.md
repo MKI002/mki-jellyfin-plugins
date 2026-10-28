@@ -82,15 +82,6 @@ Plugins for [Jellyfin](https://jellyfin.org) 12, installable from one plugin rep
       An animated showcase of your library's artwork behind the sign-in page, in four neon styles. You pick the libraries and the age rating; visitors only ever get pictures.
     </td>
   </tr>
-  <tr>
-    <td width="320" valign="top">
-      <a href="src/Jellyfin.Plugin.MkiGuestPass"><img src="src/Jellyfin.Plugin.MkiGuestPass/logo.png?v=1.0.0" alt="MKI Guest Pass" width="320"></a>
-    </td>
-    <td valign="top">
-      <h3><a href="src/Jellyfin.Plugin.MkiGuestPass">MKI Guest Pass</a></h3>
-      Temporary guest accounts from a link, a QR code or a code. Guests see only the libraries you pick, have no password and sign in TVs with Quick Connect; their accounts lock and delete themselves when the pass ends.
-    </td>
-  </tr>
 </table>
 
 ## Installation
@@ -110,7 +101,7 @@ Updates show up in the catalog automatically when a new version is released.
 ### Requirements
 
 - Jellyfin **12.x** (plugin ABI `12.0.0.0`). Older servers will not list the plugins.
-- **MKI Media Hero** and **MKI Seerr Bridge** add a small script to the Jellyfin web client by writing to its `index.html`. **MKI Password Policy** does the same; its sign-in dialog and popups only switch on while a profile is assigned or a password change is pending (otherwise the script only adds the administrator's shortcut on user pages), and uninstalling removes it. **MKI Continue Watching Cleanup** adds its script only while its Remove button is turned on, **MKI Screen Fit** only while one of its parts is on, **MKI Login Showcase** only while the showcase is turned on, **MKI Guest Pass** only while guest accounts exist or a pass with a code is open. The Jellyfin process needs write access to the web folder for that; the official Docker image has it.
+- **MKI Media Hero** and **MKI Seerr Bridge** add a small script to the Jellyfin web client by writing to its `index.html`. **MKI Password Policy** does the same; its sign-in dialog and popups only switch on while a profile is assigned or a password change is pending (otherwise the script only adds the administrator's shortcut on user pages), and uninstalling removes it. **MKI Continue Watching Cleanup** adds its script only while its Remove button is turned on, **MKI Screen Fit** only while one of its parts is on and **MKI Login Showcase** only while the showcase is turned on. The Jellyfin process needs write access to the web folder for that; the official Docker image has it.
 - **MKI Seerr Bridge**, and MKI Media Hero's trending source, need a running [Seerr](https://github.com/seerr-team/seerr) instance and its API key.
 
 ## Building from source
@@ -170,7 +161,6 @@ The [Release workflow](.github/workflows/release.yml) builds every plugin whose 
 └── src/
     ├── Jellyfin.Plugin.MediaHero/
     ├── Jellyfin.Plugin.MkiContinueWatching/
-    ├── Jellyfin.Plugin.MkiGuestPass/
     ├── Jellyfin.Plugin.MkiLoginShowcase/
     ├── Jellyfin.Plugin.MkiMergeVersions/
     ├── Jellyfin.Plugin.MkiPasswordPolicy/
