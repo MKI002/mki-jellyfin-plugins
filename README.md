@@ -173,4 +173,4 @@ The [Release workflow](.github/workflows/release.yml) builds every plugin whose 
 
 ## License
 
-[GPL-3.0](LICENSE). Jellyfin itself is GPL licensed, and plugins build against its libraries.
+Copyright © 2026 MKI002. Licensed under the [GNU GPL-3.0](LICENSE). Jellyfin itself is GPL licensed, and plugins build against its libraries.
